@@ -19,7 +19,7 @@ Clone the repository with the project name of your choice:
 
 cd into the project directory and run `npm install`
 
-Since this is just a slight variation on the [Create React App](https://github.com/facebookincubator/create-react-app) template so all of
+Since this is just a slight variation on the [Create React App](https://github.com/facebookincubator/create-react-app) template all of
 those npm scripts are available here, including:
 
 ```
