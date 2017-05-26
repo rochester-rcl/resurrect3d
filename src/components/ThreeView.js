@@ -11,6 +11,15 @@ export default class ThreeView extends Component {
   state = {
     dragging: false,
     shiftDown: false,
+    orbit: {
+      x: 0,
+      y: 0,
+      z: 0,
+    },
+    pan: {
+      x: 0,
+      y: 0,
+    },
     mouseDownX: 0,
     mouseDownY: 0,
     mouseDownLat: 0,
@@ -19,7 +28,6 @@ export default class ThreeView extends Component {
     long: 0,
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
-  POSITION_STEP = 1;
   constructor(props: Object){
     super(props);
     (this: any).initThree = this.initThree.bind(this);
@@ -30,8 +38,9 @@ export default class ThreeView extends Component {
     (this: any).update = this.update.bind(this);
     (this: any).updateOrbit = this.updateOrbit.bind(this);
     (this: any).updatePan = this.updatePan.bind(this);
+    (this: any).rerenderWebGLScene = this.rerenderWebGLScene.bind(this);
     (this: any).getNewCameraFOV = this.getNewCameraFOV.bind(this);
-    (this: any).setCameraPosition = this.setCameraPosition.bind(this);
+    (this: any).centerCameraPosition = this.centerCameraPosition.bind(this);
     (this: any).loadSkyboxTexture = this.loadSkyboxTexture.bind(this);
     (this: any).loadMesh = this.loadMesh.bind(this);
     (this: any).initEnvironment = this.initEnvironment.bind(this);
@@ -65,7 +74,7 @@ export default class ThreeView extends Component {
     this.scene = new THREE.Scene();
 
     // Skybox
-    this.skyboxGeom = new THREE.SphereGeometry(200, 100, 60);
+    this.skyboxGeom = new THREE.SphereGeometry(400, 100, 60);
     this.skyboxGeom.scale(-1, 1, 1);
     this.textureLoader = new THREE.TextureLoader();
 
@@ -88,43 +97,31 @@ export default class ThreeView extends Component {
   }
 
   update(): void {
-    if (this.state.shiftDown) {
-      this.updatePan();
-    } else {
-      this.updateOrbit();
+    if (this.state.dragging) {
+      if (this.state.shiftDown) {
+        this.updatePan();
+      } else {
+        this.updateOrbit();
+      }
     }
+    this.rerenderWebGLScene();
   }
 
   updateOrbit(): void {
-    let lat = Math.max(-85, Math.min(85, this.state.lat));
-    let phi = THREE.Math.degToRad(90 - lat);
-    let theta = THREE.Math.degToRad(this.state.long);
-    if (this.props.invertControls) {
-      this.camera.position.x = 400 * Math.sin(phi) * Math.cos(theta);
-      this.camera.position.y = 400 * Math.cos(-phi);
-    } else {
-      this.camera.position.x = 400 * Math.sin(-phi) * Math.cos(theta);
-      this.camera.position.y = 400 * Math.cos(phi);
-    }
-    this.camera.position.z = 400 * Math.sin(phi) * Math.sin(theta);
+    this.camera.position.x = this.state.orbit.x;
+    this.camera.position.y = this.state.orbit.y;
+    this.camera.position.z = this.state.orbit.z;
     this.camera.lookAt(this.scene.position);
-    this.webGLRenderer.render(this.scene, this.camera);
   }
 
   updatePan(): void {
-    let lat = Math.max(-85, Math.min(85, this.state.lat));
-    let phi = THREE.Math.degToRad(90 - lat);
-    let theta = THREE.Math.degToRad(this.state.long);
-    if (this.props.invertControls) {
-      this.mesh.position.x = lat;
-      this.mesh.position.y = theta;
-    } else {
-      this.mesh.position.x = 100 * Math.sin(-phi) * Math.cos(theta);
-      this.mesh.position.y = 100 * Math.cos(phi);
-    }
-    this.camera.lookAt(this.scene.position);
+    this.camera.position.x = this.state.pan.x;
+    this.camera.position.y = this.state.pan.y;
+    this.camera.lookAt(this.camera.target);
+  }
+
+  rerenderWebGLScene(): void {
     this.webGLRenderer.render(this.scene, this.camera);
-    //this.camera.position.set( new THREE.Vector3(...currentPosition, ...newPos));
   }
 
   animate(): void {
@@ -175,10 +172,27 @@ export default class ThreeView extends Component {
 
   handleMouseMove(event: typeof SyntheticEvent): void {
     if (this.state.dragging) {
-      this.setState({
-        lat: (this.state.mouseDownY - event.clientY) * 0.1 + this.state.mouseDownLat,
-        long: (this.state.mouseDownX - event.clientX) * 0.1 + this.state.mouseDownLong,
-      })
+      let lat = (this.state.mouseDownY - event.clientY) * 0.1 + this.state.mouseDownLat;
+      let long = (this.state.mouseDownX - event.clientX) * 0.1 + this.state.mouseDownLong;
+      if (this.state.shiftDown) {
+        this.setState({
+          pan: { x: long, y: lat, }
+        });
+      } else {
+        let orbit = {};
+        let sphericalLat = Math.max(-85, Math.min(85, this.state.lat));
+        let phi = THREE.Math.degToRad(90 - sphericalLat);
+        let theta = THREE.Math.degToRad(this.state.long);
+        if (this.props.invertControls) {
+          orbit.x = 400 * Math.sin(phi) * Math.cos(theta);
+          orbit.y = 400 * Math.cos(-phi);
+        } else {
+          orbit.x = 400 * Math.sin(-phi) * Math.cos(theta);
+          orbit.y = 400 * Math.cos(phi);
+        }
+        orbit.z = 400 * Math.sin(phi) * Math.sin(theta);
+        this.setState({ orbit: {...orbit}, lat: lat, long: long });
+      }
     }
   }
 
@@ -190,9 +204,8 @@ export default class ThreeView extends Component {
     return dstFOV;
   }
 
-  setCameraPosition(): void {
+  centerCameraPosition(): void {
     let currentPosition = this.camera.position;
-    console.log(currentPosition);
   }
 
   handleMouseWheel(event: typeof SyntheticEvent): void {
@@ -210,6 +223,7 @@ export default class ThreeView extends Component {
   }
 
   handleWindowResize(event: typeof Event): void {
+    console.log('resize');
     let { innerWidth, innerHeight } = event.target;
     this.camera.aspect = innerWidth / innerHeight;
     this.camera.updateProjectionMatrix();
@@ -218,7 +232,6 @@ export default class ThreeView extends Component {
 
   handleKeyDown(event: typeof SyntheticEvent): void {
     let currentRotation = this.mesh.getWorldRotation();
-    console.log(event.keyCode);
     switch(event.keyCode) {
       case 39:
         console.log(currentRotation)
