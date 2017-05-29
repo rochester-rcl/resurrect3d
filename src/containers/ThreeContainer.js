@@ -16,6 +16,8 @@ import ThreeView from '../components/ThreeView';
 const skyboxTexture = 'Image-003.jpg';
 const mesh = 'male_example.js'
 
+window.someTest = 'test';
+
 class ThreeContainer extends Component {
   render(): Object {
     return(

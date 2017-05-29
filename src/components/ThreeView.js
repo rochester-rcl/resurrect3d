@@ -5,7 +5,9 @@ import React, { Component } from 'react';
 
 // THREEJS
 import * as THREE from 'three';
-window.THREE = THREE;
+
+// postprocessing
+import loadPostProcessor from '../utils/postprocessing';
 
 // Utils
 import { panLeft, panUp, rotateLeft, rotateUp } from '../utils/camera';
@@ -53,6 +55,7 @@ export default class ThreeView extends Component {
     (this: any).loadMesh = this.loadMesh.bind(this);
     (this: any).initEnvironment = this.initEnvironment.bind(this);
     (this: any).initMesh = this.initMesh.bind(this);
+    (this: any).initPostprocessing = this.initPostprocessing.bind(this);
     (this: any).handleMouseDown = this.handleMouseDown.bind(this);
     (this: any).handleMouseMove = this.handleMouseMove.bind(this);
     (this: any).handleMouseUp = this.handleMouseUp.bind(this);
@@ -125,9 +128,11 @@ export default class ThreeView extends Component {
     this.webGLRenderer.setSize(this.width, this.height);
     this.threeContainer.appendChild(this.webGLRenderer.domElement);
 
-    this.camera.focus = 0.025;
     this.loadSkyboxTexture();
     this.loadMesh();
+    loadPostProcessor(THREE).then((values) => {
+      this.initPostprocessing();
+    });
     this.animate();
   }
 
@@ -140,6 +145,7 @@ export default class ThreeView extends Component {
 
   rerenderWebGLScene(): void {
     this.webGLRenderer.render(this.scene, this.camera);
+    this.composer.render(0.1);
   }
 
   animate(): void {
@@ -177,6 +183,27 @@ export default class ThreeView extends Component {
     this.scene.add(this.skyboxMesh);
     this.update();
   }
+
+  /** WEBGL Postprocessing
+  *****************************************************************************/
+  initPostprocessing(): void {
+
+    this.renderPass = new THREE.RenderPass(this.scene, this.camera);
+    this.bokehPass = new THREE.BokehPass(this.scene, this.camera, {
+      focus: 0.075,
+      aperture: 0.025,
+      maxBlur: 5.0,
+      width: this.width,
+      height: this.height,
+    });
+    this.bokehPass.renderToScreen = true;
+
+    this.composer = new THREE.EffectComposer(this.webGLRenderer);
+    this.composer.addPass(this.renderPass);
+    this.composer.addPass(this.bokehPass);
+
+  }
+
 
   /** CAMERA
   *****************************************************************************/

@@ -1,4 +1,6 @@
 /* @flow */
+import * as THREE from 'three';
+
 export function panLeft(distance: Number, matrix: typeof THREE.Vector3): typeof THREE.Vector3 {
 
   let dstX = new THREE.Vector3();
@@ -24,5 +26,5 @@ export function rotateLeft(): typeof THREE.Vector3 {
 
 export function rotateUp(): typeof THREE.Vector3 {
 
-  
+
 }
