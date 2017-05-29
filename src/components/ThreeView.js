@@ -7,25 +7,26 @@ import React, { Component } from 'react';
 import * as THREE from 'three';
 window.THREE = THREE;
 
+// Utils
+import { panLeft, panUp, rotateLeft, rotateUp } from '../utils/camera';
+
 export default class ThreeView extends Component {
   state = {
+    // interaction
     dragging: false,
     shiftDown: false,
-    orbit: {
-      x: 0,
-      y: 0,
-      z: 0,
-    },
-    pan: {
-      x: 0,
-      y: 0,
-    },
-    mouseDownX: 0,
-    mouseDownY: 0,
-    mouseDownLat: 0,
-    mouseDownLong: 0,
-    lat: 0,
-    long: 0,
+    // rotation
+    rotateStart: new THREE.Vector2(),
+    rotateEnd: new THREE.Vector2(),
+    rotateDelta: new THREE.Vector2(),
+    //panning
+    panStart: new THREE.Vector2(),
+    panEnd: new THREE.Vector2(),
+    panDelta: new THREE.Vector2(),
+    panOffset: new THREE.Vector3(),
+    // spherical coords
+    spherical: new THREE.Spherical({phi: 0, radius: 400, theta: 0}),
+    sphericalDelta: new THREE.Spherical(),
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
   constructor(props: Object){
@@ -34,10 +35,17 @@ export default class ThreeView extends Component {
     (this: any).height = window.innerHeight;
     (this: any).width = window.innerWidth;
     (this: any).pixelRatio = window.devicePixelRatio;
+    (this: any).minAzimuthAngle = - Infinity;
+    (this: any).maxAzimuthAngle = Infinity;
+    (this: any).minPolarAngle = 0;
+    (this: any).maxPolarAngle = Math.PI;
+    (this: any).minDistance = 0;
+    (this: any).maxDistance = Infinity;
+    (this: any).rotateSpeed = 0.5;
     (this: any).animate = this.animate.bind(this);
     (this: any).update = this.update.bind(this);
-    (this: any).updateOrbit = this.updateOrbit.bind(this);
-    (this: any).updatePan = this.updatePan.bind(this);
+    (this: any).updateCamera = this.updateCamera.bind(this);
+    (this: any).pan = this.pan.bind(this);
     (this: any).rerenderWebGLScene = this.rerenderWebGLScene.bind(this);
     (this: any).getNewCameraFOV = this.getNewCameraFOV.bind(this);
     (this: any).centerCameraPosition = this.centerCameraPosition.bind(this);
@@ -54,6 +62,9 @@ export default class ThreeView extends Component {
     (this: any).handleKeyUp = this.handleKeyUp.bind(this);
   }
 
+  /** COMPONENT LIFECYCYLE
+  *****************************************************************************/
+
   componentDidMount(): void {
     this.initThree();
     window.addEventListener('resize', this.handleWindowResize);
@@ -63,15 +74,37 @@ export default class ThreeView extends Component {
     window.removeEventListener('resize', this.handleWindowResize);
   }
 
+  render(): Object {
+    return(
+      <div className="three-view-container">
+        <div className="three-view-toolbar"></div>
+        <div ref="threeView" className="three-view"
+          contentEditable
+          onMouseDown={this.handleMouseDown}
+          onMouseMove={this.handleMouseMove}
+          onMouseUp={this.handleMouseUp}
+          onWheel={this.handleMouseWheel}
+          onKeyDown={this.handleKeyDown}
+          onKeyUp={this.handleKeyUp}
+        >
+        </div>
+      </div>
+    )
+  }
+
+  /** THREE JS 'LIFECYCYLE'
+  *****************************************************************************/
   initThree(): void {
+
+    let { spherical, sphericalDelta } = this.state;
     this.threeContainer = this.refs.threeView;
 
     // init camera
     this.camera = new THREE.PerspectiveCamera(60, this.width / this.height, 1, 800);
 
     // center camera
-    this.camera.target = new THREE.Vector3(0, 0, 0);
     this.scene = new THREE.Scene();
+    this.camera.target = new THREE.Vector3();
 
     // Skybox
     this.skyboxGeom = new THREE.SphereGeometry(400, 100, 60);
@@ -91,6 +124,8 @@ export default class ThreeView extends Component {
     this.webGLRenderer.setPixelRatio(this.pixelRatio);
     this.webGLRenderer.setSize(this.width, this.height);
     this.threeContainer.appendChild(this.webGLRenderer.domElement);
+
+    this.camera.focus = 0.025;
     this.loadSkyboxTexture();
     this.loadMesh();
     this.animate();
@@ -98,26 +133,9 @@ export default class ThreeView extends Component {
 
   update(): void {
     if (this.state.dragging) {
-      if (this.state.shiftDown) {
-        this.updatePan();
-      } else {
-        this.updateOrbit();
-      }
+      this.updateCamera();
     }
     this.rerenderWebGLScene();
-  }
-
-  updateOrbit(): void {
-    this.camera.position.x = this.state.orbit.x;
-    this.camera.position.y = this.state.orbit.y;
-    this.camera.position.z = this.state.orbit.z;
-    this.camera.lookAt(this.scene.position);
-  }
-
-  updatePan(): void {
-    this.camera.position.x = this.state.pan.x;
-    this.camera.position.y = this.state.pan.y;
-    this.camera.lookAt(this.camera.target);
   }
 
   rerenderWebGLScene(): void {
@@ -160,41 +178,8 @@ export default class ThreeView extends Component {
     this.update();
   }
 
-  handleMouseDown(event: typeof SyntheticEvent): void {
-    this.setState({
-      dragging: true,
-      mouseDownX: event.clientX,
-      mouseDownY: event.clientY,
-      mouseDownLong: this.state.long,
-      mouseDownLat: this.state.lat,
-    });
-  }
-
-  handleMouseMove(event: typeof SyntheticEvent): void {
-    if (this.state.dragging) {
-      let lat = (this.state.mouseDownY - event.clientY) * 0.1 + this.state.mouseDownLat;
-      let long = (this.state.mouseDownX - event.clientX) * 0.1 + this.state.mouseDownLong;
-      if (this.state.shiftDown) {
-        this.setState({
-          pan: { x: long, y: lat, }
-        });
-      } else {
-        let orbit = {};
-        let sphericalLat = Math.max(-85, Math.min(85, this.state.lat));
-        let phi = THREE.Math.degToRad(90 - sphericalLat);
-        let theta = THREE.Math.degToRad(this.state.long);
-        if (this.props.invertControls) {
-          orbit.x = 400 * Math.sin(phi) * Math.cos(theta);
-          orbit.y = 400 * Math.cos(-phi);
-        } else {
-          orbit.x = 400 * Math.sin(-phi) * Math.cos(theta);
-          orbit.y = 400 * Math.cos(phi);
-        }
-        orbit.z = 400 * Math.sin(phi) * Math.sin(theta);
-        this.setState({ orbit: {...orbit}, lat: lat, long: long });
-      }
-    }
-  }
+  /** CAMERA
+  *****************************************************************************/
 
   getNewCameraFOV(dstFOV: Number): Number {
     let max = this.props.maxFOV;
@@ -206,6 +191,112 @@ export default class ThreeView extends Component {
 
   centerCameraPosition(): void {
     let currentPosition = this.camera.position;
+  }
+
+  pan(deltaX: Number, deltaY: Number): void {
+
+    let offset = new THREE.Vector3();
+    let position = this.camera.position;
+    offset.copy(position).sub(this.camera.target);
+
+    let targetDistance = offset.length();
+    targetDistance *= Math.tan((this.camera.fov / 2) * Math.PI / 180.0);
+
+    let dstX = 2 * deltaX * targetDistance / this.height;
+    let dstY = 2 * deltaY * targetDistance / this.height;
+    let left = panLeft(dstX, this.camera.matrix);
+    let up = panUp(dstY, this.camera.matrix);
+
+    this.setState({ panOffset: this.state.panOffset.add(left.add(up)) });
+
+  }
+
+  rotate(deltaX: Number, deltaY: Number): void {
+    let { sphericalDelta } = this.state;
+    sphericalDelta.theta -= 2 * Math.PI * deltaX / this.width * this.rotateSpeed;
+    sphericalDelta.phi -= 2 * Math.PI * deltaY / this.height * this.rotateSpeed;
+    this.setState({
+      sphericalDelta: sphericalDelta,
+    });
+  }
+
+  updateCamera(): void {
+
+    const { spherical, sphericalDelta, panOffset } = this.state;
+    spherical.radius = 400;
+    let offset = new THREE.Vector3();
+		let quat = new THREE.Quaternion().setFromUnitVectors( this.camera.up, new THREE.Vector3(0, 1, 0));
+		let quatInverse = quat.clone().inverse();
+
+		let lastPosition = new THREE.Vector3();
+		let lastQuaternion = new THREE.Quaternion();
+
+    let position = this.camera.position;
+    offset.copy(position).sub(this.camera.target);
+    offset.applyQuaternion(quat);
+    spherical.setFromVector3(offset);
+    spherical.radius = 400.0;
+    spherical.theta += sphericalDelta.theta;
+    spherical.phi += sphericalDelta.phi;
+    spherical.theta = Math.max(this.minAzimuthAngle, Math.min(this.maxAzimuthAngle, spherical.theta));
+    spherical.phi = Math.max(this.minPolarAngle, Math.min(this.maxPolarAngle, spherical.phi));
+    spherical.makeSafe();
+    spherical.radius = Math.max(this.minDistance, Math.min(this.maxDistance, spherical.radius));
+
+    this.camera.target.add(panOffset);
+    offset.setFromSpherical(spherical);
+    offset.applyQuaternion(quatInverse);
+    this.camera.position.copy(this.camera.target).add(offset);
+    this.camera.lookAt(this.camera.target);
+
+    this.setState({
+      sphericalDelta: sphericalDelta.set(0, 0, 0),
+      panOffset: this.state.panOffset.set(0, 0, 0),
+    });
+
+  }
+
+  /** EVENT HANDLERS
+  *****************************************************************************/
+
+  handleMouseDown(event: typeof SyntheticEvent): void {
+    if (this.state.shiftDown) {
+      this.setState({
+        dragging: true,
+        panStart: this.state.panStart.set(event.clientX, event.clientY),
+      });
+    } else {
+      this.setState({
+        dragging: true,
+        rotateStart: this.state.rotateStart.set(event.clientX, event.clientY),
+      });
+    }
+  }
+
+  handleMouseMove(event: typeof SyntheticEvent): void {
+    if (this.state.dragging) {
+      if (this.state.shiftDown) {
+        let { panStart, panEnd, panDelta } = this.state;
+        panEnd.set(event.clientX, event.clientY);
+        panDelta.subVectors(panEnd, panStart);
+        this.pan(panDelta.x, panDelta.y);
+        this.setState({
+          panEnd: panEnd,
+          panDelta: panDelta,
+          panStart: panStart.copy(panEnd),
+        });
+      } else {
+        let { rotateStart, rotateEnd, rotateDelta } = this.state;
+        rotateEnd.set(event.clientX, event.clientY);
+        rotateDelta.subVectors(rotateEnd, rotateStart);
+        this.rotate(rotateDelta.x, rotateDelta.y);
+        this.setState({
+          rotateEnd: rotateEnd,
+          rotateDelta: rotateDelta,
+          rotateStart: rotateStart.copy(rotateEnd),
+        })
+      }
+    }
   }
 
   handleMouseWheel(event: typeof SyntheticEvent): void {
@@ -258,21 +349,4 @@ export default class ThreeView extends Component {
     }
   }
 
-  render(): Object {
-    return(
-      <div className="three-view-container">
-        <div className="three-view-toolbar"></div>
-        <div ref="threeView" className="three-view"
-          contentEditable
-          onMouseDown={this.handleMouseDown}
-          onMouseMove={this.handleMouseMove}
-          onMouseUp={this.handleMouseUp}
-          onWheel={this.handleMouseWheel}
-          onKeyDown={this.handleKeyDown}
-          onKeyUp={this.handleKeyUp}
-        >
-        </div>
-      </div>
-    )
-  }
 }
