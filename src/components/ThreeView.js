@@ -11,6 +11,7 @@ import loadPostProcessor from '../utils/postprocessing';
 
 // Utils
 import { panLeft, panUp, rotateLeft, rotateUp } from '../utils/camera';
+import { fitBoxes } from '../utils/mesh';
 
 export default class ThreeView extends Component {
   state = {
@@ -27,7 +28,7 @@ export default class ThreeView extends Component {
     panDelta: new THREE.Vector2(),
     panOffset: new THREE.Vector3(),
     // spherical coords
-    spherical: new THREE.Spherical({phi: 0, radius: 400, theta: 0}),
+    spherical: new THREE.Spherical({phi: 0, radius: this.environmentRadius, theta: 0}),
     sphericalDelta: new THREE.Spherical(),
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
@@ -44,6 +45,7 @@ export default class ThreeView extends Component {
     (this: any).minDistance = 0;
     (this: any).maxDistance = Infinity;
     (this: any).rotateSpeed = 0.5;
+    (this: any).environmentRadius = 200;
     (this: any).animate = this.animate.bind(this);
     (this: any).update = this.update.bind(this);
     (this: any).updateCamera = this.updateCamera.bind(this);
@@ -110,7 +112,7 @@ export default class ThreeView extends Component {
     this.camera.target = new THREE.Vector3();
 
     // Skybox
-    this.skyboxGeom = new THREE.SphereGeometry(400, 100, 60);
+    this.skyboxGeom = new THREE.SphereGeometry(this.environmentRadius, 100, 60);
     this.skyboxGeom.scale(-1, 1, 1);
     this.textureLoader = new THREE.TextureLoader();
 
@@ -145,7 +147,7 @@ export default class ThreeView extends Component {
 
   rerenderWebGLScene(): void {
     this.webGLRenderer.render(this.scene, this.camera);
-    this.composer.render(0.1);
+    if (this.composer !== undefined) this.composer.render(0.1);
   }
 
   animate(): void {
@@ -168,9 +170,19 @@ export default class ThreeView extends Component {
   }
 
   initMesh(mesh: Object): void {
+
     this.mesh = mesh;
     this.scene.add(this.mesh);
+    let bboxMesh = new THREE.Box3().setFromObject(this.mesh);
+    this.skyboxGeom.computeBoundingBox();
+    let bboxSkybox = this.skyboxGeom.boundingBox;
+
+    this.mesh.position.y -= this.environmentRadius / 2;
+    /*let distance = bboxMesh.min.z - this.camera.position.z;
+    this.camera.fov = 2 * Math.atan(meshHeight / (2 * distance)) * (180 / Math.PI);
+    this.camera.updateProjectionMatrix();*/
     this.update();
+
   }
 
   initEnvironment(texture: Object): void {
@@ -190,7 +202,7 @@ export default class ThreeView extends Component {
 
     this.renderPass = new THREE.RenderPass(this.scene, this.camera);
     this.bokehPass = new THREE.BokehPass(this.scene, this.camera, {
-      focus: 0.075,
+      focus: 0.25,
       aperture: 0.025,
       maxBlur: 5.0,
       width: this.width,
@@ -209,15 +221,19 @@ export default class ThreeView extends Component {
   *****************************************************************************/
 
   getNewCameraFOV(dstFOV: Number): Number {
+
     let max = this.props.maxFOV;
     let min = this.props.minFOV;
     if (dstFOV >= max) return max;
     if (dstFOV <= min) return min;
     return dstFOV;
+
   }
 
   centerCameraPosition(): void {
+
     let currentPosition = this.camera.position;
+
   }
 
   pan(deltaX: Number, deltaY: Number): void {
@@ -239,18 +255,20 @@ export default class ThreeView extends Component {
   }
 
   rotate(deltaX: Number, deltaY: Number): void {
+
     let { sphericalDelta } = this.state;
     sphericalDelta.theta -= 2 * Math.PI * deltaX / this.width * this.rotateSpeed;
     sphericalDelta.phi -= 2 * Math.PI * deltaY / this.height * this.rotateSpeed;
     this.setState({
       sphericalDelta: sphericalDelta,
     });
+
   }
 
   updateCamera(): void {
 
     const { spherical, sphericalDelta, panOffset } = this.state;
-    spherical.radius = 400;
+    spherical.radius = this.environmentRadius;
     let offset = new THREE.Vector3();
 		let quat = new THREE.Quaternion().setFromUnitVectors( this.camera.up, new THREE.Vector3(0, 1, 0));
 		let quatInverse = quat.clone().inverse();
@@ -262,7 +280,7 @@ export default class ThreeView extends Component {
     offset.copy(position).sub(this.camera.target);
     offset.applyQuaternion(quat);
     spherical.setFromVector3(offset);
-    spherical.radius = 400.0;
+    spherical.radius = this.environmentRadius;
     spherical.theta += sphericalDelta.theta;
     spherical.phi += sphericalDelta.phi;
     spherical.theta = Math.max(this.minAzimuthAngle, Math.min(this.maxAzimuthAngle, spherical.theta));
