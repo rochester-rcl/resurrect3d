@@ -28,11 +28,12 @@ export default class ThreeView extends Component {
     panDelta: new THREE.Vector2(),
     panOffset: new THREE.Vector3(),
     // spherical coords
-    spherical: new THREE.Spherical({phi: 0, radius: this.environmentRadius, theta: 0}),
+    spherical: new THREE.Spherical(),
     sphericalDelta: new THREE.Spherical(),
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
   constructor(props: Object){
+
     super(props);
     (this: any).initThree = this.initThree.bind(this);
     (this: any).height = window.innerHeight;
@@ -45,14 +46,17 @@ export default class ThreeView extends Component {
     (this: any).minDistance = 0;
     (this: any).maxDistance = Infinity;
     (this: any).rotateSpeed = 0.5;
-    (this: any).environmentRadius = 10;
+    (this: any).environmentRadius = 0;
+    (this: any).maxFov = 0;
+    (this: any).minFov = 10;
+    (this: any).bboxMesh = null;
     (this: any).animate = this.animate.bind(this);
     (this: any).update = this.update.bind(this);
     (this: any).updateCamera = this.updateCamera.bind(this);
     (this: any).pan = this.pan.bind(this);
     (this: any).rerenderWebGLScene = this.rerenderWebGLScene.bind(this);
     (this: any).getNewCameraFOV = this.getNewCameraFOV.bind(this);
-    (this: any).centerCameraPosition = this.centerCameraPosition.bind(this);
+    (this: any).fitPerspectiveCamera = this.fitPerspectiveCamera.bind(this);
     (this: any).loadSkyboxTexture = this.loadSkyboxTexture.bind(this);
     (this: any).loadMesh = this.loadMesh.bind(this);
     (this: any).initEnvironment = this.initEnvironment.bind(this);
@@ -65,6 +69,7 @@ export default class ThreeView extends Component {
     (this: any).handleWindowResize = this.handleWindowResize.bind(this);
     (this: any).handleKeyDown = this.handleKeyDown.bind(this);
     (this: any).handleKeyUp = this.handleKeyUp.bind(this);
+
   }
 
   /** COMPONENT LIFECYCYLE
@@ -105,16 +110,13 @@ export default class ThreeView extends Component {
     this.threeContainer = this.refs.threeView;
 
     // init camera
-    this.camera = new THREE.PerspectiveCamera(60, this.width / this.height, 1, 800);
+    this.camera = new THREE.PerspectiveCamera(50, this.width / this.height) // use defaults for fov and near and far frustum;
 
     // center camera
     this.scene = new THREE.Scene();
     this.envScene = new THREE.Scene();
     this.camera.target = new THREE.Vector3();
 
-    // Skybox
-    this.skyboxGeom = new THREE.SphereGeometry(this.environmentRadius, 100, 60);
-    this.skyboxGeom.scale(-1, 1, 1);
     this.textureLoader = new THREE.TextureLoader();
 
     // Mesh
@@ -123,7 +125,9 @@ export default class ThreeView extends Component {
     // Lights
     this.ambientLight = new THREE.AmbientLight(0xffffff);
     this.pointLight = new THREE.PointLight(0xfffffff, 0.2, 0.5);
-    this.pointLight.y = 800;
+    this.pointLight.y = this.environmentRadius;
+    this.scene.add(this.ambientLight);
+    this.scene.add(this.pointLight);
 
     // WebGL Renderer
     this.webGLRenderer = new THREE.WebGLRenderer({ alpha: true, autoClear: false });
@@ -132,26 +136,29 @@ export default class ThreeView extends Component {
     this.webGLRenderer.autoClear = false;
     this.threeContainer.appendChild(this.webGLRenderer.domElement);
 
-    this.loadSkyboxTexture();
     this.loadMesh();
     loadPostProcessor(THREE).then((values) => {
       this.initPostprocessing();
     });
-    this.animate();
+
   }
 
   update(): void {
+
     if (this.state.dragging) {
       this.updateCamera();
     }
     this.rerenderWebGLScene();
+
   }
 
   rerenderWebGLScene(): void {
+
     this.webGLRenderer.clear();
     if (this.envComposer !== undefined) this.envComposer.render(0.1);
     this.webGLRenderer.clearDepth();
     this.webGLRenderer.render(this.scene, this.camera);
+
   }
 
   animate(): void {
@@ -175,30 +182,29 @@ export default class ThreeView extends Component {
 
   initMesh(mesh: Object): void {
 
-    this.mesh = mesh;
-    this.scene.add(this.mesh);
-    let bboxMesh = new THREE.Box3().setFromObject(this.mesh);
-    this.skyboxGeom.computeBoundingBox();
-    let bboxSkybox = this.skyboxGeom.boundingBox;
-    let meshHeight = bboxMesh.max.y - bboxMesh.min.y;
-    let distance = this.camera.position.distanceTo(this.mesh.position);
-    console.log(bboxMesh);
-    /*this.camera.fov = 2 * Math.atan(meshHeight / (2 * distance)) * (180 / Math.PI);
-    this.camera.updateProjectionMatrix();*/
-    this.update();
+      this.mesh = mesh;
+      this.scene.add(this.mesh);
+      this.bboxMesh = new THREE.Box3().setFromObject(this.mesh);
+      let meshHeight = Math.ceil(this.bboxMesh.max.y - this.bboxMesh.min.y);
+      this.environmentRadius = meshHeight; // diameter of sphere =  2 * meshHeight
+      this.mesh.position.y = this.mesh.position.y - Math.floor(meshHeight / 2);
+      this.loadSkyboxTexture();
 
   }
 
   initEnvironment(texture: Object): void {
 
+    // Skybox
+    this.skyboxGeom = new THREE.SphereGeometry(this.environmentRadius, 100, 60);
+    this.skyboxGeom.scale(-1, 1, 1);
     this.skyboxMaterial = new THREE.MeshBasicMaterial({
       map: texture,
     });
     this.skyboxMesh = new THREE.Mesh(this.skyboxGeom, this.skyboxMaterial);
-    this.scene.add(this.ambientLight);
-    this.scene.add(this.pointLight);
     this.envScene.add(this.skyboxMesh);
-    this.update();
+    this.fitPerspectiveCamera();
+    this.updateCamera();
+    this.animate();
 
   }
 
@@ -228,17 +234,26 @@ export default class ThreeView extends Component {
 
   getNewCameraFOV(dstFOV: Number): Number {
 
-    let max = this.props.maxFOV;
-    let min = this.props.minFOV;
+    let max = this.maxFov;
+    let min = this.minFov;
     if (dstFOV >= max) return max;
     if (dstFOV <= min) return min;
     return dstFOV;
 
   }
 
-  centerCameraPosition(): void {
+  fitPerspectiveCamera(): void {
 
-    let currentPosition = this.camera.position;
+    let distance = this.camera.position.distanceTo(this.bboxMesh.min);
+    let meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
+    let meshHeight = this.bboxMesh.max.y - this.bboxMesh.min.y;
+    let fovV = 2 * Math.atan(meshHeight / (2 * distance)) * (180 / Math.PI);
+    let aspect = this.width / this.height;
+    let fovH = 2 * Math.atan((meshWidth / aspect) / (2 * distance)) * (180 / Math.PI);
+    let avgFov = (fovV + fovH) / 2;
+    this.camera.fov = avgFov;
+    this.maxFov = avgFov;
+    this.camera.updateProjectionMatrix();
 
   }
 
@@ -265,6 +280,7 @@ export default class ThreeView extends Component {
     let { sphericalDelta } = this.state;
     sphericalDelta.theta -= 2 * Math.PI * deltaX / this.width * this.rotateSpeed;
     sphericalDelta.phi -= 2 * Math.PI * deltaY / this.height * this.rotateSpeed;
+
     this.setState({
       sphericalDelta: sphericalDelta,
     });
@@ -276,11 +292,8 @@ export default class ThreeView extends Component {
     const { spherical, sphericalDelta, panOffset } = this.state;
     spherical.radius = this.environmentRadius;
     let offset = new THREE.Vector3();
-		let quat = new THREE.Quaternion().setFromUnitVectors( this.camera.up, new THREE.Vector3(0, 1, 0));
+		let quat = new THREE.Quaternion().setFromUnitVectors(this.camera.up, new THREE.Vector3(0, 1, 0));
 		let quatInverse = quat.clone().inverse();
-
-		let lastPosition = new THREE.Vector3();
-		let lastQuaternion = new THREE.Quaternion();
 
     let position = this.camera.position;
     offset.copy(position).sub(this.camera.target);
@@ -297,20 +310,29 @@ export default class ThreeView extends Component {
     this.camera.target.add(panOffset);
     offset.setFromSpherical(spherical);
     offset.applyQuaternion(quatInverse);
-    this.camera.position.copy(this.camera.target).add(offset);
-    this.camera.lookAt(this.camera.target);
 
-    this.setState({
-      sphericalDelta: sphericalDelta.set(0, 0, 0),
-      panOffset: this.state.panOffset.set(0, 0, 0),
-    });
-
+    if (this.state.dragging) {
+      this.camera.position.copy(this.camera.target).add(offset);
+      this.camera.lookAt(this.camera.target);
+      this.setState({
+        sphericalDelta: sphericalDelta.set(0, 0, 0),
+        panOffset: this.state.panOffset.set(0, 0, 0),
+      });
+    } else {
+      this.camera.position.copy(this.camera.target).add(offset);
+      this.camera.lookAt(this.camera.target);
+      this.setState({
+        sphericalDelta: sphericalDelta.set(0, 0, 0),
+        panOffset: this.state.panOffset.set(0, 0, 0),
+      });
+    }
   }
 
   /** EVENT HANDLERS
   *****************************************************************************/
 
   handleMouseDown(event: typeof SyntheticEvent): void {
+
     if (this.state.shiftDown) {
       this.setState({
         dragging: true,
@@ -322,6 +344,7 @@ export default class ThreeView extends Component {
         rotateStart: this.state.rotateStart.set(event.clientX, event.clientY),
       });
     }
+
   }
 
   handleMouseMove(event: typeof SyntheticEvent): void {
