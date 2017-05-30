@@ -45,7 +45,7 @@ export default class ThreeView extends Component {
     (this: any).minDistance = 0;
     (this: any).maxDistance = Infinity;
     (this: any).rotateSpeed = 0.5;
-    (this: any).environmentRadius = 200;
+    (this: any).environmentRadius = 10;
     (this: any).animate = this.animate.bind(this);
     (this: any).update = this.update.bind(this);
     (this: any).updateCamera = this.updateCamera.bind(this);
@@ -109,6 +109,7 @@ export default class ThreeView extends Component {
 
     // center camera
     this.scene = new THREE.Scene();
+    this.envScene = new THREE.Scene();
     this.camera.target = new THREE.Vector3();
 
     // Skybox
@@ -125,9 +126,10 @@ export default class ThreeView extends Component {
     this.pointLight.y = 800;
 
     // WebGL Renderer
-    this.webGLRenderer = new THREE.WebGLRenderer();
+    this.webGLRenderer = new THREE.WebGLRenderer({ alpha: true, autoClear: false });
     this.webGLRenderer.setPixelRatio(this.pixelRatio);
     this.webGLRenderer.setSize(this.width, this.height);
+    this.webGLRenderer.autoClear = false;
     this.threeContainer.appendChild(this.webGLRenderer.domElement);
 
     this.loadSkyboxTexture();
@@ -146,8 +148,10 @@ export default class ThreeView extends Component {
   }
 
   rerenderWebGLScene(): void {
+    this.webGLRenderer.clear();
+    if (this.envComposer !== undefined) this.envComposer.render(0.1);
+    this.webGLRenderer.clearDepth();
     this.webGLRenderer.render(this.scene, this.camera);
-    if (this.composer !== undefined) this.composer.render(0.1);
   }
 
   animate(): void {
@@ -176,43 +180,45 @@ export default class ThreeView extends Component {
     let bboxMesh = new THREE.Box3().setFromObject(this.mesh);
     this.skyboxGeom.computeBoundingBox();
     let bboxSkybox = this.skyboxGeom.boundingBox;
-
-    this.mesh.position.y -= this.environmentRadius / 2;
-    /*let distance = bboxMesh.min.z - this.camera.position.z;
-    this.camera.fov = 2 * Math.atan(meshHeight / (2 * distance)) * (180 / Math.PI);
+    let meshHeight = bboxMesh.max.y - bboxMesh.min.y;
+    let distance = this.camera.position.distanceTo(this.mesh.position);
+    console.log(bboxMesh);
+    /*this.camera.fov = 2 * Math.atan(meshHeight / (2 * distance)) * (180 / Math.PI);
     this.camera.updateProjectionMatrix();*/
     this.update();
 
   }
 
   initEnvironment(texture: Object): void {
+
     this.skyboxMaterial = new THREE.MeshBasicMaterial({
       map: texture,
     });
     this.skyboxMesh = new THREE.Mesh(this.skyboxGeom, this.skyboxMaterial);
     this.scene.add(this.ambientLight);
     this.scene.add(this.pointLight);
-    this.scene.add(this.skyboxMesh);
+    this.envScene.add(this.skyboxMesh);
     this.update();
+
   }
 
   /** WEBGL Postprocessing
   *****************************************************************************/
   initPostprocessing(): void {
 
-    this.renderPass = new THREE.RenderPass(this.scene, this.camera);
-    this.bokehPass = new THREE.BokehPass(this.scene, this.camera, {
-      focus: 0.25,
+    this.renderPass = new THREE.RenderPass(this.envScene, this.camera);
+    this.bokehPass = new THREE.BokehPass(this.envScene, this.camera, {
+      focus: 0.0015,
       aperture: 0.025,
-      maxBlur: 5.0,
+      maxBlur: 15.0,
       width: this.width,
       height: this.height,
     });
     this.bokehPass.renderToScreen = true;
 
-    this.composer = new THREE.EffectComposer(this.webGLRenderer);
-    this.composer.addPass(this.renderPass);
-    this.composer.addPass(this.bokehPass);
+    this.envComposer = new THREE.EffectComposer(this.webGLRenderer);
+    this.envComposer.addPass(this.renderPass);
+    this.envComposer.addPass(this.bokehPass);
 
   }
 
@@ -359,11 +365,12 @@ export default class ThreeView extends Component {
   }
 
   handleWindowResize(event: typeof Event): void {
-    console.log('resize');
+
     let { innerWidth, innerHeight } = event.target;
     this.camera.aspect = innerWidth / innerHeight;
     this.camera.updateProjectionMatrix();
     this.webGLRenderer.setSize(innerWidth, innerHeight);
+
   }
 
   handleKeyDown(event: typeof SyntheticEvent): void {

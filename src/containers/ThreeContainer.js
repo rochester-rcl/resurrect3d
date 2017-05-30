@@ -14,7 +14,7 @@ import * as AppActionCreators from '../actions/actions';
 import ThreeView from '../components/ThreeView';
 
 const skyboxTexture = 'Image-003.jpg';
-const mesh = 'male_example.js'
+const mesh = 'parrot.js';
 
 window.someTest = 'test';
 
