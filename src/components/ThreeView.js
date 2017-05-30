@@ -6,6 +6,9 @@ import React, { Component } from 'react';
 // THREEJS
 import * as THREE from 'three';
 
+// Semantic UI
+import LoaderModal from './LoaderModal';
+
 // postprocessing
 import loadPostProcessor from '../utils/postprocessing';
 
@@ -29,7 +32,11 @@ export default class ThreeView extends Component {
     panOffset: new THREE.Vector3(),
     // spherical coords
     spherical: new THREE.Spherical(),
-    sphericalDelta: new THREE.Spherical(),
+    sphericalDelta: new THREE.Spherical(0,1.5,1),
+    // interface
+    loadProgress: 0,
+    loadingText: '',
+
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
   constructor(props: Object){
@@ -76,17 +83,33 @@ export default class ThreeView extends Component {
   *****************************************************************************/
 
   componentDidMount(): void {
+
     this.initThree();
     window.addEventListener('resize', this.handleWindowResize);
+
+  }
+
+  shouldComponentUpdate(nextProps: Object, nextState: Object): boolean {
+
+    if (nextProps.mesh !== this.props.mesh) return true;
+    if (nextState.loadProgress !== this.state.loadProgress) return true;
+    return false;
+
   }
 
   componentWillUnmount(): void {
+
     window.removeEventListener('resize', this.handleWindowResize);
+
   }
 
   render(): Object {
+
+    const { loadProgress } = this.state;
+    console.log(loadProgress);
     return(
       <div className="three-view-container">
+        <LoaderModal text='loading' active={loadProgress !== 100} />
         <div className="three-view-toolbar"></div>
         <div ref="threeView" className="three-view"
           contentEditable
@@ -99,7 +122,8 @@ export default class ThreeView extends Component {
         >
         </div>
       </div>
-    )
+    );
+
   }
 
   /** THREE JS 'LIFECYCYLE'
@@ -110,7 +134,7 @@ export default class ThreeView extends Component {
     this.threeContainer = this.refs.threeView;
 
     // init camera
-    this.camera = new THREE.PerspectiveCamera(50, this.width / this.height) // use defaults for fov and near and far frustum;
+    this.camera = new THREE.PerspectiveCamera(50, this.width / this.height); // use defaults for fov and near and far frustum;
 
     // center camera
     this.scene = new THREE.Scene();
@@ -136,10 +160,7 @@ export default class ThreeView extends Component {
     this.webGLRenderer.autoClear = false;
     this.threeContainer.appendChild(this.webGLRenderer.domElement);
 
-    this.loadMesh();
-    loadPostProcessor(THREE).then((values) => {
-      this.initPostprocessing();
-    });
+    this.setState({ loadProgress: 25 }, this.loadMesh());
 
   }
 
@@ -162,22 +183,30 @@ export default class ThreeView extends Component {
   }
 
   animate(): void {
+
     window.requestAnimationFrame(this.animate);
     this.update();
+
   }
 
   loadSkyboxTexture(): void {
+
     this.textureLoader.load(this.props.skyboxTexture, this.initEnvironment, this.logProgress, (error) => {
       console.log(error);
     });
+
   }
 
   loadMesh(): void {
-    this.meshLoader.load(this.props.mesh, this.initMesh, this.logProgess, (error) => console.log(error))
+
+    this.meshLoader.load(this.props.mesh, this.initMesh, this.logProgess, (error) => console.log(error));
+
   }
 
   logProgess(request: typeof XmlHttpRequest): void {
+
     console.log('completed: ', request.loaded, ' total: ', request.total);
+
   }
 
   initMesh(mesh: Object): void {
@@ -188,7 +217,9 @@ export default class ThreeView extends Component {
       let meshHeight = Math.ceil(this.bboxMesh.max.y - this.bboxMesh.min.y);
       this.environmentRadius = meshHeight; // diameter of sphere =  2 * meshHeight
       this.mesh.position.y = this.mesh.position.y - Math.floor(meshHeight / 2);
-      this.loadSkyboxTexture();
+      this.setState({
+        loadProgress: 50,
+      }, this.loadSkyboxTexture());
 
   }
 
@@ -203,8 +234,11 @@ export default class ThreeView extends Component {
     this.skyboxMesh = new THREE.Mesh(this.skyboxGeom, this.skyboxMaterial);
     this.envScene.add(this.skyboxMesh);
     this.fitPerspectiveCamera();
-    this.updateCamera();
-    this.animate();
+    loadPostProcessor(THREE).then((values) => {
+      this.setState({
+        loadProgress: 75,
+      }, this.initPostprocessing());
+    });
 
   }
 
@@ -214,7 +248,7 @@ export default class ThreeView extends Component {
 
     this.renderPass = new THREE.RenderPass(this.envScene, this.camera);
     this.bokehPass = new THREE.BokehPass(this.envScene, this.camera, {
-      focus: 0.0015,
+      focus: 0.015,
       aperture: 0.025,
       maxBlur: 15.0,
       width: this.width,
@@ -225,6 +259,11 @@ export default class ThreeView extends Component {
     this.envComposer = new THREE.EffectComposer(this.webGLRenderer);
     this.envComposer.addPass(this.renderPass);
     this.envComposer.addPass(this.bokehPass);
+
+    this.updateCamera();
+    this.setState({
+      loadProgress: 100,
+    }, this.animate());
 
   }
 
@@ -348,6 +387,7 @@ export default class ThreeView extends Component {
   }
 
   handleMouseMove(event: typeof SyntheticEvent): void {
+
     if (this.state.dragging) {
       if (this.state.shiftDown) {
         let { panStart, panEnd, panDelta } = this.state;
@@ -371,6 +411,7 @@ export default class ThreeView extends Component {
         })
       }
     }
+
   }
 
   handleMouseWheel(event: typeof SyntheticEvent): void {
