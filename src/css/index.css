@@ -11,3 +11,19 @@ body {
 .three-progress-loader {
   width: 50%;
 }
+
+.three-controls-container {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  display: flex;
+  padding: 10px;
+}
+
+.three-controls-button i {
+  border-left: 2px solid #ccc;
+}
+
+.three-controls-button {
+  margin-right: 10px !important;
+}
