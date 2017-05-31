@@ -105,11 +105,16 @@ export default class ThreeView extends Component {
 
   render(): Object {
 
-    const { loadProgress } = this.state;
+    const { loadProgress, loadingText } = this.state;
     console.log(loadProgress);
     return(
       <div className="three-view-container">
-        <LoaderModal text='loading' active={loadProgress !== 100} />
+        <LoaderModal
+          text={loadingText}
+          active={loadProgress !== 100}
+          progress={loadProgress}
+          progressColor={"#21ba45"}
+        />
         <div className="three-view-toolbar"></div>
         <div ref="threeView" className="three-view"
           contentEditable
@@ -160,7 +165,7 @@ export default class ThreeView extends Component {
     this.webGLRenderer.autoClear = false;
     this.threeContainer.appendChild(this.webGLRenderer.domElement);
 
-    this.setState({ loadProgress: 25 }, this.loadMesh());
+    this.setState({ loadProgress: 25, loadingText: 'Loading Mesh' }, this.loadMesh());
 
   }
 
@@ -217,8 +222,8 @@ export default class ThreeView extends Component {
       let meshHeight = Math.ceil(this.bboxMesh.max.y - this.bboxMesh.min.y);
       this.environmentRadius = meshHeight; // diameter of sphere =  2 * meshHeight
       this.mesh.position.y = this.mesh.position.y - Math.floor(meshHeight / 2);
-      this.setState({
-        loadProgress: 50,
+      this.setState((prevState, props) => {
+        return { loadProgress: prevState.loadProgress + 25, loadingText: 'Initializing Environment' }
       }, this.loadSkyboxTexture());
 
   }
@@ -235,8 +240,8 @@ export default class ThreeView extends Component {
     this.envScene.add(this.skyboxMesh);
     this.fitPerspectiveCamera();
     loadPostProcessor(THREE).then((values) => {
-      this.setState({
-        loadProgress: 75,
+      this.setState((prevState, props) => {
+        return { loadProgress: prevState.loadProgress + 25, loadingText: 'Loading Shaders' }
       }, this.initPostprocessing());
     });
 
@@ -261,8 +266,8 @@ export default class ThreeView extends Component {
     this.envComposer.addPass(this.bokehPass);
 
     this.updateCamera();
-    this.setState({
-      loadProgress: 100,
+    this.setState((prevState, props) => {
+      return { loadProgress: prevState.loadProgress + 25, loadingText: 'Complete!' }
     }, this.animate());
 
   }
