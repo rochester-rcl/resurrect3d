@@ -35,14 +35,17 @@ export default class ThreeView extends Component {
     sphericalDelta: new THREE.Spherical(0,1.5,1),
     // interface
     loadProgress: 0,
-    loadingText: '',
+    loadText: '',
 
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
   constructor(props: Object){
 
     super(props);
-    (this: any).initThree = this.initThree.bind(this);
+
+    /** Properties
+    ***************************************************************************/
+
     (this: any).height = window.innerHeight;
     (this: any).width = window.innerWidth;
     (this: any).pixelRatio = window.devicePixelRatio;
@@ -56,7 +59,24 @@ export default class ThreeView extends Component {
     (this: any).environmentRadius = 0;
     (this: any).maxFov = 0;
     (this: any).minFov = 10;
+    (this: any).maxPan;
+    (this: any).minPan;
     (this: any).bboxMesh = null;
+
+    /** Methods
+    ***************************************************************************/
+
+    // Initialization
+
+    (this: any).initEnvironment = this.initEnvironment.bind(this);
+    (this: any).initMesh = this.initMesh.bind(this);
+    (this: any).initPostprocessing = this.initPostprocessing.bind(this);
+    (this: any).initThree = this.initThree.bind(this);
+    (this: any).loadSkyboxTexture = this.loadSkyboxTexture.bind(this);
+    (this: any).loadMesh = this.loadMesh.bind(this);
+
+    // Updates / Geometry / Rendering
+
     (this: any).animate = this.animate.bind(this);
     (this: any).update = this.update.bind(this);
     (this: any).updateCamera = this.updateCamera.bind(this);
@@ -64,11 +84,9 @@ export default class ThreeView extends Component {
     (this: any).rerenderWebGLScene = this.rerenderWebGLScene.bind(this);
     (this: any).getNewCameraFOV = this.getNewCameraFOV.bind(this);
     (this: any).fitPerspectiveCamera = this.fitPerspectiveCamera.bind(this);
-    (this: any).loadSkyboxTexture = this.loadSkyboxTexture.bind(this);
-    (this: any).loadMesh = this.loadMesh.bind(this);
-    (this: any).initEnvironment = this.initEnvironment.bind(this);
-    (this: any).initMesh = this.initMesh.bind(this);
-    (this: any).initPostprocessing = this.initPostprocessing.bind(this);
+
+    // event handlers
+
     (this: any).handleMouseDown = this.handleMouseDown.bind(this);
     (this: any).handleMouseMove = this.handleMouseMove.bind(this);
     (this: any).handleMouseUp = this.handleMouseUp.bind(this);
@@ -105,12 +123,12 @@ export default class ThreeView extends Component {
 
   render(): Object {
 
-    const { loadProgress, loadingText } = this.state;
-    console.log(loadProgress);
+    const { loadProgress, loadText } = this.state;
     return(
       <div className="three-view-container">
         <LoaderModal
-          text={loadingText}
+          text={loadText}
+          className="three-loader-dimmer"
           active={loadProgress !== 100}
           progress={loadProgress}
           progressColor={"#21ba45"}
@@ -165,7 +183,9 @@ export default class ThreeView extends Component {
     this.webGLRenderer.autoClear = false;
     this.threeContainer.appendChild(this.webGLRenderer.domElement);
 
-    this.setState({ loadProgress: 25, loadingText: 'Loading Mesh' }, this.loadMesh());
+    this.setState((prevState, props) => {
+      return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Mesh" }
+    }, this.loadMesh());
 
   }
 
@@ -223,7 +243,7 @@ export default class ThreeView extends Component {
       this.environmentRadius = meshHeight; // diameter of sphere =  2 * meshHeight
       this.mesh.position.y = this.mesh.position.y - Math.floor(meshHeight / 2);
       this.setState((prevState, props) => {
-        return { loadProgress: prevState.loadProgress + 25, loadingText: 'Initializing Environment' }
+        return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Environment" }
       }, this.loadSkyboxTexture());
 
   }
@@ -241,7 +261,7 @@ export default class ThreeView extends Component {
     this.fitPerspectiveCamera();
     loadPostProcessor(THREE).then((values) => {
       this.setState((prevState, props) => {
-        return { loadProgress: prevState.loadProgress + 25, loadingText: 'Loading Shaders' }
+        return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Shaders" }
       }, this.initPostprocessing());
     });
 
@@ -249,6 +269,9 @@ export default class ThreeView extends Component {
 
   /** WEBGL Postprocessing
   *****************************************************************************/
+
+  // TODO make this a separate component
+
   initPostprocessing(): void {
 
     this.renderPass = new THREE.RenderPass(this.envScene, this.camera);
@@ -267,7 +290,7 @@ export default class ThreeView extends Component {
 
     this.updateCamera();
     this.setState((prevState, props) => {
-      return { loadProgress: prevState.loadProgress + 25, loadingText: 'Complete!' }
+      return { loadProgress: prevState.loadProgress + 25, loadText: "Updating Scene" }
     }, this.animate());
 
   }
@@ -446,14 +469,16 @@ export default class ThreeView extends Component {
     let currentRotation = this.mesh.getWorldRotation();
     switch(event.keyCode) {
       case 39:
-        console.log(currentRotation)
         this.mesh.rotateY(currentRotation.y + this.ROTATION_STEP);
+        break;
+
       case 37:
-        console.log(currentRotation)
         this.mesh.rotateY(currentRotation.y - this.ROTATION_STEP);
+        break;
 
       case 16:
         this.setState({ shiftDown: true });
+        break;
 
       default:
         return
