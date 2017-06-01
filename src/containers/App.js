@@ -22,7 +22,7 @@ import ThreeContainer from './ThreeContainer';
 class App extends Component {
   componentDidMount() {
     // Call this here to load initial data
-    this.props.loadAPIDataAction();
+    //this.props.loadAPIDataAction();
   }
   render() {
     const { children, data } = this.props;

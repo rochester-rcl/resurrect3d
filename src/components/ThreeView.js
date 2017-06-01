@@ -240,7 +240,7 @@ export default class ThreeView extends Component {
 
   logProgess(request: typeof XmlHttpRequest): void {
 
-    console.log('completed: ', request.loaded, ' total: ', request.total, request);
+    //console.log('completed: ', request.loaded, ' total: ', request.total, request);
 
   }
 
