@@ -7,10 +7,10 @@ import React from 'react';
 import { Dimmer, Loader } from 'semantic-ui-react';
 
 const LoaderModal = (props: Object) => {
-  let { text, active, className, progress, progressColor } = props;
+  let { text, active, className } = props;
   return(
     <Dimmer className={className} active={active}>
-      <h1>{ text + ' | ' + progress + "%"}</h1>
+      <h1>{ text }</h1>
     </Dimmer>
   );
 }

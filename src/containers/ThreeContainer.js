@@ -12,11 +12,11 @@ import * as AppActionCreators from '../actions/actions';
 
 // Components
 import ThreeView from '../components/ThreeView';
+import LoaderModal from '../components/LoaderModal';
 
 const skyboxTexture = 'Image-003.jpg';
 const meshPath = 'parrot.js';
 
-window.someTest = 'test';
 
 class ThreeContainer extends Component {
   componentDidMount(): void {
@@ -27,16 +27,25 @@ class ThreeContainer extends Component {
   }
   render(): Object {
     const { mesh, texture } = this.props;
-    console.log(mesh, texture);
-    return(
-      <ThreeView
-        skyboxTexture={skyboxTexture}
-        mesh={meshPath}
-        minFOV={10}
-        maxFOV={90}
-      />
-    );
-
+    if (mesh.progress === 'Complete' && texture.progress === 'Complete') {
+      console.log(mesh.progress, texture.progress);
+      return(
+        <ThreeView
+          skyboxTexture={texture}
+          mesh={mesh}
+        />
+      );
+    } else {
+      let progressStatus = 'Loading Mesh: ' + mesh.progress + ' | ' + ' Loading Texture: ' + texture.progress;
+      return(
+        <LoaderModal
+          text={progressStatus}
+          className="three-loader-dimmer"
+          active={true}
+          progress={progressStatus}
+          progressColor={"#21ba45"}
+        />);
+    }
   }
 }
 

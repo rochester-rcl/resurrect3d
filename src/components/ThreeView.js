@@ -80,8 +80,6 @@ export default class ThreeView extends Component {
     (this: any).initMesh = this.initMesh.bind(this);
     (this: any).initPostprocessing = this.initPostprocessing.bind(this);
     (this: any).initThree = this.initThree.bind(this);
-    (this: any).loadSkyboxTexture = this.loadSkyboxTexture.bind(this);
-    (this: any).loadMesh = this.loadMesh.bind(this);
 
     // Updates / Geometry / Rendering
 
@@ -136,14 +134,12 @@ export default class ThreeView extends Component {
     const { loadProgress, loadText } = this.state;
     return(
       <div className="three-view-container">
+        <ThreeControls handleResetCamera={this.centerCamera} />
         <LoaderModal
-          text={loadText}
+          text={loadText + loadProgress}
           className="three-loader-dimmer"
           active={loadProgress !== 100}
-          progress={loadProgress}
-          progressColor={"#21ba45"}
         />
-        <ThreeControls handleResetCamera={this.centerCamera} />
         <div ref="threeView" className="three-view"
           contentEditable
           onMouseDown={this.handleMouseDown}
@@ -174,11 +170,6 @@ export default class ThreeView extends Component {
     this.envScene = new THREE.Scene();
     this.camera.target = new THREE.Vector3();
 
-    this.textureLoader = new THREE.TextureLoader();
-
-    // Mesh
-    this.meshLoader = new THREE.ObjectLoader();
-
     // Lights
     this.ambientLight = new THREE.AmbientLight(0xffffff);
     this.pointLight = new THREE.PointLight(0xfffffff, 0.2, 0.5);
@@ -195,7 +186,7 @@ export default class ThreeView extends Component {
 
     this.setState((prevState, props) => {
       return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Mesh" }
-    }, this.loadMesh());
+    }, this.initMesh());
 
   }
 
@@ -224,29 +215,9 @@ export default class ThreeView extends Component {
 
   }
 
-  loadSkyboxTexture(): void {
-
-    this.textureLoader.load(this.props.skyboxTexture, this.initEnvironment, this.logProgress, (error) => {
-      console.log(error);
-    });
-
-  }
-
-  loadMesh(): void {
-
-    this.meshLoader.load(this.props.mesh, this.initMesh, this.logProgess, (error) => console.log(error));
-
-  }
-
-  logProgess(request: typeof XmlHttpRequest): void {
-
-    //console.log('completed: ', request.loaded, ' total: ', request.total, request);
-
-  }
-
   initMesh(mesh: Object): void {
 
-      this.mesh = mesh;
+      this.mesh = this.props.mesh.object3D;
       this.scene.add(this.mesh);
       this.bboxMesh = new THREE.Box3().setFromObject(this.mesh);
       let meshHeight = Math.ceil(this.bboxMesh.max.y - this.bboxMesh.min.y);
@@ -254,17 +225,17 @@ export default class ThreeView extends Component {
       this.mesh.position.y = this.mesh.position.y - Math.floor(meshHeight / 2);
       this.setState((prevState, props) => {
         return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Environment" }
-      }, this.loadSkyboxTexture());
+      }, this.initEnvironment());
 
   }
 
-  initEnvironment(texture: Object): void {
+  initEnvironment(): void {
 
     // Skybox
     this.skyboxGeom = new THREE.SphereGeometry(this.environmentRadius * 2, 100, 60);
     this.skyboxGeom.scale(-1, 1, 1);
     this.skyboxMaterial = new THREE.MeshBasicMaterial({
-      map: texture,
+      map: this.props.skyboxTexture.image,
     });
     this.skyboxMesh = new THREE.Mesh(this.skyboxGeom, this.skyboxMaterial);
     this.envScene.add(this.skyboxMesh);
