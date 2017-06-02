@@ -27,8 +27,8 @@ class ThreeContainer extends Component {
   }
   render(): Object {
     const { mesh, texture } = this.props;
+    console.log(texture);
     if (mesh.progress === 'Complete' && texture.progress === 'Complete') {
-      console.log(mesh.progress, texture.progress);
       return(
         <ThreeView
           skyboxTexture={texture}

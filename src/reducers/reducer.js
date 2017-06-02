@@ -3,6 +3,9 @@
 // Actions
 import * as ActionConstants from '../constants/actions';
 
+// Utils
+import { RadialGradient } from '../utils/image';
+
 const defaultState = {
 
   mesh: {
@@ -15,6 +18,7 @@ const defaultState = {
     loaded: false,
     progress: 0,
     image: null,
+    default: new RadialGradient(1024, 1024, "#131419", "#262831").toTexture(),
   }
 
 }
@@ -53,6 +57,7 @@ export default function appReducer(state: Object = defaultState, action: Object)
       return {
         ...state,
         texture: {
+          ...state.texture,
           loaded: true,
           progress: 'Complete',
           image: action.payload.val

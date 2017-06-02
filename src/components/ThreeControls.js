@@ -7,7 +7,7 @@ import React from 'react';
 import { Button, Icon } from 'semantic-ui-react';
 
 const ThreeControls = (props: Object) => {
-  const { handleResetCamera, handleToggleHelpScreen } = props;
+  const { handleResetCamera, handleToggleHelpScreen, handleToggleBackground } = props;
   return(
     <div className="three-controls-container">
       <Button
@@ -15,6 +15,15 @@ const ThreeControls = (props: Object) => {
         content="re-center"
         icon="crosshairs"
         onClick={() => { handleResetCamera() }}
+        labelPosition='right'
+        color="grey"
+        inverted
+      />
+      <Button
+        className="three-controls-button"
+        content="toggle background"
+        icon="camera retro"
+        onClick={() => { handleToggleBackground() }}
         labelPosition='right'
         color="grey"
         inverted

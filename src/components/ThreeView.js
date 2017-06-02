@@ -40,6 +40,7 @@ export default class ThreeView extends Component {
     // interface
     loadProgress: 0,
     loadText: '',
+    usingDefaultBackground: false,
 
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
@@ -92,6 +93,7 @@ export default class ThreeView extends Component {
     (this: any).fitPerspectiveCamera = this.fitPerspectiveCamera.bind(this);
     (this: any).panBounds = this.panBounds.bind(this);
     (this: any).centerCamera = this.centerCamera.bind(this);
+    (this: any).toggleBackground = this.toggleBackground.bind(this);
 
     // event handlers
 
@@ -132,9 +134,10 @@ export default class ThreeView extends Component {
   render(): Object {
 
     const { loadProgress, loadText } = this.state;
+
     return(
       <div className="three-view-container">
-        <ThreeControls handleResetCamera={this.centerCamera} />
+        <ThreeControls handleResetCamera={this.centerCamera} handleToggleBackground={this.toggleBackground} />
         <LoaderModal
           text={loadText + loadProgress}
           className="three-loader-dimmer"
@@ -278,7 +281,7 @@ export default class ThreeView extends Component {
   }
 
 
-  /** CAMERA
+  /** Rendering / Updates / Camera
   *****************************************************************************/
 
   getNewCameraFOV(dstFOV: Number): Number {
@@ -409,6 +412,25 @@ export default class ThreeView extends Component {
       this.setState({
         sphericalDelta: sphericalDelta.set(0, 0, 0),
         panOffset: this.state.panOffset.set(0, 0, 0),
+      });
+    }
+
+  }
+
+  toggleBackground(event: typeof SyntheticEvent): void {
+
+    let { usingDefaultBackground } = this.state;
+    let { skyboxTexture } = this.props;
+
+    if (!usingDefaultBackground) {
+      this.skyboxMaterial.map = skyboxTexture.default;
+      this.setState({
+        usingDefaultBackground: true,
+      });
+    } else {
+      this.skyboxMaterial.map = skyboxTexture.image;
+      this.setState({
+        usingDefaultBackground: false,
       });
     }
 
