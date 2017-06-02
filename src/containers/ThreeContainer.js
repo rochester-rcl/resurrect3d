@@ -19,6 +19,7 @@ const meshPath = 'parrot.js';
 
 
 class ThreeContainer extends Component {
+  
   componentDidMount(): void {
 
     this.props.loadMeshAction(meshPath);
@@ -27,7 +28,6 @@ class ThreeContainer extends Component {
   }
   render(): Object {
     const { mesh, texture } = this.props;
-    console.log(texture);
     if (mesh.progress === 'Complete' && texture.progress === 'Complete') {
       return(
         <ThreeView

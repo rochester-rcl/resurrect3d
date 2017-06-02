@@ -8,6 +8,10 @@ body {
   background: rgba(0,0,0,1.0) !important;
 }
 
+.three-view {
+  cursor: default;
+}
+
 .three-progress-loader {
   width: 50%;
 }

@@ -224,8 +224,13 @@ export default class ThreeView extends Component {
       this.scene.add(this.mesh);
       this.bboxMesh = new THREE.Box3().setFromObject(this.mesh);
       let meshHeight = Math.ceil(this.bboxMesh.max.y - this.bboxMesh.min.y);
+      let meshWidth = Math.ceil(this.bboxMesh.max.x - this.bboxMesh.min.x);
+      this.grid = new THREE.GridHelper(meshWidth * 2, 10);
+      this.scene.add(this.grid);
+      this.grid.visible = false;
       this.environmentRadius = meshHeight; // diameter of sphere =  2 * meshHeight
       this.mesh.position.y = this.mesh.position.y - Math.floor(meshHeight / 2);
+      this.grid.position.y = this.mesh.position.y;
       this.setState((prevState, props) => {
         return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Environment" }
       }, this.initEnvironment());
@@ -263,7 +268,7 @@ export default class ThreeView extends Component {
     this.bokehPass = new THREE.BokehPass(this.envScene, this.camera, {
       focus: 0.015,
       aperture: 0.025,
-      maxBlur: 15.0,
+      maxBlur: 20.0,
       width: this.width,
       height: this.height,
     });
@@ -424,11 +429,13 @@ export default class ThreeView extends Component {
 
     if (!usingDefaultBackground) {
       this.skyboxMaterial.map = skyboxTexture.default;
+      this.grid.visible = true;
       this.setState({
         usingDefaultBackground: true,
       });
     } else {
       this.skyboxMaterial.map = skyboxTexture.image;
+      this.grid.visible = false;
       this.setState({
         usingDefaultBackground: false,
       });

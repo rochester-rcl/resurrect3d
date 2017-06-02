@@ -21,7 +21,7 @@ const ThreeControls = (props: Object) => {
       />
       <Button
         className="three-controls-button"
-        content="toggle background"
+        content="toggle environment"
         icon="camera retro"
         onClick={() => { handleToggleBackground() }}
         labelPosition='right'
