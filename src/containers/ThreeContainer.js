@@ -19,7 +19,7 @@ const meshPath = 'parrot.js';
 
 
 class ThreeContainer extends Component {
-  
+
   componentDidMount(): void {
 
     this.props.loadMeshAction(meshPath);

@@ -229,8 +229,7 @@ export default class ThreeView extends Component {
       this.scene.add(this.grid);
       this.grid.visible = false;
       this.environmentRadius = meshHeight; // diameter of sphere =  2 * meshHeight
-      this.mesh.position.y = this.mesh.position.y - Math.floor(meshHeight / 2);
-      this.grid.position.y = this.mesh.position.y;
+      this.grid.position.y = this.bboxMesh.min.y;
       this.setState((prevState, props) => {
         return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Environment" }
       }, this.initEnvironment());
@@ -315,7 +314,7 @@ export default class ThreeView extends Component {
     let fovH = 2 * Math.atan((meshWidth / aspect) / (2 * distance)) * (180 / Math.PI);
     let avgFov = (fovV + fovH) / 2;
     this.camera.fov = avgFov;
-    this.maxFov = avgFov;
+    this.maxFov = fovV;
     this.camera.updateProjectionMatrix();
 
   }
