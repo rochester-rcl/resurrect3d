@@ -22,6 +22,7 @@ body {
   right: 0;
   display: flex;
   padding: 10px;
+  z-index: 10000;
 }
 
 .three-controls-button i {
@@ -30,4 +31,14 @@ body {
 
 .three-controls-button {
   margin-right: 10px !important;
+}
+
+.three-info-grid {
+  position: relative;
+  width: 50%;
+  margin: 0 auto !important;
+}
+
+.three-info-grid-row {
+  border-bottom: 5px solid #ccc;
 }

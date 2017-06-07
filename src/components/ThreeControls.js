@@ -7,7 +7,7 @@ import React from 'react';
 import { Button, Icon } from 'semantic-ui-react';
 
 const ThreeControls = (props: Object) => {
-  const { handleResetCamera, handleToggleHelpScreen, handleToggleBackground } = props;
+  const { handleResetCamera, handleToggleInfo, handleToggleBackground } = props;
   return(
     <div className="three-controls-container">
       <Button
@@ -32,7 +32,7 @@ const ThreeControls = (props: Object) => {
         className="three-controls-button"
         content="info"
         icon="info"
-        onClick={() => { handleToggleHelpScreen() }}
+        onClick={() => { handleToggleInfo() }}
         labelPosition='right'
         color="grey"
         inverted

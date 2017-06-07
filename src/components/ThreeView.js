@@ -8,6 +8,7 @@ import * as THREE from 'three';
 
 // Semantic UI
 import LoaderModal from './LoaderModal';
+import InfoModal from './InfoModal';
 
 // postprocessing
 import loadPostProcessor from '../utils/postprocessing';
@@ -41,6 +42,7 @@ export default class ThreeView extends Component {
     loadProgress: 0,
     loadText: '',
     usingDefaultBackground: false,
+    showInfo: false,
 
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
@@ -94,6 +96,7 @@ export default class ThreeView extends Component {
     (this: any).panBounds = this.panBounds.bind(this);
     (this: any).centerCamera = this.centerCamera.bind(this);
     (this: any).toggleBackground = this.toggleBackground.bind(this);
+    (this: any).toggleInfo = this.toggleInfo.bind(this);
 
     // event handlers
 
@@ -121,6 +124,7 @@ export default class ThreeView extends Component {
 
     if (nextProps.mesh !== this.props.mesh) return true;
     if (nextState.loadProgress !== this.state.loadProgress) return true;
+    if (nextState.showInfo !== this.state.showInfo) return true;
     return false;
 
   }
@@ -133,11 +137,20 @@ export default class ThreeView extends Component {
 
   render(): Object {
 
-    const { loadProgress, loadText } = this.state;
-
+    const { loadProgress, loadText, showInfo } = this.state;
+    const info = [
+      { key: 'Width:', val: this.meshWidth ? this.meshWidth.toFixed(3) + ' cm' : 'Unknown'},
+      { key: 'Height:', val: this.meshHeight ? this.meshHeight.toFixed(3) + ' cm' : 'Unknown'},
+      { key: 'Depth:', val: this.meshDepth ? this.meshDepth.toFixed(3) + ' cm' : 'Unknown'}
+    ];
     return(
       <div className="three-view-container">
-        <ThreeControls handleResetCamera={this.centerCamera} handleToggleBackground={this.toggleBackground} />
+        <ThreeControls
+          handleResetCamera={this.centerCamera}
+          handleToggleBackground={this.toggleBackground}
+          handleToggleInfo={this.toggleInfo}
+        />
+        <InfoModal className="three-info-modal" active={showInfo} info={info} />
         <LoaderModal
           text={loadText + loadProgress}
           className="three-loader-dimmer"
@@ -307,14 +320,15 @@ export default class ThreeView extends Component {
   fitPerspectiveCamera(): void {
 
     let distance = this.camera.position.distanceTo(this.bboxMesh.min);
-    let meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
-    let meshHeight = this.bboxMesh.max.y - this.bboxMesh.min.y;
-    let fovV = 2 * Math.atan(meshHeight / (2 * distance)) * (180 / Math.PI);
+    this.meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
+    this.meshHeight = this.bboxMesh.max.y - this.bboxMesh.min.y;
+    this.meshDepth = this.bboxMesh.max.z - this.bboxMesh.min.z;
+    let fovV = 2 * Math.atan(this.meshHeight / (2 * distance)) * (180 / Math.PI);
     let aspect = this.width / this.height;
-    let fovH = 2 * Math.atan((meshWidth / aspect) / (2 * distance)) * (180 / Math.PI);
+    let fovH = 2 * Math.atan((this.meshWidth / aspect) / (2 * distance)) * (180 / Math.PI);
     let avgFov = (fovV + fovH) / 2;
-    this.camera.fov = avgFov;
-    this.maxFov = fovV;
+    this.camera.fov = avgFov + 1.0;
+    this.maxFov = fovV + 10.0;
     this.camera.updateProjectionMatrix();
 
   }
@@ -421,6 +435,9 @@ export default class ThreeView extends Component {
 
   }
 
+  /** UI
+  *****************************************************************************/
+
   toggleBackground(event: typeof SyntheticEvent): void {
 
     let { usingDefaultBackground } = this.state;
@@ -438,6 +455,16 @@ export default class ThreeView extends Component {
       this.setState({
         usingDefaultBackground: false,
       });
+    }
+
+  }
+
+  toggleInfo(event: typeof SyntheticEvent): void {
+
+    if (this.state.showInfo) {
+      this.setState({ showInfo: false });
+    } else {
+      this.setState({ showInfo: true });
     }
 
   }
