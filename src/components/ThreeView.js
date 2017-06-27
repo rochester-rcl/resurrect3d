@@ -69,6 +69,7 @@ export default class ThreeView extends Component {
     (this: any).maxPan;
     (this: any).minPan;
     (this: any).bboxMesh = null;
+    (this: any).axisGuides = [];
     (this: any).bboxSkybox = null;
     (this: any).lastCameraPosition = new THREE.Vector3();
     (this: any).lastCameraTarget = new THREE.Vector3();
@@ -95,6 +96,8 @@ export default class ThreeView extends Component {
     (this: any).fitPerspectiveCamera = this.fitPerspectiveCamera.bind(this);
     (this: any).panBounds = this.panBounds.bind(this);
     (this: any).centerCamera = this.centerCamera.bind(this);
+    (this: any).computeAxisGuides = this.computeAxisGuides.bind(this);
+    (this: any).drawAxisGuides = this.drawAxisGuides.bind(this);
     (this: any).toggleBackground = this.toggleBackground.bind(this);
     (this: any).toggleInfo = this.toggleInfo.bind(this);
 
@@ -231,18 +234,58 @@ export default class ThreeView extends Component {
 
   }
 
+  computeAxisGuides(): void {
+
+    let axes = ['x', 'y', 'z'];
+    let colors = ["rgb(255,0,0)", "rgb(0,255,0)", "rgb(0,0,255)"];
+    this.axisGuides = axes.map((axis, index) => {
+      let bbox = this.bboxMesh;
+      let max = {};
+      max[axis] = this.bboxMesh.max[axis];
+      let startVec = bbox.min;
+      let end = {...bbox.min, ...max};
+      let endVec = new THREE.Vector3().fromArray(Object.values(end));
+      let material = new THREE.LineBasicMaterial({ color: colors[index] });
+      let geometry = new THREE.Geometry();
+      geometry.vertices.push(
+        startVec,
+        endVec
+      );
+      let line = new THREE.Line(geometry, material);
+      line.visible = false;
+      return line;
+    });
+
+  }
+
+  drawAxisGuides(): void {
+
+    if (this.axisGuides.length > 0) {
+      this.axisGuides.forEach((axisGuide) => {
+        this.scene.add(axisGuide);
+      });
+    } else {
+      console.log("Axis guides not computed. Please run computeAxisGuides");
+    }
+
+  }
+
   initMesh(mesh: Object): void {
 
       this.mesh = this.props.mesh.object3D;
       this.scene.add(this.mesh);
       this.bboxMesh = new THREE.Box3().setFromObject(this.mesh);
-      let meshHeight = Math.ceil(this.bboxMesh.max.y - this.bboxMesh.min.y);
-      let meshWidth = Math.ceil(this.bboxMesh.max.x - this.bboxMesh.min.x);
-      this.grid = new THREE.GridHelper(meshWidth * 2, 10);
+      this.meshHeight = this.bboxMesh.max.y - this.bboxMesh.min.y;
+      this.meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
+      this.meshDepth = this.bboxMesh.max.z - this.bboxMesh.min.z;
+      this.computeAxisGuides();
+      this.drawAxisGuides();
+      this.grid = new THREE.GridHelper(Math.ceil(this.meshWidth) * 2, 10);
       this.scene.add(this.grid);
       this.grid.visible = false;
-      this.environmentRadius = meshHeight; // diameter of sphere =  2 * meshHeight
+      this.environmentRadius = this.meshHeight; // diameter of sphere =  2 * meshHeight
       this.grid.position.y = this.bboxMesh.min.y;
+
       this.setState((prevState, props) => {
         return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Environment" }
       }, this.initEnvironment());
@@ -320,9 +363,6 @@ export default class ThreeView extends Component {
   fitPerspectiveCamera(): void {
 
     let distance = this.camera.position.distanceTo(this.bboxMesh.min);
-    this.meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
-    this.meshHeight = this.bboxMesh.max.y - this.bboxMesh.min.y;
-    this.meshDepth = this.bboxMesh.max.z - this.bboxMesh.min.z;
     let fovV = 2 * Math.atan(this.meshHeight / (2 * distance)) * (180 / Math.PI);
     let aspect = this.width / this.height;
     let fovH = 2 * Math.atan((this.meshWidth / aspect) / (2 * distance)) * (180 / Math.PI);
@@ -446,12 +486,14 @@ export default class ThreeView extends Component {
     if (!usingDefaultBackground) {
       this.skyboxMaterial.map = skyboxTexture.default;
       this.grid.visible = true;
+      this.axisGuides.forEach((axisGuide) => { axisGuide.visible = true });
       this.setState({
         usingDefaultBackground: true,
       });
     } else {
       this.skyboxMaterial.map = skyboxTexture.image;
       this.grid.visible = false;
+      this.axisGuides.forEach((axisGuide) => { axisGuide.visible = false });
       this.setState({
         usingDefaultBackground: false,
       });
