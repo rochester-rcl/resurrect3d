@@ -16,6 +16,7 @@ import loadPostProcessor from '../utils/postprocessing';
 // Utils
 import { panLeft, panUp, rotateLeft, rotateUp } from '../utils/camera';
 import { fitBoxes } from '../utils/mesh';
+import { LabelSprite } from '../utils/image';
 
 // Controls
 import ThreeControls from './ThreeControls';
@@ -41,8 +42,9 @@ export default class ThreeView extends Component {
     // interface
     loadProgress: 0,
     loadText: '',
-    usingDefaultBackground: false,
+    detailMode: false,
     showInfo: false,
+    units: 'cm',
 
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
@@ -98,6 +100,7 @@ export default class ThreeView extends Component {
     (this: any).centerCamera = this.centerCamera.bind(this);
     (this: any).computeAxisGuides = this.computeAxisGuides.bind(this);
     (this: any).drawAxisGuides = this.drawAxisGuides.bind(this);
+    (this: any).addAxisLabels = this.addAxisLabels.bind(this);
     (this: any).toggleBackground = this.toggleBackground.bind(this);
     (this: any).toggleInfo = this.toggleInfo.bind(this);
 
@@ -142,9 +145,7 @@ export default class ThreeView extends Component {
 
     const { loadProgress, loadText, showInfo } = this.state;
     const info = [
-      { key: 'Width:', val: this.meshWidth ? this.meshWidth.toFixed(3) + ' cm' : 'Unknown'},
-      { key: 'Height:', val: this.meshHeight ? this.meshHeight.toFixed(3) + ' cm' : 'Unknown'},
-      { key: 'Depth:', val: this.meshDepth ? this.meshDepth.toFixed(3) + ' cm' : 'Unknown'}
+      { key: 'Key:', val: 'Value'},
     ];
     return(
       <div className="three-view-container">
@@ -245,7 +246,7 @@ export default class ThreeView extends Component {
       let startVec = bbox.min;
       let end = {...bbox.min, ...max};
       let endVec = new THREE.Vector3().fromArray(Object.values(end));
-      let material = new THREE.LineBasicMaterial({ color: colors[index] });
+      let material = new THREE.LineBasicMaterial({ color: colors[index], linewidth: 4, antialias: true });
       let geometry = new THREE.Geometry();
       geometry.vertices.push(
         startVec,
@@ -253,13 +254,26 @@ export default class ThreeView extends Component {
       );
       let line = new THREE.Line(geometry, material);
       line.visible = false;
+      line.userData = { start: startVec.clone(), end: endVec.clone(), axis: axis };
       return line;
     });
 
   }
 
-  drawAxisGuides(): void {
+  addAxisLabels(): void {
+    let dimensions = [this.meshWidth, this.meshHeight, this.meshDepth];
+    this.axisGuides.forEach((axisGuide, index) => {
+      let sprite = new LabelSprite(128, 128,'#fff',
+        dimensions[index].toFixed(2).toString() + ' ' + this.state.units).toSprite();
+      sprite.scale.set(4,4,4);
+      axisGuide.add(sprite);
+      let { x, y, z} = axisGuide.userData.end.addScalar(0.25);
+      sprite.position.set(x, y, z);
+    });
+  }
 
+  drawAxisGuides(showLabels: boolean): void {
+    if (showLabels) this.addAxisLabels();
     if (this.axisGuides.length > 0) {
       this.axisGuides.forEach((axisGuide) => {
         this.scene.add(axisGuide);
@@ -279,7 +293,7 @@ export default class ThreeView extends Component {
       this.meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
       this.meshDepth = this.bboxMesh.max.z - this.bboxMesh.min.z;
       this.computeAxisGuides();
-      this.drawAxisGuides();
+      this.drawAxisGuides(true);
       this.grid = new THREE.GridHelper(Math.ceil(this.meshWidth) * 2, 10);
       this.scene.add(this.grid);
       this.grid.visible = false;
@@ -480,22 +494,22 @@ export default class ThreeView extends Component {
 
   toggleBackground(event: typeof SyntheticEvent): void {
 
-    let { usingDefaultBackground } = this.state;
+    let { detailMode } = this.state;
     let { skyboxTexture } = this.props;
 
-    if (!usingDefaultBackground) {
+    if (!detailMode) {
       this.skyboxMaterial.map = skyboxTexture.default;
       this.grid.visible = true;
       this.axisGuides.forEach((axisGuide) => { axisGuide.visible = true });
       this.setState({
-        usingDefaultBackground: true,
+        detailMode: true,
       });
     } else {
       this.skyboxMaterial.map = skyboxTexture.image;
       this.grid.visible = false;
       this.axisGuides.forEach((axisGuide) => { axisGuide.visible = false });
       this.setState({
-        usingDefaultBackground: false,
+        detailMode: false,
       });
     }
 

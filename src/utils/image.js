@@ -3,7 +3,8 @@
 // Three
 import * as THREE from 'three';
 
-export class RadialGradient {
+// Abstract Base Class
+class ImageGenerator {
 
   constructor(width: number, height: number, outerColor: string, innerColor: string) {
 
@@ -11,11 +12,33 @@ export class RadialGradient {
     this.height = height;
     this.color1 = outerColor;
     this.color2 = innerColor;
+
+  }
+
+  toBase64(): string {
+
+    return this.element.toDataURL();
+
+  }
+
+  toTexture(): typeof THREE.Texture {
+
+    return new THREE.TextureLoader().load(this.toBase64());
+
+  }
+
+}
+
+export class RadialGradient extends ImageGenerator {
+
+  constructor(width: number, height: number, outerColor: string, innerColor: string) {
+
+    super(width, height, outerColor, innerColor);
     this.element = this.createGradient();
 
   }
 
-  createGradient() {
+  createGradient(): HTMLCanvasElement {
 
     let imgCanvas = document.createElement('canvas');
     imgCanvas.width = this.width;
@@ -34,17 +57,38 @@ export class RadialGradient {
 
   }
 
-  toBase64() {
+}
 
-    return this.element.toDataURL();
+export class LabelSprite extends ImageGenerator {
+
+  constructor(width: number, height: number, color: string, text: string) {
+
+    super(width, height, color, color);
+    this.text = text;
+    this.element = this.createLabel();
 
   }
 
-  toTexture() {
+  createLabel() {
 
-    let textureLoader = new THREE.TextureLoader();
-    let texture = textureLoader.load(this.toBase64());
-    return texture;
+    let imgCanvas = document.createElement('canvas');
+    imgCanvas.width = this.width;
+    imgCanvas.height = this.height;
+    let ctx = imgCanvas.getContext('2d');
+    ctx.font = "18px Lato";
+    ctx.textAlign = "center";
+    ctx.fillStyle = this.color1;
+    ctx.fillText(this.text, imgCanvas.width / 2, imgCanvas.height / 2);
+
+    return imgCanvas;
+
+  }
+
+  toSprite(): typeof THREE.Sprite {
+
+    let spriteMap = new THREE.TextureLoader().load(this.toBase64());;
+    let spriteMaterial = new THREE.SpriteMaterial({ map: spriteMap });
+    return new THREE.Sprite(spriteMaterial);
 
   }
 
