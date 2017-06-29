@@ -7,7 +7,13 @@ import React from 'react';
 import { Button, Icon } from 'semantic-ui-react';
 
 const ThreeControls = (props: Object) => {
-  const { handleResetCamera, handleToggleInfo, handleToggleBackground } = props;
+  const {
+    handleResetCamera,
+    handleToggleInfo,
+    handleToggleBackground,
+    handleToggleDynamicLighting,
+    toggleState,
+  } = props;
   return(
     <div className="three-controls-container">
       <Button
@@ -21,10 +27,21 @@ const ThreeControls = (props: Object) => {
       />
       <Button
         className="three-controls-button"
-        content="toggle environment"
+        content="dynamic lighting"
+        icon="lightbulb"
+        onClick={() => { handleToggleDynamicLighting() }}
+        active={toggleState['dynamicLighting']}
+        labelPosition='right'
+        color="grey"
+        inverted
+      />
+      <Button
+        className="three-controls-button"
+        content="detail mode"
         icon="camera retro"
         onClick={() => { handleToggleBackground() }}
         labelPosition='right'
+        active={toggleState['detailMode']}
         color="grey"
         inverted
       />

@@ -44,6 +44,7 @@ export default class ThreeView extends Component {
     loadText: '',
     detailMode: false,
     showInfo: false,
+    dynamicLighting: false,
     units: 'cm',
 
   };
@@ -92,6 +93,7 @@ export default class ThreeView extends Component {
     (this: any).animate = this.animate.bind(this);
     (this: any).update = this.update.bind(this);
     (this: any).updateCamera = this.updateCamera.bind(this);
+    (this: any).updateEnv = this.updateEnv.bind(this);
     (this: any).pan = this.pan.bind(this);
     (this: any).rerenderWebGLScene = this.rerenderWebGLScene.bind(this);
     (this: any).getNewCameraFOV = this.getNewCameraFOV.bind(this);
@@ -102,6 +104,7 @@ export default class ThreeView extends Component {
     (this: any).drawAxisGuides = this.drawAxisGuides.bind(this);
     (this: any).addAxisLabels = this.addAxisLabels.bind(this);
     (this: any).toggleBackground = this.toggleBackground.bind(this);
+    (this: any).toggleDynamicLighting = this.toggleDynamicLighting.bind(this);
     (this: any).toggleInfo = this.toggleInfo.bind(this);
 
     // event handlers
@@ -131,6 +134,8 @@ export default class ThreeView extends Component {
     if (nextProps.mesh !== this.props.mesh) return true;
     if (nextState.loadProgress !== this.state.loadProgress) return true;
     if (nextState.showInfo !== this.state.showInfo) return true;
+    if (nextState.dynamicLighting !== this.state.dynamicLighting) return true;
+    if (nextState.detailMode !== this.state.detailMode) return true;
     return false;
 
   }
@@ -143,7 +148,7 @@ export default class ThreeView extends Component {
 
   render(): Object {
 
-    const { loadProgress, loadText, showInfo } = this.state;
+    const { loadProgress, loadText, showInfo, dynamicLighting, detailMode } = this.state;
     const info = [
       { key: 'Key:', val: 'Value'},
     ];
@@ -153,6 +158,8 @@ export default class ThreeView extends Component {
           handleResetCamera={this.centerCamera}
           handleToggleBackground={this.toggleBackground}
           handleToggleInfo={this.toggleInfo}
+          handleToggleDynamicLighting={this.toggleDynamicLighting}
+          toggleState={ { detailMode: detailMode, dynamicLighting: dynamicLighting } }
         />
         <InfoModal className="three-info-modal" active={showInfo} info={info} />
         <LoaderModal
@@ -191,14 +198,22 @@ export default class ThreeView extends Component {
     this.camera.target = new THREE.Vector3();
 
     // Lights
-    this.ambientLight = new THREE.AmbientLight(0xffffff);
-    this.pointLight = new THREE.PointLight(0xfffffff, 0.2, 0.5);
-    this.pointLight.y = this.environmentRadius;
+    this.ambientLight = new THREE.AmbientLight(0xffffff, 1);
+    this.pointLight = new THREE.PointLight(0xffffff, 1, 100, 2);
+    this.backLight = new THREE.PointLight(0xffffff, 1, 100, 2);
+    this.pointLight.target = new THREE.Vector3();
+    this.backLight.target = new THREE.Vector3();
+    this.pointLight.visible = false;
+    this.backLight.visible = false;
+
     this.scene.add(this.ambientLight);
-    this.scene.add(this.pointLight);
+    this.camera.add(this.pointLight);
+    this.camera.add(this.backLight);
+    this.scene.add(this.camera);
+    this.scene.add(this.ambientLight);
 
     // WebGL Renderer
-    this.webGLRenderer = new THREE.WebGLRenderer({ alpha: true, autoClear: false });
+    this.webGLRenderer = new THREE.WebGLRenderer({ alpha: true, autoClear: false, antialias: true });
     this.webGLRenderer.setPixelRatio(this.pixelRatio);
     this.webGLRenderer.setSize(this.width, this.height);
     this.webGLRenderer.autoClear = false;
@@ -214,6 +229,7 @@ export default class ThreeView extends Component {
 
     if (this.state.dragging) {
       this.updateCamera();
+      this.updateEnv();
     }
     this.rerenderWebGLScene();
 
@@ -222,7 +238,7 @@ export default class ThreeView extends Component {
   rerenderWebGLScene(): void {
 
     this.webGLRenderer.clear();
-    if (this.envComposer !== undefined) this.envComposer.render(0.1);
+    if (this.envComposer !== undefined) this.envComposer.render();
     this.webGLRenderer.clearDepth();
     this.webGLRenderer.render(this.scene, this.camera);
 
@@ -238,20 +254,28 @@ export default class ThreeView extends Component {
   computeAxisGuides(): void {
 
     let axes = ['x', 'y', 'z'];
-    let colors = ["rgb(255,0,0)", "rgb(0,255,0)", "rgb(0,0,255)"];
+    let colors = ["rgb(180,180,180)", "rgb(180,180,180)", "rgb(180,180,180)"];
     this.axisGuides = axes.map((axis, index) => {
       let bbox = this.bboxMesh;
       let max = {};
       max[axis] = this.bboxMesh.max[axis];
-      let startVec = bbox.min;
+      let startVec = bbox.min.clone();
       let end = {...bbox.min, ...max};
       let endVec = new THREE.Vector3().fromArray(Object.values(end));
-      let material = new THREE.LineBasicMaterial({ color: colors[index], linewidth: 4, antialias: true });
+      let material = new THREE.LineDashedMaterial({
+        color: colors[index],
+        linewidth: 4,
+        dashSize: 1,
+        gapSize: 1,
+        opacity: 0.3,
+        transparent: true,
+      });
       let geometry = new THREE.Geometry();
       geometry.vertices.push(
         startVec,
         endVec
       );
+      geometry.computeLineDistances();
       let line = new THREE.Line(geometry, material);
       line.visible = false;
       line.userData = { start: startVec.clone(), end: endVec.clone(), axis: axis };
@@ -261,6 +285,7 @@ export default class ThreeView extends Component {
   }
 
   addAxisLabels(): void {
+
     let dimensions = [this.meshWidth, this.meshHeight, this.meshDepth];
     this.axisGuides.forEach((axisGuide, index) => {
       let sprite = new LabelSprite(128, 128,'#fff',
@@ -270,9 +295,11 @@ export default class ThreeView extends Component {
       let { x, y, z} = axisGuide.userData.end.addScalar(0.25);
       sprite.position.set(x, y, z);
     });
+
   }
 
   drawAxisGuides(showLabels: boolean): void {
+
     if (showLabels) this.addAxisLabels();
     if (this.axisGuides.length > 0) {
       this.axisGuides.forEach((axisGuide) => {
@@ -288,17 +315,20 @@ export default class ThreeView extends Component {
 
       this.mesh = this.props.mesh.object3D;
       this.scene.add(this.mesh);
+
       this.bboxMesh = new THREE.Box3().setFromObject(this.mesh);
       this.meshHeight = this.bboxMesh.max.y - this.bboxMesh.min.y;
       this.meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
       this.meshDepth = this.bboxMesh.max.z - this.bboxMesh.min.z;
+
+      let distance = this.camera.position.distanceTo(this.bboxMesh.max) * 10;
+      this.pointLight.distance = distance;
+      this.backLight.distance = distance;
+
       this.computeAxisGuides();
       this.drawAxisGuides(true);
-      this.grid = new THREE.GridHelper(Math.ceil(this.meshWidth) * 2, 10);
-      this.scene.add(this.grid);
-      this.grid.visible = false;
+
       this.environmentRadius = this.meshHeight; // diameter of sphere =  2 * meshHeight
-      this.grid.position.y = this.bboxMesh.min.y;
 
       this.setState((prevState, props) => {
         return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Environment" }
@@ -336,15 +366,21 @@ export default class ThreeView extends Component {
     this.renderPass = new THREE.RenderPass(this.envScene, this.camera);
     this.bokehPass = new THREE.BokehPass(this.envScene, this.camera, {
       focus: 0.015,
-      aperture: 0.025,
+      aperture: 0.045,
       maxBlur: 20.0,
       width: this.width,
       height: this.height,
     });
     this.bokehPass.renderToScreen = true;
 
+    this.brightnessPass = new THREE.ShaderPass(THREE.BrightnessContrastShader);
+    this.brightnessPass.uniforms['contrast'].value = 0.1;
+    this.brightnessPass.renderToScreen = false;
+
+
     this.envComposer = new THREE.EffectComposer(this.webGLRenderer);
     this.envComposer.addPass(this.renderPass);
+    this.envComposer.addPass(this.brightnessPass);
     this.envComposer.addPass(this.bokehPass);
 
     this.updateCamera();
@@ -486,6 +522,15 @@ export default class ThreeView extends Component {
         panOffset: this.state.panOffset.set(0, 0, 0),
       });
     }
+    this.pointLight.position.copy(this.camera.position);
+    this.pointLight.target.copy(this.camera.target);
+    this.backLight.position.copy(this.camera.position).negate();
+    this.backLight.target.copy(this.camera.target).negate();
+
+  }
+
+  updateEnv(): void {
+
 
   }
 
@@ -499,18 +544,32 @@ export default class ThreeView extends Component {
 
     if (!detailMode) {
       this.skyboxMaterial.map = skyboxTexture.default;
-      this.grid.visible = true;
       this.axisGuides.forEach((axisGuide) => { axisGuide.visible = true });
       this.setState({
         detailMode: true,
       });
     } else {
       this.skyboxMaterial.map = skyboxTexture.image;
-      this.grid.visible = false;
       this.axisGuides.forEach((axisGuide) => { axisGuide.visible = false });
       this.setState({
         detailMode: false,
       });
+    }
+
+  }
+
+  toggleDynamicLighting(): void {
+
+    if (this.state.dynamicLighting) {
+      this.setState({ dynamicLighting: false });
+      this.ambientLight.intensity = 1;
+      this.pointLight.visible = false;
+      this.backLight.visible = false;
+    } else {
+      this.setState({ dynamicLighting: true });
+      this.ambientLight.intensity = 0.2;
+      this.pointLight.visible = true;
+      this.backLight.visible = true;
     }
 
   }
