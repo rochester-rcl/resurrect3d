@@ -199,8 +199,8 @@ export default class ThreeView extends Component {
 
     // Lights
     this.ambientLight = new THREE.AmbientLight(0xffffff, 1);
-    this.pointLight = new THREE.PointLight(0xffffff, 1, 100, 2);
-    this.backLight = new THREE.PointLight(0xffffff, 1, 100, 2);
+    this.pointLight = new THREE.PointLight(0xffffff, 1.25, 100, 2);
+    this.backLight = new THREE.PointLight("rgb(239, 234, 160)", 1.25, 100, 2);
     this.pointLight.target = new THREE.Vector3();
     this.backLight.target = new THREE.Vector3();
     this.pointLight.visible = false;
@@ -213,7 +213,13 @@ export default class ThreeView extends Component {
     this.scene.add(this.ambientLight);
 
     // WebGL Renderer
-    this.webGLRenderer = new THREE.WebGLRenderer({ alpha: true, autoClear: false, antialias: true });
+    this.webGLRenderer = new THREE.WebGLRenderer({
+      alpha: true,
+      autoClear: false,
+      antialias: true,
+      gammaInput: true,
+      gammaOutput: true,
+    });
     this.webGLRenderer.setPixelRatio(this.pixelRatio);
     this.webGLRenderer.setSize(this.width, this.height);
     this.webGLRenderer.autoClear = false;
@@ -362,25 +368,29 @@ export default class ThreeView extends Component {
   // TODO make this a separate component
 
   initPostprocessing(): void {
-
+    this.copyShader = new THREE.ShaderPass(THREE.CopyShader);
+    this.copyShader.renderToScreen = true;
     this.renderPass = new THREE.RenderPass(this.envScene, this.camera);
     this.bokehPass = new THREE.BokehPass(this.envScene, this.camera, {
-      focus: 0.015,
-      aperture: 0.045,
-      maxBlur: 20.0,
+      focus: 0.0005,
+      aperture: 0.025,
+      maxBlur: 200.0,
       width: this.width,
       height: this.height,
     });
     this.bokehPass.renderToScreen = true;
 
     this.brightnessPass = new THREE.ShaderPass(THREE.BrightnessContrastShader);
-    this.brightnessPass.uniforms['contrast'].value = 0.1;
+    this.brightnessPass.uniforms['contrast'].value = 0.25;
     this.brightnessPass.renderToScreen = false;
 
+    this.bloomPass = new THREE.BloomPass(2, 35, 4.0, 256);
+    this.bloomPass.renderToScreen = false;
 
     this.envComposer = new THREE.EffectComposer(this.webGLRenderer);
     this.envComposer.addPass(this.renderPass);
     this.envComposer.addPass(this.brightnessPass);
+    this.envComposer.addPass(this.bloomPass);
     this.envComposer.addPass(this.bokehPass);
 
     this.updateCamera();
