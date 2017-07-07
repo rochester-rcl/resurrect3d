@@ -14,7 +14,7 @@ import * as AppActionCreators from '../actions/actions';
 import ThreeView from '../components/ThreeView';
 import LoaderModal from '../components/LoaderModal';
 
-const skyboxTexture = 'Image-003.jpg';
+const skyboxTexture = 'pano.jpg';
 const meshPath = 'parrot.js';
 
 

@@ -36,6 +36,10 @@ export default class ThreeView extends Component {
     panEnd: new THREE.Vector2(),
     panDelta: new THREE.Vector2(),
     panOffset: new THREE.Vector3(),
+    // dolly
+    scale: 1,
+    zoomScale: Math.pow(0.95, 1.0),
+    maxScale: 2.5,
     // spherical coords
     spherical: new THREE.Spherical(),
     sphericalDelta: new THREE.Spherical(0,1.5,1),
@@ -67,8 +71,6 @@ export default class ThreeView extends Component {
     (this: any).maxDistance = Infinity;
     (this: any).rotateSpeed = 0.5;
     (this: any).environmentRadius = 0;
-    (this: any).maxFov = 0;
-    (this: any).minFov = 10;
     (this: any).maxPan;
     (this: any).minPan;
     (this: any).bboxMesh = null;
@@ -96,7 +98,7 @@ export default class ThreeView extends Component {
     (this: any).updateEnv = this.updateEnv.bind(this);
     (this: any).pan = this.pan.bind(this);
     (this: any).rerenderWebGLScene = this.rerenderWebGLScene.bind(this);
-    (this: any).getNewCameraFOV = this.getNewCameraFOV.bind(this);
+    (this: any).getScale = this.getScale.bind(this);
     (this: any).fitPerspectiveCamera = this.fitPerspectiveCamera.bind(this);
     (this: any).panBounds = this.panBounds.bind(this);
     (this: any).centerCamera = this.centerCamera.bind(this);
@@ -199,16 +201,12 @@ export default class ThreeView extends Component {
 
     // Lights
     this.ambientLight = new THREE.AmbientLight(0xffffff, 1);
-    this.pointLight = new THREE.PointLight(0xffffff, 1.25, 100, 2);
-    this.backLight = new THREE.PointLight("rgb(239, 234, 160)", 1.25, 100, 2);
+    this.pointLight = new THREE.HemisphereLight(0xffffff, 0x000000, 1);
     this.pointLight.target = new THREE.Vector3();
-    this.backLight.target = new THREE.Vector3();
     this.pointLight.visible = false;
-    this.backLight.visible = false;
 
     this.scene.add(this.ambientLight);
     this.camera.add(this.pointLight);
-    this.camera.add(this.backLight);
     this.scene.add(this.camera);
     this.scene.add(this.ambientLight);
 
@@ -220,6 +218,7 @@ export default class ThreeView extends Component {
       gammaInput: true,
       gammaOutput: true,
     });
+
     this.webGLRenderer.setPixelRatio(this.pixelRatio);
     this.webGLRenderer.setSize(this.width, this.height);
     this.webGLRenderer.autoClear = false;
@@ -244,7 +243,7 @@ export default class ThreeView extends Component {
   rerenderWebGLScene(): void {
 
     this.webGLRenderer.clear();
-    if (this.envComposer !== undefined) this.envComposer.render();
+    if (this.effectComposer !== undefined) this.effectComposer.render(0.1);
     this.webGLRenderer.clearDepth();
     this.webGLRenderer.render(this.scene, this.camera);
 
@@ -320,6 +319,7 @@ export default class ThreeView extends Component {
   initMesh(mesh: Object): void {
 
       this.mesh = this.props.mesh.object3D;
+      console.log(this.mesh);
       this.scene.add(this.mesh);
 
       this.bboxMesh = new THREE.Box3().setFromObject(this.mesh);
@@ -329,7 +329,6 @@ export default class ThreeView extends Component {
 
       let distance = this.camera.position.distanceTo(this.bboxMesh.max) * 10;
       this.pointLight.distance = distance;
-      this.backLight.distance = distance;
 
       this.computeAxisGuides();
       this.drawAxisGuides(true);
@@ -368,16 +367,17 @@ export default class ThreeView extends Component {
   // TODO make this a separate component
 
   initPostprocessing(): void {
-    this.copyShader = new THREE.ShaderPass(THREE.CopyShader);
-    this.copyShader.renderToScreen = true;
-    this.renderPass = new THREE.RenderPass(this.envScene, this.camera);
+
+    //The environment
+    this.envRenderPass = new THREE.RenderPass(this.envScene, this.camera);
     this.bokehPass = new THREE.BokehPass(this.envScene, this.camera, {
       focus: 0.0005,
-      aperture: 0.025,
+      aperture: 0.045,
       maxBlur: 200.0,
       width: this.width,
       height: this.height,
     });
+
     this.bokehPass.renderToScreen = true;
 
     this.brightnessPass = new THREE.ShaderPass(THREE.BrightnessContrastShader);
@@ -385,13 +385,22 @@ export default class ThreeView extends Component {
     this.brightnessPass.renderToScreen = false;
 
     this.bloomPass = new THREE.BloomPass(2, 35, 4.0, 256);
-    this.bloomPass.renderToScreen = false;
 
-    this.envComposer = new THREE.EffectComposer(this.webGLRenderer);
-    this.envComposer.addPass(this.renderPass);
-    this.envComposer.addPass(this.brightnessPass);
-    this.envComposer.addPass(this.bloomPass);
-    this.envComposer.addPass(this.bokehPass);
+    let effectComposerParams = {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      format: THREE.RGBFormat,
+      stencilBuffer: true,
+    };
+
+    this.effectComposer = new THREE.EffectComposer(this.webGLRenderer,
+      new THREE.WebGLRenderTarget(this.width, this.height),
+      effectComposerParams);
+
+    this.effectComposer.addPass(this.envRenderPass);
+    this.effectComposer.addPass(this.brightnessPass);
+    this.effectComposer.addPass(this.bloomPass);
+    this.effectComposer.addPass(this.bokehPass);
 
     this.updateCamera();
     this.setState((prevState, props) => {
@@ -404,14 +413,11 @@ export default class ThreeView extends Component {
   /** Rendering / Updates / Camera
   *****************************************************************************/
 
-  getNewCameraFOV(dstFOV: Number): Number {
-
-    let max = this.maxFov;
-    let min = this.minFov;
-    if (dstFOV >= max) return max;
-    if (dstFOV <= min) return min;
-    return dstFOV;
-
+  getScale(dstScale: Number): Number {
+    let { maxScale } = this.state;
+    if (dstScale > maxScale) dstScale = maxScale;
+    if (dstScale <= 0) dstScale = 0;
+    return dstScale;
   }
 
   panBounds(targetPosition: typeof THREE.Vector3): boolean {
@@ -427,8 +433,7 @@ export default class ThreeView extends Component {
     let aspect = this.width / this.height;
     let fovH = 2 * Math.atan((this.meshWidth / aspect) / (2 * distance)) * (180 / Math.PI);
     let avgFov = (fovV + fovH) / 2;
-    this.camera.fov = avgFov + 1.0;
-    this.maxFov = fovV + 10.0;
+    this.camera.fov = avgFov + 10.0;
     this.camera.updateProjectionMatrix();
 
   }
@@ -469,7 +474,6 @@ export default class ThreeView extends Component {
     let resetVector = new THREE.Vector3();
     this.camera.position.copy(resetVector);
     this.camera.target.copy(resetVector);
-    this.camera.fov = this.maxFov;
     this.camera.updateProjectionMatrix();
 
     this.setState({
@@ -484,7 +488,7 @@ export default class ThreeView extends Component {
 
     // Borrowed from THREEJS OrbitControls
 
-    const { spherical, sphericalDelta, panOffset } = this.state;
+    const { spherical, sphericalDelta, panOffset, scale } = this.state;
     spherical.radius = this.environmentRadius;
     let offset = new THREE.Vector3();
 		let quat = new THREE.Quaternion().setFromUnitVectors(this.camera.up, new THREE.Vector3(0, 1, 0));
@@ -501,6 +505,7 @@ export default class ThreeView extends Component {
     spherical.phi = Math.max(this.minPolarAngle, Math.min(this.maxPolarAngle, spherical.phi));
     spherical.makeSafe();
     spherical.radius = Math.max(this.minDistance, Math.min(this.maxDistance, spherical.radius));
+    spherical.radius *= scale;
     this.camera.target.add(panOffset);
     offset.setFromSpherical(spherical);
     offset.applyQuaternion(quatInverse);
@@ -534,8 +539,6 @@ export default class ThreeView extends Component {
     }
     this.pointLight.position.copy(this.camera.position);
     this.pointLight.target.copy(this.camera.target);
-    this.backLight.position.copy(this.camera.position).negate();
-    this.backLight.target.copy(this.camera.target).negate();
 
   }
 
@@ -574,12 +577,10 @@ export default class ThreeView extends Component {
       this.setState({ dynamicLighting: false });
       this.ambientLight.intensity = 1;
       this.pointLight.visible = false;
-      this.backLight.visible = false;
     } else {
       this.setState({ dynamicLighting: true });
       this.ambientLight.intensity = 0.2;
       this.pointLight.visible = true;
-      this.backLight.visible = true;
     }
 
   }
@@ -642,11 +643,17 @@ export default class ThreeView extends Component {
   }
 
   handleMouseWheel(event: typeof SyntheticEvent): void {
-
+    let { scale, zoomScale } = this.state;
+    let deltaY = event.deltaY;
     event.preventDefault();
-    let fov = this.camera.fov + event.deltaY * 0.05;
-    this.camera.fov = this.getNewCameraFOV(fov);
+    if (deltaY > 0) {
+      scale = this.getScale(scale /= zoomScale);
+    } else {
+      scale = this.getScale(scale *= zoomScale);
+    }
+    this.setState({ scale: scale });
     this.camera.updateProjectionMatrix();
+    this.updateCamera();
 
   }
 
@@ -666,6 +673,7 @@ export default class ThreeView extends Component {
     this.camera.aspect = innerWidth / innerHeight;
     this.camera.updateProjectionMatrix();
     this.webGLRenderer.setSize(innerWidth, innerHeight);
+    this.effectComposer.setSize(innerWidth, innerHeight);
 
   }
 

@@ -2,96 +2,107 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-THREE.MaskPass = function ( scene, camera ) {
+export function loadMaskPass(threeInstance: Object): typeof Promise {
+	return new Promise((resolve, reject) => {
+		threeInstance.MaskPass = function ( scene, camera ) {
 
-	THREE.Pass.call( this );
+			threeInstance.Pass.call( this );
 
-	this.scene = scene;
-	this.camera = camera;
+			this.scene = scene;
+			this.camera = camera;
 
-	this.clear = true;
-	this.needsSwap = false;
+			this.clear = true;
+			this.needsSwap = false;
 
-	this.inverse = false;
+			this.inverse = false;
 
-};
+		};
 
-THREE.MaskPass.prototype = Object.assign( Object.create( THREE.Pass.prototype ), {
+		threeInstance.MaskPass.prototype = Object.assign( Object.create( threeInstance.Pass.prototype ), {
 
-	constructor: THREE.MaskPass,
+			constructor: threeInstance.MaskPass,
 
-	render: function ( renderer, writeBuffer, readBuffer, delta, maskActive ) {
+			render: function ( renderer, writeBuffer, readBuffer, delta, maskActive ) {
 
-		var context = renderer.context;
-		var state = renderer.state;
+				var context = renderer.context;
+				var state = renderer.state;
 
-		// don't update color or depth
+				// don't update color or depth
 
-		state.buffers.color.setMask( false );
-		state.buffers.depth.setMask( false );
+				state.buffers.color.setMask( false );
+				state.buffers.depth.setMask( false );
 
-		// lock buffers
+				// lock buffers
 
-		state.buffers.color.setLocked( true );
-		state.buffers.depth.setLocked( true );
+				state.buffers.color.setLocked( true );
+				state.buffers.depth.setLocked( true );
 
-		// set up stencil
+				// set up stencil
 
-		var writeValue, clearValue;
+				var writeValue, clearValue;
 
-		if ( this.inverse ) {
+				if ( this.inverse ) {
 
-			writeValue = 0;
-			clearValue = 1;
+					writeValue = 0;
+					clearValue = 1;
 
-		} else {
+				} else {
 
-			writeValue = 1;
-			clearValue = 0;
+					writeValue = 1;
+					clearValue = 0;
 
-		}
+				}
 
-		state.buffers.stencil.setTest( true );
-		state.buffers.stencil.setOp( context.REPLACE, context.REPLACE, context.REPLACE );
-		state.buffers.stencil.setFunc( context.ALWAYS, writeValue, 0xffffffff );
-		state.buffers.stencil.setClear( clearValue );
+				state.buffers.stencil.setTest( true );
+				state.buffers.stencil.setOp( context.REPLACE, context.REPLACE, context.REPLACE );
+				state.buffers.stencil.setFunc( context.ALWAYS, writeValue, 0xffffffff );
+				state.buffers.stencil.setClear( clearValue );
 
-		// draw into the stencil buffer
+				// draw into the stencil buffer
 
-		renderer.render( this.scene, this.camera, readBuffer, this.clear );
-		renderer.render( this.scene, this.camera, writeBuffer, this.clear );
+				renderer.render( this.scene, this.camera, readBuffer, this.clear );
+				renderer.render( this.scene, this.camera, writeBuffer, this.clear );
 
-		// unlock color and depth buffer for subsequent rendering
+				// unlock color and depth buffer for subsequent rendering
 
-		state.buffers.color.setLocked( false );
-		state.buffers.depth.setLocked( false );
+				state.buffers.color.setLocked( false );
+				state.buffers.depth.setLocked( false );
 
-		// only render where stencil is set to 1
+				// only render where stencil is set to 1
 
-		state.buffers.stencil.setFunc( context.EQUAL, 1, 0xffffffff );  // draw if == 1
-		state.buffers.stencil.setOp( context.KEEP, context.KEEP, context.KEEP );
+				state.buffers.stencil.setFunc( context.EQUAL, 1, 0xffffffff );  // draw if == 1
+				state.buffers.stencil.setOp( context.KEEP, context.KEEP, context.KEEP );
 
-	}
+			}
 
-} );
+		} );
+		resolve(threeInstance);
+	});
+}
 
 
-THREE.ClearMaskPass = function () {
+export function loadClearMaskPass(threeInstance: Object): typeof Promise {
+	return new Promise((resolve, reject) => {
+		threeInstance.ClearMaskPass = function () {
 
-	THREE.Pass.call( this );
+			threeInstance.Pass.call( this );
 
-	this.needsSwap = false;
+			this.needsSwap = false;
 
-};
+		};
 
-THREE.ClearMaskPass.prototype = Object.create( THREE.Pass.prototype );
+		threeInstance.ClearMaskPass.prototype = Object.create( threeInstance.Pass.prototype );
 
-Object.assign( THREE.ClearMaskPass.prototype, {
+		Object.assign( threeInstance.ClearMaskPass.prototype, {
 
-	render: function ( renderer, writeBuffer, readBuffer, delta, maskActive ) {
+			render: function ( renderer, writeBuffer, readBuffer, delta, maskActive ) {
 
-		renderer.state.buffers.stencil.setTest( false );
+				renderer.state.buffers.stencil.setTest( false );
 
-	}
+			}
 
-} );
+		} );
+		resolve(threeInstance);
+	});
+
+}
