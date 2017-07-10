@@ -23,6 +23,8 @@ class ImageGenerator {
 
   toTexture(): typeof THREE.Texture {
 
+    /* For whatever reason the THREE.Texture constructor is not working with
+       a canvas object. */
     return new THREE.TextureLoader().load(this.toBase64());
 
   }
@@ -86,7 +88,9 @@ export class LabelSprite extends ImageGenerator {
 
   toSprite(): typeof THREE.Sprite {
 
-    let spriteMap = new THREE.TextureLoader().load(this.toBase64());;
+    /* For whatever reason the THREE.Texture constructor is not working with
+       a canvas object. */
+    let spriteMap = new THREE.TextureLoader().load(this.toBase64());
     let spriteMaterial = new THREE.SpriteMaterial({ map: spriteMap });
     return new THREE.Sprite(spriteMaterial);
 
