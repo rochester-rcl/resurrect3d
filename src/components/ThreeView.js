@@ -20,6 +20,7 @@ import { LabelSprite } from '../utils/image';
 
 // Controls
 import ThreeControls from './ThreeControls';
+import ThreeMeasure from './ThreeMeasure';
 
 export default class ThreeView extends Component {
   state = {
@@ -108,6 +109,7 @@ export default class ThreeView extends Component {
     (this: any).toggleBackground = this.toggleBackground.bind(this);
     (this: any).toggleDynamicLighting = this.toggleDynamicLighting.bind(this);
     (this: any).toggleInfo = this.toggleInfo.bind(this);
+    (this: any).drawMeasurement = this.drawMeasurement.bind(this);
 
     // event handlers
 
@@ -163,6 +165,12 @@ export default class ThreeView extends Component {
           handleToggleDynamicLighting={this.toggleDynamicLighting}
           toggleState={ { detailMode: detailMode, dynamicLighting: dynamicLighting } }
         />
+        <ThreeMeasure
+          updateCallback={this.drawMeasurement}
+          camera={this.camera}
+          mesh={this.mesh}
+          resolution={{ width: this.width, height: this.height }}
+           />
         <InfoModal className="three-info-modal" active={showInfo} info={info} />
         <LoaderModal
           text={loadText + loadProgress}
@@ -316,10 +324,13 @@ export default class ThreeView extends Component {
 
   }
 
-  initMesh(mesh: Object): void {
+  drawMeasurement(measurement: Object): void {
+
+  }
+
+  initMesh(): void {
 
       this.mesh = this.props.mesh.object3D;
-      console.log(this.mesh);
       this.scene.add(this.mesh);
 
       this.bboxMesh = new THREE.Box3().setFromObject(this.mesh);
@@ -413,7 +424,7 @@ export default class ThreeView extends Component {
   /** Rendering / Updates / Camera
   *****************************************************************************/
 
-  getScale(dstScale: Number): Number {
+  getScale(dstScale: number): number {
     let { maxScale } = this.state;
     if (dstScale > maxScale) dstScale = maxScale;
     if (dstScale <= 0) dstScale = 0;
@@ -438,7 +449,7 @@ export default class ThreeView extends Component {
 
   }
 
-  pan(deltaX: Number, deltaY: Number): void {
+  pan(deltaX: number, deltaY: number): void {
 
     let offset = new THREE.Vector3();
     let position = this.camera.position;
@@ -456,7 +467,7 @@ export default class ThreeView extends Component {
 
   }
 
-  rotate(deltaX: Number, deltaY: Number): void {
+  rotate(deltaX: number, deltaY: number): void {
 
     let { sphericalDelta } = this.state;
     sphericalDelta.theta -= 2 * Math.PI * deltaX / this.width * this.rotateSpeed;

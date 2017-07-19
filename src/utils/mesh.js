@@ -1,6 +1,9 @@
 /* @flow */
 
-export function volumeFromBounds(bbox: typeof THREE.Box3): Number {
+// THREEJS
+import * as THREE from 'three';
+
+export function volumeFromBounds(bbox: typeof THREE.Box3): Object {
 
   let { min, max } = bbox;
   let shape = {};
@@ -12,7 +15,7 @@ export function volumeFromBounds(bbox: typeof THREE.Box3): Number {
 
 }
 
-export function fitBoxes(bbox1: typeof THREE.Box3, bbox2: typeof THREE.Box3, factor: Number): Number {
+export function fitBoxes(bbox1: typeof THREE.Box3, bbox2: typeof THREE.Box3, factor: number): number {
 
   let shape1 = volumeFromBounds(bbox1);
   let shape2 = volumeFromBounds(bbox2);

@@ -37,8 +37,8 @@ const ThreeControls = (props: Object) => {
       />
       <Button
         className="three-controls-button"
-        content="detail mode"
-        icon="camera retro"
+        content="background"
+        icon="image"
         onClick={() => { handleToggleBackground() }}
         labelPosition='right'
         active={toggleState['detailMode']}

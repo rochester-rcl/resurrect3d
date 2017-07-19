@@ -33,6 +33,12 @@ body {
   margin-right: 10px !important;
 }
 
+.three-measure-tool-container {
+  position: absolute;
+  right: 0px;
+  margin-top: 10px;
+}
+
 .three-info-grid {
   position: relative;
   width: 50%;

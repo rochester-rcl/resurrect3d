@@ -1,7 +1,7 @@
 /* @flow */
 import * as THREE from 'three';
 
-export function panLeft(distance: Number, matrix: typeof THREE.Vector3): typeof THREE.Vector3 {
+export function panLeft(distance: number, matrix: typeof THREE.Vector3): typeof THREE.Vector3 {
 
   let dstX = new THREE.Vector3();
   dstX.setFromMatrixColumn(matrix, 0);
@@ -10,7 +10,7 @@ export function panLeft(distance: Number, matrix: typeof THREE.Vector3): typeof 
 
 }
 
-export function panUp(distance: Number, matrix: typeof THREE.Vector3): typeof THREE.Vector3 {
+export function panUp(distance: number, matrix: typeof THREE.Vector3): typeof THREE.Vector3 {
 
   let dstY = new THREE.Vector3();
   dstY.setFromMatrixColumn(matrix, 1);
