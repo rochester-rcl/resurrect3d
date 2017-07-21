@@ -110,6 +110,8 @@ export default class ThreeView extends Component {
     (this: any).toggleDynamicLighting = this.toggleDynamicLighting.bind(this);
     (this: any).toggleInfo = this.toggleInfo.bind(this);
     (this: any).drawMeasurement = this.drawMeasurement.bind(this);
+    (this: any).drawSpriteTarget = this.drawSpriteTarget.bind(this);
+    (this: any).computeSpriteScaleFactor = this.computeSpriteScaleFactor.bind(this);
 
     // event handlers
 
@@ -169,7 +171,12 @@ export default class ThreeView extends Component {
           updateCallback={this.drawMeasurement}
           camera={this.camera}
           mesh={this.mesh}
-          resolution={{ width: this.width, height: this.height }}
+          resolution={
+            {
+              width: this.webGLRenderer ? this.webGLRenderer.domElement.clientWidth : this.width,
+              height: this.webGLRenderer ? this.webGLRenderer.domElement.clientHeight : this.height,
+            }
+          }
            />
         <InfoModal className="three-info-modal" active={showInfo} info={info} />
         <LoaderModal
@@ -217,6 +224,13 @@ export default class ThreeView extends Component {
     this.camera.add(this.pointLight);
     this.scene.add(this.camera);
     this.scene.add(this.ambientLight);
+    this.scene.add(this.state.measurement);
+
+    // Label Sprite that we can just copy for all the measurement
+    this.labelSprite = new LabelSprite(128, 128,'#fff', '+').toSprite();
+
+    this.measurement = new THREE.Group();
+    this.scene.add(this.measurement);
 
     // WebGL Renderer
     this.webGLRenderer = new THREE.WebGLRenderer({
@@ -303,9 +317,10 @@ export default class ThreeView extends Component {
     this.axisGuides.forEach((axisGuide, index) => {
       let sprite = new LabelSprite(128, 128,'#fff',
         dimensions[index].toFixed(2).toString() + ' ' + this.state.units).toSprite();
-      sprite.scale.set(4,4,4);
+      // Need to set based on actual size of model somehow
+      sprite.scale.multiplyScalar(this.spriteScaleFactor);
       axisGuide.add(sprite);
-      let { x, y, z} = axisGuide.userData.end.addScalar(0.25);
+      let { x, y, z} = axisGuide.userData.end;
       sprite.position.set(x, y, z);
     });
 
@@ -324,12 +339,65 @@ export default class ThreeView extends Component {
 
   }
 
-  drawMeasurement(measurement: Object): void {
+  computeSpriteScaleFactor(): void {
+    if (this.bboxMesh) {
+      /* assuming sprite is 1x1 plane as per constructor, we want it no more
+        than 1/4 of the mesh. A divisor of 4 seems to work best */
+      this.spriteScaleFactor = Math.ceil(this.bboxMesh.max.distanceTo(this.bboxMesh.min) / 4);
+    } else {
+      console.warn("this.bboxMesh hasn't been computed yet. spriteScaleFactor is set to 1")
+      this.spriteScaleFactor = 1;
+    }
+  }
 
+  drawSpriteTarget(position: typeof THREE.Vector3): typeof THREE.Sprite {
+    let sprite = this.labelSprite.clone();
+    sprite.position.copy(position);
+    sprite.scale.multiplyScalar(this.spriteScaleFactor);
+  }
+
+  drawMeasurement(points?: Object): void {
+    if (points) {
+      let { a, b, distance } = points;
+      let sphere = this.labelSphere.clone();
+      if (a && !b) {
+        sphere.position.copy(a);
+        this.measurement.add(sphere);
+      } else if (a && b) {
+        sphere.position.copy(b);
+        this.measurement.add(sphere);
+        if (distance) {
+          let material = new THREE.LineBasicMaterial({
+            color: '#2fef36',
+            linewidth: 4,
+            opacity: 0.3,
+            transparent: true,
+            depthWrite: false,
+            depthTest: false
+          });
+          let geometry = new THREE.Geometry();
+          geometry.vertices.push(a,b);
+          geometry.computeLineDistances();
+          let line = new THREE.Line(geometry, material);
+          this.measurement.add(line);
+
+          // draw label sprite for distance
+          let distanceLabel = new LabelSprite(128, 128,'#fff',
+            distance.toFixed(2).toString() + ' ' + this.state.units).toSprite();
+          distanceLabel.scale.multiplyScalar(this.spriteScaleFactor / 2);
+          a = a.clone();
+          b = b.clone();
+          distanceLabel.position.copy(a.add(b).divideScalar(2));
+          this.measurement.add(distanceLabel);
+        }
+      }
+
+    } else {
+      this.measurement.remove(...this.measurement.children);
+    }
   }
 
   initMesh(): void {
-
       this.mesh = this.props.mesh.object3D;
       this.scene.add(this.mesh);
 
@@ -337,8 +405,8 @@ export default class ThreeView extends Component {
       this.meshHeight = this.bboxMesh.max.y - this.bboxMesh.min.y;
       this.meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
       this.meshDepth = this.bboxMesh.max.z - this.bboxMesh.min.z;
-
-      let distance = this.camera.position.distanceTo(this.bboxMesh.max) * 10;
+      this.computeSpriteScaleFactor();
+      let distance = this.camera.position.distanceTo(this.bboxMesh.max);
       this.pointLight.distance = distance;
 
       this.computeAxisGuides();
@@ -346,6 +414,9 @@ export default class ThreeView extends Component {
 
       this.environmentRadius = this.meshHeight; // diameter of sphere =  2 * meshHeight
 
+      let labelSphereMaterial = new THREE.MeshPhongMaterial({ color: 0xCCCCCC, depthTest: false, depthWrite: false });
+      let labelSphereGeometry = new THREE.SphereGeometry((this.meshHeight / 100), 16, 16);
+      this.labelSphere = new THREE.Mesh(labelSphereGeometry, labelSphereMaterial);
       this.setState((prevState, props) => {
         return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Environment" }
       }, this.initEnvironment());
@@ -440,6 +511,7 @@ export default class ThreeView extends Component {
   fitPerspectiveCamera(): void {
 
     let distance = this.camera.position.distanceTo(this.bboxMesh.min);
+    // Sprite scale is dependent on camera distance
     let fovV = 2 * Math.atan(this.meshHeight / (2 * distance)) * (180 / Math.PI);
     let aspect = this.width / this.height;
     let fovH = 2 * Math.atan((this.meshWidth / aspect) / (2 * distance)) * (180 / Math.PI);

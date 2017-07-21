@@ -3,6 +3,16 @@
 // Three
 import * as THREE from 'three';
 
+const getFAIconChar = (iconName) => {
+     let iconElement = document.createElement('i');
+     iconElement.className = 'icon ' + iconName;
+     iconElement.style.display = 'none';
+     document.body.appendChild(iconElement);
+     let iconContent = window.getComputedStyle(iconElement, ':before').getPropertyValue('content');
+     document.body.removeChild(iconElement);
+     return iconContent.replace(/(\")/g,'');
+ }
+
 // Abstract Base Class
 class ImageGenerator {
 
@@ -91,7 +101,7 @@ export class LabelSprite extends ImageGenerator {
     /* For whatever reason the THREE.Texture constructor is not working with
        a canvas object. */
     let spriteMap = new THREE.TextureLoader().load(this.toBase64());
-    let spriteMaterial = new THREE.SpriteMaterial({ map: spriteMap });
+    let spriteMaterial = new THREE.SpriteMaterial({ map: spriteMap, depthWrite: false, depthTest: false });
     return new THREE.Sprite(spriteMaterial);
 
   }

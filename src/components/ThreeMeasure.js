@@ -10,17 +10,32 @@ import * as THREE from 'three';
 import { Button, Icon } from 'semantic-ui-react';
 
 export default class ThreeMeasure extends Component {
+  defaultState = {
+    active: false,
+    points: {
+      a: null,
+      b: null,
+      distance: null,
+    },
+    secondClick: false,
+  };
+  // Object spread doesn't do a deep copy so we need to do this
   state = {
     active: false,
-    pointA: null,
-    pointB: null,
-    distance: 0,
+    points: {
+      a: null,
+      b: null,
+      distance: null,
+    },
+    secondClick: false,
   };
-
   constructor(props: Object) {
     super(props);
     (this: any).activate = this.activate.bind(this);
     (this: any).measure = this.measure.bind(this);
+    (this: any).handleIntersection = this.handleIntersection.bind(this);
+    (this: any).reset = this.reset.bind(this);
+    (this: any).doCallback = this.doCallback.bind(this);
     (this: any).raycaster = new THREE.Raycaster();
   }
 
@@ -35,7 +50,19 @@ export default class ThreeMeasure extends Component {
   activate(): void {
     this.setState({
       active: !this.state.active
-    });
+    }, this.reset);
+  }
+
+  reset(): void {
+    if (!this.state.active) {
+      this.setState({
+        ...this.defaultState
+      }, this.doCallback)
+    }
+  }
+
+  doCallback(): void {
+    this.props.updateCallback( this.state.active ? this.state.points : null);
   }
 
   measure(event: typeof MouseEvent): void {
@@ -44,10 +71,31 @@ export default class ThreeMeasure extends Component {
       let { camera, mesh, resolution } = this.props;
       let mouseVector = new THREE.Vector2();
       mouseVector.x = (event.clientX / resolution.width) * 2 - 1;
-      mouseVector.y = (event.clientY / resolution.height) * 2 + 1;
+      mouseVector.y = -(event.clientY / resolution.height) * 2 + 1;
       this.raycaster.setFromCamera(mouseVector, camera);
-      let intersections = this.raycaster.intersectObjects(mesh.children);
-      console.log(intersections);
+      let intersections = this.raycaster.intersectObjects(mesh.children, true);
+      // Only take the best result
+      if (intersections.length > 0) this.handleIntersection(intersections[0]);
+    }
+  }
+
+  handleIntersection(intersection: Object): void {
+    let { points } = this.state;
+    if (!this.state.secondClick) {
+      points.a = intersection.point;
+      points.b = null,
+      points.distance = null,
+      this.setState({
+        points: points,
+        secondClick: true
+      }, this.doCallback);
+    } else {
+      points.b = intersection.point;
+      points.distance = points.a.distanceTo(points.b);
+      this.setState({
+        points: points,
+        secondClick: false
+      }, this.doCallback);
     }
   }
 
