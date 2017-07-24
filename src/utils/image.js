@@ -16,6 +16,12 @@ const getFAIconChar = (iconName) => {
 // Abstract Base Class
 class ImageGenerator {
 
+  width: number;
+  height: number;
+  color1: string;
+  color2: string;
+  element: HTMLCanvasElement;
+
   constructor(width: number, height: number, outerColor: string, innerColor: string) {
 
     this.width = width;
@@ -73,6 +79,8 @@ export class RadialGradient extends ImageGenerator {
 
 export class LabelSprite extends ImageGenerator {
 
+  text: string;
+
   constructor(width: number, height: number, color: string, text: string) {
 
     super(width, height, color, color);
@@ -86,7 +94,7 @@ export class LabelSprite extends ImageGenerator {
     let imgCanvas = document.createElement('canvas');
     imgCanvas.width = this.width;
     imgCanvas.height = this.height;
-    let ctx = imgCanvas.getContext('2d');
+    let ctx: CanvasRenderingContext2D = imgCanvas.getContext('2d');
     ctx.font = "18px Courier";
     ctx.textAlign = "center";
     ctx.fillStyle = this.color1;

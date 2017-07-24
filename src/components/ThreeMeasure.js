@@ -10,6 +10,9 @@ import * as THREE from 'three';
 import { Button, Icon } from 'semantic-ui-react';
 
 export default class ThreeMeasure extends Component {
+
+  raycaster: THREE.RayCaster;
+
   defaultState = {
     active: false,
     points: {
@@ -65,7 +68,7 @@ export default class ThreeMeasure extends Component {
     this.props.updateCallback( this.state.active ? this.state.points : null);
   }
 
-  measure(event: typeof MouseEvent): void {
+  measure(event: MouseEvent): void {
 
     if (this.state.active) {
       let { camera, mesh, resolution } = this.props;
@@ -91,7 +94,7 @@ export default class ThreeMeasure extends Component {
       }, this.doCallback);
     } else {
       points.b = intersection.point;
-      points.distance = points.a.distanceTo(points.b);
+      points.distance = points.a.distanceTo(points.b); // Need to figure out a way to enforce presence of 'a'
       this.setState({
         points: points,
         secondClick: false

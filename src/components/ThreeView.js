@@ -23,6 +23,64 @@ import ThreeControls from './ThreeControls';
 import ThreeMeasure from './ThreeMeasure';
 
 export default class ThreeView extends Component {
+
+  /* Flow - declare all instance property types here */
+
+  // settings
+  height: number;
+  width: number;
+  pixelRatio: number;
+  minAzimuthAngle: number;
+  maxAzimuthAngle: number;
+  minPolarAngle: number;
+  maxPolarAngle: number;
+  minDistance: number;
+  maxDistance: number;
+  rotateSpeed: number;
+  environmentRadius: number;
+  maxPan: number;
+  minPan: number;
+  spriteScaleFactor: number;
+
+  // objects
+  bboxMesh: THREE.Vector3;
+  axisGuides: Array<Object>;
+  bboxSkybox: THREE.MESH;
+  mesh: THREE.Group;
+  labelSprite: THREE.Sprite;
+  labelSphere: THREE.Sphere;
+
+  // mesh properties
+  measurement: THREE.Group;
+  meshDepth: number;
+  meshWidth: number;
+  meshHeight: number;
+
+  // environments
+  scene: THREE.Scene;
+  envScene: THREE.Scene;
+  ambientLight: THREE.AmbientLight;
+  pointLight: THREE.PointLight;
+  skyboxGeom: THREE.SphereGeometry;
+  skyboxMaterial: THREE.MeshBasicMaterial;
+  skyboxMesh: THREE.Mesh;
+
+  // cameras
+  lastCameraPosition: THREE.Vector3;
+  lastCameraTarget: THREE.Vector3;
+  camera: THREE.PerspectiveCamera;
+
+  // Rendering
+  webGLRenderer: THREE.WebGLRenderer;
+  envRenderPass: THREE.RenderPass;
+  effectComposer: THREE.EffectComposer;
+  bokehPass: THREE.BokehPass;
+  bloomPass: THREE.BloomPass;
+  brightnessPass: THREE.BrightnessPass;
+
+  // DOM
+  threeContainer: HTMLElement;
+
   state = {
 
     // interaction
@@ -224,7 +282,6 @@ export default class ThreeView extends Component {
     this.camera.add(this.pointLight);
     this.scene.add(this.camera);
     this.scene.add(this.ambientLight);
-    this.scene.add(this.state.measurement);
 
     // Label Sprite that we can just copy for all the measurement
     this.labelSprite = new LabelSprite(128, 128,'#fff', '+').toSprite();
@@ -350,7 +407,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  drawSpriteTarget(position: typeof THREE.Vector3): typeof THREE.Sprite {
+  drawSpriteTarget(position: THREE.Vector3): THREE.Sprite {
     let sprite = this.labelSprite.clone();
     sprite.position.copy(position);
     sprite.scale.multiplyScalar(this.spriteScaleFactor);
@@ -681,7 +738,7 @@ export default class ThreeView extends Component {
   /** EVENT HANDLERS
   *****************************************************************************/
 
-  handleMouseDown(event: typeof SyntheticEvent): void {
+  handleMouseDown(event: SyntheticMouseEvent): void {
 
     if (this.state.shiftDown) {
       this.setState({
@@ -697,7 +754,7 @@ export default class ThreeView extends Component {
 
   }
 
-  handleMouseMove(event: typeof SyntheticEvent): void {
+  handleMouseMove(event: SyntheticMouseEvent): void {
 
     if (this.state.dragging) {
       if (this.state.shiftDown) {
@@ -725,7 +782,7 @@ export default class ThreeView extends Component {
 
   }
 
-  handleMouseWheel(event: typeof SyntheticEvent): void {
+  handleMouseWheel(event: SyntheticWheelEvent): void {
     let { scale, zoomScale } = this.state;
     let deltaY = event.deltaY;
     event.preventDefault();
@@ -740,7 +797,7 @@ export default class ThreeView extends Component {
 
   }
 
-  handleMouseUp(event: typeof SyntheticEvent): void {
+  handleMouseUp(event: SyntheticEvent): void {
 
     if (this.state.dragging) {
       this.setState({ dragging: false });
@@ -750,9 +807,9 @@ export default class ThreeView extends Component {
 
   }
 
-  handleWindowResize(event: typeof Event): void {
-
-    let { innerWidth, innerHeight } = event.target;
+  handleWindowResize(event: Event): void {
+    let windowObj: window.Window = event.target;
+    let { innerWidth, innerHeight } = windowObj;
     this.camera.aspect = innerWidth / innerHeight;
     this.camera.updateProjectionMatrix();
     this.webGLRenderer.setSize(innerWidth, innerHeight);
@@ -760,7 +817,7 @@ export default class ThreeView extends Component {
 
   }
 
-  handleKeyDown(event: typeof SyntheticEvent): void {
+  handleKeyDown(event: SyntheticKeyboardEvent): void {
 
     let currentRotation = this.mesh.getWorldRotation();
     switch(event.keyCode) {
@@ -782,7 +839,7 @@ export default class ThreeView extends Component {
 
   }
 
-  handleKeyUp(event: typeof SyntheticEvent): void {
+  handleKeyUp(event: SyntheticKeyboardEvent): void {
 
     switch(event.keyCode) {
       case 16:

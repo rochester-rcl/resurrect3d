@@ -10,7 +10,7 @@ import * as ActionConstants from '../constants/actions';
 // THREE
 import * as THREE from 'three';
 
-function computeProgress(request: typeof ProgressEvent): string {
+function computeProgress(request: ProgressEvent): string {
 
   let progress;
   if (request.lengthComputable) {
@@ -50,11 +50,11 @@ function createLoadProgressChannel(loader: Object, loaderType: string, url): voi
         emit({ eventType: 'loaded', val: payload, loaderType: loaderType });
         emit(END);
       },
-      (progress: typeof ProgressEvent) => {
+      (progress: ProgressEvent) => {
         let update = computeProgress(progress);
         emit({ eventType: 'progress', val: update, loaderType: loaderType });
       },
-      (error: typeof Error) => {
+      (error: Error) => {
         emit({ eventType: 'error', val: error, loaderType: loaderType });
       })
 
@@ -62,7 +62,7 @@ function createLoadProgressChannel(loader: Object, loaderType: string, url): voi
       loader.onLoad = null;
     }
     return unsubscribe;
-    
+
   });
 
 }
