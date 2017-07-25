@@ -94,7 +94,7 @@ export default class ThreeMeasure extends Component {
       }, this.doCallback);
     } else {
       points.b = intersection.point;
-      points.distance = points.a.distanceTo(points.b); // Need to figure out a way to enforce presence of 'a'
+      points.distance = points.a && points.b ? points.a.distanceTo(points.b) : null; // Need to figure out a way to enforce presence of 'a'
       this.setState({
         points: points,
         secondClick: false

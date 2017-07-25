@@ -3,16 +3,6 @@
 // Three
 import * as THREE from 'three';
 
-const getFAIconChar = (iconName) => {
-     let iconElement = document.createElement('i');
-     iconElement.className = 'icon ' + iconName;
-     iconElement.style.display = 'none';
-     document.body.appendChild(iconElement);
-     let iconContent = window.getComputedStyle(iconElement, ':before').getPropertyValue('content');
-     document.body.removeChild(iconElement);
-     return iconContent.replace(/(\")/g,'');
- }
-
 // Abstract Base Class
 class ImageGenerator {
 
@@ -62,17 +52,19 @@ export class RadialGradient extends ImageGenerator {
     imgCanvas.width = this.width;
     imgCanvas.height = this.height;
     let ctx = imgCanvas.getContext('2d');
-    let halfWidth = this.width / 2;
-    let halfHeight = this.height / 2;
+    if (ctx) {
+      let halfWidth = this.width / 2;
+      let halfHeight = this.height / 2;
 
-    let gradient = ctx.createRadialGradient(halfWidth, halfHeight, halfWidth, halfWidth, halfHeight, 0);
-    gradient.addColorStop(0, this.color1);
-    gradient.addColorStop(1, this.color2);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0,0, this.width, this.height);
-
+      let gradient = ctx.createRadialGradient(halfWidth, halfHeight, halfWidth, halfWidth, halfHeight, 0);
+      gradient.addColorStop(0, this.color1);
+      gradient.addColorStop(1, this.color2);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0,0, this.width, this.height);
+    } else {
+      console.warn('getContext did not return an instance of CanvasRenderingContext2D');
+    }
     return imgCanvas;
-
   }
 
 }
@@ -94,11 +86,16 @@ export class LabelSprite extends ImageGenerator {
     let imgCanvas = document.createElement('canvas');
     imgCanvas.width = this.width;
     imgCanvas.height = this.height;
-    let ctx: CanvasRenderingContext2D = imgCanvas.getContext('2d');
-    ctx.font = "18px Courier";
-    ctx.textAlign = "center";
-    ctx.fillStyle = this.color1;
-    ctx.fillText(this.text, imgCanvas.width / 2, imgCanvas.height / 2);
+    let ctx = imgCanvas.getContext('2d');
+    if (ctx) {
+      ctx.font = "18px Courier";
+      ctx.textAlign = "center";
+      ctx.fillStyle = this.color1;
+      ctx.fillText(this.text, imgCanvas.width / 2, imgCanvas.height / 2);
+    } else {
+      console.warn('getContext did not return an instance of CanvasRenderingContext2D');
+    }
+
 
     return imgCanvas;
 
