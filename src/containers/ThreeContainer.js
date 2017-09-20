@@ -15,7 +15,7 @@ import ThreeView from '../components/ThreeView';
 import LoaderModal from '../components/LoaderModal';
 
 const skyboxTexture = 'pano.jpg';
-const meshPath = 'parrot.js';
+const meshPath = 'elmina.js';
 
 class ThreeContainer extends Component {
 
@@ -32,6 +32,7 @@ class ThreeContainer extends Component {
         <ThreeView
           skyboxTexture={texture}
           mesh={mesh}
+          renderDoubleSided={true}
         />
       );
     } else {

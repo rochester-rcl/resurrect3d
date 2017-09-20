@@ -27,7 +27,7 @@ class ImageGenerator {
 
   }
 
-  toTexture(): typeof THREE.Texture {
+  toTexture(): THREE.Texture {
 
     /* For whatever reason the THREE.Texture constructor is not working with
        a canvas object. */
@@ -37,7 +37,44 @@ class ImageGenerator {
 
 }
 
-export class RadialGradient extends ImageGenerator {
+export class LinearGradientShader {
+  topColor: string;
+  bottomColor: string;
+  uniforms: Object;
+  fragmentShader: string = [
+    'uniform vec3 topColor;',
+    'uniform vec3 bottomColor;',
+    'uniform vec2 resolution;',
+    'uniform float exponent;',
+
+    'void main() {',
+      'vec2 pixel = gl_FragCoord.xy / resolution.xy;',
+      'vec3 color = vec3(0.0);',
+      'color = mix(bottomColor, topColor, distance(vec2(pixel.x, pixel.y), vec2(0.5)));',
+      'gl_FragColor = vec4(color,1.0);',
+    '}'
+  ].join('\n');
+
+  constructor(topColor: string, bottomColor: string, width: number, height: number) {
+    this.uniforms = {
+      topColor: { type: 'c', value: new THREE.Color(topColor) },
+      bottomColor: { type: 'c', value: new THREE.Color(bottomColor) },
+      offset: { type: 'f', value: 100 },
+      exponent: { type: 'f', value: 0.6 },
+      resolution: { value: new THREE.Vector2(width, height) }
+    };
+  }
+
+  shaderMaterial(): THREE.ShaderMaterial {
+    return new THREE.ShaderMaterial({
+      uniforms: this.uniforms,
+      fragmentShader: this.fragmentShader,
+      side: THREE.DoubleSide
+    });
+  };
+}
+
+export class RadialGradientCanvas extends ImageGenerator {
 
   constructor(width: number, height: number, outerColor: string, innerColor: string) {
 
@@ -65,6 +102,18 @@ export class RadialGradient extends ImageGenerator {
       console.warn('getContext did not return an instance of CanvasRenderingContext2D');
     }
     return imgCanvas;
+  }
+
+  toTexture(): THREE.Texture {
+
+    /* For whatever reason the THREE.Texture constructor is not working with
+       a canvas object. */
+    let texture = new THREE.TextureLoader().load(this.toBase64());
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.offset.set(0,0);
+    texture.repeat.set(2,2);
+    return texture;
+
   }
 
 }

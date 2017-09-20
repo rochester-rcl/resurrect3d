@@ -17,6 +17,7 @@ import loadPostProcessor from '../utils/postprocessing';
 import { panLeft, panUp, rotateLeft, rotateUp } from '../utils/camera';
 import { fitBoxes } from '../utils/mesh';
 import { LabelSprite } from '../utils/image';
+import { LinearGradientShader } from '../utils/image';
 
 // Controls
 import ThreeControls from './ThreeControls';
@@ -62,7 +63,8 @@ export default class ThreeView extends Component {
   ambientLight: THREE.AmbientLight;
   pointLight: THREE.PointLight;
   skyboxGeom: THREE.SphereGeometry;
-  skyboxMaterial: THREE.MeshBasicMaterial;
+  skyboxMaterialBasic: THREE.MeshBasicMaterial;
+  skyboxMaterialShader: THREE.ShaderMaterial;
   skyboxMesh: THREE.Mesh;
 
   // cameras
@@ -425,8 +427,8 @@ export default class ThreeView extends Component {
         this.measurement.add(sphere);
         if (distance) {
           let material = new THREE.LineBasicMaterial({
-            color: '#2fef36',
-            linewidth: 4,
+            color: '#ccc',
+            linewidth: 3,
             opacity: 0.3,
             transparent: true,
             depthWrite: false,
@@ -456,6 +458,26 @@ export default class ThreeView extends Component {
 
   initMesh(): void {
       this.mesh = this.props.mesh.object3D;
+      if (this.props.renderDoubleSided) {
+        if (this.mesh instanceof THREE.Group) {
+          this.mesh.children.forEach((child) => {
+            if (child.material) {
+              if (child.material instanceof Array) {
+                child.material.forEach((material) => {
+                  material.side = THREE.DoubleSide;
+                });
+              } else {
+                child.material.side = THREE.DoubleSide;
+              }
+            }
+
+          });
+        } else if (this.mesh instanceof THREE.Mesh) {
+          this.mesh.material.forEach((material) => {
+            material.side = THREE.DoubleSide;
+          });
+        }
+      }
       this.scene.add(this.mesh);
 
       this.bboxMesh = new THREE.Box3().setFromObject(this.mesh);
@@ -471,8 +493,14 @@ export default class ThreeView extends Component {
 
       this.environmentRadius = this.meshHeight; // diameter of sphere =  2 * meshHeight
 
-      let labelSphereMaterial = new THREE.MeshPhongMaterial({ color: 0xCCCCCC, depthTest: false, depthWrite: false });
-      let labelSphereGeometry = new THREE.SphereGeometry((this.meshHeight / 100), 16, 16);
+      let labelSphereMaterial = new THREE.MeshPhongMaterial({
+        color: 0xCCCCCC,
+        depthTest: false,
+        depthWrite: false,
+        opacity: 0.8,
+        transparent: true
+      });
+      let labelSphereGeometry = new THREE.SphereGeometry((this.meshHeight / 125), 16, 16);
       this.labelSphere = new THREE.Mesh(labelSphereGeometry, labelSphereMaterial);
       this.setState((prevState, props) => {
         return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Environment" }
@@ -485,10 +513,11 @@ export default class ThreeView extends Component {
     // Skybox
     this.skyboxGeom = new THREE.SphereGeometry(this.environmentRadius * 2, 100, 60);
     this.skyboxGeom.scale(-1, 1, 1);
-    this.skyboxMaterial = new THREE.MeshBasicMaterial({
+    this.skyboxMaterialBasic = new THREE.MeshBasicMaterial({
       map: this.props.skyboxTexture.image,
     });
-    this.skyboxMesh = new THREE.Mesh(this.skyboxGeom, this.skyboxMaterial);
+    this.skyboxMaterialShader = new LinearGradientShader("rgb(35,35,35)", "rgb(45,45,45)", this.width, this.height).shaderMaterial();
+    this.skyboxMesh = new THREE.Mesh(this.skyboxGeom, this.skyboxMaterialBasic);
     this.envScene.add(this.skyboxMesh);
     this.bboxSkybox = new THREE.Box3().setFromObject(this.skyboxMesh);
     this.fitPerspectiveCamera();
@@ -511,8 +540,8 @@ export default class ThreeView extends Component {
     this.envRenderPass = new THREE.RenderPass(this.envScene, this.camera);
     this.bokehPass = new THREE.BokehPass(this.envScene, this.camera, {
       focus: 0.0005,
-      aperture: 0.045,
-      maxBlur: 200.0,
+      aperture: 0.055,
+      maxBlur: 1000.0,
       width: this.width,
       height: this.height,
     });
@@ -568,12 +597,8 @@ export default class ThreeView extends Component {
   fitPerspectiveCamera(): void {
 
     let distance = this.camera.position.distanceTo(this.bboxMesh.min);
-    // Sprite scale is dependent on camera distance
     let fovV = 2 * Math.atan(this.meshHeight / (2 * distance)) * (180 / Math.PI);
-    let aspect = this.width / this.height;
-    let fovH = 2 * Math.atan((this.meshWidth / aspect) / (2 * distance)) * (180 / Math.PI);
-    let avgFov = (fovV + fovH) / 2;
-    this.camera.fov = avgFov + 10.0;
+    this.camera.fov = fovV;
     this.camera.updateProjectionMatrix();
 
   }
@@ -696,13 +721,13 @@ export default class ThreeView extends Component {
     let { skyboxTexture } = this.props;
 
     if (!detailMode) {
-      this.skyboxMaterial.map = skyboxTexture.default;
+      this.skyboxMesh.material = this.skyboxMaterialShader;
       this.axisGuides.forEach((axisGuide) => { axisGuide.visible = true });
       this.setState({
         detailMode: true,
       });
     } else {
-      this.skyboxMaterial.map = skyboxTexture.image;
+      this.skyboxMesh.material = this.skyboxMaterialBasic;
       this.axisGuides.forEach((axisGuide) => { axisGuide.visible = false });
       this.setState({
         detailMode: false,

@@ -4,7 +4,7 @@
 import * as ActionConstants from '../constants/actions';
 
 // Utils
-import { RadialGradient } from '../utils/image';
+import { LinearGradientShader } from '../utils/image';
 
 const defaultState = {
 
@@ -18,7 +18,6 @@ const defaultState = {
     loaded: false,
     progress: 0,
     image: null,
-    default: new RadialGradient(1024, 1024, "#131419", "#262831").toTexture(),
   }
 
 }
