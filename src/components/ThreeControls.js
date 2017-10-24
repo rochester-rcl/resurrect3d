@@ -27,7 +27,7 @@ const ThreeControls = (props: Object) => {
       />
       <Button
         className="three-controls-button"
-        content="dynamic lighting"
+        content="lighting"
         icon="lightbulb"
         onClick={() => { handleToggleDynamicLighting() }}
         active={toggleState['dynamicLighting']}

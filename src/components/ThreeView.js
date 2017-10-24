@@ -22,6 +22,7 @@ import { LinearGradientShader } from '../utils/image';
 // Controls
 import ThreeControls from './ThreeControls';
 import ThreeMeasure from './ThreeMeasure';
+import ThreeTools from './ThreeTools';
 
 export default class ThreeView extends Component {
 
@@ -218,6 +219,27 @@ export default class ThreeView extends Component {
     const info = [
       { key: 'Key:', val: 'Value'},
     ];
+    const tools = [
+      {
+        group: 'measurement',
+        components: [
+          {
+            title: 'measure',
+            component: <ThreeMeasure
+                        updateCallback={this.drawMeasurement}
+                        camera={this.camera}
+                        mesh={this.mesh}
+                        resolution={
+                          {
+                            width: this.webGLRenderer ? this.webGLRenderer.domElement.clientWidth : this.width,
+                            height: this.webGLRenderer ? this.webGLRenderer.domElement.clientHeight : this.height,
+                          }
+                        }
+                      />,
+           },
+        ],
+      },
+    ];
     return(
       <div className="three-view-container">
         <ThreeControls
@@ -227,17 +249,7 @@ export default class ThreeView extends Component {
           handleToggleDynamicLighting={this.toggleDynamicLighting}
           toggleState={ { detailMode: detailMode, dynamicLighting: dynamicLighting } }
         />
-        <ThreeMeasure
-          updateCallback={this.drawMeasurement}
-          camera={this.camera}
-          mesh={this.mesh}
-          resolution={
-            {
-              width: this.webGLRenderer ? this.webGLRenderer.domElement.clientWidth : this.width,
-              height: this.webGLRenderer ? this.webGLRenderer.domElement.clientHeight : this.height,
-            }
-          }
-           />
+        <ThreeTools tools={tools} />
         <InfoModal className="three-info-modal" active={showInfo} info={info} />
         <LoaderModal
           text={loadText + loadProgress}

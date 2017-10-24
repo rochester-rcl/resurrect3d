@@ -33,12 +33,6 @@ body {
   margin-right: 10px !important;
 }
 
-.three-measure-tool-container {
-  position: absolute;
-  right: 0px;
-  margin-top: 10px;
-}
-
 .three-info-grid {
   position: relative;
   width: 50%;
@@ -47,4 +41,55 @@ body {
 
 .three-info-grid-row {
   border-bottom: 5px solid #ccc;
+}
+
+.three-tool-menu-dropdown {
+  border-left: 2px solid #ccc;
+  padding: 20px;
+}
+
+.three-tool-menu {
+  position: absolute;
+  right: 0px;
+  margin-top: 10px;
+  color: #ccc !important;
+  margin: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.three-tool-menu.collapsed {
+  transform: translateX(60%);
+  transition: transform ease-in-out 1s;
+}
+
+.three-tool-menu.expanded {
+  transform: translateX(0%);
+  transition: transform ease-in-out 1s;
+}
+
+.three-tool-menu
+
+.three-tool-menu-button {
+  padding-right: 20px;
+}
+
+.three-tool-menu-title {
+  padding-bottom: 5px;
+}
+
+.three-tool-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.three-measure-tool-container .three-controls-button {
+  margin: 0px !important;
+}
+
+.three-tool-container .title {
+  display: flex !important;
+  border-bottom: 2px solid #ccc;
+  padding-bottom: 5px;
 }
