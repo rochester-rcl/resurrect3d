@@ -25,3 +25,10 @@ export function fitBoxes(bbox1: typeof THREE.Box3, bbox2: typeof THREE.Box3, fac
   return fit;
 
 }
+
+type Materials = THREE.MeshStandardMaterial | THREE.MeshPhongMaterial | THREE.MeshLambertMaterial;
+
+export function mapMaterials(materials: Array<Materials> , callback): Array<Materials> {
+  if (materials.constructor === Array) return materials.map(material => callback(material));
+  return callback(materials);
+}

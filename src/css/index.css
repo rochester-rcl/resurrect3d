@@ -46,6 +46,10 @@ body {
 .three-tool-menu-dropdown {
   border-left: 2px solid #ccc;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
 }
 
 .three-tool-menu {
@@ -59,7 +63,7 @@ body {
 }
 
 .three-tool-menu.collapsed {
-  transform: translateX(60%);
+  transform: translateX(68%);
   transition: transform ease-in-out 1s;
 }
 
@@ -67,8 +71,6 @@ body {
   transform: translateX(0%);
   transition: transform ease-in-out 1s;
 }
-
-.three-tool-menu
 
 .three-tool-menu-button {
   padding-right: 20px;
@@ -82,6 +84,11 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
+}
+
+.three-tool-container .content {
+  width: 100%;
 }
 
 .three-measure-tool-container .three-controls-button {
@@ -92,4 +99,30 @@ body {
   display: flex !important;
   border-bottom: 2px solid #ccc;
   padding-bottom: 5px;
+  width: 100%;
+}
+
+.three-tool {
+  position: relative;
+  width: 100%;
+}
+
+.three-range-slider-container {
+  position: relative;
+  width: 100%;
+  height: auto;
+  background: none !important;
+  border: 2px solid #ccc !important;
+  padding: 20px !important;
+}
+
+.three-range-slider-label {
+  background: none !important;
+  color: #ccc !important;
+  border-right: 2px solid #ccc !important;
+  border-bottom: 2px solid #ccc !important;
+}
+
+.three-range-slider-container .input-range {
+  padding-top: 20px;
 }

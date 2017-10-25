@@ -15,13 +15,14 @@ import loadPostProcessor from '../utils/postprocessing';
 
 // Utils
 import { panLeft, panUp, rotateLeft, rotateUp } from '../utils/camera';
-import { fitBoxes } from '../utils/mesh';
+import { fitBoxes, mapMaterials } from '../utils/mesh';
 import { LabelSprite } from '../utils/image';
 import { LinearGradientShader } from '../utils/image';
 
 // Controls
 import ThreeControls from './ThreeControls';
 import ThreeMeasure from './ThreeMeasure';
+import ThreeRangeSlider from './ThreeRangeSlider';
 import ThreeTools from './ThreeTools';
 
 export default class ThreeView extends Component {
@@ -151,6 +152,7 @@ export default class ThreeView extends Component {
     (this: any).initMesh = this.initMesh.bind(this);
     (this: any).initPostprocessing = this.initPostprocessing.bind(this);
     (this: any).initThree = this.initThree.bind(this);
+    (this: any).initTools = this.initTools.bind(this);
 
     // Updates / Geometry / Rendering
 
@@ -219,27 +221,10 @@ export default class ThreeView extends Component {
     const info = [
       { key: 'Key:', val: 'Value'},
     ];
-    const tools = [
-      {
-        group: 'measurement',
-        components: [
-          {
-            title: 'measure',
-            component: <ThreeMeasure
-                        updateCallback={this.drawMeasurement}
-                        camera={this.camera}
-                        mesh={this.mesh}
-                        resolution={
-                          {
-                            width: this.webGLRenderer ? this.webGLRenderer.domElement.clientWidth : this.width,
-                            height: this.webGLRenderer ? this.webGLRenderer.domElement.clientHeight : this.height,
-                          }
-                        }
-                      />,
-           },
-        ],
-      },
-    ];
+
+    let tools = [];
+    if (this.mesh) tools = this.initTools();
+
     return(
       <div className="three-view-container">
         <ThreeControls
@@ -716,7 +701,18 @@ export default class ThreeView extends Component {
     }
     this.pointLight.position.copy(this.camera.position);
     this.pointLight.target.copy(this.camera.target);
+  }
 
+  updateBumpScale(scale: Number): void {
+    let mesh = this.mesh.children[0];
+    const bumpScale = (material) => {
+      if (material.bumpScale !== null) {
+        material.bumpScale = scale;
+        material.needsUpdate = true;
+      }
+      return material;
+    }
+    mesh.material = mapMaterials(mesh.material, bumpScale);
   }
 
   updateEnv(): void {
@@ -726,6 +722,59 @@ export default class ThreeView extends Component {
 
   /** UI
   *****************************************************************************/
+  initTools(): Array<Object> {
+    let defaultTools = [{
+        group: 'measurement',
+        components: [
+          {
+            title: 'measure',
+            component: <ThreeMeasure
+                        updateCallback={this.drawMeasurement}
+                        camera={this.camera}
+                        mesh={this.mesh}
+                        resolution={
+                          {
+                            width: this.webGLRenderer ? this.webGLRenderer.domElement.clientWidth : this.width,
+                            height: this.webGLRenderer ? this.webGLRenderer.domElement.clientHeight : this.height,
+                          }
+                        }
+                      />,
+           },
+        ],
+    }];
+
+    let bumpMapTool = {
+      group: 'materials',
+      components: [
+        {
+          title: 'bump scale',
+          component: <ThreeRangeSlider
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      title="bump scale"
+                      callback={(value) => this.updateBumpScale(value)}
+                     />,
+        },
+      ]
+    };
+
+    let mesh = this.mesh.children[0];
+    if (mesh.material.constructor === Array) {
+      for (let i=0; i < mesh.material.length; i++) {
+        let material = mesh.material[i];
+        if (material.bumpMap) {
+          defaultTools.push(bumpMapTool);
+          break;
+        }
+      }
+    } else {
+      if (mesh.material.bumpMap) {
+        defaultTools.push(bumpMapTool);
+      }
+    }
+    return defaultTools;
+  }
 
   toggleBackground(event: typeof SyntheticEvent): void {
 
@@ -887,5 +936,8 @@ export default class ThreeView extends Component {
     }
 
   }
+
+  // Static methods
+
 
 }
