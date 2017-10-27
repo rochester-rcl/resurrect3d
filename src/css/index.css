@@ -59,7 +59,7 @@ body {
   color: #ccc !important;
   margin: 20px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .three-tool-menu.collapsed {

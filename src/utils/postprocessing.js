@@ -2,6 +2,8 @@
 
 import loadCopyShader from './shaders/CopyShader';
 import loadBokehShader from './shaders/BokehShader';
+import loadEDLShader from './shaders/EDLShader';
+import loadHorizontalBlurShader from './shaders/HorizontalBlurShader';
 import loadBrightnessContrastShader from './shaders/BrightnessContrastShader';
 import loadConvolutionShader from './shaders/ConvolutionShader';
 import loadSSAOShader from './shaders/SSAOShader';
@@ -10,6 +12,7 @@ import loadShaderPass from './postprocessing/ShaderPass';
 import loadRenderPass from './postprocessing/RenderPass';
 import loadBokehPass from './postprocessing/BokehPass';
 import loadBloomPass from './postprocessing/BloomPass';
+import loadTexturePass from './postprocessing/TexturePass';
 import { loadMaskPass, loadClearMaskPass } from './postprocessing/MaskPass';
 
 export default function loadPostProcessor(threeInstance: Object): Promise<*> {
@@ -18,12 +21,14 @@ export default function loadPostProcessor(threeInstance: Object): Promise<*> {
     loadBokehShader(threeInstance),
     loadBrightnessContrastShader(threeInstance),
     loadConvolutionShader(threeInstance),
-    loadSSAOShader(threeInstance),
+    loadHorizontalBlurShader(threeInstance),
+    loadEDLShader(threeInstance),
   ];
   const tasks = [
     loadEffectComposer(threeInstance),
     loadShaderPass(threeInstance),
     loadRenderPass(threeInstance),
+    loadTexturePass(threeInstance),
     loadBokehPass(threeInstance),
     loadBloomPass(threeInstance),
     loadMaskPass(threeInstance),
