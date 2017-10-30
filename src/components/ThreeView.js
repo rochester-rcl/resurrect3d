@@ -322,6 +322,7 @@ export default class ThreeView extends Component {
   rerenderWebGLScene(): void {
     if (this.sceneComposer !== undefined && this.effectComposer !== undefined) {
       this.sceneComposer.render(0.01);
+      this.modelComposer.render(0.01);
       this.effectComposer.render(0.01);
     } else {
       this.webGLRenderer.render(this.scene, this.camera);
@@ -535,7 +536,7 @@ export default class ThreeView extends Component {
 
   initPostprocessing(): void {
 
-    let effectComposerParams = {
+    let rtParams = {
       minFilter: THREE.LinearFilter,
       magFilter: THREE.LinearFilter,
       format: THREE.RGBAFormat,
@@ -543,17 +544,20 @@ export default class ThreeView extends Component {
     };
 
     this.effectComposer = new THREE.EffectComposer(this.webGLRenderer,
-      new THREE.WebGLRenderTarget(this.width, this.height, effectComposerParams));
+      new THREE.WebGLRenderTarget(this.width, this.height, rtParams));
 
     this.sceneComposer = new THREE.EffectComposer(this.webGLRenderer,
-      new THREE.WebGLRenderTarget(this.width, this.height, effectComposerParams));
+      new THREE.WebGLRenderTarget(this.width, this.height, rtParams));
+
+    this.modelComposer = new THREE.EffectComposer(this.webGLRenderer,
+      new THREE.WebGLRenderTarget(this.width, this.height, rtParams));
 
     //The environment
     let envRenderPass = new THREE.RenderPass(this.envScene, this.camera);
 
     // the model
     let modelRenderPass = new THREE.RenderPass(this.scene, this.camera);
-    modelRenderPass.clear = false;
+
 
     let mask = new THREE.MaskPass(this.scene, this.camera);
     let maskInverse = new THREE.MaskPass(this.scene, this.camera);
@@ -569,36 +573,37 @@ export default class ThreeView extends Component {
 
     let brightnessShader = THREE.BrightnessContrastShader;
     let brightnessPass = new THREE.ShaderPass(brightnessShader);
-    brightnessPass.uniforms['contrast'].value = 0.25;
+    brightnessPass.uniforms['contrast'].value = 0.15;
 
-    let bloomPass = new THREE.BloomPass(2, 15, 2.0, 256);
+    let bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(this.width, this.height), 1.5, 0.8, 0.6);
 
     let bokehPass = new THREE.BokehPass(this.scene, this.camera, {
-      focus: 0.3,
-      aperture: 0.003,
+      focus: 0.7,
+      aperture: 0.009,
       maxBlur: 50.0,
       width: this.width,
       height: this.height,
     });
     bokehPass.renderToScreen = true;
+
     this.sceneComposer.addPass(envRenderPass);
-    this.sceneComposer.addPass(modelRenderPass);
-    this.sceneComposer.addPass(maskInverse);
     this.sceneComposer.addPass(brightnessPass);
     this.sceneComposer.addPass(bloomPass);
     this.sceneComposer.addPass(blurPass);
-    this.sceneComposer.addPass(clearMask);
     this.sceneComposer.addPass(copyPass);
 
-    let rawScene = new THREE.TexturePass(this.sceneComposer.renderTarget2);
+    this.modelComposer.addPass(modelRenderPass);
+
+    let rawScene = new THREE.TexturePass(this.sceneComposer.renderTarget2.texture);
+    let rawModel = new THREE.TexturePass(this.modelComposer.renderTarget2.texture);
+
 
     this.effectComposer.addPass(rawScene);
+    this.effectComposer.addPass(mask);
+    this.effectComposer.addPass(rawModel);
+    this.effectComposer.addPass(clearMask);
     this.effectComposer.addPass(bokehPass);
 
-    /*this.effectComposer.addPass(maskInverse);
-    this.effectComposer.addPass(modelRenderPass);
-    this.effectComposer.addPass(clearMask);*/
-    //this.effectComposer.addPass(copyPass);
 
     this.updateCamera();
     this.setState((prevState, props) => {
