@@ -32,6 +32,10 @@ export default function loadEDLShader(threeInstance: Object): Promise {
 
 		    "tDiffuse": { type: 't', 	value: null },
 
+        "cameraNear": { type: 'f', value: null },
+
+        "cameraFar": { type: 'f', value: null },
+
 		    "opacity":	{ type: 'f',	value: 1.0 }
 
       },
@@ -54,9 +58,15 @@ export default function loadEDLShader(threeInstance: Object): Promise {
 
         "#define NEIGHBOUR_COUNT " + neighbourCount,
 
+        "#include <packing>",
+
         "uniform float screenWidth;",
 
         "uniform float screenHeight;",
+
+        "uniform float cameraNear;",
+
+        "uniform float cameraFar;",
 
         "uniform vec2 neighbours[NEIGHBOUR_COUNT];",
 
@@ -68,7 +78,22 @@ export default function loadEDLShader(threeInstance: Object): Promise {
 
         "uniform sampler2D tDiffuse;",
 
+        "uniform sampler2D tDepth;",
+
         "varying vec2 vUv;",
+
+        "float readDepth( const in vec2 coord ) {",
+
+    			"float cameraFarPlusNear = cameraFar + cameraNear;",
+    			"float cameraFarMinusNear = cameraFar - cameraNear;",
+    			"float cameraCoef = 2.0 * cameraNear;",
+
+    			"float z = unpackRGBAToDepth( texture2D( tDepth, coord ) );",
+
+    			"return cameraCoef / ( cameraFarPlusNear - z * cameraFarMinusNear );",
+
+
+    		"}",
 
         "float response(float depth){",
 
@@ -80,7 +105,7 @@ export default function loadEDLShader(threeInstance: Object): Promise {
 
 		           "vec2 uvNeighbor = vUv + uvRadius * neighbours[i];",
 
-		           "float neighbourDepth = texture2D(colorMap, uvNeighbor).a;",
+		           "float neighbourDepth = readDepth(uvNeighbor);",
 
 		           "if(neighbourDepth != 0.0){",
 
@@ -102,21 +127,22 @@ export default function loadEDLShader(threeInstance: Object): Promise {
 
         "void main(){",
 
-	         "vec4 color = texture2D(colorMap, vUv);",
+	         "vec4 color = texture2D(tDiffuse, vUv);",
 
-	         "float depth = color.a;",
+	         "float depth = readDepth(vUv);",
 
 	         "float res = response(depth);",
 
 	         "float shade = exp(-res * 300.0 * edlStrength);",
 
-	         "if(color.a == 0.0 && res == 0.0){",
+	         "if(depth == 0.0 && res == 0.0){",
 
 		           "discard;",
 
 	         "}else{",
 
 		          "gl_FragColor = vec4(color.rgb * shade, opacity);",
+              //"gl_FragColor = vec4(mix(vec3(0.0, 1.0, 0.0), vec3(shade), 1.0), opacity);",
 
 	         "}",
 

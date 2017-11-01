@@ -300,7 +300,6 @@ export default class ThreeView extends Component {
 
     this.webGLRenderer.setPixelRatio(this.pixelRatio);
     this.webGLRenderer.setSize(this.width, this.height);
-    this.webGLRenderer.autoClear = false;
     this.threeContainer.appendChild(this.webGLRenderer.domElement);
 
     this.setState((prevState, props) => {
@@ -320,7 +319,7 @@ export default class ThreeView extends Component {
   }
 
   rerenderWebGLScene(): void {
-    if (this.sceneComposer !== undefined && this.effectComposer !== undefined) {
+    if (this.sceneComposer !== undefined && this.modelComposer !== undefined && this.effectComposer !== undefined) {
       this.sceneComposer.render(0.01);
       this.modelComposer.render(0.01);
       this.effectComposer.render(0.01);
@@ -558,13 +557,12 @@ export default class ThreeView extends Component {
     // the model
     let modelRenderPass = new THREE.RenderPass(this.scene, this.camera);
 
-
     let mask = new THREE.MaskPass(this.scene, this.camera);
     let maskInverse = new THREE.MaskPass(this.scene, this.camera);
     maskInverse.inverse = true;
 
     let copyPass = new THREE.ShaderPass(THREE.CopyShader);
-    copyPass.renderToScreen = false;
+    copyPass.renderToScreen = true;
 
     let blurPass = new THREE.ShaderPass(THREE.HorizontalBlurShader);
     blurPass.uniforms['h'].value = 2 / (this.width / 2);
@@ -575,6 +573,10 @@ export default class ThreeView extends Component {
     let brightnessPass = new THREE.ShaderPass(brightnessShader);
     brightnessPass.uniforms['contrast'].value = 0.15;
 
+    let brightnessShader2 = THREE.BrightnessContrastShader;
+    brightnessShader2.uniforms = THREE.UniformsUtils.clone(brightnessShader2);
+    let brightnessPass2 = new THREE.ShaderPass(brightnessShader2);
+    brightnessPass2.renderToScreen = true;
     let bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(this.width, this.height), 1.5, 0.8, 0.6);
 
     let bokehPass = new THREE.BokehPass(this.scene, this.camera, {
@@ -586,23 +588,35 @@ export default class ThreeView extends Component {
     });
     bokehPass.renderToScreen = true;
 
+    let EDLPass = new THREE.EDLPass(this.scene, this.camera,
+      { screenWidth: this.width,
+        screenHeight: this.height,
+        opacity: 1.0,
+        edlStrength: 100.4,
+        radius: 2.4, }
+    );
+
+    let SSAOPass = new THREE.SSAOPass(this.scene, this.camera);
+
+    SSAOPass.renderToScreen = false;
+
     this.sceneComposer.addPass(envRenderPass);
     this.sceneComposer.addPass(brightnessPass);
     this.sceneComposer.addPass(bloomPass);
     this.sceneComposer.addPass(blurPass);
-    this.sceneComposer.addPass(copyPass);
 
     this.modelComposer.addPass(modelRenderPass);
 
     let rawScene = new THREE.TexturePass(this.sceneComposer.renderTarget2.texture);
     let rawModel = new THREE.TexturePass(this.modelComposer.renderTarget2.texture);
 
-
-    this.effectComposer.addPass(rawScene);
-    this.effectComposer.addPass(mask);
     this.effectComposer.addPass(rawModel);
+    this.effectComposer.addPass(SSAOPass);
+    this.effectComposer.addPass(maskInverse);
+    this.effectComposer.addPass(rawScene);
     this.effectComposer.addPass(clearMask);
-    this.effectComposer.addPass(bokehPass);
+    this.effectComposer.addPass(copyPass);
+
 
 
     this.updateCamera();

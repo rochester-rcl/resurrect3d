@@ -155,7 +155,7 @@ export class LabelSprite extends ImageGenerator {
     /* For whatever reason the THREE.Texture constructor is not working with
        a canvas object. */
     let spriteMap = new THREE.TextureLoader().load(this.toBase64());
-    let spriteMaterial = new THREE.SpriteMaterial({ map: spriteMap, depthWrite: false, depthTest: false });
+    let spriteMaterial = new THREE.SpriteMaterial({ map: spriteMap, depthWrite: false, depthTest: false, transparent: true, alphaTest: 0.5 });
     return new THREE.Sprite(spriteMaterial);
 
   }
