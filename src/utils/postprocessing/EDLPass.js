@@ -25,6 +25,7 @@ export default function loadEDLPass(threeInstance: Object): typeof Promise {
       let opacity = (params.opacity !== undefined) ? params.opacity : 1.0;
       let screenWidth = params.screenWidth || window.innerWidth || 1;
 			let screenHeight = params.screenHeight || window.innerHeight || 1;
+			this.enableEDL = (params.enableEDL !== undefined) ? params.enableEDL : true;
 
       this.camera2 = camera;
       this.scene2 = scene;
@@ -55,11 +56,11 @@ export default function loadEDLPass(threeInstance: Object): typeof Promise {
 
 				// Render depth into texture
 
-				this.scene2.overrideMaterial = this.depthMaterial;
-
-        renderer.render(this.scene2, this.camera2, this.depthRenderTarget, true);
-
-        this.scene2.overrideMaterial = null;
+				if (this.enableEDL) {
+					this.scene2.overrideMaterial = this.depthMaterial;
+	        renderer.render(this.scene2, this.camera2, this.depthRenderTarget, true);
+	        this.scene2.overrideMaterial = null;
+				}
 
         threeInstance.ShaderPass.prototype.render.call(this, renderer, writeBuffer, readBuffer, delta, maskActive);
       }

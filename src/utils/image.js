@@ -49,8 +49,7 @@ export class LinearGradientShader {
 
     'void main() {',
       'vec2 pixel = gl_FragCoord.xy / resolution.xy;',
-      'vec3 color = vec3(0.0);',
-      'color = mix(bottomColor, topColor, distance(vec2(pixel.x, pixel.y), vec2(0.5)));',
+      'vec3 color = mix(bottomColor, topColor, distance(vec2(pixel.x, pixel.y), vec2(0.5)));',
       'gl_FragColor = vec4(color,1.0);',
     '}'
   ].join('\n');

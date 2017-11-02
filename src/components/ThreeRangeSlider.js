@@ -28,8 +28,8 @@ export default class ThreeRangeSlider extends Component {
   render() {
     const { min, max, step, callback, title } = this.props;
     return(
-      <Segment className="three-range-slider-container">
-        <Label className="three-range-slider-label" attached="top left">{title}</Label>
+      <Segment className="three-tool-component-container">
+        <Label className="three-tool-component-label" attached="top left">{title}</Label>
         <InputRange
           className="three-range-slider"
           step={step}
