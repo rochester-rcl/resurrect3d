@@ -22,7 +22,7 @@ export default function loadBokeh2Shader(threeInstance: Object): Promise {
     		"focalLength":   { value: 24.0 },
     		"fstop": { value: 0.9 },
 
-    		"tColor":   { value: null },
+    		"tDiffuse":   { value: null },
     		"tDepth":   { value: null },
 
     		"maxblur":  { value: 1.0 },
@@ -69,7 +69,7 @@ export default function loadBokeh2Shader(threeInstance: Object): Promise {
 
     		"varying vec2 vUv;",
 
-    		"uniform sampler2D tColor;",
+    		"uniform sampler2D tDiffuse;",
     		"uniform sampler2D tDepth;",
     		"uniform float textureWidth;",
     		"uniform float textureHeight;",
@@ -217,9 +217,9 @@ export default function loadBokeh2Shader(threeInstance: Object): Promise {
     			"vec3 col = vec3(0.0);",
     			"vec2 texel = vec2(1.0/textureWidth,1.0/textureHeight);",
 
-    			"col.r = texture2D(tColor,coords + vec2(0.0,1.0)*texel*fringe*blur).r;",
-    			"col.g = texture2D(tColor,coords + vec2(-0.866,-0.5)*texel*fringe*blur).g;",
-    			"col.b = texture2D(tColor,coords + vec2(0.866,-0.5)*texel*fringe*blur).b;",
+    			"col.r = texture2D(tDiffuse,coords + vec2(0.0,1.0)*texel*fringe*blur).r;",
+    			"col.g = texture2D(tDiffuse,coords + vec2(-0.866,-0.5)*texel*fringe*blur).g;",
+    			"col.b = texture2D(tDiffuse,coords + vec2(0.866,-0.5)*texel*fringe*blur).b;",
 
     			"vec3 lumcoeff = vec3(0.299,0.587,0.114);",
     			"float lum = dot(col.rgb, lumcoeff);",
@@ -320,9 +320,9 @@ export default function loadBokeh2Shader(threeInstance: Object): Promise {
 
     			"if(blur < 0.05) {",
     				"//some optimization thingy",
-    				"col = texture2D(tColor, vUv.xy).rgb;",
+    				"col = texture2D(tDiffuse, vUv.xy).rgb;",
     			"} else {",
-    				"col = texture2D(tColor, vUv.xy).rgb;",
+    				"col = texture2D(tDiffuse, vUv.xy).rgb;",
     				"float s = 1.0;",
     				"int ringsamples;",
 

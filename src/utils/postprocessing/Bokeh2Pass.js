@@ -1,5 +1,5 @@
 /**
- * EDL Shader Pass
+ * Bokeh2 Shader Pass
  */
 
 export default function loadBokeh2Pass(threeInstance: Object): typeof Promise {
@@ -7,7 +7,7 @@ export default function loadBokeh2Pass(threeInstance: Object): typeof Promise {
 		threeInstance.Bokeh2Pass = function (scene, camera, params) {
 
       if (threeInstance.ShaderPass === undefined) {
-        console.error("THREE.EDLPass depends on THREE.ShaderPass");
+        console.error("THREE.Bokeh2Pass depends on THREE.ShaderPass");
       }
 
       if ( threeInstance.Bokeh2Shader === undefined ) {
@@ -27,13 +27,13 @@ export default function loadBokeh2Pass(threeInstance: Object): typeof Promise {
 			let focalLength = (params.focalLength !== undefined) ? params.focalLength : 24.0;
       let fstop = (params.fstop !== undefined) ? params.fstop : 0.9;
       let maxBlur = (params.maxBlur !== undefined) ? params.maxBlur : 1.0;
+      let focusCoords = (params.focusCoords !== undefined) ? params.focusCoords : new threeInstance.Vector2();
 
       this.camera2 = camera;
       this.scene2 = scene;
 
       this.depthMaterial = new threeInstance.MeshDepthMaterial();
-      this.depthMaterial.depthPacking = threeInstance.RGBADepthPacking;
-      this.depthMaterial.blending = threeInstance.NoBlending;
+    
 
       let rtParams = { minFilter: threeInstance.NearestFilter, magFilter: threeInstance.NearestFilter, format: threeInstance.RGBAFormat }
       this.depthRenderTarget = new threeInstance.WebGLRenderTarget(textureWidth, textureHeight, rtParams);
@@ -45,6 +45,8 @@ export default function loadBokeh2Pass(threeInstance: Object): typeof Promise {
       this.uniforms["focalLength"].value = focalLength;
       this.uniforms["fstop"].value = fstop;
       this.uniforms["maxblur"].value = maxBlur;
+      this.uniforms["znear"].value = this.camera2.near;
+      this.uniforms["zfar"].value = this.camera2.far;
 
       this.material.defines = {
         RINGS: 3,
@@ -58,14 +60,11 @@ export default function loadBokeh2Pass(threeInstance: Object): typeof Promise {
 			constructor: threeInstance.Bokeh2Pass,
 
 			render: function ( renderer, writeBuffer, readBuffer, delta, maskActive ) {
-
 				// Render depth into texture
 
-				if (this.enableEDL) {
-					this.scene2.overrideMaterial = this.depthMaterial;
-	        renderer.render(this.scene2, this.camera2, this.depthRenderTarget, true);
-	        this.scene2.overrideMaterial = null;
-				}
+				this.scene2.overrideMaterial = this.depthMaterial;
+	      renderer.render(this.scene2, this.camera2, this.depthRenderTarget, true);
+	      this.scene2.overrideMaterial = null;
 
         threeInstance.ShaderPass.prototype.render.call(this, renderer, writeBuffer, readBuffer, delta, maskActive);
       }

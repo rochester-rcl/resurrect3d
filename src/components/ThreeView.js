@@ -588,7 +588,7 @@ export default class ThreeView extends Component {
 
     let bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(this.width, this.height), 2.5, 0.8, 0.6);
 
-    let bokeh2Pass = new THREE.Bokeh2Pass(this.envScene, this.camera, {
+    let bokeh2Pass = new THREE.Bokeh2Pass(this.scene, this.camera, {
       textureWidth: this.width,
       textureHeight: this.height,
     });
@@ -610,8 +610,7 @@ export default class ThreeView extends Component {
     this.sceneComposer.addPass(envRenderPass);
     this.sceneComposer.addPass(brightnessPass);
     this.sceneComposer.addPass(bloomPass);
-    this.sceneComposer.addPass(blurPass);
-    //this.sceneComposer.addPass(bokeh2Pass);
+    this.sceneComposer.addPass(bokeh2Pass);
 
     this.modelComposer.addPass(modelRenderPass);
 
