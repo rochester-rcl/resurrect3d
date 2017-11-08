@@ -1,7 +1,7 @@
 /* @flow */
 
 import loadCopyShader from './shaders/CopyShader';
-import loadBokehShader from './shaders/BokehShader';
+import loadBokeh2Shader from './shaders/Bokeh2Shader';
 import loadEDLShader from './shaders/EDLShader';
 import loadSSAOShader from './shaders/SSAOShader';
 import loadLuminosityHighPassShader from './shaders/LuminosityHighPassShader';
@@ -11,7 +11,7 @@ import loadConvolutionShader from './shaders/ConvolutionShader';
 import loadEffectComposer from './postprocessing/EffectComposer';
 import loadShaderPass from './postprocessing/ShaderPass';
 import loadRenderPass from './postprocessing/RenderPass';
-import loadBokehPass from './postprocessing/BokehPass';
+import loadBokeh2Pass from './postprocessing/Bokeh2Pass';
 import loadSSAOPass from './postprocessing/SSAOPass';
 import loadEDLPass from './postprocessing/EDLPass';
 import loadUnrealBloomPass from './postprocessing/UnrealBloomPass';
@@ -21,7 +21,7 @@ import { loadMaskPass, loadClearMaskPass } from './postprocessing/MaskPass';
 export default function loadPostProcessor(threeInstance: Object): Promise<*> {
   const shaders = [
     loadCopyShader(threeInstance),
-    loadBokehShader(threeInstance),
+    loadBokeh2Shader(threeInstance),
     loadBrightnessContrastShader(threeInstance),
     loadConvolutionShader(threeInstance),
     loadHorizontalBlurShader(threeInstance),
@@ -36,7 +36,7 @@ export default function loadPostProcessor(threeInstance: Object): Promise<*> {
     loadTexturePass(threeInstance),
     loadEDLPass(threeInstance),
     loadSSAOPass(threeInstance),
-    loadBokehPass(threeInstance),
+    loadBokeh2Pass(threeInstance),
     loadUnrealBloomPass(threeInstance),
     loadMaskPass(threeInstance),
     loadClearMaskPass(threeInstance)
