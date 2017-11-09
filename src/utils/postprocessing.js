@@ -1,18 +1,19 @@
 /* @flow */
 
 import loadCopyShader from './shaders/CopyShader';
-import loadBokeh2Shader from './shaders/Bokeh2Shader';
+import loadBokehShader from './shaders/BokehShader';
 import loadEDLShader from './shaders/EDLShader';
 import loadSSAOShader from './shaders/SSAOShader';
 import loadLuminosityHighPassShader from './shaders/LuminosityHighPassShader';
-import loadHorizontalBlurShader from './shaders/HorizontalBlurShader';
+import loadBlurShader from './shaders/BlurShader';
 import loadBrightnessContrastShader from './shaders/BrightnessContrastShader';
 import loadConvolutionShader from './shaders/ConvolutionShader';
 import loadEffectComposer from './postprocessing/EffectComposer';
 import loadShaderPass from './postprocessing/ShaderPass';
 import loadRenderPass from './postprocessing/RenderPass';
-import loadBokeh2Pass from './postprocessing/Bokeh2Pass';
+import loadBokehPass from './postprocessing/BokehPass';
 import loadSSAOPass from './postprocessing/SSAOPass';
+import loadGaussianPass from './postprocessing/GaussianPass';
 import loadEDLPass from './postprocessing/EDLPass';
 import loadUnrealBloomPass from './postprocessing/UnrealBloomPass';
 import loadTexturePass from './postprocessing/TexturePass';
@@ -21,10 +22,10 @@ import { loadMaskPass, loadClearMaskPass } from './postprocessing/MaskPass';
 export default function loadPostProcessor(threeInstance: Object): Promise<*> {
   const shaders = [
     loadCopyShader(threeInstance),
-    loadBokeh2Shader(threeInstance),
+    loadBokehShader(threeInstance),
     loadBrightnessContrastShader(threeInstance),
     loadConvolutionShader(threeInstance),
-    loadHorizontalBlurShader(threeInstance),
+    loadBlurShader(threeInstance),
     loadLuminosityHighPassShader(threeInstance),
     loadSSAOShader(threeInstance),
     loadEDLShader(threeInstance),
@@ -36,7 +37,8 @@ export default function loadPostProcessor(threeInstance: Object): Promise<*> {
     loadTexturePass(threeInstance),
     loadEDLPass(threeInstance),
     loadSSAOPass(threeInstance),
-    loadBokeh2Pass(threeInstance),
+    loadGaussianPass(threeInstance),
+    loadBokehPass(threeInstance),
     loadUnrealBloomPass(threeInstance),
     loadMaskPass(threeInstance),
     loadClearMaskPass(threeInstance)

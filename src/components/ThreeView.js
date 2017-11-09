@@ -280,7 +280,7 @@ export default class ThreeView extends Component {
 
     // Lights
     this.ambientLight = new THREE.AmbientLight(0xffffff, 1);
-    this.pointLight = new THREE.HemisphereLight(0xffffff, 0x000000, 1.5);
+    this.pointLight = new THREE.HemisphereLight(0xffffff, 0x000000, 1);
     this.pointLight.target = new THREE.Vector3();
     this.pointLight.visible = false;
 
@@ -577,9 +577,7 @@ export default class ThreeView extends Component {
     let copyPass = new THREE.ShaderPass(THREE.CopyShader);
     copyPass.renderToScreen = true;
 
-    let blurPass = new THREE.ShaderPass(THREE.HorizontalBlurShader);
-    blurPass.uniforms['h'].value = 2 / (this.width / 2);
-
+    let gaussianPass = new THREE.GaussianPass({ v: 2 / (this.height / 2) , h: 2 / (this.width / 2)});
     let clearMask = new THREE.ClearMaskPass();
 
     let brightnessShader = THREE.BrightnessContrastShader;
@@ -587,12 +585,6 @@ export default class ThreeView extends Component {
     brightnessPass.uniforms['contrast'].value = 0.15;
 
     let bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(this.width, this.height), 2.5, 0.8, 0.6);
-
-    let bokeh2Pass = new THREE.Bokeh2Pass(this.scene, this.camera, {
-      textureWidth: this.width,
-      textureHeight: this.height,
-    });
-    bokeh2Pass.renderToScreen = true;
 
     this.EDLPass = new THREE.EDLPass(this.scene, this.camera,
       { screenWidth: this.width,
@@ -610,7 +602,7 @@ export default class ThreeView extends Component {
     this.sceneComposer.addPass(envRenderPass);
     this.sceneComposer.addPass(brightnessPass);
     this.sceneComposer.addPass(bloomPass);
-    this.sceneComposer.addPass(bokeh2Pass);
+    this.sceneComposer.addPass(gaussianPass);
 
     this.modelComposer.addPass(modelRenderPass);
 
