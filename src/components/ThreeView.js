@@ -18,6 +18,7 @@ import { panLeft, panUp, rotateLeft, rotateUp } from '../utils/camera';
 import { fitBoxes, mapMaterials } from '../utils/mesh';
 import { LabelSprite } from '../utils/image';
 import { LinearGradientShader } from '../utils/image';
+import ThreePointLights from '../utils/lights';
 
 // Controls
 import ThreeControls from './ThreeControls';
@@ -65,7 +66,7 @@ export default class ThreeView extends Component {
   envScene: THREE.Scene;
   guiScene: THREE.Scene;
   ambientLight: THREE.AmbientLight;
-  pointLight: THREE.PointLight;
+  pointLights: ThreePointLights;
   skyboxGeom: THREE.SphereGeometry;
   skyboxMaterialBasic: THREE.MeshBasicMaterial;
   skyboxMaterialShader: THREE.ShaderMaterial;
@@ -280,12 +281,11 @@ export default class ThreeView extends Component {
 
     // Lights
     this.ambientLight = new THREE.AmbientLight(0xffffff, 1);
-    this.pointLight = new THREE.HemisphereLight(0xffffff, 0x000000, 1);
-    this.pointLight.target = new THREE.Vector3();
-    this.pointLight.visible = false;
+    this.pointLights = new ThreePointLights();
+    this.pointLights.addTo(this.scene);
+    this.pointLights.toggleVisibility();
 
     this.scene.add(this.ambientLight);
-    this.camera.add(this.pointLight);
     this.scene.add(this.camera);
     this.scene.add(this.ambientLight);
 
@@ -462,15 +462,25 @@ export default class ThreeView extends Component {
 
   initMesh(): void {
       this.mesh = this.props.mesh.object3D;
+      const setEnvMap = (material) => {
+        if (material.type === 'MeshStandardMaterial') {
+          material.envMap = this.props.skyboxTexture.image.clone();
+          material.metalness = 0.0;
+          material.roughness = 1.0;
+          material.envMapIntensity = 1;
+        }
+      }
       if (this.props.renderDoubleSided) {
         if (this.mesh instanceof THREE.Group) {
           this.mesh.children.forEach((child) => {
             if (child.material) {
               if (child.material instanceof Array) {
                 child.material.forEach((material) => {
+                  setEnvMap(material);
                   material.side = THREE.DoubleSide;
                 });
               } else {
+                setEnvMap(child.material);
                 child.material.side = THREE.DoubleSide;
               }
             }
@@ -489,9 +499,11 @@ export default class ThreeView extends Component {
       this.meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
       this.meshDepth = this.bboxMesh.max.z - this.bboxMesh.min.z;
       this.computeSpriteScaleFactor();
+      this.pointLights.addHelpers(this.guiScene, this.spriteScaleFactor);
       let distance = this.camera.position.distanceTo(this.bboxMesh.max);
-      this.pointLight.distance = distance;
-
+      this.pointLights.setTarget(this.mesh);
+      this.pointLights.setLightPositions(this.bboxMesh);
+      this.pointLights.traverse((light) => light.distance = distance / 2);
       this.computeAxisGuides();
       this.drawAxisGuides(true);
 
@@ -755,8 +767,6 @@ export default class ThreeView extends Component {
         panOffset: this.state.panOffset.set(0, 0, 0),
       });
     }
-    this.pointLight.position.copy(this.camera.position);
-    this.pointLight.target.copy(this.camera.target);
   }
 
   updateMaterials(scale: Number, prop: string): void {
@@ -870,12 +880,10 @@ export default class ThreeView extends Component {
 
     if (this.state.dynamicLighting) {
       this.setState({ dynamicLighting: false });
-      this.ambientLight.intensity = 1;
-      this.pointLight.visible = false;
+      this.pointLights.toggleVisibility();
     } else {
       this.setState({ dynamicLighting: true });
-      this.ambientLight.intensity = 0.2;
-      this.pointLight.visible = true;
+      this.pointLights.toggleVisibility();
     }
 
   }

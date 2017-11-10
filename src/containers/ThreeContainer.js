@@ -15,7 +15,7 @@ import ThreeView from '../components/ThreeView';
 import LoaderModal from '../components/LoaderModal';
 
 const skyboxTexture = 'test_pano.jpg';
-const meshPath = 'paleo.js';
+const meshPath = 'parrot.js';
 
 class ThreeContainer extends Component {
 
