@@ -4,15 +4,15 @@ import * as THREE from 'three';
 import { labelSprite } from './image';
 
 export default class ThreePointLights {
-  DEFAULT_OPTIONS = { color: 0xffffff, intensity: 1, distance: 0, angle: Math.PI/2, decay: 2, penumbra: 0 }
-  constructor(options: Object) {
-    let opts = options ? options : this.DEFAULT_OPTIONS;
-    this.key = new THREE.SpotLight();
-    this.back = new THREE.SpotLight(...opts);
-    this.flood = new THREE.SpotLight(...opts);
+  constructor() {
+    this.key = new THREE.SpotLight(0xffffff, 0.2, 0, Math.PI/2, 1.0, 2.0);
+    this.back = new THREE.SpotLight(0xffffff, 0.2, 0, Math.PI/2, 1.0, 2.0);
+    this.flood = new THREE.PointLight(0xffffff, 0.2, 0, 2);
     this._lights = [this.key, this.back, this.flood];
     this._helpers = this._initHelpers();
-    //this.toggleHelpers()
+    this.key.castShadow = true;
+    this.back.castShadow = true;
+    this.toggleHelpers();
     this._group = new THREE.Group();
     this._group.add(...this._lights);
     this._group.add(...this._helpers);
@@ -34,7 +34,9 @@ export default class ThreePointLights {
     let helpers = [];
     helpers.push(new THREE.SpotLightHelper(this.key));
     helpers.push(new THREE.SpotLightHelper(this.back));
-    helpers.push(new THREE.SpotLightHelper(this.flood));
+    helpers.push(new THREE.PointLightHelper(this.flood));
+    helpers.push(new THREE.CameraHelper(this.key.shadow.camera));
+    helpers.push(new THREE.CameraHelper(this.back.shadow.camera));
     return helpers;
   }
 
@@ -44,8 +46,7 @@ export default class ThreePointLights {
 
   addHelpers(obj: THREE.Object3D, scaleFactor: Number): void {
     const labelHelpers = (helper) => {
-      helper.scale.multiplyScalar((scaleFactor / 4000));
-      console.log(scaleFactor / 10000);
+      helper.scale.multiplyScalar((scaleFactor));
     }
     this.traverseHelpers(labelHelpers);
     obj.add(...this._helpers);
@@ -72,9 +73,12 @@ export default class ThreePointLights {
   setLightPositions(pos: THREE.Box3): void {
     let max = pos.max.clone();
     let min = pos.min.clone();
-    this.key.position.set(min.x, max.y, max.z);
-    this.back.position.set(max.x / 2, max.y, min.z);
+    this.key.position.set(max.x, max.y, min.z);
+    this.key.position.multiplyScalar(100);
+    this.back.position. set(min.x / 2, max.y, max.z / 2);
+    this.back.position.multiplyScalar(100);
     this.flood.position.set(max.x, max.y, max.z);
+    this.flood.position.multiplyScalar(100);
   }
 
   setTarget(target: Object3D): void {

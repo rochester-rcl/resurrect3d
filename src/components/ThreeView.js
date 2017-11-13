@@ -67,6 +67,7 @@ export default class ThreeView extends Component {
   guiScene: THREE.Scene;
   ambientLight: THREE.AmbientLight;
   pointLights: ThreePointLights;
+  dynamicLight: THREE.SpotLight;
   skyboxGeom: THREE.SphereGeometry;
   skyboxMaterialBasic: THREE.MeshBasicMaterial;
   skyboxMaterialShader: THREE.ShaderMaterial;
@@ -281,13 +282,23 @@ export default class ThreeView extends Component {
 
     // Lights
     this.ambientLight = new THREE.AmbientLight(0xffffff, 1);
+
+    this.dynamicLight = new THREE.SpotLight(0xffffff);
+    this.dynamicLight.intensity = 1;
+    this.dynamicLight.penumbra = 0.5;
+
+    this.dynamicLight.castShadow = true;
+		this.dynamicLight.shadow.mapSize.width = 1024;
+		this.dynamicLight.shadow.mapSize.height = 1024;
+		this.dynamicLight.shadow.bias = -0.005;
+    this.dynamicLight.visible = this.state.dynamicLighting;
+    this.camera.add(this.dynamicLight);
+
     this.pointLights = new ThreePointLights();
     this.pointLights.addTo(this.scene);
-    this.pointLights.toggleVisibility();
 
     this.scene.add(this.ambientLight);
     this.scene.add(this.camera);
-    this.scene.add(this.ambientLight);
 
     // Label Sprite that we can just copy for all the measurement
     this.labelSprite = new LabelSprite(128, 128,'#fff', '+').toSprite();
@@ -303,7 +314,8 @@ export default class ThreeView extends Component {
       gammaInput: true,
       gammaOutput: true,
     });
-
+    this.webGLRenderer.shadowMapEnabled = true,
+    this.webGLRenderer.shadowMapSoft = true,
     this.webGLRenderer.setPixelRatio(this.pixelRatio);
     this.webGLRenderer.setSize(this.width, this.height);
     this.threeContainer.appendChild(this.webGLRenderer.domElement);
@@ -473,6 +485,8 @@ export default class ThreeView extends Component {
       if (this.props.renderDoubleSided) {
         if (this.mesh instanceof THREE.Group) {
           this.mesh.children.forEach((child) => {
+            child.receiveShadow = true;
+            child.castShadow = true;
             if (child.material) {
               if (child.material instanceof Array) {
                 child.material.forEach((material) => {
@@ -487,11 +501,14 @@ export default class ThreeView extends Component {
 
           });
         } else if (this.mesh instanceof THREE.Mesh) {
+          this.mesh.castShadow = true;
+          this.mesh.receiveShadow = true;
           this.mesh.material.forEach((material) => {
             material.side = THREE.DoubleSide;
           });
         }
       }
+
       this.scene.add(this.mesh);
 
       this.bboxMesh = new THREE.Box3().setFromObject(this.mesh);
@@ -500,10 +517,11 @@ export default class ThreeView extends Component {
       this.meshDepth = this.bboxMesh.max.z - this.bboxMesh.min.z;
       this.computeSpriteScaleFactor();
       this.pointLights.addHelpers(this.guiScene, this.spriteScaleFactor);
-      let distance = this.camera.position.distanceTo(this.bboxMesh.max);
       this.pointLights.setTarget(this.mesh);
       this.pointLights.setLightPositions(this.bboxMesh);
-      this.pointLights.traverse((light) => light.distance = distance / 2);
+      let distance = this.camera.position.distanceTo(this.bboxMesh.max);
+      //this.dynamicLight.distance = distance;
+
       this.computeAxisGuides();
       this.drawAxisGuides(true);
 
@@ -767,6 +785,9 @@ export default class ThreeView extends Component {
         panOffset: this.state.panOffset.set(0, 0, 0),
       });
     }
+    let cameraPos = this.camera.position.clone();
+    cameraPos.y = cameraPos.y * 10;
+    this.dynamicLight.position.copy(cameraPos);
   }
 
   updateMaterials(scale: Number, prop: string): void {
@@ -877,15 +898,20 @@ export default class ThreeView extends Component {
   }
 
   toggleDynamicLighting(): void {
+    this.setState({
+      dynamicLighting: !this.state.dynamicLighting,
+    }, () => {
+      const { dynamicLighting } = this.state;
+      this.dynamicLight.visible = dynamicLighting;
+      if (dynamicLighting) {
+        this.pointLights.traverse((light) => light.intensity = 0.1);
+        this.ambientLight.intensity = 0.45;
+      } else {
+        this.pointLights.traverse((light) => light.intensity = 0.25);
+        this.ambientLight.intensity = 1.0;
+      }
 
-    if (this.state.dynamicLighting) {
-      this.setState({ dynamicLighting: false });
-      this.pointLights.toggleVisibility();
-    } else {
-      this.setState({ dynamicLighting: true });
-      this.pointLights.toggleVisibility();
-    }
-
+    });
   }
 
   toggleInfo(event: typeof SyntheticEvent): void {
