@@ -283,13 +283,12 @@ export default class ThreeView extends Component {
     // Lights
     this.ambientLight = new THREE.AmbientLight(0xffffff, 1);
 
-    this.dynamicLight = new THREE.SpotLight(0xffffff);
-    this.dynamicLight.intensity = 1;
-    this.dynamicLight.penumbra = 0.5;
+    this.dynamicLight = new THREE.PointLight(0xffffff, 1, 100, 2);
+    this.dynamicLight.target = new THREE.Vector3();
 
     this.dynamicLight.castShadow = true;
-		this.dynamicLight.shadow.mapSize.width = 1024;
-		this.dynamicLight.shadow.mapSize.height = 1024;
+		this.dynamicLight.shadow.mapSize.width = 2048;
+		this.dynamicLight.shadow.mapSize.height = 2048;
 		this.dynamicLight.shadow.bias = -0.005;
     this.dynamicLight.visible = this.state.dynamicLighting;
     this.camera.add(this.dynamicLight);
@@ -520,7 +519,8 @@ export default class ThreeView extends Component {
       this.pointLights.setTarget(this.mesh);
       this.pointLights.setLightPositions(this.bboxMesh);
       let distance = this.camera.position.distanceTo(this.bboxMesh.max);
-      //this.dynamicLight.distance = distance;
+      this.dynamicLight.distance = distance * 10;
+
 
       this.computeAxisGuides();
       this.drawAxisGuides(true);
@@ -785,9 +785,7 @@ export default class ThreeView extends Component {
         panOffset: this.state.panOffset.set(0, 0, 0),
       });
     }
-    let cameraPos = this.camera.position.clone();
-    cameraPos.y = cameraPos.y * 10;
-    this.dynamicLight.position.copy(cameraPos);
+    this.dynamicLight.position.copy(this.camera.position);
   }
 
   updateMaterials(scale: Number, prop: string): void {
@@ -905,7 +903,7 @@ export default class ThreeView extends Component {
       this.dynamicLight.visible = dynamicLighting;
       if (dynamicLighting) {
         this.pointLights.traverse((light) => light.intensity = 0.1);
-        this.ambientLight.intensity = 0.45;
+        this.ambientLight.intensity = 0.8;
       } else {
         this.pointLights.traverse((light) => light.intensity = 0.25);
         this.ambientLight.intensity = 1.0;
