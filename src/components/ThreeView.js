@@ -283,7 +283,7 @@ export default class ThreeView extends Component {
     // Lights
     this.ambientLight = new THREE.AmbientLight(0xffffff, 1);
 
-    this.dynamicLight = new THREE.PointLight(0xffffff, 1, 100, 2);
+    this.dynamicLight = new THREE.PointLight(0xc9e2ff, 1, 100, 2);
     this.dynamicLight.target = new THREE.Vector3();
 
     this.dynamicLight.castShadow = true;

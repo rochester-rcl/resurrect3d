@@ -7,7 +7,7 @@ export default class ThreePointLights {
   constructor() {
     this.key = new THREE.SpotLight(0xffffff, 0.2, 0, Math.PI/2, 1.0, 2.0);
     this.back = new THREE.SpotLight(0xffffff, 0.2, 0, Math.PI/2, 1.0, 2.0);
-    this.flood = new THREE.PointLight(0xffffff, 0.2, 0, 2);
+    this.flood = new THREE.PointLight(0xffffff, 0.1, 0, 2);
     this._lights = [this.key, this.back, this.flood];
     this._helpers = this._initHelpers();
     this.key.castShadow = true;
