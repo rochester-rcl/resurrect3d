@@ -283,13 +283,16 @@ export default class ThreeView extends Component {
     // Lights
     this.ambientLight = new THREE.AmbientLight(0xffffff, 1);
 
-    this.dynamicLight = new THREE.PointLight(0xc9e2ff, 1, 100, 2);
+    this.dynamicLight = new THREE.PointLight(0xc9e2ff, 0.8, 100, 2);
     this.dynamicLight.target = new THREE.Vector3();
 
     this.dynamicLight.castShadow = true;
 		this.dynamicLight.shadow.mapSize.width = 2048;
 		this.dynamicLight.shadow.mapSize.height = 2048;
-		this.dynamicLight.shadow.bias = -0.005;
+		this.dynamicLight.shadow.bias = -0.0002;
+    this.dynamicLight.shadow.camera.near = this.camera.near;
+    this.dynamicLight.shadow.camera.far = this.camera.far;
+
     this.dynamicLight.visible = this.state.dynamicLighting;
     this.camera.add(this.dynamicLight);
 
@@ -313,8 +316,8 @@ export default class ThreeView extends Component {
       gammaInput: true,
       gammaOutput: true,
     });
-    this.webGLRenderer.shadowMapEnabled = true,
-    this.webGLRenderer.shadowMapSoft = true,
+    this.webGLRenderer.shadowMap.enabled = true,
+    this.webGLRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.webGLRenderer.setPixelRatio(this.pixelRatio);
     this.webGLRenderer.setSize(this.width, this.height);
     this.threeContainer.appendChild(this.webGLRenderer.domElement);
@@ -481,7 +484,6 @@ export default class ThreeView extends Component {
           material.envMapIntensity = 1;
         }
       }
-      if (this.props.renderDoubleSided) {
         if (this.mesh instanceof THREE.Group) {
           this.mesh.children.forEach((child) => {
             child.receiveShadow = true;
@@ -490,11 +492,15 @@ export default class ThreeView extends Component {
               if (child.material instanceof Array) {
                 child.material.forEach((material) => {
                   setEnvMap(material);
-                  material.side = THREE.DoubleSide;
+                  if (this.props.renderDoubleSided) {
+                    material.side = THREE.DoubleSide;
+                  }
                 });
               } else {
                 setEnvMap(child.material);
-                child.material.side = THREE.DoubleSide;
+                if (this.props.renderDoubleSided) {
+                  child.material.side = THREE.DoubleSide;
+                }
               }
             }
 
@@ -503,10 +509,11 @@ export default class ThreeView extends Component {
           this.mesh.castShadow = true;
           this.mesh.receiveShadow = true;
           this.mesh.material.forEach((material) => {
-            material.side = THREE.DoubleSide;
+            if (this.props.renderDoubleSided) {
+              material.side = THREE.DoubleSide;
+            }
           });
         }
-      }
 
       this.scene.add(this.mesh);
 
@@ -518,8 +525,6 @@ export default class ThreeView extends Component {
       this.pointLights.addHelpers(this.guiScene, this.spriteScaleFactor);
       this.pointLights.setTarget(this.mesh);
       this.pointLights.setLightPositions(this.bboxMesh);
-      let distance = this.camera.position.distanceTo(this.bboxMesh.max);
-      this.dynamicLight.distance = distance * 10;
 
 
       this.computeAxisGuides();
@@ -620,7 +625,7 @@ export default class ThreeView extends Component {
       { screenWidth: this.width,
         screenHeight: this.height,
         opacity: 1.0,
-        edlStrength: 10.4,
+        edlStrength: 20.4,
         enableEDL: false,
         radius: 1.4, }
     );
@@ -785,14 +790,21 @@ export default class ThreeView extends Component {
         panOffset: this.state.panOffset.set(0, 0, 0),
       });
     }
+    let distance = this.camera.position.distanceTo(this.bboxMesh.max);
     this.dynamicLight.position.copy(this.camera.position);
+    this.dynamicLight.distance = distance * 5;
+    this.dynamicLight.needsUpdate = true;
   }
 
   updateMaterials(scale: Number, prop: string): void {
     let mesh = this.mesh.children[0];
     const updateFunc = (material) => {
       if (material[prop] !== null || material[prop] !== undefined) {
-        material[prop] = scale;
+        if (prop === 'normalScale') {
+          material[prop].set(scale, scale, 0);
+        } else {
+          material[prop] = scale;
+        }
         material.needsUpdate = true;
       }
       return material;
@@ -840,13 +852,13 @@ export default class ThreeView extends Component {
       group: 'materials',
       components: [
         {
-          title: 'bump scale',
+          title: 'normal scale',
           component: <ThreeRangeSlider
                       min={0}
                       max={1}
                       step={0.01}
-                      title="bump scale"
-                      callback={(value) => this.updateMaterials(value, 'bumpScale')}
+                      title="normal scale"
+                      callback={(value) => this.updateMaterials(value, 'normalScale')}
                      />,
         },
       ]
@@ -856,13 +868,13 @@ export default class ThreeView extends Component {
     if (mesh.material.constructor === Array) {
       for (let i=0; i < mesh.material.length; i++) {
         let material = mesh.material[i];
-        if (material.bumpMap) {
+        if (material.normalMap) {
           defaultTools.push(bumpMapTool);
           break;
         }
       }
     } else {
-      if (mesh.material.bumpMap) {
+      if (mesh.material.normalMap) {
         defaultTools.push(bumpMapTool);
       }
     }
