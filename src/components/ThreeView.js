@@ -116,7 +116,15 @@ export default class ThreeView extends Component {
     detailMode: false,
     showInfo: false,
     showAxes: false,
+    showLightHelper: false,
     dynamicLighting: false,
+    dynamicLightProps: {
+      color: 0xc9e2ff,
+      intensity: 0.8,
+      distance: 0,
+      decay: 2,
+      offset: new THREE.Vector3(),
+    },
     units: 'cm',
 
   };
@@ -176,7 +184,9 @@ export default class ThreeView extends Component {
     (this: any).addAxisLabels = this.addAxisLabels.bind(this);
     (this: any).toggleBackground = this.toggleBackground.bind(this);
     (this: any).showAxes = this.showAxes.bind(this);
+    (this: any).showLightHelper = this.showLightHelper.bind(this);
     (this: any).toggleDynamicLighting = this.toggleDynamicLighting.bind(this);
+    (this: any).updateDynamicLight = this.updateDynamicLighting.bind(this);
     (this: any).toggleInfo = this.toggleInfo.bind(this);
     (this: any).drawMeasurement = this.drawMeasurement.bind(this);
     (this: any).drawSpriteTarget = this.drawSpriteTarget.bind(this);
@@ -283,7 +293,7 @@ export default class ThreeView extends Component {
     // Lights
     this.ambientLight = new THREE.AmbientLight(0xffffff, 1);
 
-    this.dynamicLight = new THREE.PointLight(0xc9e2ff, 0.8, 100, 2);
+    this.dynamicLight = new THREE.PointLight(...this.state.dynamicLightProps);
     this.dynamicLight.target = new THREE.Vector3();
 
     this.dynamicLight.castShadow = true;
@@ -298,6 +308,11 @@ export default class ThreeView extends Component {
 
     this.pointLights = new ThreePointLights();
     this.pointLights.addTo(this.scene);
+
+    this.lightHelper = new THREE.CameraHelper(this.dynamicLight.shadow.camera);
+    this.lightHelper.visible = this.state.showLightHelper;
+    this.guiScene.add(this.lightHelper);
+
 
     this.scene.add(this.ambientLight);
     this.scene.add(this.camera);
@@ -525,7 +540,6 @@ export default class ThreeView extends Component {
       this.pointLights.addHelpers(this.guiScene, this.spriteScaleFactor);
       this.pointLights.setTarget(this.mesh);
       this.pointLights.setLightPositions(this.bboxMesh);
-
 
       this.computeAxisGuides();
       this.drawAxisGuides(true);
@@ -791,7 +805,7 @@ export default class ThreeView extends Component {
       });
     }
     let distance = this.camera.position.distanceTo(this.bboxMesh.max);
-    this.dynamicLight.position.copy(this.camera.position);
+    this.dynamicLight.position.copy(this.camera.position).add(this.state.dynamicLightProps.offset);
     this.dynamicLight.distance = distance * 5;
     this.dynamicLight.needsUpdate = true;
   }
@@ -810,6 +824,50 @@ export default class ThreeView extends Component {
       return material;
     }
     mesh.material = mapMaterials(mesh.material, updateFunc);
+  }
+
+  updateDynamicLighting(value: string | number | THREE.Vector3, prop: string): void {
+    let { dynamicLightProps } = this.state;
+    let updated = {};
+    if (!prop.includes('offset')) {
+      updated[prop] = value;
+    } else {
+      let axis = prop.split('offset')[1];
+      let offset = dynamicLightProps.offset.clone();
+      switch(axis) {
+
+        case('X'):
+          offset.x = value;
+          break;
+
+        case('Y'):
+          offset.y = value;
+          break;
+
+        case('Z'):
+          offset.z = value;
+          break;
+
+        default:
+          break;
+
+      }
+      prop = 'offset';
+      updated.offset = offset;
+    }
+    if (dynamicLightProps[prop] !== undefined) {
+      this.setState({
+        dynamicLightProps: { ...dynamicLightProps, ...updated }
+        }, () => {
+          if (prop !== 'offset') {
+            this.dynamicLight[prop] = this.state.dynamicLightProps[prop];
+          } else {
+            this.dynamicLight.position.copy(this.camera.position).add(this.state.dynamicLightProps.offset);
+          }
+          this.dynamicLight.needsUpdate = true;
+
+        });
+    }
   }
 
   updateEnv(): void {
@@ -846,9 +904,68 @@ export default class ThreeView extends Component {
                         />
            }
         ],
-    }];
+    },
+    {
+      group: 'lights',
+      components: [
+        {
+          title: 'helper',
+          component: <ThreeToggle
+                      callback={this.showLightHelper}
+                      checked={this.state.showLightHelper}
+                      title="show light helper"
+                      />
+        },
+        {
+          title: 'intensity',
+          component: <ThreeRangeSlider
+                        min={0.0}
+                        max={4.0}
+                        step={0.1}
+                        title="intensity"
+                        defaultVal={this.dynamicLight.intensity}
+                        callback={(value) => this.updateDynamicLighting(value, 'intensity')}
+                      />
+        },
+        {
+          title: 'offset',
+          component:
+                      <div className="three-tool-group">
+                        <h4>Offset</h4>
+                        <ThreeRangeSlider
+                          key={0}
+                          min={0.0}
+                          max={10.0}
+                          step={0.1}
+                          title="x-axis"
+                          defaultVal={0.0}
+                          callback={(value) => this.updateDynamicLighting(value, 'offsetX')}
+                        />
+                        <ThreeRangeSlider
+                          key={1}
+                          min={0.0}
+                          max={10.0}
+                          step={0.1}
+                          title="y-axis"
+                          defaultVal={0.0}
+                          callback={(value) => this.updateDynamicLighting(value, 'offsetY')}
+                        />
+                        <ThreeRangeSlider
+                          key={2}
+                          min={0.0}
+                          max={10.0}
+                          step={0.1}
+                          title="z-axis"
+                          defaultVal={0.0}
+                          callback={(value) => this.updateDynamicLighting(value, 'offsetZ')}
+                        />
+                      </div>
+        }
+      ]
+    }
+  ];
 
-    let bumpMapTool = {
+    let normalMapTool = {
       group: 'materials',
       components: [
         {
@@ -857,6 +974,7 @@ export default class ThreeView extends Component {
                       min={0}
                       max={1}
                       step={0.01}
+                      defaultVal={0}
                       title="normal scale"
                       callback={(value) => this.updateMaterials(value, 'normalScale')}
                      />,
@@ -864,11 +982,32 @@ export default class ThreeView extends Component {
       ]
     };
 
+    let bumpMapTool = {
+      group: 'materials',
+      components: [
+        {
+          title: 'bump scale',
+          component: <ThreeRangeSlider
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      defaultVal={0}
+                      title="bump scale"
+                      callback={(value) => this.updateMaterials(value, 'bumpScale')}
+                     />,
+        },
+      ]
+    }
+
     let mesh = this.mesh.children[0];
     if (mesh.material.constructor === Array) {
       for (let i=0; i < mesh.material.length; i++) {
         let material = mesh.material[i];
         if (material.normalMap) {
+          defaultTools.push(normalMapTool);
+          break;
+        }
+        if (material.bumpMap) {
           defaultTools.push(bumpMapTool);
           break;
         }
@@ -876,6 +1015,9 @@ export default class ThreeView extends Component {
     } else {
       if (mesh.material.normalMap) {
         defaultTools.push(bumpMapTool);
+      }
+      if (mesh.material.bumpMap) {
+        defaultTools.push(bumpMapTool)
       }
     }
     return defaultTools;
@@ -904,6 +1046,12 @@ export default class ThreeView extends Component {
   showAxes(show: bool): void {
     this.setState({ showAxes: show },
       () => this.axisGuides.forEach((axisGuide) => { axisGuide.visible = show })
+    );
+  }
+
+  showLightHelper(show: bool): void {
+    this.setState({ showLightHelper: show }, () =>
+      this.lightHelper.visible = this.state.showLightHelper
     );
   }
 

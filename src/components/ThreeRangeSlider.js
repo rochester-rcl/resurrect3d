@@ -19,6 +19,10 @@ export default class ThreeRangeSlider extends Component {
     (this: any).updateRange = this.updateRange.bind(this);
   }
 
+  componentDidMount(): void {
+    this.setState({ value: this.props.defaultVal });
+  }
+
   updateRange(value: Number, callback: any): void {
     this.setState({ value: value }, () => {
       if (callback) callback(value);
