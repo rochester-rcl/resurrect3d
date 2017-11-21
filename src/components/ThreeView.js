@@ -124,9 +124,16 @@ export default class ThreeView extends Component {
       distance: 0,
       decay: 2,
       offset: new THREE.Vector3(),
+      lock: false,
+    },
+    shaderPasses: {
+      EDL: {
+        radius: 0,
+        enableEDL: false,
+        edlStrength: 0,
+      }
     },
     units: 'cm',
-
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
   constructor(props: Object){
@@ -192,6 +199,7 @@ export default class ThreeView extends Component {
     (this: any).drawSpriteTarget = this.drawSpriteTarget.bind(this);
     (this: any).computeSpriteScaleFactor = this.computeSpriteScaleFactor.bind(this);
     (this: any).updateMaterials = this.updateMaterials.bind(this);
+    (this: any).updateShaders = this.updateShaders.bind(this);
 
     // event handlers
 
@@ -304,7 +312,7 @@ export default class ThreeView extends Component {
     this.dynamicLight.shadow.camera.far = this.camera.far;
 
     this.dynamicLight.visible = this.state.dynamicLighting;
-    this.camera.add(this.dynamicLight);
+    this.scene.add(this.dynamicLight);
 
     this.pointLights = new ThreePointLights();
     this.pointLights.addTo(this.scene);
@@ -639,7 +647,7 @@ export default class ThreeView extends Component {
       { screenWidth: this.width,
         screenHeight: this.height,
         opacity: 1.0,
-        edlStrength: 20.4,
+        edlStrength: 10.4,
         enableEDL: false,
         radius: 1.4, }
     );
@@ -804,14 +812,16 @@ export default class ThreeView extends Component {
         panOffset: this.state.panOffset.set(0, 0, 0),
       });
     }
-    let distance = this.camera.position.distanceTo(this.bboxMesh.max);
-    this.dynamicLight.position.copy(this.camera.position).add(this.state.dynamicLightProps.offset);
-    this.dynamicLight.distance = distance * 5;
-    this.dynamicLight.needsUpdate = true;
+
+    if (!this.state.dynamicLightProps.lock) {
+      let distance = this.camera.position.distanceTo(this.bboxMesh.max);
+      this.dynamicLight.position.copy(this.camera.position).add(this.state.dynamicLightProps.offset);
+      this.dynamicLight.distance = distance * 5;
+      this.dynamicLight.needsUpdate = true;
+    }
   }
 
   updateMaterials(scale: Number, prop: string): void {
-    let mesh = this.mesh.children[0];
     const updateFunc = (material) => {
       if (material[prop] !== null || material[prop] !== undefined) {
         if (prop === 'normalScale') {
@@ -823,7 +833,14 @@ export default class ThreeView extends Component {
       }
       return material;
     }
-    mesh.material = mapMaterials(mesh.material, updateFunc);
+    for (let i=0; i < this.mesh.children.length; i++) {
+      let mesh = this.mesh.children[i];
+      mesh.material = mapMaterials(mesh.material, updateFunc);
+    }
+  }
+
+  updateShaders(value: Number | boolean, shaderName: string, uniformProp: string): void {
+
   }
 
   updateDynamicLighting(value: string | number | THREE.Vector3, prop: string): void {
@@ -859,13 +876,14 @@ export default class ThreeView extends Component {
       this.setState({
         dynamicLightProps: { ...dynamicLightProps, ...updated }
         }, () => {
-          if (prop !== 'offset') {
+          if (prop === 'offset') {
+            if (!this.state.dynamicLightProps.lock) {
+              this.dynamicLight.position.copy(this.camera.position).add(this.state.dynamicLightProps.offset);
+            }
+          } else if(prop !== 'lock') {
             this.dynamicLight[prop] = this.state.dynamicLightProps[prop];
-          } else {
-            this.dynamicLight.position.copy(this.camera.position).add(this.state.dynamicLightProps.offset);
           }
           this.dynamicLight.needsUpdate = true;
-
         });
     }
   }
@@ -878,6 +896,9 @@ export default class ThreeView extends Component {
   /** UI
   *****************************************************************************/
   initTools(): Array<Object> {
+    let offsetMax = Number(this.environmentRadius.toFixed(2));
+    let step = Number((offsetMax / 100).toFixed(2));
+
     let defaultTools = [{
         group: 'measurement',
         components: [
@@ -931,30 +952,35 @@ export default class ThreeView extends Component {
           title: 'offset',
           component:
                       <div className="three-tool-group">
-                        <h4>Offset</h4>
+                        <h4 className="three-tool-group-title">offset</h4>
+                        <ThreeToggle
+                          callback={(value) => this.updateDynamicLighting(value, 'lock')}
+                          checked={this.state.dynamicLightProps.lock}
+                          title="lock"
+                        />
                         <ThreeRangeSlider
                           key={0}
-                          min={0.0}
-                          max={10.0}
-                          step={0.1}
+                          min={-offsetMax}
+                          max={offsetMax}
+                          step={step}
                           title="x-axis"
                           defaultVal={0.0}
                           callback={(value) => this.updateDynamicLighting(value, 'offsetX')}
                         />
                         <ThreeRangeSlider
                           key={1}
-                          min={0.0}
-                          max={10.0}
-                          step={0.1}
+                          min={-offsetMax}
+                          max={offsetMax}
+                          step={step}
                           title="y-axis"
                           defaultVal={0.0}
                           callback={(value) => this.updateDynamicLighting(value, 'offsetY')}
                         />
                         <ThreeRangeSlider
                           key={2}
-                          min={0.0}
-                          max={10.0}
-                          step={0.1}
+                          min={-offsetMax}
+                          max={offsetMax}
+                          step={step}
                           title="z-axis"
                           defaultVal={0.0}
                           callback={(value) => this.updateDynamicLighting(value, 'offsetZ')}
@@ -962,64 +988,122 @@ export default class ThreeView extends Component {
                       </div>
         }
       ]
+    },
+    {
+      group: 'shaders',
+      components: [
+        {
+          title: 'eye-dome lighting',
+          component: <div className="three-tool-group">
+                        <h4 className="three-tool-group-title">eye dome lighting</h4>
+                        <ThreeToggle
+                          key={0}
+                          callback={(value) => this.updateShaders(value, 'EDL', 'enableEDL')}
+                          checked={this.state.shaderPasses.EDL.enableEDL}
+                          title="enable"
+                        />
+                        <ThreeRangeSlider
+                          key={1}
+                          min={0.0}
+                          max={100.0}
+                          title="strength"
+                          defaultVal={0.0}
+                          callback={(value) => this.updateShaders(value, 'edl', 'edlStrength')}
+                        />
+                        <ThreeRangeSlider
+                          key={2}
+                          min={0.0}
+                          max={20.0}
+                          title="radius"
+                          defaultVal={0.0}
+                          callback={(value) => this.updateShaders(value, 'EDL', 'radius')}
+                        />
+                      </div>
+        },
+      ]
     }
   ];
 
+  let materialsTool = {
+    group: 'materials',
+    components: [],
+  }
     let normalMapTool = {
-      group: 'materials',
-      components: [
-        {
-          title: 'normal scale',
-          component: <ThreeRangeSlider
-                      min={0}
-                      max={1}
-                      step={0.01}
-                      defaultVal={0}
-                      title="normal scale"
-                      callback={(value) => this.updateMaterials(value, 'normalScale')}
-                     />,
-        },
-      ]
-    };
+        title: 'normal scale',
+        component: <ThreeRangeSlider
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    defaultVal={1.0}
+                    title="normal scale"
+                    callback={(value) => this.updateMaterials(value, 'normalScale')}
+                    />,
+    }
+
 
     let bumpMapTool = {
-      group: 'materials',
-      components: [
-        {
-          title: 'bump scale',
-          component: <ThreeRangeSlider
-                      min={0}
-                      max={1}
-                      step={0.01}
-                      defaultVal={0}
-                      title="bump scale"
-                      callback={(value) => this.updateMaterials(value, 'bumpScale')}
-                     />,
-        },
-      ]
+        title: 'bump scale',
+        component: <ThreeRangeSlider
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    defaultVal={0}
+                    title="bump scale"
+                    callback={(value) => this.updateMaterials(value, 'bumpScale')}
+                    />,
     }
 
-    let mesh = this.mesh.children[0];
-    if (mesh.material.constructor === Array) {
-      for (let i=0; i < mesh.material.length; i++) {
-        let material = mesh.material[i];
-        if (material.normalMap) {
-          defaultTools.push(normalMapTool);
-          break;
-        }
-        if (material.bumpMap) {
-          defaultTools.push(bumpMapTool);
-          break;
-        }
+
+    let pbrTool = {
+      title: 'microsurface',
+      component: <div className="three-tool-group">
+                  <h4 className="three-tool-group-title">microsurface</h4>
+                  <ThreeRangeSlider
+                    min={0.0}
+                    max={1.0}
+                    step={0.01}
+                    defaultVal={0.0}
+                    title="metalness"
+                    callback={(value) => this.updateMaterials(value, 'metalness')}
+                  />
+                  <ThreeRangeSlider
+                    min={0.0}
+                    max={1.0}
+                    step={0.01}
+                    defaultVal={1.0}
+                    title="roughness"
+                    callback={(value) => this.updateMaterials(value, 'roughness')}
+                  />
+                </div>
+    }
+
+    const checkMaterialsTools = (title) => {
+      let inTools = materialsTool.components.find((component) => {
+        return component.title === title;
+      });
+      return inTools === undefined;
+    }
+
+    for (let i=0; i < this.mesh.children.length; i++) {
+      let mesh = this.mesh.children[i];
+      let material = mesh.material;
+      if (material.constructor !== Array) {
+        material = [material];
       }
-    } else {
-      if (mesh.material.normalMap) {
-        defaultTools.push(bumpMapTool);
-      }
-      if (mesh.material.bumpMap) {
-        defaultTools.push(bumpMapTool)
+      for (let j=0; j < material.length; j++) {
+        let currentMaterial = material[j];
+        if (currentMaterial.normalMap && checkMaterialsTools(normalMapTool.title)) {
+          materialsTool.components.push(normalMapTool);
+        }
+        if (currentMaterial.bumpMap && checkMaterialsTools(bumpMapTool.title)) {
+          materialsTool.components.push(bumpMapTool);
+        }
+        if (currentMaterial.type === 'MeshStandardMaterial' && checkMaterialsTools(pbrTool.title)) {
+          materialsTool.components.push(pbrTool);
+        }
       }
     }
+    defaultTools.push(materialsTool);
     return defaultTools;
   }
 
