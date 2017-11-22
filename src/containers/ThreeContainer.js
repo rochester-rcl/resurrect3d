@@ -15,7 +15,7 @@ import ThreeView from '../components/ThreeView';
 import LoaderModal from '../components/LoaderModal';
 
 const skyboxTexture = 'test_pano.jpg';
-const meshPath = 'skull.js';
+const meshPath = 'skull_blender_normals.js';
 
 class ThreeContainer extends Component {
 

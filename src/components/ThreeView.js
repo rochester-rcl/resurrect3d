@@ -195,6 +195,7 @@ export default class ThreeView extends Component {
     (this: any).toggleDynamicLighting = this.toggleDynamicLighting.bind(this);
     (this: any).updateDynamicLight = this.updateDynamicLighting.bind(this);
     (this: any).toggleInfo = this.toggleInfo.bind(this);
+    (this: any).toggleTools = this.toggleTools.bind(this);
     (this: any).drawMeasurement = this.drawMeasurement.bind(this);
     (this: any).drawSpriteTarget = this.drawSpriteTarget.bind(this);
     (this: any).computeSpriteScaleFactor = this.computeSpriteScaleFactor.bind(this);
@@ -252,14 +253,7 @@ export default class ThreeView extends Component {
 
     return(
       <div className="three-view-container">
-        <ThreeControls
-          handleResetCamera={this.centerCamera}
-          handleToggleBackground={this.toggleBackground}
-          handleToggleInfo={this.toggleInfo}
-          handleToggleDynamicLighting={this.toggleDynamicLighting}
-          toggleState={ { detailMode: detailMode, dynamicLighting: dynamicLighting } }
-        />
-        <ThreeTools tools={tools} />
+        <ThreeTools ref={(ref) => this.toolsMenu = ref} tools={tools} />
         <InfoModal className="three-info-modal" active={showInfo} info={info} />
         <LoaderModal
           text={loadText + loadProgress}
@@ -267,7 +261,6 @@ export default class ThreeView extends Component {
           active={loadProgress !== 100}
         />
         <div ref="threeView" className="three-view"
-          contentEditable
           onMouseDown={this.handleMouseDown}
           onMouseMove={this.handleMouseMove}
           onMouseUp={this.handleMouseUp}
@@ -275,6 +268,14 @@ export default class ThreeView extends Component {
           onKeyDown={this.handleKeyDown}
           onKeyUp={this.handleKeyUp}
         >
+          <ThreeControls
+            handleResetCamera={this.centerCamera}
+            handleToggleBackground={this.toggleBackground}
+            handleToggleInfo={this.toggleInfo}
+            handleToggleDynamicLighting={this.toggleDynamicLighting}
+            handleToggleTools={this.toggleTools}
+            toggleState={ { detailMode: detailMode, dynamicLighting: dynamicLighting } }
+          />
         </div>
       </div>
     );
@@ -320,7 +321,6 @@ export default class ThreeView extends Component {
     this.lightHelper = new THREE.CameraHelper(this.dynamicLight.shadow.camera);
     this.lightHelper.visible = this.state.showLightHelper;
     this.guiScene.add(this.lightHelper);
-
 
     this.scene.add(this.ambientLight);
     this.scene.add(this.camera);
@@ -647,7 +647,7 @@ export default class ThreeView extends Component {
       { screenWidth: this.width,
         screenHeight: this.height,
         opacity: 1.0,
-        edlStrength: 10.4,
+        edlStrength: 6.4,
         enableEDL: false,
         radius: 1.4, }
     );
@@ -1106,6 +1106,20 @@ export default class ThreeView extends Component {
     defaultTools.push(materialsTool);
     return defaultTools;
   }
+  // TODO make this thing resize properly
+  toggleTools(): void {
+    if (this.toolsMenu) {
+      this.toolsMenu.expandMenu((status) => {
+        if (status) {
+          this.width = this.width * 0.8;
+          this.sceneComposer.setSize(this.width, this.height);
+          this.guiComposer.setSize(this.width, this.height);
+          this.effectComposer.setSize(this.width, this.height);
+        }
+      });
+    }
+
+  }
 
   toggleBackground(event: typeof SyntheticEvent): void {
 
@@ -1244,8 +1258,9 @@ export default class ThreeView extends Component {
     this.camera.aspect = innerWidth / innerHeight;
     this.camera.updateProjectionMatrix();
     this.webGLRenderer.setSize(innerWidth, innerHeight);
+    this.sceneComposer.setSize(innerWidth, innerHeight);
+    this.guiComposer.setSize(innerWidth, innerHeight);
     this.effectComposer.setSize(innerWidth, innerHeight);
-
   }
 
   handleKeyDown(event: SyntheticKeyboardEvent): void {

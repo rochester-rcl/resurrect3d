@@ -21,9 +21,11 @@ export default class ThreeTools extends Component {
     }
   }
 
-  expandMenu(): void {
+  expandMenu(callback: any): void {
     this.setState({
       menuExpanded: !this.state.menuExpanded,
+    }, () => {
+      if (callback) callback(this.state.menuExpanded);
     });
   }
 
@@ -31,18 +33,10 @@ export default class ThreeTools extends Component {
     const { activeIndex, menuExpanded } = this.state;
     const { tools } = this.props;
     let menuClass = "three-tool-menu";
+    let dropdownClass = "three-tool-menu-dropdown"
     return(
       <div className={menuClass += menuExpanded ? " expanded" : " collapsed"}>
-        <Button
-          inverted
-          color="grey"
-          labelPosition="right"
-          content="tools"
-          className="three-tool-menu-button three-controls-button"
-          icon="wrench"
-          onClick={this.expandMenu}
-        />
-        <Accordion className="three-tool-menu-dropdown" inverted>
+        <Accordion className={dropdownClass += menuExpanded ? " expanded" : " collapsed"} inverted>
           {tools.map((group, index) =>
             <div key={index} className="three-tool-container">
             <Accordion.Title active={activeIndex === index} key={index} onClick={() => this.selectTool(index)}>

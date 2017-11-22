@@ -12,6 +12,7 @@ const ThreeControls = (props: Object) => {
     handleToggleInfo,
     handleToggleBackground,
     handleToggleDynamicLighting,
+    handleToggleTools,
     toggleState,
   } = props;
   return(
@@ -53,6 +54,15 @@ const ThreeControls = (props: Object) => {
         labelPosition='right'
         color="grey"
         inverted
+      />
+      <Button
+        inverted
+        color="grey"
+        labelPosition="right"
+        content="tools"
+        className="three-controls-button"
+        icon="wrench"
+        onClick={handleToggleTools}
       />
     </div>
   );
