@@ -14,8 +14,8 @@ import * as AppActionCreators from '../actions/actions';
 import ThreeView from '../components/ThreeView';
 import LoaderModal from '../components/LoaderModal';
 
-const skyboxTexture = 'test_pano.jpg';
-const meshPath = 'skull_blender_normals.js';
+const skyboxTexture = 'sample_pano.png';
+const meshPath = 'rti.js';
 
 class ThreeContainer extends Component {
 

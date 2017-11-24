@@ -531,9 +531,13 @@ export default class ThreeView extends Component {
         } else if (this.mesh instanceof THREE.Mesh) {
           this.mesh.castShadow = true;
           this.mesh.receiveShadow = true;
-          this.mesh.material.forEach((material) => {
+          let material = this.mesh.material;
+          if (material.constructor !== Array) {
+            material = [material];
+          }
+          material.forEach((currentMaterial) => {
             if (this.props.renderDoubleSided) {
-              material.side = THREE.DoubleSide;
+              currentMaterial.side = THREE.DoubleSide;
             }
           });
         }
@@ -833,8 +837,12 @@ export default class ThreeView extends Component {
       }
       return material;
     }
-    for (let i=0; i < this.mesh.children.length; i++) {
-      let mesh = this.mesh.children[i];
+    let children = this.mesh.children;
+    if (children.length === 0) {
+      children = [this.mesh];
+    }
+    for (let i=0; i < children.length; i++) {
+      let mesh = children[i];
       mesh.material = mapMaterials(mesh.material, updateFunc);
     }
   }
@@ -1083,13 +1091,17 @@ export default class ThreeView extends Component {
       });
       return inTools === undefined;
     }
-
-    for (let i=0; i < this.mesh.children.length; i++) {
-      let mesh = this.mesh.children[i];
+    let children = this.mesh.children;
+    if (children.length === 0) {
+      children = [this.mesh];
+    }
+    for (let i=0; i < children.length; i++) {
+      let mesh = children[i];
       let material = mesh.material;
       if (material.constructor !== Array) {
         material = [material];
       }
+
       for (let j=0; j < material.length; j++) {
         let currentMaterial = material[j];
         if (currentMaterial.normalMap && checkMaterialsTools(normalMapTool.title)) {
