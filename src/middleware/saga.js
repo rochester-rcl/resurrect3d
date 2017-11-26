@@ -47,6 +47,10 @@ function createLoadProgressChannel(loader: Object, loaderType: string, url): voi
 
     loader.load(url,
       (payload: Object) => {
+        // We're going to use this as a skybox texture so ...
+        payload.mapping = THREE.EquirectangularReflectionMapping;
+        payload.magFilter = THREE.LinearFilter;
+				payload.minFilter = THREE.LinearMipMapLinearFilter;
         emit({ eventType: 'loaded', val: payload, loaderType: loaderType });
         emit(END);
       },

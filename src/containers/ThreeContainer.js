@@ -12,6 +12,7 @@ import * as AppActionCreators from '../actions/actions';
 
 // Components
 import ThreeView from '../components/ThreeView';
+import ThreeOrthographicView from '../components/ThreeOrthographicView';
 import LoaderModal from '../components/LoaderModal';
 
 const skyboxTexture = 'sample_pano.png';

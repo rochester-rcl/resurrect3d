@@ -45,14 +45,13 @@ export default function appReducer(state: Object = defaultState, action: Object)
       }
 
     case ActionConstants.UPDATE_TEXTURE_LOAD_PROGRESS:
-
       return {
         ...state,
         texture: { ...state.texture, progress: action.payload.val }
       }
 
     case ActionConstants.TEXTURE_LOADED:
-
+      console.log(action.payload.val);
       return {
         ...state,
         texture: {
