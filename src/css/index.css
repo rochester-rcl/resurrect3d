@@ -171,6 +171,14 @@ body {
 .three-tool-component-container .input-range {
   padding-top: 20px;
 }
+.three-color-picker-container {
+  align-self: center;
+  display: flex;
+}
+
+.three-color-picker {
+  width: 90% !important;
+}
 
 .three-tool-component-container .input-range .input-range__track--active {
   background: rgb(0, 180, 0) !important;

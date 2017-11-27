@@ -36,7 +36,11 @@ export default function loadEDLShader(threeInstance: Object): Promise {
 
         "cameraFar": { type: 'f', value: null },
 
-		    "opacity":	{ type: 'f',	value: 1.0 }
+		    "opacity":	{ type: 'f',	value: 1.0 },
+
+        "onlyEDL": { value: 0 },
+
+        "enableEDL": { value: 0 },
 
       },
 
@@ -80,7 +84,15 @@ export default function loadEDLShader(threeInstance: Object): Promise {
 
         "uniform sampler2D tDepth;",
 
+        "uniform sampler2D tNormal;",
+
         "varying vec2 vUv;",
+
+        "uniform bool useNormalMap;",
+
+        "uniform bool enableEDL;",
+
+        "uniform bool onlyEDL;",
 
         "float readDepth( const in vec2 coord ) {",
 
@@ -111,7 +123,7 @@ export default function loadEDLShader(threeInstance: Object): Promise {
 
 			            "if(depth == 0.0){",
 
-				             "sum += 100.0;",
+				             "sum += 10.0;",
 
 			            "}else{",
 
@@ -129,23 +141,37 @@ export default function loadEDLShader(threeInstance: Object): Promise {
 
 	         "vec4 color = texture2D(tDiffuse, vUv);",
 
-	         "float depth = readDepth(vUv);",
+           "if (enableEDL) {",
 
-	         "float res = response(depth);",
+  	         "float depth = readDepth(vUv);",
 
-	         "float shade = exp(-res * 300.0 * edlStrength);",
+  	         "float res = response(depth);",
 
-	         "if(depth == 0.0 && res == 0.0){",
+  	         "float shade = exp(-res * 300.0 * edlStrength);",
 
-		           "discard;",
+  	         "if(depth == 0.0 && res == 0.0){",
 
-	         "}else{",
+  		           "discard;",
 
-		          "gl_FragColor = vec4(color.rgb * shade, opacity);",
-              //"gl_FragColor = vec4(mix(vec3(0.0, 1.0, 0.0), vec3(shade), 1.0), opacity);",
+  	         "} else {",
 
-	         "}",
+                "if (onlyEDL) {",
 
+                  "gl_FragColor = vec4(mix(vec3(color.g, color.g, color.g), vec3(shade), 0.5), opacity);",
+
+                "} else {",
+
+  		            "gl_FragColor = vec4(color.rgb * shade, opacity);",
+
+                "}",
+
+            "}",
+
+  	       "} else {",
+
+              "gl_FragColor = color;",
+
+          "}",
        "}"
      ].join('\n'),
     }

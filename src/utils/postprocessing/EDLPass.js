@@ -25,16 +25,16 @@ export default function loadEDLPass(threeInstance: Object): typeof Promise {
       let opacity = (params.opacity !== undefined) ? params.opacity : 1.0;
       let screenWidth = params.screenWidth || window.innerWidth || 1;
 			let screenHeight = params.screenHeight || window.innerHeight || 1;
-			this.enableEDL = (params.enableEDL !== undefined) ? params.enableEDL : true;
-
+			let enableEDL = (params.enableEDL !== undefined) ? params.enableEDL : false;
+			let onlyEDL = (params.onlyEDL !== undefined) ? params.onlyEDL : false;
       this.camera2 = camera;
       this.scene2 = scene;
 
       this.depthMaterial = new threeInstance.MeshDepthMaterial();
       this.depthMaterial.depthPacking = threeInstance.RGBADepthPacking;
-      this.depthMaterial.blending = threeInstance.NoBlending;
 
-      let rtParams = { minFilter: threeInstance.NearestFilter, magFilter: threeInstance.NearestFilter, format: threeInstance.RGBAFormat }
+
+      let rtParams = { minFilter: threeInstance.LinearFilter, magFilter: threeInstance.LinearFilter, format: threeInstance.RGBAFormat }
       this.depthRenderTarget = new threeInstance.WebGLRenderTarget(screenWidth, screenHeight, rtParams);
 
 			this.uniforms["tDepth"].value = this.depthRenderTarget.texture;
@@ -45,6 +45,8 @@ export default function loadEDLPass(threeInstance: Object): typeof Promise {
       this.uniforms["screenHeight"].value = screenHeight;
 			this.uniforms["cameraNear"].value = this.camera2.near;
 			this.uniforms["cameraFar"].value = this.camera2.far;
+			this.uniforms["onlyEDL"].value = (onlyEDL === true) ? 1 : 0;
+			this.uniforms["enableEDL"].value = (enableEDL === true) ? 1 : 0;
 
 		};
 
@@ -55,15 +57,12 @@ export default function loadEDLPass(threeInstance: Object): typeof Promise {
 			render: function ( renderer, writeBuffer, readBuffer, delta, maskActive ) {
 
 				// Render depth into texture
+				this.scene2.overrideMaterial = this.depthMaterial;
+	      renderer.render(this.scene2, this.camera2, this.depthRenderTarget, true);
+	      this.scene2.overrideMaterial = null;
+				threeInstance.ShaderPass.prototype.render.call(this, renderer, writeBuffer, readBuffer, delta, maskActive);
 
-				if (this.enableEDL) {
-					this.scene2.overrideMaterial = this.depthMaterial;
-	        renderer.render(this.scene2, this.camera2, this.depthRenderTarget, true);
-	        this.scene2.overrideMaterial = null;
-				}
-
-        threeInstance.ShaderPass.prototype.render.call(this, renderer, writeBuffer, readBuffer, delta, maskActive);
-      }
+      },
 		});
 		resolve(threeInstance);
 	});

@@ -25,6 +25,7 @@ import ThreeControls from './ThreeControls';
 import ThreeMeasure from './ThreeMeasure';
 import ThreeRangeSlider from './ThreeRangeSlider';
 import ThreeToggle from './ThreeToggle';
+import ThreeColorPicker from './ThreeColorPicker';
 import ThreeTools from './ThreeTools';
 
 export default class ThreeView extends Component {
@@ -127,13 +128,7 @@ export default class ThreeView extends Component {
       offset: new THREE.Vector3(),
       lock: false,
     },
-    shaderPasses: {
-      EDL: {
-        radius: 0,
-        enableEDL: false,
-        edlStrength: 0,
-      }
-    },
+    shaderPasses: {},
     units: 'cm',
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
@@ -174,6 +169,7 @@ export default class ThreeView extends Component {
     (this: any).initPostprocessing = this.initPostprocessing.bind(this);
     (this: any).initThree = this.initThree.bind(this);
     (this: any).initTools = this.initTools.bind(this);
+    (this: any).addShaderPass = this.addShaderPass.bind(this);
 
     // Updates / Geometry / Rendering
 
@@ -613,6 +609,10 @@ export default class ThreeView extends Component {
 
   // TODO make this a separate component
 
+  addShaderPass(pass: Object): void {
+    this.setState({ shaderPasses: {...this.state.shaderPasses, ...pass }});
+  }
+
   initPostprocessing(): void {
 
     let rtParams = {
@@ -661,14 +661,19 @@ export default class ThreeView extends Component {
 
     let bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(this.width, this.height), 2.5, 0.8, 0.6);
 
-    this.EDLPass = new THREE.EDLPass(this.scene, this.camera,
-      { screenWidth: this.width,
-        screenHeight: this.height,
-        opacity: 1.0,
-        edlStrength: 6.4,
-        enableEDL: false,
-        radius: 1.4, }
-    );
+    let EDLParams = {
+      screenWidth: this.width,
+      screenHeight: this.height,
+      opacity: 1.0,
+      edlStrength: 0,
+      enableEDL: false,
+      onlyEDL: false,
+      radius: 0,
+    }
+
+    let EDLPass = new THREE.EDLPass(this.scene, this.camera, EDLParams);
+
+    this.addShaderPass({ EDL: EDLPass });
 
     let SSAOPass = new THREE.SSAOPass(this.scene, this.camera);
 
@@ -689,7 +694,7 @@ export default class ThreeView extends Component {
 
     this.effectComposer.addPass(rawModel);
     this.effectComposer.addPass(SSAOPass);
-    this.effectComposer.addPass(this.EDLPass);
+    this.effectComposer.addPass(EDLPass);
     this.effectComposer.addPass(maskInverse);
     this.effectComposer.addPass(rawScene);
     this.effectComposer.addPass(clearMask);
@@ -862,10 +867,27 @@ export default class ThreeView extends Component {
   }
 
   updateShaders(value: Number | boolean, shaderName: string, uniformProp: string): void {
+    const { shaderPasses } = this.state;
+    let pass = shaderPasses[shaderName];
+    if (uniformProp === 'screenWidth') {
+      if (pass.depthRenderTarget !== undefined) {
+        pass.depthRenderTarget.width = value;
+      }
+    }
 
+    if (uniformProp === 'screenHeight') {
+      if (pass.depthRenderTarget !== undefined) {
+        pass.depthRenderTarget.height = value;
+      }
+    }
+
+    console.log(pass.depthRenderTarget);
+
+    pass.uniforms[uniformProp].value = value;
   }
 
   updateDynamicLighting(value: string | number | THREE.Vector3, prop: string): void {
+    console.log(value);
     let { dynamicLightProps } = this.state;
     let updated = {};
     if (!prop.includes('offset')) {
@@ -966,6 +988,13 @@ export default class ThreeView extends Component {
                       />
         },
         {
+          title: 'color',
+          component: <ThreeColorPicker
+                        title="color"
+                        callback={(color) => this.updateDynamicLighting(color, 'color')}
+                      />
+        },
+        {
           title: 'offset',
           component:
                       <div className="three-tool-group">
@@ -1019,18 +1048,26 @@ export default class ThreeView extends Component {
                           checked={this.state.shaderPasses.EDL.enableEDL}
                           title="enable"
                         />
-                        <ThreeRangeSlider
+                        <ThreeToggle
                           key={1}
-                          min={0.0}
-                          max={100.0}
-                          title="strength"
-                          defaultVal={0.0}
-                          callback={(value) => this.updateShaders(value, 'edl', 'edlStrength')}
+                          callback={(value) => this.updateShaders(value, 'EDL', 'onlyEDL')}
+                          checked={this.state.shaderPasses.EDL.onlyEDL}
+                          title="edl only"
                         />
                         <ThreeRangeSlider
                           key={2}
                           min={0.0}
-                          max={20.0}
+                          max={10.0}
+                          step={0.01}
+                          title="strength"
+                          defaultVal={0.0}
+                          callback={(value) => this.updateShaders(value, 'EDL', 'edlStrength')}
+                        />
+                        <ThreeRangeSlider
+                          key={3}
+                          min={0.0}
+                          max={4.0}
+                          step={0.01}
                           title="radius"
                           defaultVal={0.0}
                           callback={(value) => this.updateShaders(value, 'EDL', 'radius')}
@@ -1144,6 +1181,7 @@ export default class ThreeView extends Component {
           this.sceneComposer.setSize(width, this.height);
           this.guiComposer.setSize(width, this.height);
           this.effectComposer.setSize(width, this.height);
+          this.updateShaders(width, 'EDL', 'screenWidth');
         });
       });
     }
@@ -1291,6 +1329,8 @@ export default class ThreeView extends Component {
     this.effectComposer.setSize(innerWidth, innerHeight);
     this.width = innerWidth;
     this.height = innerHeight;
+    this.updateShaders(this.width, 'EDL', 'screenWidth');
+    this.updateShaders(this.height, 'EDL', 'screenHeight');
   }
 
   handleKeyDown(event: SyntheticKeyboardEvent): void {
