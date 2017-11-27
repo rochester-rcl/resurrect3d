@@ -13,7 +13,6 @@ const ThreeControls = (props: Object) => {
     handleToggleBackground,
     handleToggleDynamicLighting,
     handleToggleTools,
-    toggleState,
   } = props;
   return(
     <div className="three-controls-container">
@@ -24,17 +23,14 @@ const ThreeControls = (props: Object) => {
         onClick={() => { handleResetCamera() }}
         labelPosition='right'
         color="grey"
-        inverted
       />
       <Button
         className="three-controls-button"
         content="lighting"
         icon="lightbulb"
         onClick={() => { handleToggleDynamicLighting() }}
-        active={toggleState['dynamicLighting']}
         labelPosition='right'
         color="grey"
-        inverted
       />
       <Button
         className="three-controls-button"
@@ -42,9 +38,7 @@ const ThreeControls = (props: Object) => {
         icon="image"
         onClick={() => { handleToggleBackground() }}
         labelPosition='right'
-        active={toggleState['detailMode']}
         color="grey"
-        inverted
       />
       <Button
         className="three-controls-button"
@@ -53,16 +47,14 @@ const ThreeControls = (props: Object) => {
         onClick={() => { handleToggleInfo() }}
         labelPosition='right'
         color="grey"
-        inverted
       />
       <Button
-        inverted
         color="grey"
         labelPosition="right"
         content="tools"
         className="three-controls-button"
         icon="wrench"
-        onClick={handleToggleTools}
+        onClick={() => {handleToggleTools()}}
       />
     </div>
   );

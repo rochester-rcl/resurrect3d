@@ -12,11 +12,10 @@ import * as AppActionCreators from '../actions/actions';
 
 // Components
 import ThreeView from '../components/ThreeView';
-import ThreeOrthographicView from '../components/ThreeOrthographicView';
 import LoaderModal from '../components/LoaderModal';
 
-const skyboxTexture = 'sample_pano.png';
-const meshPath = 'rti.js';
+const skyboxTexture = 'test_pano.jpg';
+const meshPath = 'skull.js';
 
 class ThreeContainer extends Component {
 

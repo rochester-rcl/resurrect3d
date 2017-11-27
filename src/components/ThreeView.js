@@ -118,6 +118,7 @@ export default class ThreeView extends Component {
     showAxes: false,
     showLightHelper: false,
     dynamicLighting: false,
+    toolsActive: false,
     dynamicLightProps: {
       color: 0xc9e2ff,
       intensity: 0.8,
@@ -243,7 +244,7 @@ export default class ThreeView extends Component {
 
   render(): Object {
 
-    const { loadProgress, loadText, showInfo, dynamicLighting, detailMode } = this.state;
+    const { loadProgress, loadText, showInfo, dynamicLighting, detailMode, toolsActive } = this.state;
     const info = [
       { key: 'Key:', val: 'Value'},
     ];
@@ -260,6 +261,13 @@ export default class ThreeView extends Component {
           className="three-loader-dimmer"
           active={loadProgress !== 100}
         />
+        <ThreeControls
+          handleResetCamera={this.centerCamera}
+          handleToggleBackground={this.toggleBackground}
+          handleToggleInfo={this.toggleInfo}
+          handleToggleDynamicLighting={this.toggleDynamicLighting}
+          handleToggleTools={this.toggleTools}
+        />
         <div ref="threeView" className="three-view"
           onMouseDown={this.handleMouseDown}
           onMouseMove={this.handleMouseMove}
@@ -269,14 +277,6 @@ export default class ThreeView extends Component {
           onKeyUp={this.handleKeyUp}
           contentEditable
         >
-          <ThreeControls
-            handleResetCamera={this.centerCamera}
-            handleToggleBackground={this.toggleBackground}
-            handleToggleInfo={this.toggleInfo}
-            handleToggleDynamicLighting={this.toggleDynamicLighting}
-            handleToggleTools={this.toggleTools}
-            toggleState={ { detailMode: detailMode, dynamicLighting: dynamicLighting } }
-          />
         </div>
       </div>
     );
@@ -582,7 +582,7 @@ export default class ThreeView extends Component {
   initEnvironment(): void {
 
     // Skybox
-    let cubeSize = this.environmentRadius * 2;
+    let cubeSize = this.environmentRadius * 4;
     this.skyboxGeom = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
 
     let equirectShader = THREE.ShaderLib['equirect'];
@@ -918,7 +918,7 @@ export default class ThreeView extends Component {
   /** UI
   *****************************************************************************/
   initTools(): Array<Object> {
-    let offsetMax = Number(this.environmentRadius.toFixed(2));
+    let offsetMax = Number(this.environmentRadius.toFixed(2)) * 2;
     let step = Number((offsetMax / 100).toFixed(2));
 
     let defaultTools = [{
@@ -930,12 +930,7 @@ export default class ThreeView extends Component {
                         updateCallback={this.drawMeasurement}
                         camera={this.camera}
                         mesh={this.mesh}
-                        resolution={
-                          {
-                            width: this.webGLRenderer ? this.webGLRenderer.domElement.clientWidth : this.width,
-                            height: this.webGLRenderer ? this.webGLRenderer.domElement.clientHeight : this.height,
-                          }
-                        }
+                        target={this.webGLRenderer.domElement}
                       />,
            },
            {
@@ -1136,15 +1131,22 @@ export default class ThreeView extends Component {
   toggleTools(): void {
     if (this.toolsMenu) {
       this.toolsMenu.expandMenu((status) => {
-        if (status) {
-          this.width = this.width * 0.8;
-          this.sceneComposer.setSize(this.width, this.height);
-          this.guiComposer.setSize(this.width, this.height);
-          this.effectComposer.setSize(this.width, this.height);
-        }
+        this.setState({ toolsActive: status }, () => {
+          let width = this.width;
+          if (status) {
+            width -= this.width * 0.2;
+          } else {
+            width = this.width;
+          }
+          this.camera.aspect = width / this.height;
+          this.camera.updateProjectionMatrix();
+          this.webGLRenderer.setSize(width, this.height);
+          this.sceneComposer.setSize(width, this.height);
+          this.guiComposer.setSize(width, this.height);
+          this.effectComposer.setSize(width, this.height);
+        });
       });
     }
-
   }
 
   toggleBackground(event: typeof SyntheticEvent): void {
@@ -1287,6 +1289,8 @@ export default class ThreeView extends Component {
     this.sceneComposer.setSize(innerWidth, innerHeight);
     this.guiComposer.setSize(innerWidth, innerHeight);
     this.effectComposer.setSize(innerWidth, innerHeight);
+    this.width = innerWidth;
+    this.height = innerHeight;
   }
 
   handleKeyDown(event: SyntheticKeyboardEvent): void {

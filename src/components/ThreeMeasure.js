@@ -43,11 +43,11 @@ export default class ThreeMeasure extends Component {
   }
 
   componentDidMount(): void {
-    window.addEventListener('click', this.measure, true);
+    this.props.target.addEventListener('click', this.measure, true);
   }
 
   componentWillUnmount(): void {
-    window.removeEventListener('click', this.measure, true);
+    this.props.target.removeEventListener('click', this.measure, true);
   }
 
   activate(): void {
@@ -71,10 +71,13 @@ export default class ThreeMeasure extends Component {
   measure(event: MouseEvent): void {
 
     if (this.state.active) {
-      let { camera, mesh, resolution } = this.props;
+      let { camera, mesh } = this.props;
+
+      let res = this.props.target.getBoundingClientRect();
+
       let mouseVector = new THREE.Vector2();
-      mouseVector.x = (event.clientX / resolution.width) * 2 - 1;
-      mouseVector.y = -(event.clientY / resolution.height) * 2 + 1;
+      mouseVector.x = ((event.clientX - res.x) / res.width) * 2 - 1;
+      mouseVector.y = -(event.clientY / res.height) * 2 + 1;
       this.raycaster.setFromCamera(mouseVector, camera);
       let intersections = this.raycaster.intersectObjects(mesh.children, true);
       // Only take the best result

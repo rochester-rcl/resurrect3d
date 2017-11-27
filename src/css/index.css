@@ -43,9 +43,21 @@ body {
   justify-content: center;
   padding: 10px;
   z-index: 10000;
-  width: 100%;
-  margin: 0 auto;
+  width: 80%;
+  right: 0;
   flex-wrap: wrap;
+}
+
+.three-controls-container .three-controls-button {
+  background-color: rgba(0,0,0,0.5) !important;
+}
+
+.three-controls-container .three-controls-button:hover {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.three-controls-container .three-controls-button.active {
+  background-color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .three-controls-button i {
