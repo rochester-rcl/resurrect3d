@@ -25,7 +25,7 @@ import ThreeControls from './ThreeControls';
 import ThreeMeasure from './ThreeMeasure';
 import ThreeRangeSlider from './ThreeRangeSlider';
 import ThreeToggle from './ThreeToggle';
-import ThreeColorPicker from './ThreeColorPicker';
+import ThreeColorPicker, { ThreeMicroColorPicker } from './ThreeColorPicker';
 import ThreeTools from './ThreeTools';
 
 export default class ThreeView extends Component {
@@ -128,7 +128,9 @@ export default class ThreeView extends Component {
       offset: new THREE.Vector3(),
       lock: false,
     },
-    shaderPasses: {},
+    shaderPasses: {
+      EDL: {},
+    },
     units: 'cm',
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
@@ -881,13 +883,10 @@ export default class ThreeView extends Component {
       }
     }
 
-    console.log(pass.depthRenderTarget);
-
     pass.uniforms[uniformProp].value = value;
   }
 
   updateDynamicLighting(value: string | number | THREE.Vector3, prop: string): void {
-    console.log(value);
     let { dynamicLightProps } = this.state;
     let updated = {};
     if (!prop.includes('offset')) {
@@ -942,7 +941,7 @@ export default class ThreeView extends Component {
   initTools(): Array<Object> {
     let offsetMax = Number(this.environmentRadius.toFixed(2)) * 2;
     let step = Number((offsetMax / 100).toFixed(2));
-
+    let { shaderPasses } = this.state;
     let defaultTools = [{
         group: 'measurement',
         components: [
@@ -1045,15 +1044,28 @@ export default class ThreeView extends Component {
                         <ThreeToggle
                           key={0}
                           callback={(value) => this.updateShaders(value, 'EDL', 'enableEDL')}
-                          checked={this.state.shaderPasses.EDL.enableEDL}
+                          checked={shaderPasses.EDL.enableEDL ? shaderPasses.EDL.enableEDL : false}
                           title="enable"
                         />
-                        <ThreeToggle
-                          key={1}
-                          callback={(value) => this.updateShaders(value, 'EDL', 'onlyEDL')}
-                          checked={this.state.shaderPasses.EDL.onlyEDL}
-                          title="edl only"
-                        />
+                        <div className="three-tool-group" key={1}>
+                          <h5 className="three-tool-group-title">shading</h5>
+                          <ThreeToggle
+                            key={10}
+                            callback={(value) => this.updateShaders(value, 'EDL', 'onlyEDL')}
+                            checked={shaderPasses.EDL.onlyEDL ? shaderPasses.EDL.onlyEDL : false}
+                            title="edl only"
+                          />
+                          <ThreeToggle
+                            key={11}
+                            callback={(value) => this.updateShaders(value, 'EDL', 'useTexture')}
+                            checked={shaderPasses.EDL.useTexture ? shaderPasses.EDL.useTexture : false}
+                            title="geometry + texture"
+                          />
+                          <ThreeMicroColorPicker
+                            title="color"
+                            callback={(color) => this.updateShaders(color, 'EDL', 'onlyEDLColor')}
+                          />
+                        </div>
                         <ThreeRangeSlider
                           key={2}
                           min={0.0}

@@ -40,7 +40,11 @@ export default function loadEDLShader(threeInstance: Object): Promise {
 
         "onlyEDL": { value: 0 },
 
+        "onlyEDLColor": { type: '3vf', value: new threeInstance.Vector3(1.0) },
+
         "enableEDL": { value: 0 },
+
+        "useTexture": { value: 0 },
 
       },
 
@@ -88,11 +92,15 @@ export default function loadEDLShader(threeInstance: Object): Promise {
 
         "varying vec2 vUv;",
 
+        "uniform vec3 onlyEDLColor;",
+
         "uniform bool useNormalMap;",
 
         "uniform bool enableEDL;",
 
         "uniform bool onlyEDL;",
+
+        "uniform bool useTexture;",
 
         "float readDepth( const in vec2 coord ) {",
 
@@ -106,6 +114,42 @@ export default function loadEDLShader(threeInstance: Object): Promise {
 
 
     		"}",
+
+        "float depthFromGray(const in vec2 coord) {",
+
+          "return 1.0 - texture2D(tDiffuse, coord).g;",
+
+        "}",
+
+        "float grayResponse(float gray) {",
+
+          "vec2 uvRadius = radius / vec2(screenWidth, screenHeight);",
+
+          "float sum = 0.0;",
+
+          "for(int i = 0; i < NEIGHBOUR_COUNT; i++){",
+
+              "vec2 uvNeighbor = vUv + uvRadius * neighbours[i];",
+
+              "float neighbourGray = depthFromGray(uvNeighbor);",
+
+              "if(neighbourGray != 0.0){",
+
+                  "if(gray == 0.0){",
+
+                    "sum += 10.0;",
+
+                    "} else {",
+
+                    "sum += max(0.0, gray - neighbourGray);",
+                  "}",
+
+              "}",
+          "}",
+
+        "return sum / float(NEIGHBOUR_COUNT);",
+
+       "}",
 
         "float response(float depth){",
 
@@ -125,7 +169,7 @@ export default function loadEDLShader(threeInstance: Object): Promise {
 
 				             "sum += 10.0;",
 
-			            "}else{",
+			              "} else {",
 
 				             "sum += max(0.0, depth - neighbourDepth);",
 			         "}",
@@ -147,6 +191,14 @@ export default function loadEDLShader(threeInstance: Object): Promise {
 
   	         "float res = response(depth);",
 
+             "if (useTexture) {",
+
+                "float gray = depthFromGray(vUv);",
+
+                "res += grayResponse(gray);",
+
+             "}",
+
   	         "float shade = exp(-res * 300.0 * edlStrength);",
 
   	         "if(depth == 0.0 && res == 0.0){",
@@ -157,7 +209,7 @@ export default function loadEDLShader(threeInstance: Object): Promise {
 
                 "if (onlyEDL) {",
 
-                  "gl_FragColor = vec4(mix(vec3(color.g, color.g, color.g), vec3(shade), 0.5), opacity);",
+                  "gl_FragColor = vec4(onlyEDLColor * shade, opacity);",
 
                 "} else {",
 

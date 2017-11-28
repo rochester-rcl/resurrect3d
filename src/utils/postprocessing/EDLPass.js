@@ -27,6 +27,8 @@ export default function loadEDLPass(threeInstance: Object): typeof Promise {
 			let screenHeight = params.screenHeight || window.innerHeight || 1;
 			let enableEDL = (params.enableEDL !== undefined) ? params.enableEDL : false;
 			let onlyEDL = (params.onlyEDL !== undefined) ? params.onlyEDL : false;
+			let onlyEDLColor = (params.onlyEDLColor !== undefined) ? params.onlyEDLColor : new threeInstance.Vector3(1.0);
+			let useTexture = (params.useTexture !== undefined) ? params.useTexture : false;
       this.camera2 = camera;
       this.scene2 = scene;
 
@@ -45,8 +47,10 @@ export default function loadEDLPass(threeInstance: Object): typeof Promise {
       this.uniforms["screenHeight"].value = screenHeight;
 			this.uniforms["cameraNear"].value = this.camera2.near;
 			this.uniforms["cameraFar"].value = this.camera2.far;
-			this.uniforms["onlyEDL"].value = (onlyEDL === true) ? 1 : 0;
-			this.uniforms["enableEDL"].value = (enableEDL === true) ? 1 : 0;
+			this.uniforms["onlyEDL"].value = onlyEDL;
+			this.uniforms["enableEDL"].value = enableEDL;
+			this.uniforms["useTexture"].value = useTexture;
+			this.uniforms["onlyEDLColor"].value = onlyEDLColor;
 
 		};
 
