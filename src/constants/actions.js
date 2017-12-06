@@ -1,5 +1,8 @@
 /* @flow */
 
+// REST
+export const GET_THREE_ASSET: string = 'GET_THREE_ASSET';
+
 // Meshes
 export const LOAD_MESH: string = 'LOAD_MESH';
 export const UPDATE_MESH_LOAD_PROGRESS: string = 'UPDATE_MESH_LOAD_PROGRESS';

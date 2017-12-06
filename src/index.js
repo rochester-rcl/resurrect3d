@@ -10,9 +10,6 @@ import './css/index.css';
 // Store
 import { sagaMiddleware, configureStore } from './store/configure-store';
 
-// React-Router
-import { browserHistory } from 'react-router';
-
 // Sagas
 import rootSaga from './middleware/saga';
 
@@ -24,6 +21,6 @@ const store: Object = configureStore();
 sagaMiddleware.run(rootSaga);
 
 ReactDOM.render(
-  <Root store={store} history={browserHistory} />,
+  <Root store={store} />,
   document.getElementById('root')
 );

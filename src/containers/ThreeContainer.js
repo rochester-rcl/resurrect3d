@@ -15,18 +15,18 @@ import ThreeView from '../components/ThreeView';
 import LoaderModal from '../components/LoaderModal';
 
 const skyboxTexture = 'test_pano.jpg';
-const meshPath = 'skull_blender_normals.js';
+const meshPath = 'sphenodon.js';
 
 class ThreeContainer extends Component {
 
   componentDidMount(): void {
-
+    this.props.getThreeAssetAction(this.props.viewerId);
     this.props.loadMeshAction(meshPath);
     this.props.loadTextureAction(skyboxTexture);
 
   }
   render(): Object {
-    const { mesh, texture } = this.props;
+    const { mesh, texture, viewerId } = this.props;
     if (mesh.progress === 'Complete' && texture.progress === 'Complete') {
       return(
         <ThreeView
@@ -50,7 +50,6 @@ class ThreeContainer extends Component {
 }
 
 function mapStateToProps(state: Object): Object {
-
   return {
     mesh: state.mesh,
     texture: state.texture,

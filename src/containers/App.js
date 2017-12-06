@@ -25,17 +25,16 @@ class App extends Component {
     //this.props.loadAPIDataAction();
   }
   render() {
-    const { children, data } = this.props;
+    const { children, data, match } = this.props;
     return (
       <div className="app-root-container">
-        <ThreeContainer />
+        <ThreeContainer viewerId={match.params.id}/>
       </div>
     );
   }
 }
 
 function mapStateToProps(state) {
-  // Do sorting here
   return {
     data: state.data,
   }

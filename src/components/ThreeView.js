@@ -498,7 +498,6 @@ export default class ThreeView extends Component {
 
   initMesh(): void {
       this.mesh = this.props.mesh.object3D;
-
       const setEnvMap = (material) => {
         if (material.type === 'MeshStandardMaterial') {
           material.envMap = this.props.skyboxTexture.image;
