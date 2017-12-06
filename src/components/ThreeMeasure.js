@@ -79,7 +79,13 @@ export default class ThreeMeasure extends Component {
       mouseVector.x = ((event.clientX - res.x) / res.width) * 2 - 1;
       mouseVector.y = -(event.clientY / res.height) * 2 + 1;
       this.raycaster.setFromCamera(mouseVector, camera);
-      let intersections = this.raycaster.intersectObjects(mesh.children, true);
+      let meshArray = [];
+      if (mesh.type === THREE.Group) {
+        meshArray = mesh.children;
+      } else {
+        meshArray.push(mesh);
+      }
+      let intersections = this.raycaster.intersectObjects(meshArray, true);
       // Only take the best result
       if (intersections.length > 0) this.handleIntersection(intersections[0]);
     }
