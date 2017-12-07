@@ -2,6 +2,8 @@
 
 // REST
 export const GET_THREE_ASSET: string = 'GET_THREE_ASSET';
+export const THREE_ASSET_LOADED: string = 'THREE_ASSET_LOADED';
+export const THREE_METADATA_LOADED: string = 'THREE_METADATA_LOADED';
 
 // Meshes
 export const LOAD_MESH: string = 'LOAD_MESH';

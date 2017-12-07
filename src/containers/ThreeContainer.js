@@ -7,6 +7,9 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
+//lodash
+import lodash from 'lodash';
+
 // Actions
 import * as AppActionCreators from '../actions/actions';
 
@@ -21,18 +24,24 @@ class ThreeContainer extends Component {
 
   componentDidMount(): void {
     this.props.getThreeAssetAction(this.props.viewerId);
-    this.props.loadMeshAction(meshPath);
-    this.props.loadTextureAction(skyboxTexture);
+  }
 
+  componentWillReceiveProps(nextProps: Object, nextState: Object): void {
+    if (!lodash.isEqual(nextProps.threeAsset, this.props.threeAsset)) {
+      this.props.loadMeshAction(nextProps.threeAsset.threeFile);
+      if (nextProps.threeAsset.skybox.file) this.props.loadTextureAction(nextProps.threeAsset.skybox.file);
+    }
   }
   render(): Object {
-    const { mesh, texture, viewerId } = this.props;
+    const { mesh, texture, metadata, threeAsset } = this.props;
+    console.log(threeAsset);
     if (mesh.progress === 'Complete' && texture.progress === 'Complete') {
       return(
         <ThreeView
           skyboxTexture={texture}
           mesh={mesh}
           renderDoubleSided={true}
+          info={metadata}
         />
       );
     } else {
@@ -53,6 +62,8 @@ function mapStateToProps(state: Object): Object {
   return {
     mesh: state.mesh,
     texture: state.texture,
+    metadata: state.metadata,
+    threeAsset: state.threeAsset,
   }
 
 }

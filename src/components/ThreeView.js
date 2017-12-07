@@ -243,9 +243,7 @@ export default class ThreeView extends Component {
   render(): Object {
 
     const { loadProgress, loadText, showInfo, dynamicLighting, detailMode, toolsActive } = this.state;
-    const info = [
-      { key: 'Key:', val: 'Value'},
-    ];
+    const { info } = this.props;
 
     let tools = [];
     if (this.mesh) tools = this.initTools();

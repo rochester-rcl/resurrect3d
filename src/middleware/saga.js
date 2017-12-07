@@ -39,8 +39,10 @@ function* getThreeAssetSaga(getThreeAssetAction: Object): Generator < any, any, 
   try {
     let apiKey = yield omekaBackend.authenticate();
     let apiURL = omekaBackend.endpoint + '/' + getThreeAssetAction.id;
-    let skybox = yield omekaBackend.getThreeAsset(apiURL, { method: 'GET', credentials: 'same-origin' });
-    console.log(skybox);
+    let asset = yield omekaBackend.getThreeAsset(apiURL, { method: 'GET', credentials: 'same-origin' });
+    let metadata = yield omekaBackend.getMetadata(asset.itemUrl);
+    yield put({ type: ActionConstants.THREE_ASSET_LOADED, threeAsset: asset });
+    yield put({type: ActionConstants.THREE_METADATA_LOADED, metadata: metadata});
   } catch (error) {
     console.log(error);
   }
@@ -129,6 +131,7 @@ export function* loadTextureSaga(loadTextureAction: Object): Generator < any, an
   // load the texture
   try {
     const textureLoader = new THREE.TextureLoader();
+    textureLoader.crossOrigin = 'anonymous';
     const textureLoaderChannel = yield call(createLoadProgressChannel, textureLoader, 'texture', loadTextureAction.url);
     while (true) {
       const payload = yield take(textureLoaderChannel)

@@ -18,8 +18,13 @@ const defaultState = {
     loaded: false,
     progress: 0,
     image: null,
-  }
+  },
 
+  metadata: [],
+
+  threeAsset: {
+
+  }
 }
 
 export default function appReducer(state: Object = defaultState, action: Object): Object {
@@ -51,7 +56,6 @@ export default function appReducer(state: Object = defaultState, action: Object)
       }
 
     case ActionConstants.TEXTURE_LOADED:
-      console.log(action.payload.val);
       return {
         ...state,
         texture: {
@@ -60,6 +64,18 @@ export default function appReducer(state: Object = defaultState, action: Object)
           progress: 'Complete',
           image: action.payload.val
         }
+      }
+
+    case ActionConstants.THREE_ASSET_LOADED:
+      return {
+        ...state,
+        threeAsset: action.threeAsset,
+      }
+
+    case ActionConstants.THREE_METADATA_LOADED:
+      return {
+        ...state,
+        metadata: action.metadata,
       }
 
     default:
