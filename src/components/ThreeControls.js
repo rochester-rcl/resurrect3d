@@ -1,5 +1,7 @@
 /* @flow */
 
+//TODO change this to a class that allows you to register controls, same with tools 
+
 // React
 import React from 'react';
 

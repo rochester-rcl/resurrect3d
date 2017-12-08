@@ -10,6 +10,9 @@ import * as THREE from 'three';
 import LoaderModal from './LoaderModal';
 import InfoModal from './InfoModal';
 
+// GUI
+import ThreeGUI, { ThreeGUIPanelLayout, ThreeGUILayout, ThreeGUIGroup, ThreeGUINestedGroup } from './ThreeGUI';
+
 // postprocessing
 import loadPostProcessor from '../utils/postprocessing';
 
@@ -250,7 +253,8 @@ export default class ThreeView extends Component {
 
     return(
       <div className="three-view-container">
-        <ThreeTools ref={(ref) => this.toolsMenu = ref} tools={tools} />
+        {/*}<ThreeTools ref={(ref) => this.toolsMenu = ref} tools={tools} />*/}
+        {this.panelLayout ? this.panelLayout : <span></span>}
         <InfoModal className="three-info-modal" active={showInfo} info={info} />
         <LoaderModal
           text={loadText + loadProgress}
@@ -282,6 +286,13 @@ export default class ThreeView extends Component {
   /** THREE JS 'LIFECYCYLE'
   *****************************************************************************/
   initThree(): void {
+    this.GUI = new ThreeGUI();
+    this.GUI.registerComponent('THREE_RANGE_SLIDER', ThreeRangeSlider);
+    this.GUI.registerComponent('THREE_TOGGLE', ThreeToggle);
+    this.GUI.registerComponent('THREE_COLOR_PICKER', ThreeColorPicker);
+    this.GUI.registerComponent('THREE_MEASURE', ThreeMeasure);
+    this.GUI.registerLayout('THREE_GROUP_LAYOUT', ThreeGUILayout);
+    this.GUI.registerLayout('THREE_PANEL_LAYOUT', ThreeGUIPanelLayout);
 
     let { color, intensity, decay, distance } = this.state.dynamicLightProps;
     this.threeContainer = this.refs.threeView;
@@ -590,7 +601,7 @@ export default class ThreeView extends Component {
     });
 
     this.skyboxMaterial.uniforms['tEquirect'].value = this.props.skyboxTexture.image;
-    this.skyboxMaterialShader = new LinearGradientShader("rgb(35,35,35)", "rgb(45,45,45)", this.width, this.height).shaderMaterial();
+    this.skyboxMaterialShader = new LinearGradientShader("rgb(35,35,35)", "rgb(105,105,105)", this.width, this.height);
     this.skyboxMesh = new THREE.Mesh(this.skyboxGeom, this.skyboxMaterial);
     this.envScene.add(this.skyboxMesh);
     this.bboxSkybox = new THREE.Box3().setFromObject(this.skyboxMesh);
@@ -939,6 +950,44 @@ export default class ThreeView extends Component {
     let offsetMax = Number(this.environmentRadius.toFixed(2)) * 2;
     let step = Number((offsetMax / 100).toFixed(2));
     let { shaderPasses } = this.state;
+
+    const layouts = this.GUI.layouts;
+    const components = this.GUI.components;
+    let panelGroup = new ThreeGUINestedGroup('tools');
+
+    if (this.props.options.enableMeasurement) {
+      let measurementGroup = new ThreeGUIGroup('measurement');
+
+      measurementGroup.add('measure', components.THREE_MEASURE, {
+        updateCallback: this.drawMeasurement,
+        camera: this.camera,
+        mesh: this.mesh,
+        target: this.webGLRenderer.domElement
+      });
+
+      measurementGroup.add('show axes', components.THREE_TOGGLE, {
+        callback: this.showAxes,
+        checked: this.state.showAxes,
+        title: "show axes",
+      });
+
+      panelGroup.add(measurementGroup);
+    }
+
+    if (this.props.options.enableLights) {
+      let lightGroup = new ThreeGUINestedGroup('lights');
+      // need to add both flat buttons and groups
+    }
+
+
+    this.panelLayout = <layouts.THREE_PANEL_LAYOUT
+      groups={panelGroup.groups}
+      elementClass='three-tool'
+      groupClass='three-tool-container'
+      menuClass='three-tool-menu'
+      dropdownClass='three-tool-menu-dropdown'
+      ref={(ref) => this.toolsMenu = ref}
+    />
     let defaultTools = [{
         group: 'measurement',
         components: [
@@ -1188,8 +1237,10 @@ export default class ThreeView extends Component {
           this.camera.updateProjectionMatrix();
           this.webGLRenderer.setSize(width, this.height);
           this.sceneComposer.setSize(width, this.height);
+          this.modelComposer.setSize(width, this.height);
           this.guiComposer.setSize(width, this.height);
           this.effectComposer.setSize(width, this.height);
+          this.skyboxMaterialShader.updateUniforms('resolution', new THREE.Vector2(width, this.height));
           this.updateShaders(width, 'EDL', 'screenWidth');
         });
       });
@@ -1202,7 +1253,7 @@ export default class ThreeView extends Component {
     let { skyboxTexture } = this.props;
 
     if (!detailMode) {
-      this.skyboxMesh.material = this.skyboxMaterialShader;
+      this.skyboxMesh.material = this.skyboxMaterialShader.shaderMaterial;
       this.setState({
         detailMode: true,
       });
@@ -1334,10 +1385,12 @@ export default class ThreeView extends Component {
     this.camera.updateProjectionMatrix();
     this.webGLRenderer.setSize(innerWidth, innerHeight);
     this.sceneComposer.setSize(innerWidth, innerHeight);
+    this.modelComposer.setSize(innerWidth, innerHeight);
     this.guiComposer.setSize(innerWidth, innerHeight);
     this.effectComposer.setSize(innerWidth, innerHeight);
     this.width = innerWidth;
     this.height = innerHeight;
+    this.skyboxMaterialShader.updateUniforms('resolution', new THREE.Vector2(this.width, this.height));
     this.updateShaders(this.width, 'EDL', 'screenWidth');
     this.updateShaders(this.height, 'EDL', 'screenHeight');
   }

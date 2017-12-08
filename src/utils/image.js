@@ -45,7 +45,6 @@ export class LinearGradientShader {
     'uniform vec3 topColor;',
     'uniform vec3 bottomColor;',
     'uniform vec2 resolution;',
-    'uniform float exponent;',
 
     'void main() {',
       'vec2 pixel = gl_FragCoord.xy / resolution.xy;',
@@ -58,13 +57,16 @@ export class LinearGradientShader {
     this.uniforms = {
       topColor: { type: 'c', value: new THREE.Color(topColor) },
       bottomColor: { type: 'c', value: new THREE.Color(bottomColor) },
-      offset: { type: 'f', value: 100 },
-      exponent: { type: 'f', value: 0.6 },
       resolution: { value: new THREE.Vector2(width, height) }
     };
+    this.shaderMaterial = this.generateShaderMaterial();
   }
 
-  shaderMaterial(): THREE.ShaderMaterial {
+  updateUniforms(uniformName: string, value: Number | THREE.Vector2): void {
+    this.uniforms[uniformName].value = value;
+  }
+
+  generateShaderMaterial(): THREE.ShaderMaterial {
     return new THREE.ShaderMaterial({
       uniforms: this.uniforms,
       fragmentShader: this.fragmentShader,

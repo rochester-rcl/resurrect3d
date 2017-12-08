@@ -34,7 +34,7 @@ class ThreeContainer extends Component {
   }
   render(): Object {
     const { mesh, texture, metadata, threeAsset } = this.props;
-    console.log(threeAsset);
+
     if (mesh.progress === 'Complete' && texture.progress === 'Complete') {
       return(
         <ThreeView
@@ -42,6 +42,7 @@ class ThreeContainer extends Component {
           mesh={mesh}
           renderDoubleSided={true}
           info={metadata}
+          options={threeAsset}
         />
       );
     } else {
