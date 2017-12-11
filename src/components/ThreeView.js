@@ -587,22 +587,31 @@ export default class ThreeView extends Component {
   }
 
   initEnvironment(): void {
-
+    let { gradient } = this.props.options.skybox;
     // Skybox
     let cubeSize = this.environmentRadius * 4;
     this.skyboxGeom = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
 
-    let equirectShader = THREE.ShaderLib['equirect'];
-    this.skyboxMaterial = new THREE.ShaderMaterial({
-      fragmentShader: equirectShader.fragmentShader,
-      vertexShader: equirectShader.vertexShader,
-      uniforms: equirectShader.uniforms,
-      depthWrite: false,
-      side: THREE.BackSide,
-    });
+    if (this.props.skyboxTexture) {
+      let equirectShader = THREE.ShaderLib['equirect'];
+      this.skyboxMaterial = new THREE.ShaderMaterial({
+        fragmentShader: equirectShader.fragmentShader,
+        vertexShader: equirectShader.vertexShader,
+        uniforms: equirectShader.uniforms,
+        depthWrite: false,
+        side: THREE.BackSide,
+      });
+      this.skyboxMaterial.uniforms['tEquirect'].value = this.props.skyboxTexture.image;
+    }
+    let innerColor = "rgb(35, 35, 35)";
+    let outerColor = "rgb(105, 105, 105)";
 
-    this.skyboxMaterial.uniforms['tEquirect'].value = this.props.skyboxTexture.image;
-    this.skyboxMaterialShader = new LinearGradientShader("rgb(35,35,35)", "rgb(105,105,105)", this.width, this.height);
+    if (this.props.options.skybox.gradient) {
+      innerColor = gradient.innerColor;
+      outerColor = gradient.outerColor;
+    }
+    this.skyboxMaterialShader = new LinearGradientShader(innerColor, outerColor, this.width, this.height);
+
     this.skyboxMesh = new THREE.Mesh(this.skyboxGeom, this.skyboxMaterial);
     this.envScene.add(this.skyboxMesh);
     this.bboxSkybox = new THREE.Box3().setFromObject(this.skyboxMesh);
