@@ -290,6 +290,7 @@ export default class ThreeView extends Component {
     this.GUI.registerComponent('THREE_RANGE_SLIDER', ThreeRangeSlider);
     this.GUI.registerComponent('THREE_TOGGLE', ThreeToggle);
     this.GUI.registerComponent('THREE_COLOR_PICKER', ThreeColorPicker);
+    this.GUI.registerComponent('THREE_MICRO_COLOR_PICKER', ThreeMicroColorPicker);
     this.GUI.registerComponent('THREE_MEASURE', ThreeMeasure);
     this.GUI.registerLayout('THREE_GROUP_LAYOUT', ThreeGUILayout);
     this.GUI.registerLayout('THREE_PANEL_LAYOUT', ThreeGUIPanelLayout);
@@ -946,9 +947,7 @@ export default class ThreeView extends Component {
 
   /** UI
   *****************************************************************************/
-  initTools(): Array<Object> {
-    let offsetMax = Number(this.environmentRadius.toFixed(2)) * 2;
-    let step = Number((offsetMax / 100).toFixed(2));
+  initTools(): void {
     let { shaderPasses } = this.state;
 
     const layouts = this.GUI.layouts;
@@ -958,14 +957,14 @@ export default class ThreeView extends Component {
     if (this.props.options.enableMeasurement) {
       let measurementGroup = new ThreeGUIGroup('measurement');
 
-      measurementGroup.add('measure', components.THREE_MEASURE, {
+      measurementGroup.addComponent('measure', components.THREE_MEASURE, {
         updateCallback: this.drawMeasurement,
         camera: this.camera,
         mesh: this.mesh,
         target: this.webGLRenderer.domElement
       });
 
-      measurementGroup.add('show axes', components.THREE_TOGGLE, {
+      measurementGroup.addComponent('show axes', components.THREE_TOGGLE, {
         callback: this.showAxes,
         checked: this.state.showAxes,
         title: "show axes",
@@ -975,10 +974,173 @@ export default class ThreeView extends Component {
     }
 
     if (this.props.options.enableLights) {
-      let lightGroup = new ThreeGUINestedGroup('lights');
-      // need to add both flat buttons and groups
+
+      let offsetMax = Number(this.environmentRadius.toFixed(2)) * 2;
+      let step = Number((offsetMax / 100).toFixed(2));
+
+      let lightGroup = new ThreeGUIGroup('lights');
+      lightGroup.addComponent('helper', components.THREE_TOGGLE, {
+        callback: this.showLightHelper,
+        checked: this.state.showLightHelper,
+        title: "show light helper",
+      });
+      lightGroup.addComponent('intensity', components.THREE_RANGE_SLIDER, {
+        min: 0.0,
+        max: 4.0,
+        step: 0.1,
+        title: "intensity",
+        defaultVal: this.dynamicLight.intensity,
+        callback: (value) => this.updateDynamicLighting(value, 'intensity'),
+      });
+      lightGroup.addComponent('color', components.THREE_COLOR_PICKER, {
+        title: "color",
+        callback: (color) => this.updateDynamicLighting(color, 'color'),
+      });
+      let offsetGroup = new ThreeGUIGroup('three-tool-group');
+      offsetGroup.addComponent('lock', components.THREE_TOGGLE, {
+        title: "lock",
+        checked: this.state.dynamicLightProps.lock,
+        callback: (value) => this.updateDynamicLighting(value, 'lock'),
+      });
+      let offsetProps = {
+        key: 0,
+        min: -offsetMax,
+        max: offsetMax,
+        step: step,
+        title: "x-axis",
+        defaultVal: 0.0,
+        callback: (value) => this.updateDynamicLighting(value, 'offsetX'),
+      }
+      offsetGroup.addComponent('x-axis', components.THREE_RANGE_SLIDER, {
+        ...offsetProps,
+      });
+      offsetGroup.addComponent('y-axis', components.THREE_RANGE_SLIDER, {
+        ...offsetProps,
+        key: 1,
+        title: "y-axis",
+        callback: (value) => this.updateDynamicLighting(value, 'offsetY'),
+      });
+      offsetGroup.addComponent('z-axis', components.THREE_RANGE_SLIDER, {
+        ...offsetProps,
+        key: 2,
+        title: "z-axis",
+        callback: (value) => this.updateDynamicLighting(value, 'offsetZ'),
+      });
+      lightGroup.addGroup('offset', offsetGroup);
+      panelGroup.add(lightGroup);
     }
 
+    if (this.props.options.enableShaders) {
+      let shaderGroup = new ThreeGUIGroup('shaders');
+      let edlGroup = new ThreeGUIGroup('edl');
+      edlGroup.addComponent('enable', components.THREE_TOGGLE, {
+        key: 0,
+        title: "enable",
+        callback: (value) => this.updateShaders(value, 'EDL', 'enableEDL'),
+        checked: shaderPasses.EDL.enableEDL ? shaderPasses.EDL.enableEDL : false
+      });
+
+      let edlShadingGroup = new ThreeGUIGroup('edlShading');
+
+      edlShadingGroup.addComponent('edlOnly', components.THREE_TOGGLE, {
+        key: 10,
+        callback: (value) => this.updateShaders(value, 'EDL', 'onlyEDL'),
+        checked: shaderPasses.EDL.onlyEDL ? shaderPasses.EDL.onlyEDL : false,
+        title: 'edl only',
+      });
+
+      edlShadingGroup.addComponent('geometryAndTexture', components.THREE_TOGGLE, {
+        key: 11,
+        callback: (value) => this.updateShaders(value, 'EDL', 'useTexture'),
+        checked: shaderPasses.EDL.useTexture ? shaderPasses.EDL.useTexture : false,
+        title: "geometry + texture",
+      });
+
+      edlShadingGroup.addComponent('color', components.THREE_MICRO_COLOR_PICKER, {
+        title: "color",
+        callback: (color) => this.updateShaders(color, 'EDL', 'onlyEDLColor'),
+      });
+
+      edlGroup.addComponent('strength', components.THREE_RANGE_SLIDER, {
+        key: 2,
+        min: 0.0,
+        max: 10.0,
+        step: 0.01,
+        title: "strength",
+        defaultVal: 0.0,
+        callback: (value) => this.updateShaders(value, 'EDL', 'edlStrength'),
+      });
+
+      edlGroup.addComponent('radius', components.THREE_RANGE_SLIDER, {
+        key: 3,
+        min: 0.0,
+        max: 4.0,
+        step: 0.01,
+        title: "radius",
+        defaultVal: 0.0,
+        callback: (value) => this.updateShaders(value, 'EDL', 'radius'),
+      });
+
+      edlGroup.addGroup('edl shading', edlShadingGroup);
+      shaderGroup.addGroup('eye dome lighting', edlGroup);
+      panelGroup.add(shaderGroup);
+    }
+
+    if (this.props.options.enableMaterials) {
+      let materialsGroup = new ThreeGUIGroup('materials');
+      let materialsProps = {
+        min: 0,
+        max: 1,
+        step: 0.01,
+        defaultVal: 1.0,
+        title: "normal scale",
+      }
+      let children = this.mesh.children;
+      if (children.length === 0) {
+        children = [this.mesh];
+      }
+      for (let i=0; i < children.length; i++) {
+        let mesh = children[i];
+        let material = mesh.material;
+        if (material.constructor !== Array) {
+          material = [material];
+        }
+        for (let j=0; j < material.length; j++) {
+          let currentMaterial = material[j];
+          if (currentMaterial.normalMap && !materialsGroup.find('normalScale')) {
+            materialsGroup.addComponent('normalScale', components.THREE_RANGE_SLIDER, {
+              ...materialsProps,
+              callback: (value) => this.updateMaterials(value, 'normalScale'),
+            });
+          }
+          if (currentMaterial.bumpMap && !materialsGroup.find('bumpScale')) {
+            materialsGroup.addComponent('bumpScale', components.THREE_RANGE_SLIDER, {
+              ...materialsProps,
+              title: "bump scale",
+              callback: (value) => this.updateMaterials(value, 'bumpScale'),
+            });
+          }
+          if (currentMaterial.type === 'MeshStandardMaterial' && !materialsGroup.find('microsurface')) {
+            let pbrGroup = new ThreeGUIGroup('pbrTool');
+            pbrGroup.addComponent('metalness', components.THREE_RANGE_SLIDER, {
+              ...materialsProps,
+              title: "metalness",
+              defaultVal: 0.0,
+              callback: (value) => this.updateMaterials(value, 'metalness'),
+            });
+
+            pbrGroup.addComponent('roughness', components.THREE_RANGE_SLIDER, {
+              ...materialsProps,
+              defaultVal: 1.0,
+              title: "roughness",
+              callback: (value) => this.updateMaterials(value, 'roughness'),
+            });
+            materialsGroup.addGroup('microsurface', pbrGroup);
+          }
+        }
+      }
+      panelGroup.add(materialsGroup);
+    }
 
     this.panelLayout = <layouts.THREE_PANEL_LAYOUT
       groups={panelGroup.groups}
@@ -988,239 +1150,6 @@ export default class ThreeView extends Component {
       dropdownClass='three-tool-menu-dropdown'
       ref={(ref) => this.toolsMenu = ref}
     />
-    let defaultTools = [{
-        group: 'measurement',
-        components: [
-          {
-            title: 'measure',
-            component: <ThreeMeasure
-                        updateCallback={this.drawMeasurement}
-                        camera={this.camera}
-                        mesh={this.mesh}
-                        target={this.webGLRenderer.domElement}
-                      />,
-           },
-           {
-             title: 'show axes',
-             component: <ThreeToggle
-                          callback={this.showAxes}
-                          checked={this.state.showAxes}
-                          title="show axes"
-                        />
-           }
-        ],
-    },
-    {
-      group: 'lights',
-      components: [
-        {
-          title: 'helper',
-          component: <ThreeToggle
-                      callback={this.showLightHelper}
-                      checked={this.state.showLightHelper}
-                      title="show light helper"
-                      />
-        },
-        {
-          title: 'intensity',
-          component: <ThreeRangeSlider
-                        min={0.0}
-                        max={4.0}
-                        step={0.1}
-                        title="intensity"
-                        defaultVal={this.dynamicLight.intensity}
-                        callback={(value) => this.updateDynamicLighting(value, 'intensity')}
-                      />
-        },
-        {
-          title: 'color',
-          component: <ThreeColorPicker
-                        title="color"
-                        callback={(color) => this.updateDynamicLighting(color, 'color')}
-                      />
-        },
-        {
-          title: 'offset',
-          component:
-                      <div className="three-tool-group">
-                        <h4 className="three-tool-group-title">offset</h4>
-                        <ThreeToggle
-                          callback={(value) => this.updateDynamicLighting(value, 'lock')}
-                          checked={this.state.dynamicLightProps.lock}
-                          title="lock"
-                        />
-                        <ThreeRangeSlider
-                          key={0}
-                          min={-offsetMax}
-                          max={offsetMax}
-                          step={step}
-                          title="x-axis"
-                          defaultVal={0.0}
-                          callback={(value) => this.updateDynamicLighting(value, 'offsetX')}
-                        />
-                        <ThreeRangeSlider
-                          key={1}
-                          min={-offsetMax}
-                          max={offsetMax}
-                          step={step}
-                          title="y-axis"
-                          defaultVal={0.0}
-                          callback={(value) => this.updateDynamicLighting(value, 'offsetY')}
-                        />
-                        <ThreeRangeSlider
-                          key={2}
-                          min={-offsetMax}
-                          max={offsetMax}
-                          step={step}
-                          title="z-axis"
-                          defaultVal={0.0}
-                          callback={(value) => this.updateDynamicLighting(value, 'offsetZ')}
-                        />
-                      </div>
-        }
-      ]
-    },
-    {
-      group: 'shaders',
-      components: [
-        {
-          title: 'eye-dome lighting',
-          component: <div className="three-tool-group">
-                        <h4 className="three-tool-group-title">eye dome lighting</h4>
-                        <ThreeToggle
-                          key={0}
-                          callback={(value) => this.updateShaders(value, 'EDL', 'enableEDL')}
-                          checked={shaderPasses.EDL.enableEDL ? shaderPasses.EDL.enableEDL : false}
-                          title="enable"
-                        />
-                        <div className="three-tool-group" key={1}>
-                          <h5 className="three-tool-group-title">shading</h5>
-                          <ThreeToggle
-                            key={10}
-                            callback={(value) => this.updateShaders(value, 'EDL', 'onlyEDL')}
-                            checked={shaderPasses.EDL.onlyEDL ? shaderPasses.EDL.onlyEDL : false}
-                            title="edl only"
-                          />
-                          <ThreeToggle
-                            key={11}
-                            callback={(value) => this.updateShaders(value, 'EDL', 'useTexture')}
-                            checked={shaderPasses.EDL.useTexture ? shaderPasses.EDL.useTexture : false}
-                            title="geometry + texture"
-                          />
-                          <ThreeMicroColorPicker
-                            title="color"
-                            callback={(color) => this.updateShaders(color, 'EDL', 'onlyEDLColor')}
-                          />
-                        </div>
-                        <ThreeRangeSlider
-                          key={2}
-                          min={0.0}
-                          max={10.0}
-                          step={0.01}
-                          title="strength"
-                          defaultVal={0.0}
-                          callback={(value) => this.updateShaders(value, 'EDL', 'edlStrength')}
-                        />
-                        <ThreeRangeSlider
-                          key={3}
-                          min={0.0}
-                          max={4.0}
-                          step={0.01}
-                          title="radius"
-                          defaultVal={0.0}
-                          callback={(value) => this.updateShaders(value, 'EDL', 'radius')}
-                        />
-                      </div>
-        },
-      ]
-    }
-  ];
-
-  let materialsTool = {
-    group: 'materials',
-    components: [],
-  }
-    let normalMapTool = {
-        title: 'normal scale',
-        component: <ThreeRangeSlider
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    defaultVal={1.0}
-                    title="normal scale"
-                    callback={(value) => this.updateMaterials(value, 'normalScale')}
-                    />,
-    }
-
-
-    let bumpMapTool = {
-        title: 'bump scale',
-        component: <ThreeRangeSlider
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    defaultVal={0}
-                    title="bump scale"
-                    callback={(value) => this.updateMaterials(value, 'bumpScale')}
-                    />,
-    }
-
-
-    let pbrTool = {
-      title: 'microsurface',
-      component: <div className="three-tool-group">
-                  <h4 className="three-tool-group-title">microsurface</h4>
-                  <ThreeRangeSlider
-                    min={0.0}
-                    max={1.0}
-                    step={0.01}
-                    defaultVal={0.0}
-                    title="metalness"
-                    callback={(value) => this.updateMaterials(value, 'metalness')}
-                  />
-                  <ThreeRangeSlider
-                    min={0.0}
-                    max={1.0}
-                    step={0.01}
-                    defaultVal={1.0}
-                    title="roughness"
-                    callback={(value) => this.updateMaterials(value, 'roughness')}
-                  />
-                </div>
-    }
-
-    const checkMaterialsTools = (title) => {
-      let inTools = materialsTool.components.find((component) => {
-        return component.title === title;
-      });
-      return inTools === undefined;
-    }
-    let children = this.mesh.children;
-    if (children.length === 0) {
-      children = [this.mesh];
-    }
-    for (let i=0; i < children.length; i++) {
-      let mesh = children[i];
-      let material = mesh.material;
-      if (material.constructor !== Array) {
-        material = [material];
-      }
-
-      for (let j=0; j < material.length; j++) {
-        let currentMaterial = material[j];
-        if (currentMaterial.normalMap && checkMaterialsTools(normalMapTool.title)) {
-          materialsTool.components.push(normalMapTool);
-        }
-        if (currentMaterial.bumpMap && checkMaterialsTools(bumpMapTool.title)) {
-          materialsTool.components.push(bumpMapTool);
-        }
-        if (currentMaterial.type === 'MeshStandardMaterial' && checkMaterialsTools(pbrTool.title)) {
-          materialsTool.components.push(pbrTool);
-        }
-      }
-    }
-    defaultTools.push(materialsTool);
-    return defaultTools;
   }
   // TODO make this thing resize properly
   toggleTools(): void {

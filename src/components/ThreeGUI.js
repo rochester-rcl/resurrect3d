@@ -3,7 +3,12 @@ import React, { Component } from 'react';
 // semantic-ui-react
 import { Accordion, Button, Icon } from 'semantic-ui-react';
 
+// lodash
+import lodash from 'lodash';
+
 const e = React.createElement;
+
+import { GROUP, COMPONENT } from '../constants/application';
 
 export default class ThreeGUI {
   components: Object;
@@ -64,14 +69,26 @@ export class ThreeGUIGroup {
     this.components = [];
   }
 
-  add(name: string, component: Component, componentProps: Object): void {
+  addComponent(name: string, component: Component, componentProps: Object): void {
     this.components.push(
       {
         name: name,
+        type: COMPONENT,
         component: component,
-        props: componentProps,
+        props: { ...componentProps, key: lodash.uniqueId() },
       }
     );
+  }
+
+  addGroup(name: string, component: ThreeGUIGroup): void {
+    this.components.push(
+      {
+        name: name,
+        type: GROUP,
+        component: component,
+        props: null,
+      }
+    )
   }
 
   remove(name: string): bool {
@@ -90,11 +107,30 @@ export class ThreeGUIGroup {
     let index = this.components.findIndex((component) => {
       return component.name === name;
     });
-    if (index) {
+    if (index !== -1) {
       return this.components[index];
     } else {
       return false;
     }
+  }
+
+  _renderGroup(group: ThreeGUIGroup): Array<Object> {
+    return group.components.map((element) => {
+      if (element.type === GROUP) {
+        return (
+          <div className={"three-gui-group " + element.name}>
+            <h4 className="three-gui-group-title">{element.name}</h4>
+            {this._renderGroup(element.component)}
+          </div>
+        );
+      } else {
+        return e(element.component, element.props, null);
+      }
+    });
+  }
+
+  render() {
+    return this._renderGroup(this);
   }
 
 }
@@ -170,10 +206,7 @@ export class ThreeGUIPanelLayout extends ThreeGUILayout {
               <h3><Icon name="dropdown" />{group.name}</h3>
             </Accordion.Title>
             <Accordion.Content active={activeIndex === index}>
-              {group.components.map((tool, index) =>
-                <div className={elementClass} key={index}>
-                  {e(tool.component, tool.props, null)}
-                </div>)}
+              {group.render()}
             </Accordion.Content>
           </div>
           )}

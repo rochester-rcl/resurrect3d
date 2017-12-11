@@ -196,14 +196,14 @@ body {
   align-items: stretch;
 }
 
-.three-tool-group {
+.three-gui-group {
   margin: 10px;
   border: 2px solid #ccc;
   padding: 20px;
   border-radius: 5px;
 }
 
-.three-tool-group-title {
+.three-gui-group-title {
   border-bottom: 2px solid #ccc;
   padding: 5px;
 }
