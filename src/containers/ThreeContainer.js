@@ -23,7 +23,7 @@ const meshPath = 'sphenodon.js';
 class ThreeContainer extends Component {
 
   componentDidMount(): void {
-    this.props.getThreeAssetAction(this.props.viewerId);
+    this.props.getThreeAssetAction(this.props.viewerId, this.props.url);
   }
 
   componentWillReceiveProps(nextProps: Object, nextState: Object): void {

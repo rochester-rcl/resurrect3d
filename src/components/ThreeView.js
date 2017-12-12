@@ -714,11 +714,15 @@ export default class ThreeView extends Component {
         if (this.props.skyboxTexture.image) {
           material.envMap = this.props.skyboxTexture.image;
           material.envMap.mapping = THREE.EquirectangularReflectionMapping;
+          material.envMap.minFilter = THREE.LinearMipMapLinearFilter;
+          material.envMap.magFilter = THREE.LinearFilter;
           material.envMapIntensity = 1;
         } else {
           let tex = new RadialGradientCanvas(1024, 1024,
-            this.skyboxMaterialShader.innerColor, this.skyboxMaterialShader.outerColor).toTexture();
+            "rgb(255, 255, 255)", "rgb(150, 150, 150)").toTexture();
           material.envMap = tex;
+          material.envMap.minFilter = THREE.LinearMipMapLinearFilter;
+          material.envMap.magFilter = THREE.LinearFilter;
           material.envMap.mapping = THREE.EquirectangularReflectionMapping;
         }
       }
@@ -731,9 +735,10 @@ export default class ThreeView extends Component {
   initPostprocessing(): void {
 
     let rtParams = {
-      minFilter: THREE.LinearMipMapLinearFilter,
+      minFilter: THREE.LinearFilter,
       magFilter: THREE.LinearFilter,
       format: THREE.RGBAFormat,
+      stencilBuffer: true,
     };
 
     this.effectComposer = new THREE.EffectComposer(this.webGLRenderer,

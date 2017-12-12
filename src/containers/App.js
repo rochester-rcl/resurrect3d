@@ -28,7 +28,7 @@ class App extends Component {
     const { children, data, match } = this.props;
     return (
       <div className="app-root-container">
-        <ThreeContainer viewerId={match.params.id}/>
+        <ThreeContainer viewerId={match.params.id} url={match.url} />
       </div>
     );
   }

@@ -3,10 +3,11 @@
 // Constants
 import * as ActionConstants from '../constants/actions';
 
-export function getThreeAssetAction(assetId: Number): Object {
+export function getThreeAssetAction(assetId: Number, url: string): Object {
   return {
     type: ActionConstants.GET_THREE_ASSET,
     id: assetId,
+    url: url,
   }
 }
 
