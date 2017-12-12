@@ -135,21 +135,8 @@ export class ThreeGUIGroup {
 
 }
 
-export class ThreeGUINestedGroup extends ThreeGUIGroup {
-  groups: Array<ThreeGUIGroup>
-  constructor(name: string) {
-    super(name);
-    this.groups = this.components;
-  }
-
-  add(group: ThreeGUIGroup) {
-    this.components.push(group);
-  }
-}
-
-
 // Flat Layout
-
+// Meant for a single group!
 export class ThreeGUILayout extends Component {
   state = {}
   constructor(props: Object) {
@@ -157,17 +144,17 @@ export class ThreeGUILayout extends Component {
   }
 
   render() {
-    const { group, className } = this.props;
+    const { group, groupClass } = this.props;
     return(
-      <div className={className}>
-        group.map((element) => e(element.component, element.props, null));
+      <div className={groupClass}>
+        {group.render()}
       </div>
     );
   }
 }
 
 // Nested Layout w/ Collapsible Panel
-
+// Meant for a group of groups!
 export class ThreeGUIPanelLayout extends ThreeGUILayout {
 
   state: Object = { activeIndex: -1, menuExpanded: false }
@@ -195,18 +182,17 @@ export class ThreeGUIPanelLayout extends ThreeGUILayout {
 
   render() {
     const { activeIndex, menuExpanded } = this.state;
-    let { menuClass, dropdownClass, elementClass, groupClass, groups } = this.props;
-
+    let { menuClass, dropdownClass, elementClass, groupClass, group } = this.props;
     return(
       <div className={menuClass += menuExpanded ? " expanded" : " collapsed"}>
         <Accordion className={dropdownClass += menuExpanded ? " expanded" : " collapsed"} inverted>
-          {groups.map((group, index) =>
+          {group.components.map((group, index) =>
             <div key={index} className={groupClass}>
             <Accordion.Title active={activeIndex === index} key={index} onClick={() => this.selectTool(index)}>
               <h3><Icon name="dropdown" />{group.name}</h3>
             </Accordion.Title>
             <Accordion.Content active={activeIndex === index}>
-              {group.render()}
+              {group.component.render()}
             </Accordion.Content>
           </div>
           )}

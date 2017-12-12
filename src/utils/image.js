@@ -54,6 +54,8 @@ export class LinearGradientShader {
   ].join('\n');
 
   constructor(topColor: string, bottomColor: string, width: number, height: number) {
+    this.innerColor = topColor;
+    this.outerColor = bottomColor;
     this.uniforms = {
       topColor: { type: 'c', value: new THREE.Color(topColor) },
       bottomColor: { type: 'c', value: new THREE.Color(bottomColor) },
@@ -113,6 +115,8 @@ export class RadialGradientCanvas extends ImageGenerator {
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     texture.offset.set(0,0);
     texture.repeat.set(2,2);
+    texture.minFilter = THREE.LinearMipMapLinearFilter;
+    texture.magFilter = THREE.LinearMipMapLinearFilter;
     return texture;
 
   }

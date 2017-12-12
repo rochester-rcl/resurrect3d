@@ -9,6 +9,7 @@ import * as THREE from 'three';
 // Semantic UI
 import LoaderModal from './LoaderModal';
 import InfoModal from './InfoModal';
+import { Button, Label, Icon } from 'semantic-ui-react';
 
 // GUI
 import ThreeGUI, { ThreeGUIPanelLayout, ThreeGUILayout, ThreeGUIGroup, ThreeGUINestedGroup } from './ThreeGUI';
@@ -20,7 +21,7 @@ import loadPostProcessor from '../utils/postprocessing';
 import { panLeft, panUp, rotateLeft, rotateUp } from '../utils/camera';
 import { fitBoxes, mapMaterials } from '../utils/mesh';
 import { LabelSprite } from '../utils/image';
-import { LinearGradientShader } from '../utils/image';
+import { LinearGradientShader, RadialGradientCanvas } from '../utils/image';
 import ThreePointLights from '../utils/lights';
 
 // Controls
@@ -89,6 +90,10 @@ export default class ThreeView extends Component {
   bokehPass: THREE.BokehPass;
   bloomPass: THREE.BloomPass;
   brightnessPass: THREE.BrightnessPass;
+
+  // GUI
+  panelLayout: ThreeGUIPanelLayout;
+  controls: ThreeGUILayout;
 
   // DOM
   threeContainer: HTMLElement;
@@ -173,6 +178,7 @@ export default class ThreeView extends Component {
     (this: any).initMesh = this.initMesh.bind(this);
     (this: any).initPostprocessing = this.initPostprocessing.bind(this);
     (this: any).initThree = this.initThree.bind(this);
+    (this: any).initControls = this.initControls.bind(this);
     (this: any).initTools = this.initTools.bind(this);
     (this: any).addShaderPass = this.addShaderPass.bind(this);
 
@@ -203,6 +209,7 @@ export default class ThreeView extends Component {
     (this: any).computeSpriteScaleFactor = this.computeSpriteScaleFactor.bind(this);
     (this: any).updateMaterials = this.updateMaterials.bind(this);
     (this: any).updateShaders = this.updateShaders.bind(this);
+    (this: any).setEnvMap = this.setEnvMap.bind(this);
 
     // event handlers
 
@@ -248,12 +255,10 @@ export default class ThreeView extends Component {
     const { loadProgress, loadText, showInfo, dynamicLighting, detailMode, toolsActive } = this.state;
     const { info } = this.props;
 
-    let tools = [];
-    if (this.mesh) tools = this.initTools();
+    if (this.mesh && !this.panelLayout) this.initTools();
 
     return(
       <div className="three-view-container">
-        {/*}<ThreeTools ref={(ref) => this.toolsMenu = ref} tools={tools} />*/}
         {this.panelLayout ? this.panelLayout : <span></span>}
         <InfoModal className="three-info-modal" active={showInfo} info={info} />
         <LoaderModal
@@ -261,13 +266,7 @@ export default class ThreeView extends Component {
           className="three-loader-dimmer"
           active={loadProgress !== 100}
         />
-        <ThreeControls
-          handleResetCamera={this.centerCamera}
-          handleToggleBackground={this.toggleBackground}
-          handleToggleInfo={this.toggleInfo}
-          handleToggleDynamicLighting={this.toggleDynamicLighting}
-          handleToggleTools={this.toggleTools}
-        />
+        {this.controls ? this.controls : <span></span>}
         <div ref="threeView" className="three-view"
           onMouseDown={this.handleMouseDown}
           onMouseMove={this.handleMouseMove}
@@ -288,13 +287,14 @@ export default class ThreeView extends Component {
   initThree(): void {
     this.GUI = new ThreeGUI();
     this.GUI.registerComponent('THREE_RANGE_SLIDER', ThreeRangeSlider);
+    this.GUI.registerComponent('THREE_BUTTON', Button);
     this.GUI.registerComponent('THREE_TOGGLE', ThreeToggle);
     this.GUI.registerComponent('THREE_COLOR_PICKER', ThreeColorPicker);
     this.GUI.registerComponent('THREE_MICRO_COLOR_PICKER', ThreeMicroColorPicker);
     this.GUI.registerComponent('THREE_MEASURE', ThreeMeasure);
     this.GUI.registerLayout('THREE_GROUP_LAYOUT', ThreeGUILayout);
     this.GUI.registerLayout('THREE_PANEL_LAYOUT', ThreeGUIPanelLayout);
-
+    this.initControls();
     let { color, intensity, decay, distance } = this.state.dynamicLightProps;
     this.threeContainer = this.refs.threeView;
 
@@ -358,6 +358,75 @@ export default class ThreeView extends Component {
       return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Mesh" }
     }, this.initMesh());
 
+  }
+
+  initControls(): void {
+    let components = this.GUI.components;
+    let layouts = this.GUI.layouts;
+    let controls = new ThreeGUIGroup('controls');
+    const checkTools = () => {
+      for (let key in this.props.options) {
+        if (key.includes('enable')) {
+          let value = this.props.options[key];
+          if (value) return true;
+        }
+      }
+      return false;
+    }
+
+    let buttonProps = {
+      content: "re-center",
+      className: "three-controls-button",
+      icon: "crosshairs",
+      onClick: () => this.centerCamera(),
+      labelPosition: "right",
+      color: "grey",
+    }
+
+    controls.addComponent('resetCamera', components.THREE_BUTTON, {
+      ...buttonProps,
+    });
+
+    if (this.props.options.enableLights) {
+      controls.addComponent('lighting', components.THREE_BUTTON, {
+        ...buttonProps,
+        content: "lighting",
+        icon: 'lightbulb',
+        onClick: () => this.toggleDynamicLighting(),
+      });
+    }
+
+    if (this.props.skyboxTexture.image) {
+      controls.addComponent('background', components.THREE_BUTTON, {
+        ...buttonProps,
+        content: "background",
+        icon: 'image',
+        onClick: () => this.toggleBackground(),
+      });
+    }
+
+    if (this.props.info) {
+      controls.addComponent('info', components.THREE_BUTTON, {
+        ...buttonProps,
+        content: "info",
+        icon: 'info',
+        onClick: () => this.toggleInfo(),
+      });
+    }
+
+    if (checkTools()) {
+      controls.addComponent('tools', components.THREE_BUTTON, {
+        ...buttonProps,
+        content: 'tools',
+        icon: 'wrench',
+        onClick: () => this.toggleTools(),
+      });
+    }
+
+    this.controls = <layouts.THREE_GROUP_LAYOUT
+        group={controls}
+        groupClass='three-controls-container'
+      />
   }
 
   update(): void {
@@ -508,15 +577,14 @@ export default class ThreeView extends Component {
 
   initMesh(): void {
       this.mesh = this.props.mesh.object3D;
-      const setEnvMap = (material) => {
+      const setMicrosurface = (material) => {
         if (material.type === 'MeshStandardMaterial') {
-          material.envMap = this.props.skyboxTexture.image;
-          material.mapping = THREE.EquirectangularReflectionMapping,
           material.metalness = 0.0;
           material.roughness = 1.0;
         }
         material.needsUpdate = true;
       }
+      // rewrite this to a function to abstract  out a lot of this boilerplate
         if (this.mesh instanceof THREE.Group) {
           this.mesh.children.forEach((child) => {
             child.receiveShadow = true;
@@ -524,13 +592,13 @@ export default class ThreeView extends Component {
             if (child.material) {
               if (child.material instanceof Array) {
                 child.material.forEach((material) => {
-                  setEnvMap(material);
+                  setMicrosurface(material);
                   if (this.props.renderDoubleSided) {
                     material.side = THREE.DoubleSide;
                   }
                 });
               } else {
-                setEnvMap(child.material);
+                setMicrosurface(child.material);
                 child.castShadow = true;
                 child.receiveShadow = true;
                 if (this.props.renderDoubleSided) {
@@ -538,7 +606,6 @@ export default class ThreeView extends Component {
                 }
               }
             }
-
           });
         } else if (this.mesh instanceof THREE.Mesh) {
           this.mesh.castShadow = true;
@@ -550,10 +617,10 @@ export default class ThreeView extends Component {
           material.forEach((currentMaterial) => {
             if (this.props.renderDoubleSided) {
               currentMaterial.side = THREE.DoubleSide;
-              setEnvMap(currentMaterial);
+              setMicrosurface(currentMaterial);
             }
           });
-        }
+       }
 
       this.scene.add(this.mesh);
 
@@ -569,7 +636,7 @@ export default class ThreeView extends Component {
       this.computeAxisGuides();
       this.drawAxisGuides(true);
 
-      this.environmentRadius = this.meshHeight; // diameter of sphere =  2 * meshHeight
+      this.environmentRadius = Math.max(this.meshWidth, this.meshHeight, this.meshDepth); // diameter of sphere =  2 * meshHeight
 
       let labelSphereMaterial = new THREE.MeshPhongMaterial({
         color: 0xCCCCCC,
@@ -592,7 +659,7 @@ export default class ThreeView extends Component {
     let cubeSize = this.environmentRadius * 4;
     this.skyboxGeom = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
 
-    if (this.props.skyboxTexture) {
+    if (this.props.skyboxTexture.image) {
       let equirectShader = THREE.ShaderLib['equirect'];
       this.skyboxMaterial = new THREE.ShaderMaterial({
         fragmentShader: equirectShader.fragmentShader,
@@ -610,12 +677,14 @@ export default class ThreeView extends Component {
       innerColor = gradient.innerColor;
       outerColor = gradient.outerColor;
     }
-    this.skyboxMaterialShader = new LinearGradientShader(innerColor, outerColor, this.width, this.height);
-
-    this.skyboxMesh = new THREE.Mesh(this.skyboxGeom, this.skyboxMaterial);
+    this.skyboxMaterialShader = new LinearGradientShader(innerColor, outerColor,
+      this.width, this.height);
+    this.skyboxMesh = new THREE.Mesh(this.skyboxGeom, this.skyboxMaterial !== undefined ?
+      this.skyboxMaterial : this.skyboxMaterialShader.shaderMaterial);
     this.envScene.add(this.skyboxMesh);
     this.bboxSkybox = new THREE.Box3().setFromObject(this.skyboxMesh);
     this.fitPerspectiveCamera();
+    this.setEnvMap();
     loadPostProcessor(THREE).then((values) => {
       this.setState((prevState, props) => {
         return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Shaders" }
@@ -633,13 +702,38 @@ export default class ThreeView extends Component {
     this.setState({ shaderPasses: {...this.state.shaderPasses, ...pass }});
   }
 
+  setEnvMap(): void {
+
+    let mesh = this.mesh;
+    if (mesh.constructor === THREE.Group) {
+      mesh = mesh.children[0];
+    }
+
+    const setEnv = (material) => {
+      if (material.type === 'MeshStandardMaterial') {
+        if (this.props.skyboxTexture.image) {
+          material.envMap = this.props.skyboxTexture.image;
+          material.envMap.mapping = THREE.EquirectangularReflectionMapping;
+          material.envMapIntensity = 1;
+        } else {
+          let tex = new RadialGradientCanvas(1024, 1024,
+            this.skyboxMaterialShader.innerColor, this.skyboxMaterialShader.outerColor).toTexture();
+          material.envMap = tex;
+          material.envMap.mapping = THREE.EquirectangularReflectionMapping;
+        }
+      }
+      material.needsUpdate = true;
+      return material;
+    }
+    mesh.material = mapMaterials(mesh.material, setEnv);
+  }
+
   initPostprocessing(): void {
 
     let rtParams = {
-      minFilter: THREE.LinearFilter,
+      minFilter: THREE.LinearMipMapLinearFilter,
       magFilter: THREE.LinearFilter,
       format: THREE.RGBAFormat,
-      stencilBuffer: true,
     };
 
     this.effectComposer = new THREE.EffectComposer(this.webGLRenderer,
@@ -690,6 +784,8 @@ export default class ThreeView extends Component {
       onlyEDL: false,
       radius: 0,
     }
+
+    // Set up env maps
 
     let EDLPass = new THREE.EDLPass(this.scene, this.camera, EDLParams);
 
@@ -750,7 +846,7 @@ export default class ThreeView extends Component {
   fitPerspectiveCamera(): void {
 
     let distance = this.camera.position.distanceTo(this.bboxMesh.min);
-    let fovV = 2 * Math.atan(this.meshHeight / (2 * distance)) * (180 / Math.PI);
+    let fovV = 2 * Math.atan(this.environmentRadius / (2 * distance)) * (180 / Math.PI);
     this.camera.fov = fovV;
     this.camera.updateProjectionMatrix();
 
@@ -961,7 +1057,7 @@ export default class ThreeView extends Component {
 
     const layouts = this.GUI.layouts;
     const components = this.GUI.components;
-    let panelGroup = new ThreeGUINestedGroup('tools');
+    let panelGroup = new ThreeGUIGroup('tools');
 
     if (this.props.options.enableMeasurement) {
       let measurementGroup = new ThreeGUIGroup('measurement');
@@ -979,7 +1075,7 @@ export default class ThreeView extends Component {
         title: "show axes",
       });
 
-      panelGroup.add(measurementGroup);
+      panelGroup.addGroup('measurement', measurementGroup);
     }
 
     if (this.props.options.enableLights) {
@@ -1036,7 +1132,7 @@ export default class ThreeView extends Component {
         callback: (value) => this.updateDynamicLighting(value, 'offsetZ'),
       });
       lightGroup.addGroup('offset', offsetGroup);
-      panelGroup.add(lightGroup);
+      panelGroup.addGroup('lights', lightGroup);
     }
 
     if (this.props.options.enableShaders) {
@@ -1092,7 +1188,7 @@ export default class ThreeView extends Component {
 
       edlGroup.addGroup('edl shading', edlShadingGroup);
       shaderGroup.addGroup('eye dome lighting', edlGroup);
-      panelGroup.add(shaderGroup);
+      panelGroup.addGroup('shaders', shaderGroup);
     }
 
     if (this.props.options.enableMaterials) {
@@ -1148,11 +1244,11 @@ export default class ThreeView extends Component {
           }
         }
       }
-      panelGroup.add(materialsGroup);
+      panelGroup.addGroup('materials', materialsGroup);
     }
 
     this.panelLayout = <layouts.THREE_PANEL_LAYOUT
-      groups={panelGroup.groups}
+      group={panelGroup}
       elementClass='three-tool'
       groupClass='three-tool-container'
       menuClass='three-tool-menu'
@@ -1185,7 +1281,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  toggleBackground(event: typeof SyntheticEvent): void {
+  toggleBackground(): void {
 
     let { detailMode } = this.state;
     let { skyboxTexture } = this.props;
@@ -1234,7 +1330,7 @@ export default class ThreeView extends Component {
     });
   }
 
-  toggleInfo(event: typeof SyntheticEvent): void {
+  toggleInfo(): void {
 
     if (this.state.showInfo) {
       this.setState({ showInfo: false });

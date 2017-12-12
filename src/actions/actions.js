@@ -24,3 +24,11 @@ export function loadTextureAction(url: string): Object {
     url: url,
   }
 }
+
+// Load a null texture to short-circuit progress loader
+export function noSkyboxTexture(): Object {
+  return {
+    type: ActionConstants.TEXTURE_LOADED,
+    payload: { val: null }
+  }
+}

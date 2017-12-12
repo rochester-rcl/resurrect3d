@@ -29,12 +29,16 @@ class ThreeContainer extends Component {
   componentWillReceiveProps(nextProps: Object, nextState: Object): void {
     if (!lodash.isEqual(nextProps.threeAsset, this.props.threeAsset)) {
       this.props.loadMeshAction(nextProps.threeAsset.threeFile);
-      if (nextProps.threeAsset.skybox.file) this.props.loadTextureAction(nextProps.threeAsset.skybox.file);
+      if (nextProps.threeAsset.skybox.file) {
+        this.props.loadTextureAction(nextProps.threeAsset.skybox.file);
+        // Need logic for null image for skybox
+      } else {
+        this.props.noSkyboxTexture();
+      }
     }
   }
   render(): Object {
     const { mesh, texture, metadata, threeAsset } = this.props;
-
     if (mesh.progress === 'Complete' && texture.progress === 'Complete') {
       return(
         <ThreeView
