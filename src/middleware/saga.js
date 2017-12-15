@@ -37,9 +37,7 @@ function computeProgress(request: ProgressEvent): string {
 
 function* getThreeAssetSaga(getThreeAssetAction: Object): Generator < any, any, any > {
   try {
-    console.log(getThreeAssetAction.url);
-    let apiKey = yield omekaBackend.authenticate();
-    let apiURL = omekaBackend.endpoint + '/' + getThreeAssetAction.id;
+    let apiURL = getThreeAssetAction.url + omekaBackend.endpoint + '/' + getThreeAssetAction.id;
     let asset = yield omekaBackend.getThreeAsset(apiURL, { method: 'GET', credentials: 'same-origin' });
     let metadata = yield omekaBackend.getMetadata(asset.itemUrl);
     yield put({ type: ActionConstants.THREE_ASSET_LOADED, threeAsset: asset });

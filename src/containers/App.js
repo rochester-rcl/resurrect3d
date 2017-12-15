@@ -20,15 +20,12 @@ import 'semantic-ui-css/semantic.css';
 import ThreeContainer from './ThreeContainer';
 
 class App extends Component {
-  componentDidMount() {
-    // Call this here to load initial data
-    //this.props.loadAPIDataAction();
-  }
   render() {
     const { children, data, match } = this.props;
+    let path = window.rootUrl ? window.rootUrl : '/';
     return (
       <div className="app-root-container">
-        <ThreeContainer viewerId={match.params.id} url={match.url} />
+        <ThreeContainer viewerId={match.params.id} url={path} />
       </div>
     );
   }

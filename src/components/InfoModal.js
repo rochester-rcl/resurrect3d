@@ -4,7 +4,7 @@
 import React from 'react';
 
 // Semantic UI
-import { Dimmer, Loader, Grid } from 'semantic-ui-react';
+import { Dimmer, Loader, Grid, Divider } from 'semantic-ui-react';
 
 const InfoModal = (props: Object) => {
   let { info, active, className } = props;
@@ -15,6 +15,9 @@ const InfoModal = (props: Object) => {
           <Grid.Row className='three-info-grid-row' key={index} columns={2}>
             <Grid.Column className='info-grid-key'>
               <h1>{pair.label}</h1>
+            </Grid.Column>
+            <Grid.Column className='info-grid-separator'>
+              <Divider vertical>|</Divider>
             </Grid.Column>
             <Grid.Column className='info-grid-val'>
               <h1>{pair.value}</h1>

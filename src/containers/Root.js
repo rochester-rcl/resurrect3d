@@ -15,10 +15,12 @@ import App from './App';
 export default class Root extends Component {
   render() {
     const { store } = this.props;
+    // need this for Omeka or embedding in any other system that has its own routing
+    let path = window.publicUrl ? window.publicUrl : '/';
     return(
       <Provider store={store}>
         <Router>
-          <Route path="/:id" component={App} />
+          <Route path={path += ':id'} component={App} />
         </Router>
       </Provider>
     )

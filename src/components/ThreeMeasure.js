@@ -77,7 +77,7 @@ export default class ThreeMeasure extends Component {
 
       let mouseVector = new THREE.Vector2();
       mouseVector.x = ((event.clientX - res.x) / res.width) * 2 - 1;
-      mouseVector.y = -(event.clientY / res.height) * 2 + 1;
+      mouseVector.y = -((event.clientY - res.top) / res.height) * 2 + 1;
       this.raycaster.setFromCamera(mouseVector, camera);
       let meshArray = [];
       if (mesh.type === THREE.Group) {

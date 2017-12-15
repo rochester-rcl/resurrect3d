@@ -23,6 +23,7 @@ import { fitBoxes, mapMaterials } from '../utils/mesh';
 import { LabelSprite } from '../utils/image';
 import { LinearGradientShader, RadialGradientCanvas } from '../utils/image';
 import ThreePointLights from '../utils/lights';
+import { convertUnits } from '../utils/math';
 
 // Controls
 import ThreeControls from './ThreeControls';
@@ -490,11 +491,11 @@ export default class ThreeView extends Component {
   }
 
   addAxisLabels(): void {
-
+    let { modelUnits } = this.props.options;
     let dimensions = [this.meshWidth, this.meshHeight, this.meshDepth];
     this.axisGuides.forEach((axisGuide, index) => {
       let sprite = new LabelSprite(128, 128,'#fff',
-        dimensions[index].toFixed(2).toString() + ' ' + this.state.units).toSprite();
+        convertUnits(modelUnits, dimensions[index]).toFixed(2).toString() + ' ' + this.state.units).toSprite();
       // Need to set based on actual size of model somehow
       sprite.scale.multiplyScalar(this.spriteScaleFactor);
       axisGuide.add(sprite);
@@ -536,6 +537,7 @@ export default class ThreeView extends Component {
 
   drawMeasurement(points?: Object): void {
     if (points) {
+      let { modelUnits } = this.props.options;
       let { a, b, distance } = points;
       let sphere = this.labelSphere.clone();
       if (a && !b) {
@@ -561,7 +563,7 @@ export default class ThreeView extends Component {
 
           // draw label sprite for distance
           let distanceLabel = new LabelSprite(128, 128,'#fff',
-            distance.toFixed(2).toString() + ' ' + this.state.units).toSprite();
+            convertUnits(modelUnits, distance).toFixed(2).toString() + ' ' + this.state.units).toSprite();
           distanceLabel.scale.multiplyScalar(this.spriteScaleFactor / 2);
           a = a.clone();
           b = b.clone();
@@ -677,7 +679,8 @@ export default class ThreeView extends Component {
       innerColor = gradient.innerColor;
       outerColor = gradient.outerColor;
     }
-    this.skyboxMaterialShader = new LinearGradientShader(innerColor, outerColor,
+    // need to clean this up, it's a radial gradient not a linear gradient
+    this.skyboxMaterialShader = new LinearGradientShader(outerColor, innerColor,
       this.width, this.height);
     this.skyboxMesh = new THREE.Mesh(this.skyboxGeom, this.skyboxMaterial !== undefined ?
       this.skyboxMaterial : this.skyboxMaterialShader.shaderMaterial);
@@ -719,7 +722,7 @@ export default class ThreeView extends Component {
           material.envMapIntensity = 1;
         } else {
           let tex = new RadialGradientCanvas(1024, 1024,
-            "rgb(255, 255, 255)", "rgb(150, 150, 150)").toTexture();
+            this.skyboxMaterialShader.innerColor, this.skyboxMaterialShader.outerColor).toTexture();
           material.envMap = tex;
           material.envMap.minFilter = THREE.LinearMipMapLinearFilter;
           material.envMap.magFilter = THREE.LinearFilter;
@@ -1420,6 +1423,7 @@ export default class ThreeView extends Component {
   handleWindowResize(event: Event): void {
     let windowObj: window.Window = event.target;
     let { innerWidth, innerHeight } = windowObj;
+
     this.camera.aspect = innerWidth / innerHeight;
     this.camera.updateProjectionMatrix();
     this.webGLRenderer.setSize(innerWidth, innerHeight);
@@ -1427,11 +1431,12 @@ export default class ThreeView extends Component {
     this.modelComposer.setSize(innerWidth, innerHeight);
     this.guiComposer.setSize(innerWidth, innerHeight);
     this.effectComposer.setSize(innerWidth, innerHeight);
+    this.skyboxMaterialShader.updateUniforms('resolution', new THREE.Vector2(innerWidth, innerHeight));
+    this.updateShaders(innerWidth, 'EDL', 'screenWidth');
+    this.updateShaders(innerHeight, 'EDL', 'screenHeight');
     this.width = innerWidth;
     this.height = innerHeight;
-    this.skyboxMaterialShader.updateUniforms('resolution', new THREE.Vector2(this.width, this.height));
-    this.updateShaders(this.width, 'EDL', 'screenWidth');
-    this.updateShaders(this.height, 'EDL', 'screenHeight');
+
   }
 
   handleKeyDown(event: SyntheticKeyboardEvent): void {
