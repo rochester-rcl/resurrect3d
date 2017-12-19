@@ -6,6 +6,12 @@ body {
   font-family: sans-serif;
 }
 
+/* Omeka Admin Bar */
+#admin-bar {
+  position: relative;
+  z-index: 1001;
+}
+
 #root {
   width: 100%;
   height: 100%;
@@ -82,18 +88,40 @@ body {
 
 .three-info-grid {
   position: relative;
-  width: 50%;
+  width: 80%;
+  height: auto;
+  overflow-y: scroll;
   margin: 0 auto !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
 }
 
-.three-info-grid-row {
-  border-bottom: 5px solid #ccc;
+.three-info-grid-row-odd {
+  border-bottom: 3px solid #333;
   flex-wrap: nowrap !important;
 }
 
-.three-info-grid-row h1 {
+.three-info-grid-row-even {
+  flex-wrap: nowrap !important;
+}
+
+.three-info-grid-val-text {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 20px;
+  color: #ccc;
+}
+
+.three-info-grid-row-odd h2 {
   font-family: 'Source Code Pro', monospace;
   color: #fff;
+}
+
+.info-value-link {
+  color: rgb(0, 180, 0) !important;
+}
+
+.info-grid-divider {
+  border-left: 2px solid #ccc;
 }
 
 .three-tool-menu-dropdown {

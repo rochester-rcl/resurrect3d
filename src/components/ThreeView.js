@@ -672,8 +672,8 @@ export default class ThreeView extends Component {
       });
       this.skyboxMaterial.uniforms['tEquirect'].value = this.props.skyboxTexture.image;
     }
-    let innerColor = "rgb(35, 35, 35)";
-    let outerColor = "rgb(105, 105, 105)";
+    let outerColor = "rgb(35, 35, 35)";
+    let innerColor = "rgb(105, 105, 105)";
 
     if (this.props.options.skybox.gradient) {
       innerColor = gradient.innerColor;

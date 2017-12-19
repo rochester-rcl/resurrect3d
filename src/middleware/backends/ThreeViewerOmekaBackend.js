@@ -27,7 +27,7 @@ export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend 
       .catch((error) => console.log(error));
   }
 
-  getMetadata(url: string, params) {
+  getMetadata(url: string, params: Object) {
     return this._get(url, params).then((result) => {
       return ThreeViewerOmekaBackend.parseMetadata(result.element_texts);
     }).catch((error) => console.log(error));

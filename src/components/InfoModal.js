@@ -4,27 +4,28 @@
 import React from 'react';
 
 // Semantic UI
-import { Dimmer, Loader, Grid, Divider } from 'semantic-ui-react';
+import { Dimmer, Loader, Grid } from 'semantic-ui-react';
 
 const InfoModal = (props: Object) => {
   let { info, active, className } = props;
   return(
     <Dimmer className={className} active={active}>
-      <Grid className='three-info-grid'>
+
         {info.map((pair, index) =>
-          <Grid.Row className='three-info-grid-row' key={index} columns={2}>
-            <Grid.Column className='info-grid-key'>
-              <h1>{pair.label}</h1>
-            </Grid.Column>
-            <Grid.Column className='info-grid-separator'>
-              <Divider vertical>|</Divider>
-            </Grid.Column>
-            <Grid.Column className='info-grid-val'>
-              <h1>{pair.value}</h1>
-            </Grid.Column>
+          <Grid className='three-info-grid'>
+            <Grid.Row className='three-info-grid-row-odd' key={index} columns={1}>
+              <Grid.Column className='info-grid-key'>
+                <h2>{pair.label}</h2>
+              </Grid.Column>
+            </Grid.Row>
+            <Grid.Row className="three-info-grid-row-even" key={index+1} columns={1}>
+              <Grid.Column className='info-grid-val'>
+                <span className="three-info-grid-val-text">{pair.value}</span>
+              </Grid.Column>
           </Grid.Row>
+          </Grid>
         )}
-      </Grid>
+
     </Dimmer>
   );
 }
