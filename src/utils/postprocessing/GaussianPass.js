@@ -41,7 +41,7 @@ export default function loadGaussianPass(threeInstance: Object): typeof Promise 
 				vertexShader: threeInstance.VerticalBlurShader.vertexShader,
 				fragmentShader: threeInstance.VerticalBlurShader.fragmentShader,
 			});
-	
+
 			this.camera = new threeInstance.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 			this.scene  = new threeInstance.Scene();
 
@@ -60,7 +60,7 @@ export default function loadGaussianPass(threeInstance: Object): typeof Promise 
 				this.horizontalBlurUniforms["tDiffuse"].value = readBuffer.texture;
 				this.quad.material = this.horizontalBlurMaterial;
 	      renderer.render(this.scene, this.camera, this.pass1RenderTarget, true);
-				this.uniforms["tColor"].value = this.pass1RenderTarget.texture;
+				this.uniforms["tDiffuse"].value = this.pass1RenderTarget.texture;
 				this.quad.material = this.verticalBlurMaterial;
         threeInstance.ShaderPass.prototype.render.call(this, renderer, writeBuffer, readBuffer, delta, maskActive);
       }

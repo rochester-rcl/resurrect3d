@@ -6,8 +6,8 @@
  *   and used in http://www.cake23.de/traveling-wavefronts-lit-up.html
  *
  * - 9 samples per pass
- * - standard deviation 2.7
- * - "h" and "v" parameters should be set to "1 / width" and "1 / height"
+ * - standard deviation 10.8
+ * - "h" and "v" parameters should be set to "1 / (width / 4)" and "1 / (height / 4)"
  */
 
 export default function loadBlurShader(threeInstance: Object): Promise {
@@ -45,15 +45,15 @@ export default function loadBlurShader(threeInstance: Object): Promise {
 
     			"vec4 sum = vec4( 0.0 );",
 
-    			"sum += texture2D( tDiffuse, vec2( vUv.x - 4.0 * h, vUv.y ) ) * 0.051;",
-    			"sum += texture2D( tDiffuse, vec2( vUv.x - 3.0 * h, vUv.y ) ) * 0.0918;",
-    			"sum += texture2D( tDiffuse, vec2( vUv.x - 2.0 * h, vUv.y ) ) * 0.12245;",
-    			"sum += texture2D( tDiffuse, vec2( vUv.x - 1.0 * h, vUv.y ) ) * 0.1531;",
-    			"sum += texture2D( tDiffuse, vec2( vUv.x, vUv.y ) ) * 0.1633;",
-    			"sum += texture2D( tDiffuse, vec2( vUv.x + 1.0 * h, vUv.y ) ) * 0.1531;",
-    			"sum += texture2D( tDiffuse, vec2( vUv.x + 2.0 * h, vUv.y ) ) * 0.12245;",
-    			"sum += texture2D( tDiffuse, vec2( vUv.x + 3.0 * h, vUv.y ) ) * 0.0918;",
-    			"sum += texture2D( tDiffuse, vec2( vUv.x + 4.0 * h, vUv.y ) ) * 0.051;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x - 4.0 * h, vUv.y ) ) * 0.106723;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x - 3.0 * h, vUv.y ) ) * 0.109972;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x - 2.0 * h, vUv.y ) ) * 0.112352;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x - 1.0 * h, vUv.y ) ) * 0.113806;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x, vUv.y ) ) * 0.114294;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x + 1.0 * h, vUv.y ) ) * 0.113806;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x + 2.0 * h, vUv.y ) ) * 0.112352;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x + 3.0 * h, vUv.y ) ) * 0.109972;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x + 4.0 * h, vUv.y ) ) * 0.106723;",
 
     			"gl_FragColor = sum;",
 
@@ -67,7 +67,7 @@ export default function loadBlurShader(threeInstance: Object): Promise {
 
     	uniforms: {
 
-    		"tColor": { value: null },
+    		"tDiffuse": { value: null },
     		"v":        { value: 1.0 / 512.0 },
 
     	},
@@ -87,7 +87,7 @@ export default function loadBlurShader(threeInstance: Object): Promise {
 
     	fragmentShader: [
 
-        "uniform sampler2D tColor;",
+        "uniform sampler2D tDiffuse;",
 		    "uniform float v;",
 
 		    "varying vec2 vUv;",
@@ -96,15 +96,15 @@ export default function loadBlurShader(threeInstance: Object): Promise {
 
     			"vec4 sum = vec4( 0.0 );",
 
-    			"sum += texture2D( tColor, vec2( vUv.x, vUv.y - 4.0 * v ) ) * 0.051;",
-    			"sum += texture2D( tColor, vec2( vUv.x, vUv.y - 3.0 * v ) ) * 0.0918;",
-    			"sum += texture2D( tColor, vec2( vUv.x, vUv.y - 2.0 * v ) ) * 0.12245;",
-    			"sum += texture2D( tColor, vec2( vUv.x, vUv.y - 1.0 * v ) ) * 0.1531;",
-    			"sum += texture2D( tColor, vec2( vUv.x, vUv.y ) ) * 0.1633;",
-    			"sum += texture2D( tColor, vec2( vUv.x, vUv.y + 1.0 * v ) ) * 0.1531;",
-    			"sum += texture2D( tColor, vec2( vUv.x, vUv.y + 2.0 * v ) ) * 0.12245;",
-    			"sum += texture2D( tColor, vec2( vUv.x, vUv.y + 3.0 * v ) ) * 0.0918;",
-    			"sum += texture2D( tColor, vec2( vUv.x, vUv.y + 4.0 * v ) ) * 0.051;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x, vUv.y - 4.0 * v ) ) * 0.106723;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x, vUv.y - 3.0 * v ) ) * 0.109972;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x, vUv.y - 2.0 * v ) ) * 0.112352;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x, vUv.y - 1.0 * v ) ) * 0.113806;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x, vUv.y ) ) * 0.114294;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x, vUv.y + 1.0 * v ) ) * 0.113806;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x, vUv.y + 2.0 * v ) ) * 0.112352;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x, vUv.y + 3.0 * v ) ) * 0.109972;",
+    			"sum += texture2D( tDiffuse, vec2( vUv.x, vUv.y + 4.0 * v ) ) * 0.106723;",
 
     			"gl_FragColor = sum;",
 

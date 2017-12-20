@@ -104,6 +104,7 @@ export default class ThreeView extends Component {
     // interaction
     dragging: false,
     shiftDown: false,
+    rmbDown: false,
     // rotation
     rotateStart: new THREE.Vector2(),
     rotateEnd: new THREE.Vector2(),
@@ -275,6 +276,7 @@ export default class ThreeView extends Component {
           onWheel={this.handleMouseWheel}
           onKeyDown={this.handleKeyDown}
           onKeyUp={this.handleKeyUp}
+          onContextMenu={(event) => event.preventDefault()}
           contentEditable
         >
         </div>
@@ -774,14 +776,18 @@ export default class ThreeView extends Component {
     let copyPass = new THREE.ShaderPass(THREE.CopyShader);
     copyPass.renderToScreen = true;
 
-    let gaussianPass = new THREE.GaussianPass({ v: 2 / (this.height / 2) , h: 2 / (this.width / 2)});
+    let vignettePass = new THREE.VignettePass(new THREE.Vector2(this.width, this.height),
+      0.5, new THREE.Color(0.025, 0.025, 0.025));
+
+    this.addShaderPass({vignette: vignettePass});
+
     let clearMask = new THREE.ClearMaskPass();
 
     let brightnessShader = THREE.BrightnessContrastShader;
     let brightnessPass = new THREE.ShaderPass(brightnessShader);
     brightnessPass.uniforms['contrast'].value = 0.15;
 
-    let bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(this.width, this.height), 2.5, 0.8, 0.6);
+    let bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(this.width, this.height), 0.5, 0.4, 0.95);
 
     let EDLParams = {
       screenWidth: this.width,
@@ -806,7 +812,7 @@ export default class ThreeView extends Component {
     this.sceneComposer.addPass(envRenderPass);
     this.sceneComposer.addPass(brightnessPass);
     this.sceneComposer.addPass(bloomPass);
-    this.sceneComposer.addPass(gaussianPass);
+    this.sceneComposer.addPass(vignettePass);
 
     this.modelComposer.addPass(modelRenderPass);
 
@@ -1004,7 +1010,6 @@ export default class ThreeView extends Component {
         pass.depthRenderTarget.height = value;
       }
     }
-
     pass.uniforms[uniformProp].value = value;
   }
 
@@ -1284,6 +1289,7 @@ export default class ThreeView extends Component {
           this.effectComposer.setSize(width, this.height);
           this.skyboxMaterialShader.updateUniforms('resolution', new THREE.Vector2(width, this.height));
           this.updateShaders(width, 'EDL', 'screenWidth');
+          this.updateShaders(new THREE.Vector2(width, this.height), 'vignette', 'resolution');
         });
       });
     }
@@ -1352,15 +1358,23 @@ export default class ThreeView extends Component {
   *****************************************************************************/
 
   handleMouseDown(event: SyntheticMouseEvent): void {
-
     if (this.state.shiftDown) {
       this.setState({
         dragging: true,
         panStart: this.state.panStart.set(event.clientX, event.clientY),
       });
+    }
+
+    if (event.nativeEvent.which === 3) {
+      this.setState({
+        dragging: true,
+        rmbDown: true,
+        panStart: this.state.panStart.set(event.clientX, event.clientY),
+      })
     } else {
       this.setState({
         dragging: true,
+        rmbDown: false,
         rotateStart: this.state.rotateStart.set(event.clientX, event.clientY),
       });
     }
@@ -1370,7 +1384,7 @@ export default class ThreeView extends Component {
   handleMouseMove(event: SyntheticMouseEvent): void {
 
     if (this.state.dragging) {
-      if (this.state.shiftDown) {
+      if (this.state.shiftDown || this.state.rmbDown) {
         let { panStart, panEnd, panDelta } = this.state;
         panEnd.set(event.clientX, event.clientY);
         panDelta.subVectors(panEnd, panStart);
@@ -1434,6 +1448,7 @@ export default class ThreeView extends Component {
     this.skyboxMaterialShader.updateUniforms('resolution', new THREE.Vector2(innerWidth, innerHeight));
     this.updateShaders(innerWidth, 'EDL', 'screenWidth');
     this.updateShaders(innerHeight, 'EDL', 'screenHeight');
+    this.updateShaders(new THREE.Vector2(innerWidth, innerHeight), 'vignette', 'resolution');
     this.width = innerWidth;
     this.height = innerHeight;
 
