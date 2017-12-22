@@ -25,6 +25,9 @@ import { LinearGradientShader, RadialGradientCanvas } from '../utils/image';
 import ThreePointLights from '../utils/lights';
 import { convertUnits } from '../utils/math';
 
+// Constants
+import { DEFAULT_GRADIENT_COLORS } from '../constants/application';
+
 // Controls
 import ThreeControls from './ThreeControls';
 import ThreeMeasure from './ThreeMeasure';
@@ -658,7 +661,7 @@ export default class ThreeView extends Component {
   }
 
   initEnvironment(): void {
-    let { gradient } = this.props.options.skybox;
+    let { skybox } = this.props.options;
     // Skybox
     let cubeSize = this.environmentRadius * 4;
     this.skyboxGeom = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
@@ -674,13 +677,9 @@ export default class ThreeView extends Component {
       });
       this.skyboxMaterial.uniforms['tEquirect'].value = this.props.skyboxTexture.image;
     }
-    let outerColor = "rgb(35, 35, 35)";
-    let innerColor = "rgb(105, 105, 105)";
 
-    if (this.props.options.skybox.gradient) {
-      innerColor = gradient.innerColor;
-      outerColor = gradient.outerColor;
-    }
+    let innerColor = (skybox.gradient.innerColor) ? skybox.gradient.innerColor : DEFAULT_GRADIENT_COLORS.inner;
+    let outerColor = (skybox.gradient.outerColor) ? skybox.gradient.outerColor : DEFAULT_GRADIENT_COLORS.outer;
     // need to clean this up, it's a radial gradient not a linear gradient
     this.skyboxMaterialShader = new LinearGradientShader(outerColor, innerColor,
       this.width, this.height);
@@ -724,7 +723,7 @@ export default class ThreeView extends Component {
           material.envMapIntensity = 1;
         } else {
           let tex = new RadialGradientCanvas(1024, 1024,
-            this.skyboxMaterialShader.innerColor, this.skyboxMaterialShader.outerColor).toTexture();
+            this.skyboxMaterialShader.outerColor, this.skyboxMaterialShader.innerColor).toTexture();
           material.envMap = tex;
           material.envMap.minFilter = THREE.LinearMipMapLinearFilter;
           material.envMap.magFilter = THREE.LinearFilter;
@@ -787,7 +786,7 @@ export default class ThreeView extends Component {
     let brightnessPass = new THREE.ShaderPass(brightnessShader);
     brightnessPass.uniforms['contrast'].value = 0.15;
 
-    let bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(this.width, this.height), 0.5, 0.4, 0.95);
+    let bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(this.width, this.height), 1.0, 0.6, 0.90);
 
     let EDLParams = {
       screenWidth: this.width,

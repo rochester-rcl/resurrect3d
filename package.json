@@ -7,6 +7,7 @@
     "react-scripts": "0.9.0"
   },
   "dependencies": {
+    "pako": "^1.0.6",
     "rc-progress": "^2.1.2",
     "react": "^15.4.2",
     "react-color": "^2.13.8",
@@ -19,7 +20,8 @@
     "redux-saga": "^0.14.3",
     "semantic-ui-css": "^2.2.4",
     "semantic-ui-react": "^0.64.8",
-    "three": "^0.85.2"
+    "three": "^0.85.2",
+    "zlibjs": "^0.3.1"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -1,5 +1,4 @@
 /* @flow */
-
 // Redux Saga
 import {
   put,
@@ -31,7 +30,13 @@ const omekaBackend = new ThreeViewerOmekaBackend(endpoint);
 function computeProgress(request: ProgressEvent): string {
   let progress;
   if (request.lengthComputable) {
-    progress = Math.floor(request.loaded / request.total) + ' %';
+    let percentage = Math.floor(request.loaded / request.total);
+    // for data URI
+    if (percentage === 1) {
+      progress = 'parsing';
+    } else {
+      progress = percentage + ' %';
+    }
   } else {
     progress = parseFloat(request.loaded / 1000000).toFixed(2) + ' MB';
   }
@@ -126,8 +131,18 @@ export function* loadMeshSaga(loadMeshAction: Object): Generator < any, any, any
 
   // load the mesh
   try {
+    let url;
+    let ext = loadMeshAction.url.split('.').pop();
+    if (ext === 'gz' || ext === 'gzip') {
+      yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Fetching" } });
+      let dataURL = yield ThreeViewerOmekaBackend.loadGZippedAsset(loadMeshAction.url);
+      yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Decompressing" } });
+      url = dataURL;
+    } else {
+      url = loadMeshAction.url;
+    }
     const meshLoader = new THREE.ObjectLoader();
-    const meshLoaderChannel = yield call(createLoadProgressChannel, meshLoader, 'mesh', loadMeshAction.url);
+    const meshLoaderChannel = yield call(createLoadProgressChannel, meshLoader, 'mesh', url);
     while (true) {
       const payload = yield take(meshLoaderChannel);
       yield put({

@@ -17,6 +17,9 @@ import * as AppActionCreators from '../actions/actions';
 import ThreeView from '../components/ThreeView';
 import LoaderModal from '../components/LoaderModal';
 
+// Constants
+import { WEBGL_SUPPORT } from '../constants/application';
+
 class ThreeContainer extends Component {
 
   componentDidMount(): void {
@@ -36,7 +39,7 @@ class ThreeContainer extends Component {
   }
   render(): Object {
     const { mesh, texture, metadata, threeAsset } = this.props;
-    if (mesh.progress === 'Complete' && texture.progress === 'Complete') {
+    if (mesh.progress === 'Complete' && texture.progress === 'Complete' && WEBGL_SUPPORT) {
       return(
         <ThreeView
           skyboxTexture={texture}
@@ -47,7 +50,13 @@ class ThreeContainer extends Component {
         />
       );
     } else {
-      let progressStatus = 'Loading Mesh: ' + mesh.progress + ' | ' + ' Loading Texture: ' + texture.progress;
+      let progressStatus;
+      if (!WEBGL_SUPPORT) {
+        progressStatus = "Your Browser Does Not Currently Support WebGL";
+      } else {
+        progressStatus = 'Loading Mesh: ' + mesh.progress + ' | ' + ' Loading Texture: ' + texture.progress;
+      }
+
       return(
         <LoaderModal
           text={progressStatus}
