@@ -87,6 +87,7 @@ export class ThreeGUIGroup {
         type: GROUP,
         component: component,
         props: null,
+        enabled: true,
       }
     )
   }

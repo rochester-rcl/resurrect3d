@@ -8,6 +8,8 @@ export const DEFAULT_GRADIENT_COLORS = {
   outer: "rgb(35, 35, 35)",
 }
 
+export const DEFAULT_CLEAR_COLOR = 0x666666;
+
 // Webgl detector https://github.com/mrdoob/three.js/blob/master/examples/js/Detector.js
 
 // IIFE for webgl support

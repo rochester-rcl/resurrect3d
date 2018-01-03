@@ -26,7 +26,7 @@ import ThreePointLights from '../utils/lights';
 import { convertUnits } from '../utils/math';
 
 // Constants
-import { DEFAULT_GRADIENT_COLORS } from '../constants/application';
+import { DEFAULT_GRADIENT_COLORS, DEFAULT_CLEAR_COLOR } from '../constants/application';
 
 // Controls
 import ThreeControls from './ThreeControls';
@@ -144,6 +144,7 @@ export default class ThreeView extends Component {
     shaderPasses: {
       EDL: {},
     },
+    enablePostProcessing: true,
     units: 'cm',
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
@@ -194,7 +195,7 @@ export default class ThreeView extends Component {
     (this: any).updateCamera = this.updateCamera.bind(this);
     (this: any).updateEnv = this.updateEnv.bind(this);
     (this: any).pan = this.pan.bind(this);
-    (this: any).rerenderWebGLScene = this.rerenderWebGLScene.bind(this);
+    (this: any).renderWebGL = this.renderWebGL.bind(this);
     (this: any).getScale = this.getScale.bind(this);
     (this: any).fitPerspectiveCamera = this.fitPerspectiveCamera.bind(this);
     (this: any).panBounds = this.panBounds.bind(this);
@@ -209,6 +210,7 @@ export default class ThreeView extends Component {
     (this: any).updateDynamicLight = this.updateDynamicLighting.bind(this);
     (this: any).toggleInfo = this.toggleInfo.bind(this);
     (this: any).toggleTools = this.toggleTools.bind(this);
+    (this: any).togglePostProcessing = this.togglePostProcessing.bind(this);
     (this: any).drawMeasurement = this.drawMeasurement.bind(this);
     (this: any).drawSpriteTarget = this.drawSpriteTarget.bind(this);
     (this: any).computeSpriteScaleFactor = this.computeSpriteScaleFactor.bind(this);
@@ -393,6 +395,13 @@ export default class ThreeView extends Component {
       ...buttonProps,
     });
 
+    controls.addComponent('postprocessing', components.THREE_BUTTON, {
+      ...buttonProps,
+      content: "postprocessing",
+      icon: "paint brush",
+      onClick: () => this.togglePostProcessing(),
+    });
+
     if (this.props.options.enableLights) {
       controls.addComponent('lighting', components.THREE_BUTTON, {
         ...buttonProps,
@@ -441,13 +450,15 @@ export default class ThreeView extends Component {
       this.updateCamera();
       this.updateEnv();
     }
-    this.rerenderWebGLScene();
+    this.renderWebGL();
 
   }
 
-  rerenderWebGLScene(): void {
+  renderWebGL(): void {
     if (this.sceneComposer !== undefined && this.modelComposer !== undefined && this.effectComposer !== undefined) {
-      this.sceneComposer.render(0.01);
+      if (this.state.enablePostProcessing) {
+        this.sceneComposer.render(0.01);
+      }
       this.modelComposer.render(0.01);
       this.guiComposer.render(0.01);
       this.effectComposer.render(0.01);
@@ -678,8 +689,17 @@ export default class ThreeView extends Component {
       this.skyboxMaterial.uniforms['tEquirect'].value = this.props.skyboxTexture.image;
     }
 
-    let innerColor = (skybox.gradient.innerColor) ? skybox.gradient.innerColor : DEFAULT_GRADIENT_COLORS.inner;
-    let outerColor = (skybox.gradient.outerColor) ? skybox.gradient.outerColor : DEFAULT_GRADIENT_COLORS.outer;
+    let innerColor;
+    let outerColor;
+
+    if (skybox.gradient) {
+      innerColor = (skybox.gradient.innerColor) ? skybox.gradient.innerColor : DEFAULT_GRADIENT_COLORS.inner;
+      outerColor = (skybox.gradient.outerColor) ? skybox.gradient.outerColor : DEFAULT_GRADIENT_COLORS.outer;
+    } else {
+      innerColor = DEFAULT_GRADIENT_COLORS.inner;
+      outerColor = DEFAULT_GRADIENT_COLORS.outer;
+    }
+
     // need to clean this up, it's a radial gradient not a linear gradient
     this.skyboxMaterialShader = new LinearGradientShader(outerColor, innerColor,
       this.width, this.height);
@@ -1294,6 +1314,16 @@ export default class ThreeView extends Component {
     }
   }
 
+  togglePostProcessing(): void {
+    let { enablePostProcessing } = this.state;
+    this.setState({ enablePostProcessing: !enablePostProcessing }, () => {
+      if (!this.state.enablePostProcessing) {
+        this.webGLRenderer.setRenderTarget(this.sceneComposer.renderTarget2);
+        this.webGLRenderer.clear();
+      }
+    });
+  }
+
   toggleBackground(): void {
 
     let { detailMode } = this.state;
@@ -1450,7 +1480,6 @@ export default class ThreeView extends Component {
     this.updateShaders(new THREE.Vector2(innerWidth, innerHeight), 'vignette', 'resolution');
     this.width = innerWidth;
     this.height = innerHeight;
-
   }
 
   handleKeyDown(event: SyntheticKeyboardEvent): void {

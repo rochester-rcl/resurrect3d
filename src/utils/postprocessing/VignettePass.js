@@ -56,8 +56,8 @@ export default function loadVignettePass(threeInstance: Object): typeof Promise 
             this.uniforms["resolution"].value = rtResolution;
             this.uniforms["color"].value = color ? color : new threeInstance.Color(0.5);
 
-            this.horizontalBlurUniforms["h"].value = 1 / (rtResolution.x / 5);
-            this.verticalBlurUniforms["v"].value = 1 / (rtResolution.y / 5);
+            this.horizontalBlurUniforms["h"].value = 2 / (rtResolution.x / 2);
+            this.verticalBlurUniforms["v"].value = 2 / (rtResolution.y / 2);
 
             this.camera = new threeInstance.OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
 	          this.scene  = new threeInstance.Scene();

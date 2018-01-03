@@ -15,6 +15,7 @@ body {
 #root {
   width: 100%;
   height: 100%;
+  position: relative;
 }
 
 .app-root-container {
@@ -56,7 +57,7 @@ body {
   position: absolute;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   padding: 10px;
   z-index: 10000;
   max-width: 50%;
@@ -67,6 +68,7 @@ body {
 
 .three-controls-container .three-controls-button {
   background-color: rgba(0,0,0,0.5) !important;
+  margin-top: 10px !important;
 }
 
 .three-controls-container .three-controls-button:hover {

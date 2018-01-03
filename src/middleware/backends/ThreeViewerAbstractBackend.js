@@ -1,5 +1,5 @@
 import pako from 'pako';
-const GZIP_CHUNK_SIZE = 24 * 1024;
+const GZIP_CHUNK_SIZE = 16 * 1024;
 export default class ThreeViewerBackendAbstract {
   /* So we need a few things here -
    * 1) a URL to a three.js formatted mesh
