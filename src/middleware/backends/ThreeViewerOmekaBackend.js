@@ -1,7 +1,10 @@
 // Abstract backend class
 import ThreeViewerAbstractBackend from './ThreeViewerAbstractBackend';
+import React from 'react';
 
 import lodash from 'lodash';
+
+import { Markup } from 'interweave';
 
 export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend {
   authenticate(): Promise {
@@ -38,7 +41,7 @@ export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend 
     return elementTexts.map((element) => {
       return {
         label: element.element.name,
-        value: element.text
+        value: <Markup content={element.text} />
       }
     });
   }

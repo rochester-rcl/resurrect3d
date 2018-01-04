@@ -35,8 +35,12 @@ body {
 
 .three-view {
   cursor: default;
-  max-width: 80%;
-  flex: 0.8;
+  flex: 1;
+}
+
+.three-view canvas {
+  width: 100vw !important;
+  height: 100vh !important;
 }
 
 .three-progress-loader {
@@ -53,17 +57,22 @@ body {
   overflow: hidden;
 }
 
+.three-gui-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+}
+
 .three-controls-container {
-  position: absolute;
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   padding: 10px;
   z-index: 10000;
-  max-width: 50%;
-  margin: 0 auto;
-  right: 0;
   flex-wrap: wrap;
+  background-color: #000;
 }
 
 .three-controls-container .three-controls-button {
@@ -86,6 +95,14 @@ body {
 .three-controls-button {
   margin-right: 10px !important;
   font-family: 'Source Code Pro', monospace !important;
+}
+
+.three-info-modal {
+  overflow-y: scroll;
+}
+
+.three-info-modal .content {
+  padding-top: 20px;
 }
 
 .three-info-grid {
@@ -116,10 +133,6 @@ body {
 .three-info-grid-row-odd h2 {
   font-family: 'Source Code Pro', monospace;
   color: #fff;
-}
-
-.info-value-link {
-  color: rgb(0, 180, 0) !important;
 }
 
 .info-grid-divider {

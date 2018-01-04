@@ -144,7 +144,30 @@ export default class ThreeView extends Component {
     shaderPasses: {
       EDL: {},
     },
-    enablePostProcessing: true,
+    quality: {
+      options: [
+        {
+          label: "best",
+          value: 1,
+        },
+        {
+          label: "good",
+          value: 1.325,
+        },
+        {
+          label: "medium",
+          value: 2,
+        },
+        {
+          label: "low",
+          value: 4,
+        },
+      ],
+      current: {
+        label: "good",
+        value: 1.325,
+      },
+    },
     units: 'cm',
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
@@ -210,12 +233,13 @@ export default class ThreeView extends Component {
     (this: any).updateDynamicLight = this.updateDynamicLighting.bind(this);
     (this: any).toggleInfo = this.toggleInfo.bind(this);
     (this: any).toggleTools = this.toggleTools.bind(this);
-    (this: any).togglePostProcessing = this.togglePostProcessing.bind(this);
+    (this: any).toggleQuality = this.toggleQuality.bind(this);
     (this: any).drawMeasurement = this.drawMeasurement.bind(this);
     (this: any).drawSpriteTarget = this.drawSpriteTarget.bind(this);
     (this: any).computeSpriteScaleFactor = this.computeSpriteScaleFactor.bind(this);
     (this: any).updateMaterials = this.updateMaterials.bind(this);
     (this: any).updateShaders = this.updateShaders.bind(this);
+    (this: any).updateRenderSize = this.updateRenderSize.bind(this);
     (this: any).setEnvMap = this.setEnvMap.bind(this);
 
     // event handlers
@@ -247,6 +271,7 @@ export default class ThreeView extends Component {
     if (nextState.showInfo !== this.state.showInfo) return true;
     if (nextState.dynamicLighting !== this.state.dynamicLighting) return true;
     if (nextState.detailMode !== this.state.detailMode) return true;
+    if (nextState.quality.current.label !== this.state.quality.current.label) return true;
     return false;
 
   }
@@ -265,25 +290,26 @@ export default class ThreeView extends Component {
     if (this.mesh && !this.panelLayout) this.initTools();
 
     return(
-      <div className="three-view-container">
-        {this.panelLayout ? this.panelLayout : <span></span>}
-        <InfoModal className="three-info-modal" active={showInfo} info={info} />
-        <LoaderModal
-          text={loadText + loadProgress}
-          className="three-loader-dimmer"
-          active={loadProgress !== 100}
-        />
+      <div className="three-gui-container">
         {this.controls ? this.controls : <span></span>}
-        <div ref="threeView" className="three-view"
-          onMouseDown={this.handleMouseDown}
-          onMouseMove={this.handleMouseMove}
-          onMouseUp={this.handleMouseUp}
-          onWheel={this.handleMouseWheel}
-          onKeyDown={this.handleKeyDown}
-          onKeyUp={this.handleKeyUp}
-          onContextMenu={(event) => event.preventDefault()}
-          contentEditable
-        >
+        <div className="three-view-container">
+          {this.panelLayout ? this.panelLayout : <span></span>}
+          <InfoModal className="three-info-modal" active={showInfo} info={info} />
+          <LoaderModal
+            text={loadText + loadProgress}
+            className="three-loader-dimmer"
+            active={loadProgress !== 100}
+          />
+          <div ref="threeView" className="three-view"
+            onMouseDown={this.handleMouseDown}
+            onMouseMove={this.handleMouseMove}
+            onMouseUp={this.handleMouseUp}
+            onWheel={this.handleMouseWheel}
+            onKeyDown={this.handleKeyDown}
+            onKeyUp={this.handleKeyUp}
+            onContextMenu={(event) => event.preventDefault()}
+            contentEditable
+          />
         </div>
       </div>
     );
@@ -395,11 +421,11 @@ export default class ThreeView extends Component {
       ...buttonProps,
     });
 
-    controls.addComponent('postprocessing', components.THREE_BUTTON, {
+    controls.addComponent('quality', components.THREE_BUTTON, {
       ...buttonProps,
-      content: "postprocessing",
-      icon: "paint brush",
-      onClick: () => this.togglePostProcessing(),
+      content: "quality",
+      icon: "signal",
+      onClick: () => this.toggleQuality(),
     });
 
     if (this.props.options.enableLights) {
@@ -456,9 +482,7 @@ export default class ThreeView extends Component {
 
   renderWebGL(): void {
     if (this.sceneComposer !== undefined && this.modelComposer !== undefined && this.effectComposer !== undefined) {
-      if (this.state.enablePostProcessing) {
-        this.sceneComposer.render(0.01);
-      }
+      this.sceneComposer.render(0.01);
       this.modelComposer.render(0.01);
       this.guiComposer.render(0.01);
       this.effectComposer.render(0.01);
@@ -1015,6 +1039,20 @@ export default class ThreeView extends Component {
     }
   }
 
+  updateRenderSize(resolution: Array<Number>): void {
+    let [width, height] = resolution.map((val) => Math.floor(val / this.state.quality.current.value));
+    this.webGLRenderer.setSize(width, height);
+    this.sceneComposer.setSize(width, height);
+    this.modelComposer.setSize(width, height);
+    this.guiComposer.setSize(width, height);
+    this.effectComposer.setSize(width, height);
+    // also do the other stuff dependent on resolution - should maybe dispatch an event?
+    this.skyboxMaterialShader.updateUniforms('resolution', new THREE.Vector2(width, height));
+    this.updateShaders(width, 'EDL', 'screenWidth');
+    this.updateShaders(height, 'EDL', 'screenHeight');
+    this.updateShaders(new THREE.Vector2(width, height), 'vignette', 'resolution');
+  }
+
   updateShaders(value: Number | boolean, shaderName: string, uniformProp: string): void {
     const { shaderPasses } = this.state;
     let pass = shaderPasses[shaderName];
@@ -1292,36 +1330,19 @@ export default class ThreeView extends Component {
   toggleTools(): void {
     if (this.toolsMenu) {
       this.toolsMenu.expandMenu((status) => {
-        this.setState({ toolsActive: status }, () => {
-          let width = this.width;
-          if (status) {
-            width -= this.width * 0.2;
-          } else {
-            width = this.width;
-          }
-          this.camera.aspect = width / this.height;
-          this.camera.updateProjectionMatrix();
-          this.webGLRenderer.setSize(width, this.height);
-          this.sceneComposer.setSize(width, this.height);
-          this.modelComposer.setSize(width, this.height);
-          this.guiComposer.setSize(width, this.height);
-          this.effectComposer.setSize(width, this.height);
-          this.skyboxMaterialShader.updateUniforms('resolution', new THREE.Vector2(width, this.height));
-          this.updateShaders(width, 'EDL', 'screenWidth');
-          this.updateShaders(new THREE.Vector2(width, this.height), 'vignette', 'resolution');
-        });
+        this.setState({ toolsActive: status });
       });
     }
   }
 
-  togglePostProcessing(): void {
-    let { enablePostProcessing } = this.state;
-    this.setState({ enablePostProcessing: !enablePostProcessing }, () => {
-      if (!this.state.enablePostProcessing) {
-        this.webGLRenderer.setRenderTarget(this.sceneComposer.renderTarget2);
-        this.webGLRenderer.clear();
-      }
-    });
+  toggleQuality(): void {
+    let { options, current } = this.state.quality;
+    let currentIndex = options.findIndex((option) => { return option.label === current.label });
+    let nextIndex = ((currentIndex + 1) < options.length) ? currentIndex + 1 : 0;
+    this.setState({ quality: {
+      options: options,
+      current: options[nextIndex],
+    }}, () => this.updateRenderSize([this.width, this.height]));
   }
 
   toggleBackground(): void {
@@ -1469,15 +1490,7 @@ export default class ThreeView extends Component {
 
     this.camera.aspect = innerWidth / innerHeight;
     this.camera.updateProjectionMatrix();
-    this.webGLRenderer.setSize(innerWidth, innerHeight);
-    this.sceneComposer.setSize(innerWidth, innerHeight);
-    this.modelComposer.setSize(innerWidth, innerHeight);
-    this.guiComposer.setSize(innerWidth, innerHeight);
-    this.effectComposer.setSize(innerWidth, innerHeight);
-    this.skyboxMaterialShader.updateUniforms('resolution', new THREE.Vector2(innerWidth, innerHeight));
-    this.updateShaders(innerWidth, 'EDL', 'screenWidth');
-    this.updateShaders(innerHeight, 'EDL', 'screenHeight');
-    this.updateShaders(new THREE.Vector2(innerWidth, innerHeight), 'vignette', 'resolution');
+    this.updateRenderSize([innerWidth, innerHeight]);
     this.width = innerWidth;
     this.height = innerHeight;
   }
