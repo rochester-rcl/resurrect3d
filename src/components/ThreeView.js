@@ -34,7 +34,9 @@ import ThreeMeasure from './ThreeMeasure';
 import ThreeRangeSlider from './ThreeRangeSlider';
 import ThreeToggle from './ThreeToggle';
 import ThreeColorPicker, { ThreeMicroColorPicker } from './ThreeColorPicker';
+import ThreeButton from './ThreeButton';
 import ThreeTools from './ThreeTools';
+import ThreeScreenshot from './ThreeScreenshot';
 
 export default class ThreeView extends Component {
 
@@ -227,6 +229,7 @@ export default class ThreeView extends Component {
     (this: any).drawAxisGuides = this.drawAxisGuides.bind(this);
     (this: any).addAxisLabels = this.addAxisLabels.bind(this);
     (this: any).toggleBackground = this.toggleBackground.bind(this);
+    (this: any).captureScreenshot = this.captureScreenshot.bind(this);
     (this: any).showAxes = this.showAxes.bind(this);
     (this: any).showLightHelper = this.showLightHelper.bind(this);
     (this: any).toggleDynamicLighting = this.toggleDynamicLighting.bind(this);
@@ -271,7 +274,6 @@ export default class ThreeView extends Component {
     if (nextState.showInfo !== this.state.showInfo) return true;
     if (nextState.dynamicLighting !== this.state.dynamicLighting) return true;
     if (nextState.detailMode !== this.state.detailMode) return true;
-    if (nextState.quality.current.label !== this.state.quality.current.label) return true;
     return false;
 
   }
@@ -321,14 +323,15 @@ export default class ThreeView extends Component {
   initThree(): void {
     this.GUI = new ThreeGUI();
     this.GUI.registerComponent('THREE_RANGE_SLIDER', ThreeRangeSlider);
-    this.GUI.registerComponent('THREE_BUTTON', Button);
+    this.GUI.registerComponent('THREE_BUTTON', ThreeButton);
     this.GUI.registerComponent('THREE_TOGGLE', ThreeToggle);
     this.GUI.registerComponent('THREE_COLOR_PICKER', ThreeColorPicker);
     this.GUI.registerComponent('THREE_MICRO_COLOR_PICKER', ThreeMicroColorPicker);
     this.GUI.registerComponent('THREE_MEASURE', ThreeMeasure);
+    this.GUI.registerComponent('THREE_SCREENSHOT', ThreeScreenshot);
     this.GUI.registerLayout('THREE_GROUP_LAYOUT', ThreeGUILayout);
     this.GUI.registerLayout('THREE_PANEL_LAYOUT', ThreeGUIPanelLayout);
-    this.initControls();
+
     let { color, intensity, decay, distance } = this.state.dynamicLightProps;
     this.threeContainer = this.refs.threeView;
 
@@ -381,12 +384,15 @@ export default class ThreeView extends Component {
       antialias: true,
       gammaInput: true,
       gammaOutput: true,
+      preserveDrawingBuffer: true,
     });
     this.webGLRenderer.shadowMap.enabled = true,
     this.webGLRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.webGLRenderer.setPixelRatio(this.pixelRatio);
     this.webGLRenderer.setSize(this.width, this.height);
     this.threeContainer.appendChild(this.webGLRenderer.domElement);
+
+    this.initControls();
 
     this.setState((prevState, props) => {
       return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Mesh" }
@@ -423,16 +429,24 @@ export default class ThreeView extends Component {
 
     controls.addComponent('quality', components.THREE_BUTTON, {
       ...buttonProps,
-      content: "quality",
+      content: "quality: " + this.state.quality.current.label,
       icon: "signal",
+      ref: (ref) => this.toggleQualityButton = ref,
       onClick: () => this.toggleQuality(),
+    });
+
+    controls.addComponent('screenshot', components.THREE_SCREENSHOT, {
+      extension: 'jpg',
+      mime: 'image/jpeg',
+      renderer: this.webGLRenderer,
     });
 
     if (this.props.options.enableLights) {
       controls.addComponent('lighting', components.THREE_BUTTON, {
         ...buttonProps,
-        content: "lighting",
+        content: "lighting: off",
         icon: 'lightbulb',
+        ref: (ref) => this.enableLightsButton = ref,
         onClick: () => this.toggleDynamicLighting(),
       });
     }
@@ -481,6 +495,7 @@ export default class ThreeView extends Component {
   }
 
   renderWebGL(): void {
+    this.webGLRenderer.clear();
     if (this.sceneComposer !== undefined && this.modelComposer !== undefined && this.effectComposer !== undefined) {
       this.sceneComposer.render(0.01);
       this.modelComposer.render(0.01);
@@ -1342,7 +1357,10 @@ export default class ThreeView extends Component {
     this.setState({ quality: {
       options: options,
       current: options[nextIndex],
-    }}, () => this.updateRenderSize([this.width, this.height]));
+    }}, () => {
+      this.updateRenderSize([this.width, this.height]);
+      this.toggleQualityButton.updateLabel("quality: " + this.state.quality.current.label);
+    });
   }
 
   toggleBackground(): void {
@@ -1362,6 +1380,10 @@ export default class ThreeView extends Component {
         detailMode: false,
       });
     }
+
+  }
+
+  captureScreenshot(): void {
 
   }
 
@@ -1386,9 +1408,11 @@ export default class ThreeView extends Component {
       if (dynamicLighting) {
         this.pointLights.traverse((light) => light.intensity = 0.1);
         this.ambientLight.intensity = 0.8;
+        this.enableLightsButton.updateLabel("lighting: on");
       } else {
         this.pointLights.traverse((light) => light.intensity = 0.25);
         this.ambientLight.intensity = 1.0;
+        this.enableLightsButton.updateLabel("lighting: off");
       }
 
     });

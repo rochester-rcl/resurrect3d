@@ -67,10 +67,10 @@ body {
 .three-controls-container {
   position: relative;
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: center;
   padding: 10px;
-  z-index: 10000;
+  z-index: 1001;
   flex-wrap: wrap;
   background-color: #000;
 }
@@ -283,4 +283,45 @@ body {
 
 .three-toggle-status {
   padding-left: 5px;
+}
+
+/*** Screenshots ***/
+
+.three-screenshot-button-container {
+  display: flex;
+  align-items: center;
+}
+
+.three-screenshot-button-container .three-controls-button {
+  flex: 1;
+}
+
+.three-data-download-link {
+  flex: 1;
+}
+
+.three-data-download-link .label {
+  background-color: none !important;
+  background: none !important;
+  color: #fff !important;
+}
+
+.three-data-download-link .label:hover {
+  color: #ccc !important;
+}
+
+.three-data-download-link.hide {
+  flex: 0;
+  width: auto;
+  max-width: 0px;
+  opacity: 0;
+  transition: all ease-in-out 0.5s;
+}
+
+.three-data-download-link.show {
+  flex: 1;
+  opacity: 1;
+  width: auto;
+  max-width: 500px;
+  transition: all ease-in-out 0.5s;
 }
