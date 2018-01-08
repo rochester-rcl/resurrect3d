@@ -52,7 +52,7 @@ export default class ThreeScreenshot extends Component {
           className={ inBuffer ? downloadClass += ' show' : downloadClass += ' hide'}
           onClick={this.handleClientDownload}
         >
-          <Label basic icon="cloud download" content={filename} />
+          <Label basic icon="cloud download" content='download' />
         </a>
       </div>
     );

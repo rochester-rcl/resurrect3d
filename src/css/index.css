@@ -14,7 +14,7 @@ body {
 
 #root {
   width: 100%;
-  height: 100%;
+  height: 85vh;
   position: relative;
 }
 
@@ -36,11 +36,18 @@ body {
 .three-view {
   cursor: default;
   flex: 1;
+  height: 100%;
+  align-self: center;
+}
+
+.three-view.tools-active {
+  flex: 0.8;
+  transition: flex ease-in-out 0.5s;
 }
 
 .three-view canvas {
-  width: 100vw !important;
-  height: 100vh !important;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .three-progress-loader {
@@ -62,6 +69,9 @@ body {
   width: 100%;
   height: 100%;
   background-color: #000;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .three-controls-container {
@@ -289,7 +299,11 @@ body {
 
 .three-screenshot-button-container {
   display: flex;
-  align-items: center;
+  align-items: baseline;
+}
+
+.three-data-download-link .ui.basic.label {
+  display: flex;
 }
 
 .three-screenshot-button-container .three-controls-button {
@@ -312,16 +326,45 @@ body {
 
 .three-data-download-link.hide {
   flex: 0;
-  width: auto;
   max-width: 0px;
   opacity: 0;
-  transition: all ease-in-out 0.5s;
+  transition: all ease-in-out 1s;
 }
 
 .three-data-download-link.show {
   flex: 1;
   opacity: 1;
-  width: auto;
   max-width: 500px;
-  transition: all ease-in-out 0.5s;
+  transition: all ease-in-out 1s;
+}
+
+/*** MOBILE Styles ***/
+
+@media screen and (max-width: 520px) {
+
+
+  .three-view-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+    max-height: 100%;
+    background-color: #000;
+    overflow: hidden;
+  }
+
+  .three-tool-menu.collapsed {
+    flex: 0;
+    max-height: 0px;
+    transition: all ease-in-out 0.5s;
+  }
+
+  .three-tool-menu.expanded {
+    flex: 0.2;
+    max-height: 300px;
+    transition: all ease-in-out 0.5s;
+  }
+
+
+
 }

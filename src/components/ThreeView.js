@@ -198,6 +198,8 @@ export default class ThreeView extends Component {
     (this: any).bboxSkybox = null;
     (this: any).lastCameraPosition = new THREE.Vector3();
     (this: any).lastCameraTarget = new THREE.Vector3();
+    (this: any).EDL_TEXTURE_RADIUS = 1.0;
+    (this: any).EDL_TEXTURE_STEP = 0.01;
 
 
     /** Methods
@@ -274,6 +276,7 @@ export default class ThreeView extends Component {
     if (nextState.showInfo !== this.state.showInfo) return true;
     if (nextState.dynamicLighting !== this.state.dynamicLighting) return true;
     if (nextState.detailMode !== this.state.detailMode) return true;
+    if (nextState.toolsActive !== this.state.toolsActive) return true;
     return false;
 
   }
@@ -290,11 +293,12 @@ export default class ThreeView extends Component {
     const { info } = this.props;
 
     if (this.mesh && !this.panelLayout) this.initTools();
-
+    let threeViewClassName = 'three-view ';
+    threeViewClassName += toolsActive ? 'tools-active' : 'tools-inactive';
     return(
       <div className="three-gui-container">
         {this.controls ? this.controls : <span></span>}
-        <div className="three-view-container">
+        <div className='three-view-container'>
           {this.panelLayout ? this.panelLayout : <span></span>}
           <InfoModal className="three-info-modal" active={showInfo} info={info} />
           <LoaderModal
@@ -302,7 +306,7 @@ export default class ThreeView extends Component {
             className="three-loader-dimmer"
             active={loadProgress !== 100}
           />
-          <div ref="threeView" className="three-view"
+          <div ref="threeView" className={threeViewClassName}
             onMouseDown={this.handleMouseDown}
             onMouseMove={this.handleMouseMove}
             onMouseUp={this.handleMouseUp}
@@ -388,10 +392,13 @@ export default class ThreeView extends Component {
     });
     this.webGLRenderer.shadowMap.enabled = true,
     this.webGLRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    this.webGLRenderer.setPixelRatio(this.pixelRatio);
-    this.webGLRenderer.setSize(this.width, this.height);
+    this.webGLRenderer.setPixelRatio(1);
     this.threeContainer.appendChild(this.webGLRenderer.domElement);
-
+    this.width = this.webGLRenderer.domElement.clientWidth;
+    this.height = this.webGLRenderer.domElement.clientHeight;
+    this.webGLRenderer.setSize(this.width, this.height, false);
+    this.camera.aspect = this.width / this.height;
+    this.camera.updateProjectionMatrix();
     this.initControls();
 
     this.setState((prevState, props) => {
@@ -1056,32 +1063,52 @@ export default class ThreeView extends Component {
 
   updateRenderSize(resolution: Array<Number>): void {
     let [width, height] = resolution.map((val) => Math.floor(val / this.state.quality.current.value));
-    this.webGLRenderer.setSize(width, height);
-    this.sceneComposer.setSize(width, height);
-    this.modelComposer.setSize(width, height);
-    this.guiComposer.setSize(width, height);
-    this.effectComposer.setSize(width, height);
+    this.webGLRenderer.setSize(width, height, false);
+    this.sceneComposer.setSize(width, height, false);
+    this.modelComposer.setSize(width, height, false);
+    this.guiComposer.setSize(width, height, false);
+    this.effectComposer.setSize(width, height, false);
     // also do the other stuff dependent on resolution - should maybe dispatch an event?
     this.skyboxMaterialShader.updateUniforms('resolution', new THREE.Vector2(width, height));
     this.updateShaders(width, 'EDL', 'screenWidth');
     this.updateShaders(height, 'EDL', 'screenHeight');
     this.updateShaders(new THREE.Vector2(width, height), 'vignette', 'resolution');
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
   }
 
   updateShaders(value: Number | boolean, shaderName: string, uniformProp: string): void {
     const { shaderPasses } = this.state;
     let pass = shaderPasses[shaderName];
-    if (uniformProp === 'screenWidth') {
-      if (pass.depthRenderTarget !== undefined) {
-        pass.depthRenderTarget.width = value;
-      }
+
+    switch(uniformProp) {
+
+      case 'screenWidth':
+        if (pass.depthRenderTarget !== undefined) {
+          pass.depthRenderTarget.width = value;
+        }
+        break;
+
+      case 'screenHeight':
+        if (pass.depthRenderTarget !== undefined) {
+          pass.depthRenderTarget.height = value;
+        }
+        break;
+
+      case 'useTexture':
+        if (value) {
+          this.EDLRadiusRangeSlider.updateThreshold(0, this.EDL_TEXTURE_RADIUS, this.EDL_TEXTURE_STEP);
+          this.EDLStrengthRangeSlider.updateThreshold(0, this.EDL_TEXTURE_RADIUS, this.EDL_TEXTURE_STEP);
+        } else {
+          this.EDLRadiusRangeSlider.resetToDefaults();
+          this.EDLStrengthRangeSlider.resetToDefaults();
+        }
+
+      default:
+        break;
+
     }
 
-    if (uniformProp === 'screenHeight') {
-      if (pass.depthRenderTarget !== undefined) {
-        pass.depthRenderTarget.height = value;
-      }
-    }
     pass.uniforms[uniformProp].value = value;
   }
 
@@ -1258,6 +1285,7 @@ export default class ThreeView extends Component {
         step: 0.01,
         title: "strength",
         defaultVal: 0.0,
+        ref: (ref) => this.EDLStrengthRangeSlider = ref,
         callback: (value) => this.updateShaders(value, 'EDL', 'edlStrength'),
       });
 
@@ -1268,6 +1296,7 @@ export default class ThreeView extends Component {
         step: 0.01,
         title: "radius",
         defaultVal: 0.0,
+        ref: (ref) => this.EDLRadiusRangeSlider = ref,
         callback: (value) => this.updateShaders(value, 'EDL', 'radius'),
       });
 
@@ -1345,10 +1374,18 @@ export default class ThreeView extends Component {
   toggleTools(): void {
     if (this.toolsMenu) {
       this.toolsMenu.expandMenu((status) => {
-        this.setState({ toolsActive: status });
+        this.setState({ toolsActive: status },
+      () => {
+        if (this.state.toolsActive) {
+          let { clientWidth, clientHeight } = this.webGLRenderer.domElement;
+          this.updateRenderSize([clientWidth, clientHeight]);
+        } else {
+          this.updateRenderSize([this.width, this.height]);
+        }
       });
-    }
-  }
+    });
+   }
+ }
 
   toggleQuality(): void {
     let { options, current } = this.state.quality;
@@ -1509,14 +1546,20 @@ export default class ThreeView extends Component {
   }
 
   handleWindowResize(event: Event): void {
-    let windowObj: window.Window = event.target;
-    let { innerWidth, innerHeight } = windowObj;
-
-    this.camera.aspect = innerWidth / innerHeight;
+    let { clientWidth, clientHeight } = this.webGLRenderer.domElement;
+    // we're concerned with client height + client width of our canvas
+    this.camera.aspect = clientWidth / clientHeight;
     this.camera.updateProjectionMatrix();
-    this.updateRenderSize([innerWidth, innerHeight]);
-    this.width = innerWidth;
-    this.height = innerHeight;
+    this.updateRenderSize([clientWidth, clientHeight]);
+    if (this.state.toolsActive) {
+      this.width = clientWidth + (clientWidth * 0.2);
+      // don't change this.height
+    } else {
+      this.width = clientWidth;
+      this.height = clientHeight;
+    }
+
+
   }
 
   handleKeyDown(event: SyntheticKeyboardEvent): void {

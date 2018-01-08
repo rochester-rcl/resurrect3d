@@ -1,5 +1,5 @@
 import pako from 'pako';
-const GZIP_CHUNK_SIZE = 16 * 1024;
+const GZIP_CHUNK_SIZE = 512 * 1024;
 export default class ThreeViewerBackendAbstract {
   /* So we need a few things here -
    * 1) a URL to a three.js formatted mesh
@@ -61,7 +61,7 @@ export default class ThreeViewerBackendAbstract {
 
   static chunkGZippedArray(gzip: string, chunkSize: Number): Promise {
     return new Promise((resolve, reject) => {
-      const inflator = new pako.Inflate({ chunkSize: chunkSize, to: 'string' });
+      const inflator = new pako.Inflate({ to: 'string' });
       let done = false;
       for (let i = 0; i < gzip.length; i+=chunkSize) {
         let end = i + chunkSize;
