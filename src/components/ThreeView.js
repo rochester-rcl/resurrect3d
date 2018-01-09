@@ -14,6 +14,9 @@ import { Button, Label, Icon } from 'semantic-ui-react';
 // GUI
 import ThreeGUI, { ThreeGUIPanelLayout, ThreeGUILayout, ThreeGUIGroup, ThreeGUINestedGroup } from './ThreeGUI';
 
+// Touch
+import TapAndPinchable from 'react-tappable/lib/TapAndPinchable';
+
 // postprocessing
 import loadPostProcessor from '../utils/postprocessing';
 
@@ -110,6 +113,7 @@ export default class ThreeView extends Component {
     dragging: false,
     shiftDown: false,
     rmbDown: false,
+    pinching: false,
     // rotation
     rotateStart: new THREE.Vector2(),
     rotateEnd: new THREE.Vector2(),
@@ -221,6 +225,8 @@ export default class ThreeView extends Component {
     (this: any).update = this.update.bind(this);
     (this: any).updateCamera = this.updateCamera.bind(this);
     (this: any).updateEnv = this.updateEnv.bind(this);
+    (this: any).orbit = this.orbit.bind(this);
+    (this: any).zoom = this.zoom.bind(this);
     (this: any).pan = this.pan.bind(this);
     (this: any).renderWebGL = this.renderWebGL.bind(this);
     (this: any).getScale = this.getScale.bind(this);
@@ -257,6 +263,10 @@ export default class ThreeView extends Component {
     (this: any).handleKeyDown = this.handleKeyDown.bind(this);
     (this: any).handleKeyUp = this.handleKeyUp.bind(this);
 
+    // touch events
+    (this: any).handlePinchMove = this.handlePinchMove.bind(this);
+    (this: any).handleTouch = this.handleTouch.bind(this);
+    (this: any).handleTouchMove = this.handleTouchMove.bind(this);
   }
 
   /** COMPONENT LIFECYCYLE
@@ -306,16 +316,32 @@ export default class ThreeView extends Component {
             className="three-loader-dimmer"
             active={loadProgress !== 100}
           />
-          <div ref="threeView" className={threeViewClassName}
-            onMouseDown={this.handleMouseDown}
-            onMouseMove={this.handleMouseMove}
-            onMouseUp={this.handleMouseUp}
-            onWheel={this.handleMouseWheel}
-            onKeyDown={this.handleKeyDown}
-            onKeyUp={this.handleKeyUp}
-            onContextMenu={(event) => event.preventDefault()}
-            contentEditable
-          />
+          <TapAndPinchable
+            className='three-mobile-listener'
+            onPinchMove={this.handlePinchMove}
+            onPinchStart={(event) => {
+              event.type = 'pinchstart';
+              this.handleTouch(event);
+            }}
+            onPinchEnd={(event) => {
+              event.type = 'pinchend';
+              this.handleTouch(event);
+            }}
+            onTouchStart={this.handleTouch}
+            onTouchEnd={this.handleTouch}
+            onTouchMove={this.handleTouchMove}
+            >
+            <div ref="threeView" className={threeViewClassName}
+              onMouseDown={this.handleMouseDown}
+              onMouseMove={this.handleMouseMove}
+              onMouseUp={this.handleMouseUp}
+              onWheel={this.handleMouseWheel}
+              onKeyDown={this.handleKeyDown}
+              onKeyUp={this.handleKeyUp}
+              onContextMenu={(event) => event.preventDefault()}
+              contentEditable
+            />
+          </TapAndPinchable>
         </div>
       </div>
     );
@@ -961,6 +987,44 @@ export default class ThreeView extends Component {
 
   }
 
+  zoom(zoomDelta: Number): void {
+    let { scale, zoomScale } = this.state;
+    if (zoomDelta > 0) {
+      scale = this.getScale(scale /= zoomScale);
+    } else {
+      scale = this.getScale(scale *= zoomScale);
+    }
+    this.setState({ scale: scale });
+    this.camera.updateProjectionMatrix();
+    this.updateCamera();
+  }
+
+  orbit(x: Number, y: Number): void {
+    if (this.state.dragging) {
+      if (this.state.shiftDown || this.state.rmbDown || this.state.pinching) {
+        let { panStart, panEnd, panDelta } = this.state;
+        panEnd.set(x, y);
+        panDelta.subVectors(panEnd, panStart);
+        this.pan(panDelta.x, panDelta.y);
+        this.setState({
+          panEnd: panEnd,
+          panDelta: panDelta,
+          panStart: panStart.copy(panEnd),
+        });
+      } else {
+        let { rotateStart, rotateEnd, rotateDelta } = this.state;
+        rotateEnd.set(x, y);
+        rotateDelta.subVectors(rotateEnd, rotateStart);
+        this.rotate(rotateDelta.x, rotateDelta.y);
+        this.setState({
+          rotateEnd: rotateEnd,
+          rotateDelta: rotateDelta,
+          rotateStart: rotateStart.copy(rotateEnd),
+        });
+      }
+    }
+  }
+
   centerCamera(): void {
 
     const { spherical, sphericalDelta, panOffset } = this.state;
@@ -1476,63 +1540,30 @@ export default class ThreeView extends Component {
       });
     }
 
-    if (event.nativeEvent.which === 3) {
-      this.setState({
-        dragging: true,
-        rmbDown: true,
-        panStart: this.state.panStart.set(event.clientX, event.clientY),
-      })
-    } else {
-      this.setState({
-        dragging: true,
-        rmbDown: false,
-        rotateStart: this.state.rotateStart.set(event.clientX, event.clientY),
-      });
+    if (event.nativeEvent) {
+      if (event.nativeEvent.which === 3) {
+        this.setState({
+          dragging: true,
+          rmbDown: true,
+          panStart: this.state.panStart.set(event.clientX, event.clientY),
+        })
+      } else {
+        this.setState({
+          dragging: true,
+          rmbDown: false,
+          rotateStart: this.state.rotateStart.set(event.clientX, event.clientY),
+        });
+      }
     }
-
   }
 
   handleMouseMove(event: SyntheticMouseEvent): void {
-
-    if (this.state.dragging) {
-      if (this.state.shiftDown || this.state.rmbDown) {
-        let { panStart, panEnd, panDelta } = this.state;
-        panEnd.set(event.clientX, event.clientY);
-        panDelta.subVectors(panEnd, panStart);
-        this.pan(panDelta.x, panDelta.y);
-        this.setState({
-          panEnd: panEnd,
-          panDelta: panDelta,
-          panStart: panStart.copy(panEnd),
-        });
-      } else {
-        let { rotateStart, rotateEnd, rotateDelta } = this.state;
-        rotateEnd.set(event.clientX, event.clientY);
-        rotateDelta.subVectors(rotateEnd, rotateStart);
-        this.rotate(rotateDelta.x, rotateDelta.y);
-        this.setState({
-          rotateEnd: rotateEnd,
-          rotateDelta: rotateDelta,
-          rotateStart: rotateStart.copy(rotateEnd),
-        })
-      }
-    }
-
+    this.orbit(event.clientX, event.clientY);
   }
 
   handleMouseWheel(event: SyntheticWheelEvent): void {
-    let { scale, zoomScale } = this.state;
-    let deltaY = event.deltaY;
     event.preventDefault();
-    if (deltaY > 0) {
-      scale = this.getScale(scale /= zoomScale);
-    } else {
-      scale = this.getScale(scale *= zoomScale);
-    }
-    this.setState({ scale: scale });
-    this.camera.updateProjectionMatrix();
-    this.updateCamera();
-
+    this.zoom(event.deltaY);
   }
 
   handleMouseUp(event: SyntheticEvent): void {
@@ -1550,16 +1581,12 @@ export default class ThreeView extends Component {
     // we're concerned with client height + client width of our canvas
     this.camera.aspect = clientWidth / clientHeight;
     this.camera.updateProjectionMatrix();
-    this.updateRenderSize([clientWidth, clientHeight]);
-    if (this.state.toolsActive) {
-      this.width = clientWidth + (clientWidth * 0.2);
-      // don't change this.height
-    } else {
+
+    if (!this.state.toolsActive) {
       this.width = clientWidth;
       this.height = clientHeight;
+      this.updateRenderSize([this.width, this.height]);
     }
-
-
   }
 
   handleKeyDown(event: SyntheticKeyboardEvent): void {
@@ -1594,6 +1621,56 @@ export default class ThreeView extends Component {
         return
     }
 
+  }
+
+  // touch methods
+  handlePinchMove(event: SyntheticEvent): void {
+    console.log(event);
+    let { x, y } = event.center;
+    this.orbit(x, y);
+  }
+
+  handleTouchMove(event: SyntheticEvent): void {
+    let touches = event.nativeEvent.touches;
+    if (touches.length === 1) {
+      let touch = touches[0];
+      this.orbit(touch.clientX, touch.clientY);
+    }
+  }
+
+  handleTouch(event: SyntheticEvent | Event): void {
+    switch(event.type) {
+      case 'touchstart':
+        let touch = event.nativeEvent.touches[0];
+        this.setState({
+          dragging: true,
+          rotateStart: this.state.rotateStart.set(touch.clientX, touch.clientY),
+        });
+        break;
+
+      case 'touchend':
+        this.setState({
+          dragging: false,
+        });
+        break;
+
+      case 'pinchstart':
+        console.log(event.touches);
+        this.setState({
+          pinching: true,
+
+        });
+        break;
+
+      case 'pinchend':
+        this.setState({
+          pinching: false,
+        });
+        break;
+
+      default:
+        break;
+    }
   }
 
   // Static methods
