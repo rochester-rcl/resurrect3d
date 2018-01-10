@@ -15,7 +15,7 @@ import { Button, Label, Icon } from 'semantic-ui-react';
 import ThreeGUI, { ThreeGUIPanelLayout, ThreeGUILayout, ThreeGUIGroup, ThreeGUINestedGroup } from './ThreeGUI';
 
 // Touch
-import TapAndPinchable from 'react-tappable/lib/TapAndPinchable';
+import ThreeTouchControls from './ThreeTouchControls';
 
 // postprocessing
 import loadPostProcessor from '../utils/postprocessing';
@@ -29,7 +29,10 @@ import ThreePointLights from '../utils/lights';
 import { convertUnits } from '../utils/math';
 
 // Constants
-import { DEFAULT_GRADIENT_COLORS, DEFAULT_CLEAR_COLOR } from '../constants/application';
+import {
+  DEFAULT_GRADIENT_COLORS,
+  DEFAULT_CLEAR_COLOR,
+} from '../constants/application';
 
 // Controls
 import ThreeControls from './ThreeControls';
@@ -265,6 +268,7 @@ export default class ThreeView extends Component {
 
     // touch events
     (this: any).handlePinchMove = this.handlePinchMove.bind(this);
+    (this: any).handlePinch = this.handlePinch.bind(this);
     (this: any).handleTouch = this.handleTouch.bind(this);
     (this: any).handleTouchMove = this.handleTouchMove.bind(this);
   }
@@ -316,21 +320,14 @@ export default class ThreeView extends Component {
             className="three-loader-dimmer"
             active={loadProgress !== 100}
           />
-          <TapAndPinchable
-            className='three-mobile-listener'
-            onPinchMove={this.handlePinchMove}
-            onPinchStart={(event) => {
-              event.type = 'pinchstart';
-              this.handleTouch(event);
-            }}
-            onPinchEnd={(event) => {
-              event.type = 'pinchend';
-              this.handleTouch(event);
-            }}
-            onTouchStart={this.handleTouch}
-            onTouchEnd={this.handleTouch}
-            onTouchMove={this.handleTouchMove}
-            >
+          <ThreeTouchControls
+            onTouchStartCallback={this.handleTouch}
+            onTouchEndCallback={this.handleTouch}
+            onTouchMoveCallback={this.handleTouchMove}
+            onPinchStartCallback={this.handlePinch}
+            onPinchEndCallback={this.handlePinch}
+            onPinchMoveCallback={this.handlePinchMove}
+          >
             <div ref="threeView" className={threeViewClassName}
               onMouseDown={this.handleMouseDown}
               onMouseMove={this.handleMouseMove}
@@ -341,7 +338,7 @@ export default class ThreeView extends Component {
               onContextMenu={(event) => event.preventDefault()}
               contentEditable
             />
-          </TapAndPinchable>
+          </ThreeTouchControls>
         </div>
       </div>
     );
@@ -987,7 +984,7 @@ export default class ThreeView extends Component {
 
   }
 
-  zoom(zoomDelta: Number): void {
+  zoom(zoomDelta: number): void {
     let { scale, zoomScale } = this.state;
     if (zoomDelta > 0) {
       scale = this.getScale(scale /= zoomScale);
@@ -999,7 +996,7 @@ export default class ThreeView extends Component {
     this.updateCamera();
   }
 
-  orbit(x: Number, y: Number): void {
+  orbit(x: number, y: number): void {
     if (this.state.dragging) {
       if (this.state.shiftDown || this.state.rmbDown || this.state.pinching) {
         let { panStart, panEnd, panDelta } = this.state;
@@ -1103,7 +1100,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  updateMaterials(scale: Number, prop: string): void {
+  updateMaterials(scale: number, prop: string): void {
     const updateFunc = (material) => {
       if (material[prop] !== null || material[prop] !== undefined) {
         if (prop === 'normalScale') {
@@ -1125,7 +1122,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  updateRenderSize(resolution: Array<Number>): void {
+  updateRenderSize(resolution: Array<number>): void {
     let [width, height] = resolution.map((val) => Math.floor(val / this.state.quality.current.value));
     this.webGLRenderer.setSize(width, height, false);
     this.sceneComposer.setSize(width, height, false);
@@ -1141,7 +1138,7 @@ export default class ThreeView extends Component {
     this.camera.updateProjectionMatrix();
   }
 
-  updateShaders(value: Number | boolean, shaderName: string, uniformProp: string): void {
+  updateShaders(value: number | boolean, shaderName: string, uniformProp: string): void {
     const { shaderPasses } = this.state;
     let pass = shaderPasses[shaderName];
 
@@ -1434,6 +1431,7 @@ export default class ThreeView extends Component {
       ref={(ref) => this.toolsMenu = ref}
     />
   }
+
   // TODO make this thing resize properly
   toggleTools(): void {
     if (this.toolsMenu) {
@@ -1624,41 +1622,14 @@ export default class ThreeView extends Component {
   }
 
   // touch methods
-  handlePinchMove(event: SyntheticEvent): void {
-    console.log(event);
-    let { x, y } = event.center;
-    this.orbit(x, y);
-  }
 
-  handleTouchMove(event: SyntheticEvent): void {
-    let touches = event.nativeEvent.touches;
-    if (touches.length === 1) {
-      let touch = touches[0];
-      this.orbit(touch.clientX, touch.clientY);
-    }
-  }
-
-  handleTouch(event: SyntheticEvent | Event): void {
-    switch(event.type) {
-      case 'touchstart':
-        let touch = event.nativeEvent.touches[0];
-        this.setState({
-          dragging: true,
-          rotateStart: this.state.rotateStart.set(touch.clientX, touch.clientY),
-        });
-        break;
-
-      case 'touchend':
-        this.setState({
-          dragging: false,
-        });
-        break;
+  handlePinch(pinchInfo: Object, type: string): void {
+    switch(type) {
 
       case 'pinchstart':
-        console.log(event.touches);
         this.setState({
           pinching: true,
-
+          panStart: this.state.panStart.set(pinchInfo.clientCenter.x, pinchInfo.clientCenter.y),
         });
         break;
 
@@ -1671,6 +1642,40 @@ export default class ThreeView extends Component {
       default:
         break;
     }
+  }
+
+  handlePinchMove(pinchInfo: Object, type: string): void {
+    let pinchDelta = pinchInfo.pinchDelta;
+    if (pinchDelta !== 0) {
+      this.zoom(pinchDelta);
+    } else {
+      this.orbit(pinchInfo.clientCenter.x, pinchInfo.clientCenter.y);
+    }
+  }
+
+  handleTouch(touch: Touch, type: string): void {
+    switch(type) {
+
+      case 'touchstart':
+        this.setState({
+          dragging: true,
+          rotateStart: this.state.rotateStart.set(touch.clientX, touch.clientY),
+        });
+        break;
+
+      case 'touchend':
+        this.setState({
+          dragging: false,
+        });
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  handleTouchMove(touch: Touch): void {
+    this.orbit(touch.clientX, touch.clientY);
   }
 
   // Static methods
