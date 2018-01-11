@@ -4,6 +4,9 @@ import React, { Component } from 'react';
 // Semantic UI
 import { Icon, Label, Button } from 'semantic-ui-react';
 
+// Components
+import ThreeButton from './ThreeButton';
+
 // short uuid
 const short = require('short-uuid');
 
@@ -36,9 +39,10 @@ export default class ThreeScreenshot extends Component {
     const { extension } = this.props;
     const { url, filename, inBuffer } = this.state;
     let downloadClass = "three-data-download-link";
+
     return(
       <div className="three-screenshot-button-container">
-        <Button
+        <ThreeButton
           content="screenshot"
           className="three-controls-button"
           icon="photo"

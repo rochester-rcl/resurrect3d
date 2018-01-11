@@ -20,6 +20,7 @@ export default class ThreeTouchControls extends Component {
   touchControlRef: Object;
   width: number;
   height: number;
+  baseClassName = 'three-touch-listener ';
   constructor(props: Object) {
     super(props);
     (this: any).handleTouch = this.handleTouch.bind(this);
@@ -159,7 +160,7 @@ export default class ThreeTouchControls extends Component {
   render() {
     const { className, children } = this.props;
     return(
-      <span className={"three-mobile-listener " + className}
+      <span className={this.baseClassName += className ? className : ''}
         ref={(ref) => this.touchControlRef = ref}
         onTouchStart={this.handleTouch}
         onTouchEnd={this.handleTouch}

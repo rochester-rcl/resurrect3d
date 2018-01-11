@@ -31,3 +31,13 @@ export const WEBGL_SUPPORT = (() => {
     return false;
   }
 })();
+
+// loose detection of tablet or smartphone purely for hiding / showing menu labels.
+export const DISPLAY_DEVICE = {
+  ANDROID_SMARTPHONE: () => navigator.userAgent.match(/Android/i) && matchMedia('only screen and (max-width: 1024px)'),
+  ANDROID_TABLET: () => navigator.userAgent.match(/Android/i) && matchMedia('only screen and (max-width: 768px)'),
+  IPHONE: () => navigator.userAgent.match(/iPhone/i),
+  IPAD: () => navigator.userAgent.match(/iPad/i),
+  SMARTPHONE: () => DISPLAY_DEVICE.ANDROID_SMARTPHONE() || DISPLAY_DEVICE.IPHONE(),
+  TABLET: () => DISPLAY_DEVICE.ANDROID_TABLET() || DISPLAY_DEVICE.IPAD(),
+}

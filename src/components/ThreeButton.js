@@ -4,6 +4,9 @@ import React, { Component } from 'react';
 // Semantic UI
 import { Button, Label, Icon } from 'semantic-ui-react';
 
+// Device Detection for label content
+import { DISPLAY_DEVICE } from '../constants/application';
+
 export default class ThreeButton extends Component {
   state = {
     label: null
@@ -28,7 +31,17 @@ export default class ThreeButton extends Component {
     const { className, icon, onClick, labelPosition, color } = this.props;
     const { label } = this.state;
 
-    return(
+    if (DISPLAY_DEVICE.SMARTPHONE()) {
+      return(
+        <Button
+          className={className + ' mobile'}
+          icon={icon}
+          onClick={onClick}
+          color={color}
+        />
+      );
+    } else {
+      return(
         <Button
           className={className}
           icon={icon}
@@ -36,7 +49,7 @@ export default class ThreeButton extends Component {
           labelPosition={labelPosition}
           color={color}
           content={label}
-        />
-    );
+        />);
+    }
   }
 }
