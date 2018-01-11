@@ -14,11 +14,12 @@ import { ZOOM_IN, ZOOM_OUT, PINCH_END, PINCH_START} from '../constants/applicati
 // ONLY SUPPORTS 2 FINGER PINCH
 export default class ThreeTouchControls extends Component {
   state = {
-    pinchDistance: 0,
     pinchDistanceFromCenter: 0,
     pinchVectors: new THREE.Vector2(),
   }
-
+  touchControlRef: Object;
+  width: number;
+  height: number;
   constructor(props: Object) {
     super(props);
     (this: any).handleTouch = this.handleTouch.bind(this);
@@ -28,10 +29,16 @@ export default class ThreeTouchControls extends Component {
     (this: any)._preparePinchCallback = this._preparePinchCallback.bind(this);
     (this: any)._preparePinchMoveCallback = this._preparePinchMoveCallback.bind(this);
     (this: any).pinchDistance = this.pinchDistance.bind(this);
+    (this: any).normalizedPinchDistance = this.normalizedPinchDistance.bind(this);
     (this: any).pinchCenter = this.pinchCenter.bind(this);
     (this: any).distanceFromCenter = this.distanceFromCenter.bind(this);
     (this: any).setPinchVectors = this.setPinchVectors.bind(this);
     (this: any).toVec2Array = this.toVec2Array.bind(this);
+  }
+
+  componentDidMount(): void {
+    this.width = this.touchControlRef.clientWidth;
+    this.height = this.touchControlRef.clientHeight;
   }
 
   handleTouch(event: SyntheticEvent): void {
@@ -71,14 +78,15 @@ export default class ThreeTouchControls extends Component {
 
   _preparePinchCallback(vecs: Array<THREE.Vector2>, touches: TouchList): void {
     let distance = this.pinchDistance();
+    let normalizedDistance = this.normalizedPinchDistance();
     let pinchCenter = this.pinchCenter();
     let distanceFromCenter = this.distanceFromCenter(vecs[0], vecs[1], pinchCenter);
     this.setState({
-      pinchDistance: distance,
       pinchDistanceFromCenter: distanceFromCenter,
     }, () => {
       let pinchInfo = {
-        distance: this.state.pinchDistance,
+        distance: distance,
+        normalizedDistance: normalizedDistance,
         clientCenter: pinchCenter,
         nativeTouches: touches,
       }
@@ -92,17 +100,18 @@ export default class ThreeTouchControls extends Component {
 
   _preparePinchMoveCallback(vecs: Array<THREE.Vector2>, touches: TouchList): void {
     let pinchDistance = this.pinchDistance();
+    let normalizedDistance = this.normalizedPinchDistance();
     let pinchCenter = this.pinchCenter();
     let distanceFromCenter = this.distanceFromCenter(vecs[0], vecs[1], pinchCenter);
     let zoomAction = (distanceFromCenter > this.state.pinchDistanceFromCenter) ?
       ZOOM_OUT : ZOOM_IN;
     let pinchDelta = this.state.pinchDistanceFromCenter - distanceFromCenter;
     this.setState({
-      pinchDistance: pinchDistance,
       pinchDistanceFromCenter: distanceFromCenter,
     }, () => {
       this.props.onPinchMoveCallback({
-        distance: this.state.pinchDistance,
+        distance: pinchDistance,
+        normalizedDistance: normalizedDistance,
         pinchDelta: pinchDelta,
         clientCenter: this.pinchCenter(...touches),
         nativeTouches: touches,
@@ -110,9 +119,16 @@ export default class ThreeTouchControls extends Component {
       });
     });
   }
-
+  // distance from touches in pixels
   pinchDistance(): number {
     let [vec1, vec2] = this.state.pinchVectors;
+    return vec1.distanceTo(vec2);
+  }
+  // distance from touches in normalized screen coords
+  normalizedPinchDistance(): number {
+    let [vec1, vec2] = this.state.pinchVectors.map((vec) => {
+      return new THREE.Vector2(vec.x / this.width, vec.y / this.height);
+    });
     return vec1.distanceTo(vec2);
   }
 
@@ -144,6 +160,7 @@ export default class ThreeTouchControls extends Component {
     const { className, children } = this.props;
     return(
       <span className={"three-mobile-listener " + className}
+        ref={(ref) => this.touchControlRef = ref}
         onTouchStart={this.handleTouch}
         onTouchEnd={this.handleTouch}
         onTouchMove={this.handleTouchMove}>

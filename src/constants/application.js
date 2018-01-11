@@ -13,7 +13,11 @@ export const PINCH_END = 'pinchend';
 export const PINCH_START = 'pinchstart';
 export const ZOOM_IN = 'zoomin';
 export const ZOOM_OUT = 'zoomout';
+// distance between touches before a pan becomes a zoom
+// 1/4 of the canvas in any direction
+export const ZOOM_PINCH_DISTANCE_SIZE = 0.25;
 
+// RENDERING
 export const DEFAULT_CLEAR_COLOR = 0x666666;
 
 // Webgl detector https://github.com/mrdoob/three.js/blob/master/examples/js/Detector.js
@@ -26,4 +30,4 @@ export const WEBGL_SUPPORT = (() => {
   } catch(error) {
     return false;
   }
-})()
+})();

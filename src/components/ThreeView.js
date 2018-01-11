@@ -32,6 +32,7 @@ import { convertUnits } from '../utils/math';
 import {
   DEFAULT_GRADIENT_COLORS,
   DEFAULT_CLEAR_COLOR,
+  ZOOM_PINCH_DISTANCE_SIZE,
 } from '../constants/application';
 
 // Controls
@@ -1645,8 +1646,8 @@ export default class ThreeView extends Component {
   }
 
   handlePinchMove(pinchInfo: Object, type: string): void {
-    let pinchDelta = pinchInfo.pinchDelta;
-    if (pinchDelta !== 0) {
+    let { pinchDelta, normalizedDistance } = pinchInfo;
+    if (normalizedDistance > ZOOM_PINCH_DISTANCE_SIZE) {
       this.zoom(pinchDelta);
     } else {
       this.orbit(pinchInfo.clientCenter.x, pinchInfo.clientCenter.y);
