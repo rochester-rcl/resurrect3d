@@ -314,6 +314,7 @@ body {
 
 .three-data-download-link .ui.basic.label {
   display: flex;
+  background-color: rgba(0,0,0,0.5) !important;
 }
 
 .three-screenshot-button-container .three-controls-button {
@@ -345,6 +346,7 @@ body {
   flex: 1;
   opacity: 1;
   max-width: 500px;
+  margin-right: 10px;
   transition: all ease-in-out 1s;
 }
 
