@@ -40,7 +40,7 @@ import ThreeControls from './ThreeControls';
 import ThreeMeasure from './ThreeMeasure';
 import ThreeRangeSlider from './ThreeRangeSlider';
 import ThreeToggle from './ThreeToggle';
-import ThreeColorPicker, { ThreeMicroColorPicker } from './ThreeColorPicker';
+import ThreeColorPicker, { ThreeMicroColorPicker, ThreeEyeDropperColorPicker } from './ThreeColorPicker';
 import ThreeButton from './ThreeButton';
 import ThreeTools from './ThreeTools';
 import ThreeScreenshot from './ThreeScreenshot';
@@ -307,7 +307,6 @@ export default class ThreeView extends Component {
     const { loadProgress, loadText, showInfo, dynamicLighting, detailMode, toolsActive } = this.state;
     const { info } = this.props;
 
-    if (this.mesh && !this.panelLayout) this.initTools();
     let threeViewClassName = 'three-view ';
     threeViewClassName += toolsActive ? 'tools-active' : 'tools-inactive';
     return(
@@ -354,6 +353,7 @@ export default class ThreeView extends Component {
     this.GUI.registerComponent('THREE_BUTTON', ThreeButton);
     this.GUI.registerComponent('THREE_TOGGLE', ThreeToggle);
     this.GUI.registerComponent('THREE_COLOR_PICKER', ThreeColorPicker);
+    this.GUI.registerComponent('THREE_EYEDROPPER_COLOR_PICKER', ThreeEyeDropperColorPicker)
     this.GUI.registerComponent('THREE_MICRO_COLOR_PICKER', ThreeMicroColorPicker);
     this.GUI.registerComponent('THREE_MEASURE', ThreeMeasure);
     this.GUI.registerComponent('THREE_SCREENSHOT', ThreeScreenshot);
@@ -781,7 +781,7 @@ export default class ThreeView extends Component {
     this.setEnvMap();
     loadPostProcessor(THREE).then((values) => {
       this.setState((prevState, props) => {
-        return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Shaders" }
+        return { loadProgress: prevState.loadProgress + 15, loadText: "Loading Shaders" }
       }, this.initPostprocessing());
     });
 
@@ -924,8 +924,8 @@ export default class ThreeView extends Component {
 
     this.updateCamera();
     this.setState((prevState, props) => {
-      return { loadProgress: prevState.loadProgress + 25, loadText: "Updating Scene" }
-    }, this.animate());
+      return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Tools" }
+    }, this.initTools());
 
   }
 
@@ -1363,7 +1363,17 @@ export default class ThreeView extends Component {
       });
 
       edlGroup.addGroup('edl shading', edlShadingGroup);
+
+      let chromaKeyGroup = new ThreeGUIGroup('chromaKey');
+
+      chromaKeyGroup.addComponent('eyedropper', components.THREE_EYEDROPPER_COLOR_PICKER, {
+        renderer: this.webGLRenderer,
+        renderTarget: this.effectComposer.renderTarget2,
+        title: 'color',
+      });
+
       shaderGroup.addGroup('eye dome lighting', edlGroup);
+      shaderGroup.addGroup('chroma key', chromaKeyGroup);
       panelGroup.addGroup('shaders', shaderGroup);
     }
 
@@ -1431,6 +1441,9 @@ export default class ThreeView extends Component {
       dropdownClass='three-tool-menu-dropdown'
       ref={(ref) => this.toolsMenu = ref}
     />
+    this.setState((prevState, props) => {
+      return { loadProgress: prevState.loadProgress + 10, loadText: "Updating Scene" }
+    }, this.animate());
   }
 
   // TODO make this thing resize properly
