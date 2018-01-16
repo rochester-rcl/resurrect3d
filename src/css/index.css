@@ -242,6 +242,7 @@ body {
   margin-top: 10px !important;
   display: flex;
   justify-content: center;
+  align-items: center;
   font-family: 'Source Code Pro', monospace;
 }
 
@@ -255,9 +256,16 @@ body {
 .three-tool-component-container .input-range {
   padding-top: 20px;
 }
+
 .three-color-picker-container {
   align-self: center;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.three-color-picker-container .three-controls-button {
+  margin: 5px;
 }
 
 .three-color-picker {

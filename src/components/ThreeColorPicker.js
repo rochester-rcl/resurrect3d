@@ -10,13 +10,14 @@ import * as THREE from 'three';
 // semantic-ui-react
 import { Label, Segment, Checkbox, Button } from 'semantic-ui-react';
 
+const rgbString = (colorRGB: Object) => {
+  let { r, g, b } = colorRGB;
+  let rgb = [r, g, b];
+  return( new THREE.Color('rgb(' + rgb.join(',') + ')'));
+}
+
 const ThreeColorPicker = (props: Object) => {
   const { callback, title, color } = props;
-  const rgbString = (colorRGB: Object) => {
-    let { r, g, b } = colorRGB;
-    let rgb = [r, g, b];
-    return( new THREE.Color('rgb(' + rgb.join(',') + ')'));
-  }
   return (
     <Segment className="three-tool-component-container">
       <Label className="three-tool-component-label" attached="top left">{title}</Label>
@@ -53,7 +54,11 @@ export const ThreeMicroColorPicker = (props: Object) => {
 export class ThreeEyeDropperColorPicker extends Component {
 
   state = {
-    currentColor: '#fff',
+    currentColor: {
+      r: '255',
+      g: '255',
+      b: '255',
+    },
     active: false,
   }
 
@@ -61,7 +66,6 @@ export class ThreeEyeDropperColorPicker extends Component {
     super(props);
     (this: any).pickColor = this.pickColor.bind(this);
     (this: any).activate = this.activate.bind(this);
-    (this: any).doCallback = this.doCallback.bind(this);
   }
 
   activate(): void {
@@ -74,19 +78,35 @@ export class ThreeEyeDropperColorPicker extends Component {
     let { active } = this.state;
     if (active) {
       let { renderer, renderTarget } = this.props;
-      let res = renderer.domElement.getBoundingClientRect();
+      let element = renderer.domElement;
+      let rec = element.getBoundingClientRect();
       let mouseVector = new THREE.Vector2();
-      mouseVector.x = (event.clientX - res.x);
-      mouseVector.y = -(event.clientY - res.top);
+      // check for scaling
+      let xScale = element.width / rec.width;
+      let yScale = element.height / rec.height;
+      // mouse vector must be in pixels relative to the canvas size
+      mouseVector.x = (event.clientX - rec.left) * xScale;
+      mouseVector.y = (event.clientY - rec.top) * yScale;
       // rgba
       let readBuffer = new Uint8Array(4);
-      renderer.readRenderTargetPixels(renderTarget, res.x, res.y, 1, 1, readBuffer);
-      console.log(readBuffer[0]);
+      renderer.readRenderTargetPixels(renderTarget, mouseVector.x, element.height - mouseVector.y, 1, 1, readBuffer);
+      let color = {
+        rgb: {
+          r: readBuffer[0],
+          g: readBuffer[1],
+          b: readBuffer[2],
+        }
+      };
+      this.handleChangeComplete(color);
     }
   }
 
-  doCallback(): void {
-
+  handleChangeComplete(color: Object): void {
+    this.setState({
+      currentColor: {...color.rgb},
+    }, () => {
+      this.props.callback(rgbString(this.state.currentColor));
+    });
   }
 
   componentDidMount(): void {
@@ -112,6 +132,11 @@ export class ThreeEyeDropperColorPicker extends Component {
             color="grey"
             active={this.state.active}
             inverted
+          />
+          <CompactPicker
+            className="three-color-picker"
+            color={this.state.currentColor}
+            onChangeComplete={this.handleChangeComplete}
           />
         </div>
       </Segment>

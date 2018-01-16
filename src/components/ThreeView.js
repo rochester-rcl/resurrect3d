@@ -1368,8 +1368,9 @@ export default class ThreeView extends Component {
 
       chromaKeyGroup.addComponent('eyedropper', components.THREE_EYEDROPPER_COLOR_PICKER, {
         renderer: this.webGLRenderer,
-        renderTarget: this.effectComposer.renderTarget2,
+        renderTarget: this.modelComposer.renderTarget2,
         title: 'color',
+        callback: (color) => {},
       });
 
       shaderGroup.addGroup('eye dome lighting', edlGroup);
