@@ -66,6 +66,7 @@ export class ThreeEyeDropperColorPicker extends Component {
     super(props);
     (this: any).pickColor = this.pickColor.bind(this);
     (this: any).activate = this.activate.bind(this);
+    (this: any).handleChangeComplete = this.handleChangeComplete.bind(this);
   }
 
   activate(): void {
@@ -103,7 +104,7 @@ export class ThreeEyeDropperColorPicker extends Component {
 
   handleChangeComplete(color: Object): void {
     this.setState({
-      currentColor: {...color.rgb},
+      currentColor: { ...color.rgb },
     }, () => {
       this.props.callback(rgbString(this.state.currentColor));
     });

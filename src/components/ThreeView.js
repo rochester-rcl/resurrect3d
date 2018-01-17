@@ -888,11 +888,12 @@ export default class ThreeView extends Component {
       radius: 0,
     }
 
-    // Set up env maps
-
     let EDLPass = new THREE.EDLPass(this.scene, this.camera, EDLParams);
+    let chromaKeyPass = new THREE.ChromaKeyPass(false, new THREE.Color(0), 0.5, false);
+    chromaKeyPass.renderToScreen = false;
 
     this.addShaderPass({ EDL: EDLPass });
+    this.addShaderPass({ ChromaKey: chromaKeyPass });
 
     let SSAOPass = new THREE.SSAOPass(this.scene, this.camera);
 
@@ -912,6 +913,7 @@ export default class ThreeView extends Component {
     let rawGui = new THREE.TexturePass(this.guiComposer.renderTarget2.texture);
 
     this.effectComposer.addPass(rawModel);
+    this.effectComposer.addPass(chromaKeyPass);
     this.effectComposer.addPass(SSAOPass);
     this.effectComposer.addPass(EDLPass);
     this.effectComposer.addPass(maskInverse);
@@ -1170,7 +1172,6 @@ export default class ThreeView extends Component {
         break;
 
     }
-
     pass.uniforms[uniformProp].value = value;
   }
 
@@ -1364,13 +1365,45 @@ export default class ThreeView extends Component {
 
       edlGroup.addGroup('edl shading', edlShadingGroup);
 
+      // Chroma Key
+
       let chromaKeyGroup = new ThreeGUIGroup('chromaKey');
+
+      chromaKeyGroup.addComponent('enable', components.THREE_TOGGLE, {
+        key: 1,
+        callback: (value) => this.updateShaders(value, 'ChromaKey', 'enable'),
+        checked: shaderPasses.ChromaKey.enable ? shaderPasses.ChromaKey.enable : false,
+        title: 'enable',
+      });
 
       chromaKeyGroup.addComponent('eyedropper', components.THREE_EYEDROPPER_COLOR_PICKER, {
         renderer: this.webGLRenderer,
+        // pull from the model pass only so we ignore all the edl effects other shaders
         renderTarget: this.modelComposer.renderTarget2,
-        title: 'color',
-        callback: (color) => {},
+        title: 'chroma',
+        callback: (color) => this.updateShaders(color, 'ChromaKey', 'chroma'),
+      });
+
+      chromaKeyGroup.addComponent('replacement_color', components.THREE_MICRO_COLOR_PICKER, {
+        title: "replacement color",
+        callback: (color) => this.state.shaderPasses.ChromaKey.setReplacementColor(color),
+      });
+
+      chromaKeyGroup.addComponent('invert', components.THREE_TOGGLE, {
+        key: 1,
+        callback: (value) => this.updateShaders(value, 'ChromaKey', 'invert'),
+        checked: shaderPasses.ChromaKey.invert ? shaderPasses.ChromaKey.invert : false,
+        title: 'invert',
+      });
+
+      chromaKeyGroup.addComponent('threshold', components.THREE_RANGE_SLIDER, {
+        key: 2,
+        min: -1.0,
+        max: 1.0,
+        step: 0.01,
+        title: "threshold",
+        defaultVal: 0.0,
+        callback: (value) => this.updateShaders(value, 'ChromaKey', 'threshold'),
       });
 
       shaderGroup.addGroup('eye dome lighting', edlGroup);

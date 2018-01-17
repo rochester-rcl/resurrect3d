@@ -3,6 +3,7 @@
 import loadCopyShader from './shaders/CopyShader';
 import loadBokehShader from './shaders/BokehShader';
 import loadEDLShader from './shaders/EDLShader';
+import loadChromaKeyShader from './shaders/ChromaKeyShader';
 import loadSSAOShader from './shaders/SSAOShader';
 import loadLuminosityHighPassShader from './shaders/LuminosityHighPassShader';
 import loadBlurShader from './shaders/BlurShader';
@@ -17,6 +18,7 @@ import loadSSAOPass from './postprocessing/SSAOPass';
 import loadGaussianPass from './postprocessing/GaussianPass';
 import loadVignettePass from './postprocessing/VignettePass';
 import loadEDLPass from './postprocessing/EDLPass';
+import loadChromaKeyPass from './postprocessing/ChromaKeyPass';
 import loadUnrealBloomPass from './postprocessing/UnrealBloomPass';
 import loadTexturePass from './postprocessing/TexturePass';
 import { loadMaskPass, loadClearMaskPass } from './postprocessing/MaskPass';
@@ -31,6 +33,7 @@ export default function loadPostProcessor(threeInstance: Object): Promise<*> {
     loadLuminosityHighPassShader(threeInstance),
     loadSSAOShader(threeInstance),
     loadEDLShader(threeInstance),
+    loadChromaKeyShader(threeInstance),
     loadVignetteShader(threeInstance),
   ];
   const tasks = [
@@ -39,6 +42,7 @@ export default function loadPostProcessor(threeInstance: Object): Promise<*> {
     loadRenderPass(threeInstance),
     loadTexturePass(threeInstance),
     loadEDLPass(threeInstance),
+    loadChromaKeyPass(threeInstance),
     loadVignettePass(threeInstance),
     loadSSAOPass(threeInstance),
     loadGaussianPass(threeInstance),

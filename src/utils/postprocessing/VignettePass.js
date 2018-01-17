@@ -9,11 +9,15 @@ export default function loadVignettePass(threeInstance: Object): typeof Promise 
             threeInstance.Pass.call(this);
 
             if ( threeInstance.VignetteShader === undefined ) {
-      				console.error( "THREE.VignettePass relies on THREE.VignetteShader" );
+							let msg = "THREE.VignettePass relies on THREE.VignetteShader";
+      				console.error(msg);
+							reject(msg);
       			}
 
             if ( threeInstance.HorizontalBlurShader === undefined || threeInstance.VerticalBlurShader === undefined ) {
-      				console.error( "THREE.VignettePass relies on THREE.HorizontalBlurShader and THREE.VerticalBlurShader!" );
+							let msg = "THREE.VignettePass relies on THREE.HorizontalBlurShader and THREE.VerticalBlurShader!"
+      				console.error(msg);
+							reject(msg);
       			}
 
             this.uniforms = threeInstance.UniformsUtils.clone(threeInstance.VignetteShader.uniforms);
