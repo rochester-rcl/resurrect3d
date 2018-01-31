@@ -1435,6 +1435,7 @@ export default class ThreeView extends Component {
           if (currentMaterial.normalMap && !materialsGroup.find('normalScale')) {
             materialsGroup.addComponent('normalScale', components.THREE_RANGE_SLIDER, {
               ...materialsProps,
+              defaultVal: 0.25,
               callback: (value) => this.updateMaterials(value, 'normalScale'),
             });
           }
