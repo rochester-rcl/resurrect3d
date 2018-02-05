@@ -28,19 +28,7 @@ import ThreeViewerOmekaBackend from './backends/ThreeViewerOmekaBackend';
 const omekaBackend = new ThreeViewerOmekaBackend(endpoint);
 
 function computeProgress(request: ProgressEvent): string {
-  let progress;
-  if (request.lengthComputable) {
-    let percentage = Math.floor(request.loaded / request.total);
-    // for data URI
-    if (percentage === 1) {
-      progress = 'parsing';
-    } else {
-      progress = percentage + ' %';
-    }
-  } else {
-    progress = parseFloat(request.loaded / 1000000).toFixed(2) + ' MB';
-  }
-  return progress;
+  return parseFloat(request.loaded / 1000000).toFixed(2) + ' MB';
 }
 
 function* getThreeAssetSaga(getThreeAssetAction: Object): Generator < any, any, any > {
