@@ -951,8 +951,7 @@ export default class ThreeView extends Component {
   fitPerspectiveCamera(): void {
 
     let distance = this.camera.position.distanceTo(this.bboxMesh.min);
-    let fovV = 2 * Math.atan(this.environmentRadius / (2 * distance)) * (180 / Math.PI);
-    this.camera.fov = fovV;
+    let fovV = Math.atan(this.environmentRadius / (2 * distance)) * (180 / Math.PI);
     this.camera.updateProjectionMatrix();
 
   }
