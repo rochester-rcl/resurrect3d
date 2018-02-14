@@ -279,7 +279,7 @@ body {
 .three-tool-component-container .input-range__slider {
   background: rgb(0, 180, 0) !important;
   border: none !important;
-  touch-action: none;
+  touch-action: none !important;
 }
 
 .three-tool-toggle-container {

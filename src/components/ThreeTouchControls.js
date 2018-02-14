@@ -44,6 +44,8 @@ export default class ThreeTouchControls extends Component {
 
   handleTouch(event: SyntheticEvent): void {
     let touches = event.nativeEvent.touches;
+    event.preventDefault();
+    event.stopPropagation();
     switch (event.type) {
 
       case 'touchstart':
