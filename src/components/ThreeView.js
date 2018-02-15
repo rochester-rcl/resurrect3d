@@ -128,7 +128,7 @@ export default class ThreeView extends Component {
     panDelta: new THREE.Vector2(),
     panOffset: new THREE.Vector3(),
     // dolly
-    scale: 1,
+    scale: 1.25,
     zoomScale: Math.pow(0.95, 1.0),
     maxScale: 2.5,
     // spherical coords
@@ -420,8 +420,8 @@ export default class ThreeView extends Component {
     this.threeContainer.appendChild(this.webGLRenderer.domElement);
     this.width = this.webGLRenderer.domElement.clientWidth;
     this.height = this.webGLRenderer.domElement.clientHeight;
-    this.webGLRenderer.setSize(this.width, this.height, false);
     this.camera.aspect = this.width / this.height;
+    this.webGLRenderer.setSize(this.width, this.height, false);
     this.camera.updateProjectionMatrix();
     this.initControls();
 
@@ -777,7 +777,8 @@ export default class ThreeView extends Component {
       this.skyboxMaterial : this.skyboxMaterialShader.shaderMaterial);
     this.envScene.add(this.skyboxMesh);
     this.bboxSkybox = new THREE.Box3().setFromObject(this.skyboxMesh);
-    this.fitPerspectiveCamera();
+    // Don't seem to need this anymore
+    //this.fitPerspectiveCamera();
     this.setEnvMap();
     loadPostProcessor(THREE).then((values) => {
       this.setState((prevState, props) => {
@@ -949,11 +950,8 @@ export default class ThreeView extends Component {
   }
 
   fitPerspectiveCamera(): void {
-
     let distance = this.camera.position.distanceTo(this.bboxMesh.min);
-    let fovV = Math.atan(this.environmentRadius / (2 * distance)) * (180 / Math.PI);
-    this.camera.updateProjectionMatrix();
-
+    let fovV = 2 * Math.atan((this.bboxMesh.max.y - this.bboxMesh.max.y) / (2 * distance)) * (180 / Math.PI);
   }
 
   pan(deltaX: number, deltaY: number): void {
@@ -994,7 +992,6 @@ export default class ThreeView extends Component {
       scale = this.getScale(scale *= zoomScale);
     }
     this.setState({ scale: scale });
-    this.camera.updateProjectionMatrix();
     this.updateCamera();
   }
 
@@ -1343,7 +1340,7 @@ export default class ThreeView extends Component {
       edlGroup.addComponent('strength', components.THREE_RANGE_SLIDER, {
         key: 2,
         min: 0.0,
-        max: 10.0,
+        max: 100.0,
         step: 0.01,
         title: "strength",
         defaultVal: 0.0,
@@ -1354,7 +1351,7 @@ export default class ThreeView extends Component {
       edlGroup.addComponent('radius', components.THREE_RANGE_SLIDER, {
         key: 3,
         min: 0.0,
-        max: 4.0,
+        max: 5.0,
         step: 0.01,
         title: "radius",
         defaultVal: 0.0,
@@ -1477,7 +1474,9 @@ export default class ThreeView extends Component {
     />
     this.setState((prevState, props) => {
       return { loadProgress: prevState.loadProgress + 10, loadText: "Updating Scene" }
-    }, this.animate());
+    }, () => {
+      this.animate();
+    });
   }
 
   // TODO make this thing resize properly
@@ -1627,7 +1626,6 @@ export default class ThreeView extends Component {
     // we're concerned with client height + client width of our canvas
     this.camera.aspect = clientWidth / clientHeight;
     this.camera.updateProjectionMatrix();
-
     if (!this.state.toolsActive) {
       this.width = clientWidth;
       this.height = clientHeight;

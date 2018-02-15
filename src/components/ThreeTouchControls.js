@@ -67,6 +67,8 @@ export default class ThreeTouchControls extends Component {
   }
 
   handleTouchMove(event: SyntheticEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
     let touches = event.nativeEvent.touches;
     if (touches.length > 1) {
       this.handlePinchMove(touches);

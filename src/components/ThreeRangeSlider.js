@@ -52,7 +52,8 @@ export default class ThreeRangeSlider extends Component {
   }
 
   resetToDefaults(): void {
-    this.updateThreshold(...Object.values(this.state.defaults));
+    let { minValue, maxValue, stepValue } = this.state.defaults;
+    this.updateThreshold(minValue, maxValue, stepValue);
   }
 
   render() {
