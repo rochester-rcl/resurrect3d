@@ -1,12 +1,14 @@
 export const GROUP = 'GROUP';
 export const COMPONENT = 'COMPONENT';
-export const CM = 'cm';
-export const MM = 'mm';
-export const IN = 'in';
+export const CM = 'CM';
+export const MM = 'MM';
+export const IN = 'IN';
 export const DEFAULT_GRADIENT_COLORS = {
   inner: "rgb(105, 105, 105)",
   outer: "rgb(35, 35, 35)",
 }
+export const MIN_SCALE = 0;
+export const MAX_SCALE = 2.5;
 
 // Touch controls
 export const PINCH_END = 'pinchend';
@@ -40,4 +42,11 @@ export const DISPLAY_DEVICE = {
   IPAD: () => navigator.userAgent.match(/iPad/i),
   SMARTPHONE: () => DISPLAY_DEVICE.ANDROID_SMARTPHONE() || DISPLAY_DEVICE.IPHONE(),
   TABLET: () => DISPLAY_DEVICE.ANDROID_TABLET() || DISPLAY_DEVICE.IPAD(),
+}
+
+export const CONVERSIONS = {
+  CM_TO_IN: (measurement: number) => measurement * 0.393701,
+  IN_TO_CM: (measurement: number) => measurement * 2.54,
+  MM_TO_CM: (measurement: number) => measurement * 10,
+  CM_TO_MM: (measurement: number) => measurement * 0.1,
 }

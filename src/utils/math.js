@@ -1,26 +1,22 @@
 /*@flow*/
-import { CM, MM, IN } from '../constants/application';
+import { CM, MM, IN, CONVERSIONS } from '../constants/application';
 
-export function cmToInches(measurement: Number): Number {
-  return measurement * 0.0393701;
+export function cmToInches(measurement: number): number {
+  return measurement * 0.393701;
 }
 
-export function cmToMM(measurement: Number): Number {
+export function cmToMM(measurement: number): number {
   return measurement * 0.1;
 }
 
-export function convertUnits(unit: string, measurement: Number): Number {
-  switch(unit) {
-    case(CM):
-      return measurement;
+export function inchesToCM(measurement: number): number {
+  return measurement * 2.54;
+}
 
-    case(MM):
-      return cmToMM(measurement);
-
-    case(IN):
-      return cmToInches(measurement);
-
-    default:
-      return measurement;
-  }
+export function convertUnits(from: string, to: string, measurement: number): number {
+  from = from.toUpperCase();
+  if (from === to) return measurement;
+  let conversion = from + '_TO_' + to;
+  let cback = CONVERSIONS[conversion];
+  return (cback !== undefined) ? cback(measurement) : measurement;
 }

@@ -33,13 +33,14 @@ import {
   DEFAULT_GRADIENT_COLORS,
   DEFAULT_CLEAR_COLOR,
   ZOOM_PINCH_DISTANCE_SIZE,
+  CM, IN, MM,
 } from '../constants/application';
 
 // Controls
 import ThreeControls from './ThreeControls';
 import ThreeMeasure from './ThreeMeasure';
 import ThreeRangeSlider from './ThreeRangeSlider';
-import ThreeToggle from './ThreeToggle';
+import ThreeToggle, { ThreeToggleMulti } from './ThreeToggle';
 import ThreeColorPicker, { ThreeMicroColorPicker, ThreeEyeDropperColorPicker } from './ThreeColorPicker';
 import ThreeButton from './ThreeButton';
 import ThreeTools from './ThreeTools';
@@ -128,7 +129,7 @@ export default class ThreeView extends Component {
     panDelta: new THREE.Vector2(),
     panOffset: new THREE.Vector3(),
     // dolly
-    scale: 1.25,
+    scale: 1.75,
     zoomScale: Math.pow(0.95, 1.0),
     maxScale: 2.5,
     // spherical coords
@@ -178,7 +179,7 @@ export default class ThreeView extends Component {
         value: 1.325,
       },
     },
-    units: 'cm',
+    units: CM,
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
   constructor(props: Object){
@@ -240,6 +241,7 @@ export default class ThreeView extends Component {
     (this: any).computeAxisGuides = this.computeAxisGuides.bind(this);
     (this: any).drawAxisGuides = this.drawAxisGuides.bind(this);
     (this: any).addAxisLabels = this.addAxisLabels.bind(this);
+    (this: any).removeAxisLabels = this.removeAxisLabels.bind(this);
     (this: any).toggleBackground = this.toggleBackground.bind(this);
     (this: any).captureScreenshot = this.captureScreenshot.bind(this);
     (this: any).showAxes = this.showAxes.bind(this);
@@ -284,6 +286,13 @@ export default class ThreeView extends Component {
 
   }
 
+  componentDidUpdate(prevProps: Object, prevState: Object): void {
+    if (prevState.units !== this.state.units) {
+      this.removeAxisLabels();
+      this.addAxisLabels();
+    }
+  }
+
   shouldComponentUpdate(nextProps: Object, nextState: Object): boolean {
 
     if (nextProps.mesh !== this.props.mesh) return true;
@@ -292,6 +301,7 @@ export default class ThreeView extends Component {
     if (nextState.dynamicLighting !== this.state.dynamicLighting) return true;
     if (nextState.detailMode !== this.state.detailMode) return true;
     if (nextState.toolsActive !== this.state.toolsActive) return true;
+    if (nextState.units !== this.state.units) return true;
     return false;
 
   }
@@ -352,6 +362,7 @@ export default class ThreeView extends Component {
     this.GUI.registerComponent('THREE_RANGE_SLIDER', ThreeRangeSlider);
     this.GUI.registerComponent('THREE_BUTTON', ThreeButton);
     this.GUI.registerComponent('THREE_TOGGLE', ThreeToggle);
+    this.GUI.registerComponent('THREE_TOGGLE_MULTI', ThreeToggleMulti);
     this.GUI.registerComponent('THREE_COLOR_PICKER', ThreeColorPicker);
     this.GUI.registerComponent('THREE_EYEDROPPER_COLOR_PICKER', ThreeEyeDropperColorPicker)
     this.GUI.registerComponent('THREE_MICRO_COLOR_PICKER', ThreeMicroColorPicker);
@@ -365,7 +376,6 @@ export default class ThreeView extends Component {
 
     // init camera
     this.camera = new THREE.PerspectiveCamera(50, this.width / this.height); // use defaults for fov and near and far frustum;
-
 
     // Scenes
     this.scene = new THREE.Scene();
@@ -414,6 +424,7 @@ export default class ThreeView extends Component {
       gammaOutput: true,
       preserveDrawingBuffer: true,
     });
+
     this.webGLRenderer.shadowMap.enabled = true,
     this.webGLRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.webGLRenderer.setPixelRatio(1);
@@ -581,14 +592,19 @@ export default class ThreeView extends Component {
     let dimensions = [this.meshWidth, this.meshHeight, this.meshDepth];
     this.axisGuides.forEach((axisGuide, index) => {
       let sprite = new LabelSprite(128, 128,'#fff',
-        convertUnits(modelUnits, dimensions[index]).toFixed(2).toString() + ' ' + this.state.units).toSprite();
+        convertUnits(modelUnits, this.state.units, dimensions[index]).toFixed(2).toString() + ' ' + this.state.units.toLowerCase()).toSprite();
       // Need to set based on actual size of model somehow
       sprite.scale.multiplyScalar(this.spriteScaleFactor);
       axisGuide.add(sprite);
       let { x, y, z} = axisGuide.userData.end;
       sprite.position.set(x, y, z);
     });
+  }
 
+  removeAxisLabels(): void {
+    this.axisGuides.forEach((axisGuide, index) => {
+      axisGuide.remove(...axisGuide.children);
+    });
   }
 
   drawAxisGuides(showLabels: boolean): void {
@@ -649,7 +665,7 @@ export default class ThreeView extends Component {
 
           // draw label sprite for distance
           let distanceLabel = new LabelSprite(128, 128,'#fff',
-            convertUnits(modelUnits, distance).toFixed(2).toString() + ' ' + this.state.units).toSprite();
+            convertUnits(modelUnits, this.state.units, distance).toFixed(2).toString() + ' ' + this.state.units.toLowerCase()).toSprite();
           distanceLabel.scale.multiplyScalar(this.spriteScaleFactor / 2);
           a = a.clone();
           b = b.clone();
@@ -733,7 +749,7 @@ export default class ThreeView extends Component {
         opacity: 0.8,
         transparent: true
       });
-      let labelSphereGeometry = new THREE.SphereGeometry((this.meshHeight / 125), 16, 16);
+      let labelSphereGeometry = new THREE.SphereGeometry((this.meshHeight / 300), 16, 16);
       this.labelSphere = new THREE.Mesh(labelSphereGeometry, labelSphereMaterial);
       this.setState((prevState, props) => {
         return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Environment" }
@@ -1244,6 +1260,16 @@ export default class ThreeView extends Component {
         callback: this.showAxes,
         checked: this.state.showAxes,
         title: "show axes",
+      });
+
+      let unitButtons = [
+        { label: 'cm', checked: true, callback: () => this.setState({ units: CM }) },
+        { label: 'in', checked: false, callback: () => this.setState({ units: IN }) },
+        //{ label: 'ft', checked: false, callback: (value) => console.log(value) },
+      ]
+      measurementGroup.addComponent('units', components.THREE_TOGGLE_MULTI, {
+        buttons: unitButtons,
+        title: 'units',
       });
 
       panelGroup.addGroup('measurement', measurementGroup);
