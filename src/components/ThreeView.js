@@ -33,7 +33,7 @@ import {
   DEFAULT_GRADIENT_COLORS,
   DEFAULT_CLEAR_COLOR,
   ZOOM_PINCH_DISTANCE_SIZE,
-  CM, IN, MM,
+  CM, IN, MM, FT,
 } from '../constants/application';
 
 // Controls
@@ -1265,6 +1265,7 @@ export default class ThreeView extends Component {
       let unitButtons = [
         { label: 'cm', checked: true, callback: () => this.setState({ units: CM }) },
         { label: 'in', checked: false, callback: () => this.setState({ units: IN }) },
+        { label: 'ft', checked: false, callback: () => this.setState({ units: FT })},
         //{ label: 'ft', checked: false, callback: (value) => console.log(value) },
       ]
       measurementGroup.addComponent('units', components.THREE_TOGGLE_MULTI, {

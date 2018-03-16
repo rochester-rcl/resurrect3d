@@ -3,6 +3,7 @@ export const COMPONENT = 'COMPONENT';
 export const CM = 'CM';
 export const MM = 'MM';
 export const IN = 'IN';
+export const FT = 'FT';
 export const DEFAULT_GRADIENT_COLORS = {
   inner: "rgb(105, 105, 105)",
   outer: "rgb(35, 35, 35)",
@@ -49,4 +50,8 @@ export const CONVERSIONS = {
   IN_TO_CM: (measurement: number) => measurement * 2.54,
   MM_TO_CM: (measurement: number) => measurement * 10,
   CM_TO_MM: (measurement: number) => measurement * 0.1,
+  FT_TO_IN: (measurement: number) => measurement * 12,
+  FT_TO_CM: (measurement: number) => measurement * 30.48,
+  CM_TO_FT: (measurement: number) => measurement * 0.0328084,
+  IN_TO_FT: (measurement: number) => measurement * 0.0833333,
 }
