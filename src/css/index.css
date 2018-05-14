@@ -358,6 +358,49 @@ body {
   transition: all ease-in-out 1s;
 }
 
+/*** MESH EXPORTER ***/
+.three-export-modal {
+  display: flex;
+  justify-content: center;
+}
+
+.three-export-modal-header {
+  font-family: 'Source Code Pro', monospace !important;
+  font-size: 25px !important;
+  border-bottom: 2px solid #fff !important;
+}
+
+.three-export-modal-content {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.three-export-format {
+  color: #fff;
+  font-family: 'Source Code Pro', monospace;
+  font-size: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.three-export-format-label {
+
+}
+
+.three-export-format-info a {
+  color: #fff !important;
+}
+
+.three-export-format > * {
+  margin-right: 10px;
+}
+
+.three-export-format-download {
+  border-left: 1px solid #fff
+  padding-left: 5px;
+}
+
 /*** MOBILE Styles ***/
 
 .three-touch-listener {

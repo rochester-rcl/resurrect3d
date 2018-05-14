@@ -20,6 +20,9 @@ import ThreeTouchControls from './ThreeTouchControls';
 // postprocessing
 import loadPostProcessor from '../utils/postprocessing';
 
+// exporters
+import loadExporters from '../utils/exporters';
+
 // Utils
 import { panLeft, panUp, rotateLeft, rotateUp } from '../utils/camera';
 import { fitBoxes, mapMaterials } from '../utils/mesh';
@@ -45,6 +48,7 @@ import ThreeColorPicker, { ThreeMicroColorPicker, ThreeEyeDropperColorPicker } f
 import ThreeButton from './ThreeButton';
 import ThreeTools from './ThreeTools';
 import ThreeScreenshot from './ThreeScreenshot';
+import ThreeMeshExporter from './ThreeMeshExporter';
 
 export default class ThreeView extends Component {
 
@@ -258,7 +262,7 @@ export default class ThreeView extends Component {
     (this: any).updateShaders = this.updateShaders.bind(this);
     (this: any).updateRenderSize = this.updateRenderSize.bind(this);
     (this: any).setEnvMap = this.setEnvMap.bind(this);
-
+    (this: any).exportObj = this.exportObj.bind(this);
     // event handlers
 
     (this: any).handleMouseDown = this.handleMouseDown.bind(this);
@@ -368,6 +372,7 @@ export default class ThreeView extends Component {
     this.GUI.registerComponent('THREE_MICRO_COLOR_PICKER', ThreeMicroColorPicker);
     this.GUI.registerComponent('THREE_MEASURE', ThreeMeasure);
     this.GUI.registerComponent('THREE_SCREENSHOT', ThreeScreenshot);
+    this.GUI.registerComponent('THREE_MESH_EXPORTER', ThreeMeshExporter);
     this.GUI.registerLayout('THREE_GROUP_LAYOUT', ThreeGUILayout);
     this.GUI.registerLayout('THREE_PANEL_LAYOUT', ThreeGUIPanelLayout);
 
@@ -434,7 +439,6 @@ export default class ThreeView extends Component {
     this.camera.aspect = this.width / this.height;
     this.webGLRenderer.setSize(this.width, this.height, false);
     this.camera.updateProjectionMatrix();
-    this.initControls();
 
     this.setState((prevState, props) => {
       return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Mesh" }
@@ -483,6 +487,11 @@ export default class ThreeView extends Component {
       renderer: this.webGLRenderer,
     });
 
+    controls.addComponent('screenshot', components.THREE_MESH_EXPORTER, {
+      threeInstance: THREE,
+      mesh: this.mesh,
+    });
+
     if (this.props.options.enableLights) {
       controls.addComponent('lighting', components.THREE_BUTTON, {
         ...buttonProps,
@@ -519,11 +528,10 @@ export default class ThreeView extends Component {
         onClick: () => this.toggleTools(),
       });
     }
-
     this.controls = <layouts.THREE_GROUP_LAYOUT
         group={controls}
         groupClass='three-controls-container'
-      />
+    />
   }
 
   update(): void {
@@ -751,6 +759,8 @@ export default class ThreeView extends Component {
       });
       let labelSphereGeometry = new THREE.SphereGeometry((this.meshHeight / 300), 16, 16);
       this.labelSphere = new THREE.Mesh(labelSphereGeometry, labelSphereMaterial);
+      // We need the mesh to exist if we're going to export it
+      this.initControls();
       this.setState((prevState, props) => {
         return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Environment" }
       }, this.initEnvironment());
@@ -1599,6 +1609,12 @@ export default class ThreeView extends Component {
       this.setState({ showInfo: true });
     }
 
+  }
+
+  exportObj(): void {
+    let exporter = new THREE.OBJExporter();
+    let result = exporter.parse(this.mesh);
+    console.log(result);
   }
 
   /** EVENT HANDLERS
