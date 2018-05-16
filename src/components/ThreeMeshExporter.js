@@ -1,116 +1,187 @@
+/* @flow */
+
 // React
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
 // Semantic UI
-import { Icon, Label, Button, Sidebar, Menu, Segment, Modal } from 'semantic-ui-react';
+import {
+  Icon,
+  Label,
+  Button,
+  Sidebar,
+  Menu,
+  Segment,
+  Modal
+} from "semantic-ui-react";
 
 // Components
-import ThreeButton from './ThreeButton';
+import ThreeButton from "./ThreeButton";
 
 // short uuid
-const short = require('short-uuid');
+const short = require("short-uuid");
 
 // exporters
-import loadExporters from '../utils/exporters';
+import loadExporters from "../utils/exporters";
+
+// Cache
+import IndexedCache from "../utils/cache/Cache";
+
+// THREE
+import THREE from "three";
+
+// JSZip
+import JSZip from "jszip";
+
+// constants
+import { OBJ_EXT, STL_EXT, ZIP_EXT } from "../constants/application";
 
 export default class ThreeMeshExporter extends Component {
-  OBJ_FORMAT = 0;
-  OBJ_EXT = '.obj'
-  STL_FORMAT = 1;
-  STL_EXT = '.stl';
-  MIME = 'text/plain';
-  state = { url: null, OBJKey: null, STLKey: null, dbLoaded: false, menuVisible: false, filename: null }
+  FORMATS: Object = {
+    OBJ: {
+      ext: ".obj",
+      mime: "text/plain",
+      exporter: null
+    },
+    STL: {
+      ext: ".stl",
+      mime: "text/plain",
+      exporter: null
+    }
+  };
+  OBJ_FORMAT: string = "OBJ";
+  STL_FORMAT: string = "STL";
+  MIME: string = "text/plain";
+  _cache: IndexedCache;
+  state: Object = {
+    url: null,
+    OBJKey: null,
+    STLKey: null,
+    dbLoaded: false,
+    menuVisible: false,
+    filename: null
+  };
   uuid = short();
   constructor(props: Object) {
     super(props);
-    (this: any).exportOBJ = this.exportOBJ.bind(this);
-    (this: any).exportSTL = this.exportSTL.bind(this);
-    (this: any).saveOBJ = this.saveOBJ.bind(this);
-    (this: any).saveSTL = this.saveSTL.bind(this);
-    (this: any).initDB = this.initDB.bind(this);
-    (this: any).updateDB = this.updateDB.bind(this);
+    (this: any).export = this.export.bind(this);
+    (this: any).save = this.save.bind(this);
+    (this: any).initCache = this.initCache.bind(this);
     (this: any).toggleExportMenu = this.toggleExportMenu.bind(this);
     (this: any).handleClientDownload = this.handleClientDownload.bind(this);
-    (this: any).indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
-    (this: any).meshDB = null;
     (this: any).OBJExporter = null;
     (this: any).STLExporter = null;
   }
 
   componentDidMount(): void {
     loadExporters(this.props.threeInstance).then(() => {
-      this.OBJExporter = new this.props.threeInstance.OBJExporter();
-      // do stl after
-      this.initDB();
+      this.FORMATS[
+        this.OBJ_FORMAT
+      ].exporter = new this.props.threeInstance.OBJExporter();
+      this.FORMATS[
+        this.STL_FORMAT
+      ].exporter = new this.props.threeInstance.STLExporter();
+      this.initCache();
     });
   }
 
   componentWillUnmount(): void {
-    this.meshDB.result.close();
+    this._cache.close();
   }
 
-  initDB(): void {
-    this.meshDB = this.indexedDB.open("ThreeMeshDB", 1);
-    this.meshDB.onupgradeneeded = this.updateDB;
-    this.meshDB.onsuccess = () => this.setState({ dbLoaded: true });
+  initCache(): void {
+    this._cache = new IndexedCache("ThreeMesh", {
+      name: "ThreeMeshIndex",
+      items: ["mesh.name", "mesh.format"]
+    });
+    this._cache
+      .open()
+      .then(() => this.setState({ dbLoaded: true }))
+      .catch(error => console.log(error));
   }
 
-  updateDB(): void {
-    let db = this.meshDB.result;
-    let store = db.createObjectStore("ThreeMeshStore", { keyPath: "id" });
-    store.createIndex("MeshIndex", ["mesh.name", "mesh.format"]);
-  }
-
-  exportOBJ(event: SyntheticEvent): void {
+  export(event: SyntheticEvent, format: string): void {
     event.preventDefault();
     event.stopPropagation();
     if (this.state.dbLoaded !== false) {
-      let db = this.meshDB.result;
-      let transaction = db.transaction("ThreeMeshStore", "readwrite");
-      let store = transaction.objectStore("ThreeMeshStore");
-      let index = store.index("MeshIndex");
-      let getOBJ = index.get([this.props.mesh.children[0].name, this.OBJ_FORMAT]);
-      getOBJ.onsuccess = () => {
-        if (getOBJ.result === undefined) {
-          this.saveOBJ();
-        } else {
-          this.handleClientDownload(getOBJ.result.mesh.data, this.OBJ_FORMAT);
-        }
-      }
+      let result = this._cache
+        .get([this.props.mesh.children[0].name, format])
+        .then(query => {
+          if (query.data === null) {
+            this.save(format);
+          } else {
+            this.handleClientDownload(query.data.mesh.data, format);
+          }
+        })
+        .catch(error => {
+          console.log(
+            "Unable to retrieve exported mesh from cache. Encountered the following error: ",
+            error
+          );
+          let meshData = this.FORMATS[format].exporter.parse(
+            this.props.mesh,
+            this.uuid.new()
+          );
+          this.handleClientDownload(meshData, format);
+        });
     }
   }
 
-  saveOBJ(): void {
-    let db = this.meshDB.result;
-    let transaction = db.transaction("ThreeMeshStore", "readwrite");
-    let store = transaction.objectStore("ThreeMeshStore");
-    let meshData = this.OBJExporter.parse(this.props.mesh);
-    store.put({ id: this.uuid.new(), mesh: { name: this.props.mesh.children[0].name, format: this.OBJ_FORMAT, data: meshData }});
-    this.exportOBJ();
-  }
-
-  exportSTL(): void {
-
-  }
-
-  saveSTL(): void {
-
+  save(format: string): void {
+    let meshData = this.FORMATS[format].exporter.parse(
+      this.props.mesh,
+      this.uuid.new()
+    );
+    this._cache
+      .add({
+        id: this.uuid.new(),
+        mesh: {
+          name: this.props.mesh.children[0].name,
+          format: format,
+          data: meshData
+        }
+      })
+      .then(query => {
+        this.handleClientDownload(meshData, format);
+      })
+      .catch(error => console.log(error));
   }
 
   toggleExportMenu(): void {
     this.setState({
-      menuVisible: !this.state.menuVisible,
+      menuVisible: !this.state.menuVisible
     });
   }
 
-  handleClientDownload(data: string, format: number, event: SyntheticEvent): void {
-    let blob = new Blob([data], { type: this.MIME });
-    let filename = this.uuid.new();
-    filename += (format === this.OBJ_FORMAT) ? this.OBJ_EXT : this.STL_EXT;
-    this.setState({
-      url: window.URL.createObjectURL(blob),
-      filename: filename,
-    }, () => this.downloadLink.click());
+  handleClientDownload(data: Object, format: string): void {
+    switch(format) {
+      case this.OBJ_FORMAT:
+        let zipFile = new JSZip();
+        const { obj, mtl, images, zip } = data;
+        zipFile.file(obj.filename, obj.rawData);
+        zipFile.file(mtl.filename, mtl.rawData);
+        for (let i = 0; i < images.length; i++) {
+          let image = images[i];
+          zipFile.file(images[i].filename, images[i].rawData, { binary: true });
+        }
+        zipFile.generateAsync({ type: "blob" }).then((blob) => {
+          this.setState(
+            {
+              url: window.URL.createObjectURL(blob),
+              filename: zip.filename
+            },
+            () => this.downloadLink.click());
+        });
+        break;
+
+      case this.STL_FORMAT:
+        const { stl } = data;
+        let blob = new Blob([stl.rawData], {type: this.MIME});
+        this.setState({
+          url: window.URL.createObjectURL(blob),
+          filename: stl.filename,
+        }, () => this.downloadLink.click());
+        break;
+    }
   }
 
   render() {
@@ -119,13 +190,15 @@ export default class ThreeMeshExporter extends Component {
     let downloadClass = "three-data-download-link";
     let baseClass = "three-export-menu ";
     if (menuVisible) {
-      baseClass += 'show';
+      baseClass += "show";
     } else {
-      baseClass += 'hide';
+      baseClass += "hide";
     }
-    return(
+    return (
       <div className="three-export-button-container">
-        <Modal basic className="three-export-modal"
+        <Modal
+          basic
+          className="three-export-modal"
           trigger={
             <ThreeButton
               content="save mesh"
@@ -136,25 +209,53 @@ export default class ThreeMeshExporter extends Component {
             />
           }
         >
-        <Modal.Header className="three-export-modal-header"> Select an export format </Modal.Header>
-        <Modal.Content className="three-export-modal-content">
-          <span className="three-export-format">
-            <span className="three-export-format-label">
-              WaveFront OBJ --
+          <Modal.Header className="three-export-modal-header">
+            {" "}
+            Select an export format{" "}
+          </Modal.Header>
+          <Modal.Content className="three-export-modal-content">
+            <span className="three-export-format">
+              <span className="three-export-format-label">
+                WaveFront OBJ (geometry + textures) --
+              </span>
+              <a
+                className="three-export-format-info"
+                href="https://en.wikipedia.org/wiki/Wavefront_.obj_file"
+                target="_blank"
+              >
+                <Icon name="info" />
+              </a>
+              <span
+                className="three-export-format-download"
+                onClick={event => this.export(event, this.OBJ_FORMAT)}
+              >
+                <Icon name="cloud download" />
+              </span>
             </span>
-            <a className="three-export-format-info" href="https://en.wikipedia.org/wiki/Wavefront_.obj_file">
-              <Icon name="info"/>
-            </a>
-            <span className="three-export-format-download" onClick={(event) => this.exportOBJ(event)}>
-              <Icon name="cloud download" />
+            <span className="three-export-format">
+              <span className="three-export-format-label">
+                Stereolithography STL (geometry only) --
+              </span>
+              <a
+                className="three-export-format-info"
+                href="https://en.wikipedia.org/wiki/Stereolithography"
+                target="_blank"
+              >
+                <Icon name="info" />
+              </a>
+              <span
+                className="three-export-format-download"
+                onClick={event => this.export(event, this.STL_FORMAT)}
+              >
+                <Icon name="cloud download" />
+              </span>
             </span>
             <a
-              ref={(ref) => this.downloadLink = ref}
+              ref={ref => (this.downloadLink = ref)}
               href={url}
               download={filename}
             />
-          </span>
-        </Modal.Content>
+          </Modal.Content>
         </Modal>
       </div>
     );

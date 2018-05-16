@@ -3,6 +3,12 @@
 // THREEJS
 import * as THREE from 'three';
 
+// utils
+import { base64ImageToBlob } from './image';
+
+// constants
+import { MAP_TYPES } from '../constants/application';
+
 export function volumeFromBounds(bbox: typeof THREE.Box3): Object {
 
   let { min, max } = bbox;
@@ -31,4 +37,18 @@ type Materials = THREE.MeshStandardMaterial | THREE.MeshPhongMaterial | THREE.Me
 export function mapMaterials(materials: Array<Materials> , callback): Array<Materials> {
   if (materials.constructor === Array) return materials.map(material => callback(material));
   return callback(materials);
+}
+
+export function exportMap(material: Materials): Array<Object> {
+  let images = [];
+  if (material.map.image !== undefined) {
+    let imageData = base64ImageToBlob(material.map.image.currentSrc, 1024);
+    images.push({ rawData: imageData.rawData, ext: imageData.ext, type: MAP_TYPES.DIFFUSE_MAP });
+  }
+  if (material.normalMap.image !== undefined) {
+    let imageData = base64ImageToBlob(material.normalMap.image.currentSrc, 1024);
+    images.push({ rawData: imageData.rawData, ext: imageData.ext, type: MAP_TYPES.NORMAL_MAP });
+  }
+
+  return images;
 }

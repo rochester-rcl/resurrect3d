@@ -55,3 +55,17 @@ export const CONVERSIONS = {
   CM_TO_FT: (measurement: number) => measurement * 0.0328084,
   IN_TO_FT: (measurement: number) => measurement * 0.0833333,
 }
+
+// Mesh exports
+export const MAP_TYPES = {
+  DIFFUSE_MAP: 0,
+  NORMAL_MAP: 1,
+  ROUGHNESS_MAP: 2,
+  METALNESS_MAP: 3,
+  // etc
+}
+
+export const OBJ_EXT = '.obj';
+export const STL_EXT = '.stl';
+export const MTL_EXT = '.mtl';
+export const ZIP_EXT = '.zip';

@@ -86,7 +86,7 @@ body {
   padding: 10px;
   z-index: 1001;
   flex-wrap: wrap;
-  background-color: #808080;
+  background-color: #1b1b1b;
 }
 
 .three-controls-container .three-controls-button {
@@ -104,7 +104,7 @@ body {
 
 
 .three-controls-button i {
-  border-left: 2px solid #ccc;
+
 }
 
 .three-controls-button.mobile i {
@@ -382,13 +382,15 @@ body {
   font-size: 20px;
   display: flex;
   justify-content: flex-end;
+  border-bottom: 2px solid #3b3b3b;
+  padding: 10px 0px 10px 0px;
 }
 
 .three-export-format-label {
 
 }
 
-.three-export-format-info a {
+.three-export-format i {
   color: #fff !important;
 }
 
@@ -397,8 +399,8 @@ body {
 }
 
 .three-export-format-download {
-  border-left: 1px solid #fff
   padding-left: 5px;
+  cursor: pointer;
 }
 
 /*** MOBILE Styles ***/

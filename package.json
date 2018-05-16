@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "interweave": "^8.0.2",
+    "jszip": "^3.1.5",
     "pako": "^1.0.6",
     "rc-progress": "^2.1.2",
     "react": "^15.6.2",

@@ -166,3 +166,22 @@ export class LabelSprite extends ImageGenerator {
   }
 
 }
+
+// https://stackoverflow.com/questions/16245767/creating-a-blob-from-a-base64-string-in-javascript
+export function base64ImageToBlob(b64String: string, chunkSize: number): Object {
+  let data = b64String.split(',')
+  let contentType = data[0].split(';base64')[0].slice(5);
+  let ext = '.' + contentType.split('/')[1];
+  chunkSize = (chunkSize !== undefined) ? chunkSize : 512;
+  let chars = atob(data.slice(1).join(''));
+  let bytes = [];
+  for (let offset = 0; offset < chars.length; offset += chunkSize) {
+    let chunk = chars.slice(offset, offset + chunkSize);
+    let charCodes = new Uint8Array(chunk.length);
+    for (let i = 0; i < charCodes.length; i++) {
+      charCodes[i] = chunk.charCodeAt(i);
+    }
+    bytes.push(charCodes);
+  }
+  return { rawData: new Blob(bytes, {type: contentType}), ext: ext };
+}
