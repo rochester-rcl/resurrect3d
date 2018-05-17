@@ -102,9 +102,10 @@ export default class ThreeMeshExporter extends Component {
   export(event: SyntheticEvent, format: string): void {
     event.preventDefault();
     event.stopPropagation();
+    let name = (this.props.mesh.children[0] !== undefined) ? this.props.mesh.children[0].name : this.props.mesh.name;
     if (this.state.dbLoaded !== false) {
       let result = this._cache
-        .get([this.props.mesh.children[0].name, format])
+        .get([name, format])
         .then(query => {
           if (query.data === null) {
             this.save(format);
@@ -127,6 +128,7 @@ export default class ThreeMeshExporter extends Component {
   }
 
   save(format: string): void {
+    let name = (this.props.mesh.children[0] !== undefined) ? this.props.mesh.children[0].name : this.props.mesh.name;
     let meshData = this.FORMATS[format].exporter.parse(
       this.props.mesh,
       this.uuid.new()
@@ -135,7 +137,7 @@ export default class ThreeMeshExporter extends Component {
       .add({
         id: this.uuid.new(),
         mesh: {
-          name: this.props.mesh.children[0].name,
+          name: name,
           format: format,
           data: meshData
         }
@@ -153,7 +155,7 @@ export default class ThreeMeshExporter extends Component {
   }
 
   handleClientDownload(data: Object, format: string): void {
-    switch(format) {
+    switch (format) {
       case this.OBJ_FORMAT:
         let zipFile = new JSZip();
         const { obj, mtl, images, zip } = data;
@@ -163,23 +165,27 @@ export default class ThreeMeshExporter extends Component {
           let image = images[i];
           zipFile.file(images[i].filename, images[i].rawData, { binary: true });
         }
-        zipFile.generateAsync({ type: "blob" }).then((blob) => {
+        zipFile.generateAsync({ type: "blob" }).then(blob => {
           this.setState(
             {
               url: window.URL.createObjectURL(blob),
               filename: zip.filename
             },
-            () => this.downloadLink.click());
+            () => this.downloadLink.click()
+          );
         });
         break;
 
       case this.STL_FORMAT:
         const { stl } = data;
-        let blob = new Blob([stl.rawData], {type: this.MIME});
-        this.setState({
-          url: window.URL.createObjectURL(blob),
-          filename: stl.filename,
-        }, () => this.downloadLink.click());
+        let blob = new Blob([stl.rawData], { type: this.MIME });
+        this.setState(
+          {
+            url: window.URL.createObjectURL(blob),
+            filename: stl.filename
+          },
+          () => this.downloadLink.click()
+        );
         break;
     }
   }
