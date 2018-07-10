@@ -1,0 +1,451 @@
+@import url('https://fonts.googleapis.com/css?family=Source+Code+Pro');
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+
+/* Omeka Admin Bar */
+#admin-bar {
+  position: relative;
+  z-index: 1001;
+}
+
+#root {
+  width: 100%;
+  height: 85vh;
+  position: relative;
+}
+
+.app-root-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.three-loader-dimmer {
+  background: rgba(0,0,0,1.0) !important;
+}
+
+.three-loader-dimmer h1 {
+  color: #fff;
+  font-family: 'Source Code Pro', monospace;
+}
+
+.three-view {
+  cursor: default;
+  flex: 1;
+  height: auto;
+  width: 100%;
+}
+
+.three-view.tools-active {
+  flex: 0.8;
+  transition: flex ease-in-out 0.5s;
+}
+
+.three-view canvas {
+  width: 100% !important;
+  height: 100% !important;
+  touch-action: none;
+}
+
+.three-progress-loader {
+  width: 50%;
+}
+
+.three-view-container {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  min-height: 0;
+  max-height: 100%;
+  background-color: #000;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+}
+
+.three-gui-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center
+}
+
+.three-controls-container {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  padding: 10px;
+  z-index: 1001;
+  flex-wrap: wrap;
+  background-color: #1b1b1b;
+}
+
+.three-controls-container .three-controls-button {
+  background-color: rgba(0,0,0,0.5) !important;
+  margin-top: 10px !important;
+}
+
+.three-controls-container .three-controls-button:hover {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.three-controls-container .three-controls-button.active {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+
+.three-controls-button i {
+
+}
+
+.three-controls-button.mobile i {
+  border-left: none;
+}
+
+.three-controls-button {
+  margin-right: 10px !important;
+  font-family: 'Source Code Pro', monospace !important;
+}
+
+.three-info-modal {
+  overflow-y: scroll;
+}
+
+.three-info-modal .content {
+  padding-top: 20px;
+}
+
+.three-info-grid {
+  position: relative;
+  width: 80%;
+  height: auto;
+  overflow-y: scroll;
+  margin: 0 auto !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+}
+
+.three-info-grid-row-odd {
+  border-bottom: 3px solid #333;
+  flex-wrap: nowrap !important;
+}
+
+.three-info-grid-row-even {
+  flex-wrap: nowrap !important;
+}
+
+.three-info-grid-val-text {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 20px;
+  color: #ccc;
+}
+
+.three-info-grid-row-odd h2 {
+  font-family: 'Source Code Pro', monospace;
+  color: #fff;
+}
+
+.info-grid-divider {
+  border-left: 2px solid #ccc;
+}
+
+.three-tool-menu-dropdown {
+  padding: 20px;
+}
+
+.three-tool-menu-dropdown.collapsed {
+  opacity: 0.0;
+  transition: opacity ease-in-out 0.5s;
+}
+
+.three-tool-menu-dropdown.expanded {
+  opacity: 1.0;
+  transition: opacity ease-in-out 0.5s;
+}
+
+.three-tool-menu {
+  position: relative;
+  color: #ccc !important;
+  background-color: #111 !important;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  max-height: 100vh;
+  flex: 0.2;
+  overflow-y: auto;
+}
+
+.three-tool-menu.collapsed {
+  flex: 0;
+  min-width: 0px;
+  transition: all ease-in-out 0.5s;
+}
+
+.three-tool-menu.expanded {
+  flex: 0.2;
+  min-width: 300px;
+  transition: all ease-in-out 0.5s;
+}
+
+.three-tool-menu-button {
+  margin: 20px !important;
+}
+
+.three-tool-menu-title {
+  padding-bottom: 5px;
+}
+
+.three-tool-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.three-tool-container .content {
+  width: 100%;
+}
+
+.three-measure-tool-container .three-controls-button {
+  position: absolute;
+}
+
+.three-tool-container .title  h3{
+  display: flex !important;
+  border-bottom: 2px solid #ccc;
+  padding-bottom: 5px;
+  flex-wrap: nowrap;
+  width: 100%;
+  color: #fff;
+  font-family: 'Source Code Pro', monospace;
+}
+
+.three-tool {
+  position: relative;
+  width: 100%;
+}
+
+.three-tool-component-container {
+  position: relative;
+  width: 100%;
+  height: auto;
+  background-color: rgba(0,0,0,0.7) !important;
+  border: 2px solid #ccc !important;
+  padding: 20px !important;
+  margin-top: 10px !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Source Code Pro', monospace;
+}
+
+.three-tool-component-label {
+  background: none !important;
+  color: #ccc !important;
+  border-right: 2px solid #ccc !important;
+  border-bottom: 2px solid #ccc !important;
+}
+
+.three-tool-component-container .input-range {
+  padding-top: 20px;
+}
+
+.three-color-picker-container {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.three-color-picker-container .three-controls-button {
+  margin: 5px;
+}
+
+.three-color-picker {
+  width: 90% !important;
+}
+
+.three-tool-component-container .input-range .input-range__track--active {
+  background: rgb(0, 180, 0) !important;
+}
+
+.three-tool-component-container .input-range__slider {
+  background: rgb(0, 180, 0) !important;
+  border: none !important;
+  touch-action: none !important;
+}
+
+.three-tool-toggle-container {
+  display: flex;
+  align-items: stretch;
+}
+
+.three-gui-group {
+  margin: 10px;
+  border: 2px solid #ccc;
+  padding: 20px;
+  border-radius: 5px;
+  font-family: 'Source Code Pro', monospace;
+}
+
+.three-gui-group-title {
+  border-bottom: 2px solid #ccc;
+  padding: 5px;
+  font-family: 'Source Code Pro', monospace;
+}
+
+.three-tool-toggle-container .ui.toggle.checkbox input:checked ~ label:before {
+  background-color: rgb(0, 180, 0) !important;
+}
+
+.three-tool-toggle label:before {
+  background-color: #ccc !important;
+}
+
+.three-toggle-status {
+  padding-left: 5px;
+}
+
+/*** Screenshots ***/
+
+.three-screenshot-button-container {
+  display: flex;
+  align-items: baseline;
+}
+
+.three-data-download-link .ui.basic.label {
+  display: flex;
+  background-color: rgba(0,0,0,0.5) !important;
+}
+
+.three-screenshot-button-container .three-controls-button {
+  flex: 1;
+}
+
+.three-data-download-link {
+  flex: 1;
+}
+
+.three-data-download-link .label {
+  background-color: none !important;
+  background: none !important;
+  color: #fff !important;
+}
+
+.three-data-download-link .label:hover {
+  color: #ccc !important;
+}
+
+.three-data-download-link.hide {
+  flex: 0;
+  max-width: 0px;
+  opacity: 0;
+  transition: all ease-in-out 1s;
+}
+
+.three-data-download-link.show {
+  flex: 1;
+  opacity: 1;
+  max-width: 500px;
+  margin-right: 10px;
+  transition: all ease-in-out 1s;
+}
+
+/*** MESH EXPORTER ***/
+.three-export-modal {
+  display: flex;
+  justify-content: center;
+}
+
+.three-export-modal-header {
+  font-family: 'Source Code Pro', monospace !important;
+  font-size: 25px !important;
+  border-bottom: 2px solid #fff !important;
+}
+
+.three-export-modal-content {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.three-export-format {
+  color: #fff;
+  font-family: 'Source Code Pro', monospace;
+  font-size: 20px;
+  display: flex;
+  justify-content: flex-end;
+  border-bottom: 2px solid #3b3b3b;
+  padding: 10px 0px 10px 0px;
+}
+
+.three-export-format-label {
+
+}
+
+.three-export-format i {
+  color: #fff !important;
+}
+
+.three-export-format > * {
+  margin-right: 10px;
+}
+
+.three-export-format-download {
+  padding-left: 5px;
+  cursor: pointer;
+}
+
+/*** MOBILE Styles ***/
+
+.three-touch-listener {
+  width: 100%;
+  height: auto;
+  align-self: center;
+  flex:1;
+}
+
+@media screen and (max-width: 520px) {
+
+  #root {
+    height: auto;
+  }
+
+  .three-gui-container {
+    justify-content: flex-start;
+  }
+
+  .three-view-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+    max-height: 100%;
+    background-color: #000;
+    overflow: hidden;
+    width: 100%;
+    height: auto;
+  }
+
+  .three-tool-menu.collapsed {
+    flex: 0;
+    max-height: 0px;
+    transition: all ease-in-out 0.5s;
+  }
+
+  .three-tool-menu.expanded {
+    flex: 0.2;
+    max-height: 300px;
+    transition: all ease-in-out 0.5s;
+  }
+
+
+
+}
