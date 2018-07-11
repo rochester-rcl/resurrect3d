@@ -23,9 +23,9 @@ import * as THREE from 'three';
 // API
 import endpoint from '../constants/api-endpoints';
 
-import ThreeViewerOmekaBackend from './backends/ThreeViewerOmekaBackend';
+import ThreeViewerNodeBackend from './backends/ThreeViewerNodeBackend';
 
-const omekaBackend = new ThreeViewerOmekaBackend(endpoint);
+const nodeBackend = new ThreeViewerNodeBackend(endpoint);
 
 function computeProgress(request: ProgressEvent): string {
   return parseFloat(request.loaded / 1000000).toFixed(2) + ' MB';
@@ -33,24 +33,10 @@ function computeProgress(request: ProgressEvent): string {
 
 function* getThreeAssetSaga(getThreeAssetAction: Object): Generator < any, any, any > {
   try {
-    let apiURL = getThreeAssetAction.url + omekaBackend.endpoint + '/' + getThreeAssetAction.id;
-    let asset = yield omekaBackend.getThreeAsset(apiURL, { method: 'GET', credentials: 'same-origin' });
-    let metadata = yield omekaBackend.getMetadata(asset.itemUrl);
-    // this is only Omeka related
-    if (metadata) {
-      let title = metadata.findIndex((element) => {
-        return element.label === 'Title';
-      });
-      if (title !== -1) {
-        let titleObj = {...metadata[title]};
-        metadata.splice(title, 1);
-        let link = { label: 'Title', value: <a className="info-value-link" target="_blank"
-          href={asset.itemShowUrl}>{titleObj.value}</a>};
-        metadata.unshift(link);
-      }
-    }
+    let apiURL = getThreeAssetAction.url + nodeBackend.endpoint + '/' + getThreeAssetAction.id;
+    let asset = yield nodeBackend.getThreeAsset(apiURL, { method: 'GET', credentials: 'same-origin' });
+    console.log(asset);
     yield put({ type: ActionConstants.THREE_ASSET_LOADED, threeAsset: asset });
-    yield put({type: ActionConstants.THREE_METADATA_LOADED, metadata: metadata});
   } catch (error) {
     console.log(error);
   }
@@ -123,7 +109,7 @@ export function* loadMeshSaga(loadMeshAction: Object): Generator < any, any, any
     let ext = loadMeshAction.url.split('.').pop();
     if (ext === 'gz' || ext === 'gzip') {
       yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Fetching" } });
-      let dataURL = yield ThreeViewerOmekaBackend.loadGZippedAsset(loadMeshAction.url);
+      let dataURL = yield ThreeViewerNodeBackend.loadGZippedAsset(loadMeshAction.url);
       yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Decompressing" } });
       url = dataURL;
     } else {

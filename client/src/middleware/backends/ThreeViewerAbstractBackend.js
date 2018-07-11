@@ -1,6 +1,6 @@
 import pako from 'pako';
 const GZIP_CHUNK_SIZE = 512 * 1024;
-export default class ThreeViewerBackendAbstract {
+export default class ThreeViewerAbstractBackend {
   /* So we need a few things here -
    * 1) a URL to a three.js formatted mesh
    * 2) a URL to an equirectangular image for the skybox
@@ -85,7 +85,7 @@ export default class ThreeViewerBackendAbstract {
             // should be Uint8Array
             let res = reader.result;
             let uint8 = new Uint8Array(res);
-            return ThreeViewerBackendAbstract.chunkGZippedArray(uint8, GZIP_CHUNK_SIZE)
+            return ThreeViewerAbstractBackend.chunkGZippedArray(uint8, GZIP_CHUNK_SIZE)
             .then((gunzipped) => {
               // or to blob should work. ^ this is the problem right now
               let dataURL = 'data:application/json,' + gunzipped;

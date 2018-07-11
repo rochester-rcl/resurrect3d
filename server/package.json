@@ -1,0 +1,19 @@
+{
+  "name": "REST-server",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "flow-bin": "^0.39.0"
+  },
+  "dependencies": {
+    "body-parser": "^1.15.1",
+    "cors": "^2.8.4",
+    "express": "^4.13.4",
+    "fsevents": "^1.2.4",
+    "mongoose": "^4.4.20"
+  },
+  "scripts": {
+    "server": "nodemon index.js",
+    "client": "nodemon start-client.js"
+  }
+}

@@ -1,5 +1,5 @@
 /* @flow */
 
-const endpoint: string = 'api/threejs_viewers';
+const endpoint: string = 'api/views';
 
 export default endpoint;
