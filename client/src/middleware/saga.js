@@ -24,8 +24,11 @@ import * as THREE from 'three';
 import endpoint from '../constants/api-endpoints';
 
 import ThreeViewerNodeBackend from './backends/ThreeViewerNodeBackend';
+import ThreeViewerAdminBackend from './backends/ThreeViewerAdminBackend';
 
-const nodeBackend = new ThreeViewerNodeBackend(endpoint);
+const nodeBackend = new ThreeViewerNodeBackend();
+
+const adminBackend = new ThreeViewerAdminBackend();
 
 function computeProgress(request: ProgressEvent): string {
   return parseFloat(request.loaded / 1000000).toFixed(2) + ' MB';
@@ -34,6 +37,7 @@ function computeProgress(request: ProgressEvent): string {
 function* getThreeAssetSaga(getThreeAssetAction: Object): Generator < any, any, any > {
   try {
     let apiURL = getThreeAssetAction.url + nodeBackend.endpoint + '/' + getThreeAssetAction.id;
+    console.log(apiURL);
     let asset = yield nodeBackend.getThreeAsset(apiURL, { method: 'GET', credentials: 'same-origin' });
     console.log(asset);
     yield put({ type: ActionConstants.THREE_ASSET_LOADED, threeAsset: asset });
@@ -147,9 +151,44 @@ export function* loadTextureSaga(loadTextureAction: Object): Generator < any, an
   } catch (error) {
     console.log(error);
   }
-
 }
 
+/***************** ADMIN ADDITIONS ********************************************/
+
+export function* addThreeViewSaga(addThreeViewAction: Object): Generator<any, any, any> {
+  try {
+    const result = yield adminBackend.addView(addThreeViewAction.viewData);
+  } catch(error) {
+    console.log(error);
+  }
+}
+
+export function* getThreeViewsSaga(getThreeViewsAction: Object): Generator<any, any, any> {
+  try {
+    const results = yield adminBackend.getViews();
+    console.log(results);
+    yield put({
+      type: ActionConstants.VIEWS_LOADED,
+      views: results,
+    });
+  } catch(error) {
+    console.log(error);
+  }
+}
+
+export function* getThreeViewSaga(getThreeViewAction: Object): Generator<any, any, any> {
+  try {
+    const result = yield adminBackend.getView(getThreeViewAction.id);
+    yield put({
+      type: ActionConstants.VIEW_LOADED,
+      view: result
+    });
+  } catch(error) {
+    console.log(error);
+  }
+}
+
+/*************************** Observers ****************************************/
 export function* watchForGetThreeAsset(): Generator < any, any, any > {
   yield takeEvery(ActionConstants.GET_THREE_ASSET, getThreeAssetSaga);
 }
@@ -162,10 +201,25 @@ export function* watchForLoadTexture(): Generator < any, any, any > {
   yield takeEvery(ActionConstants.LOAD_TEXTURE, loadTextureSaga);
 }
 
+export function* watchForAddThreeView(): Generator <any, any, any> {
+  yield takeEvery(ActionConstants.ADD_VIEW, addThreeViewSaga);
+}
+
+export function* watchForGetThreeViews(): Generator <any, any, any> {
+  yield takeEvery(ActionConstants.GET_VIEWS, getThreeViewsSaga);
+}
+
+export function* watchForGetThreeView(): Generator <any, any, any> {
+  yield takeEvery(ActionConstants.GET_VIEW, getThreeViewSaga);
+}
+
 export default function* rootSaga(): Generator < any, any, any > {
   yield [
     watchForGetThreeAsset(),
     watchForLoadMesh(),
     watchForLoadTexture(),
+    watchForAddThreeView(),
+    watchForGetThreeViews(),
+    watchForGetThreeView(),
   ];
 }

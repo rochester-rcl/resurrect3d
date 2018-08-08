@@ -9,9 +9,17 @@ import { BrowserRouter as Router, Route } from 'react-router';
 // Containers
 import App from '../containers/App';
 
+// Components
+import ViewForm from '../components/admin/ThreeViewForm';
+const blah = () => {
+  return <div>HI</div>;
+}
+
 const routes = () => {
-  return(<Router>
-    <Route path="/" component={App}/>
+  return(
+    <Router>
+      <Route path="/models" component={App}/>
+      <Route path="/admin" component={blah}/>
   </Router>)
 };
 

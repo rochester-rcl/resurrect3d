@@ -17,3 +17,15 @@ export const UPDATE_TEXTURE_LOAD_PROGRESS: string = 'UPDATE_TEXTURE_LOAD_PROGRES
 export const TEXTURE_LOAD_ERROR: string = 'TEXTURE_LOAD_ERROR';
 export const TEXTURE_LOADED: string = 'TEXTURE_LOADED';
 export const LOAD_TEXTURE: string = 'LOAD_TEXTURE';
+
+// Admin
+export const GET_VIEWS: string = 'GET_VIEWS';
+export const GET_VIEW: string = 'GET_VIEW';
+export const GET_THREEFILE: string = 'GET_THREEFILE';
+export const ADD_VIEW: string = 'ADD_VIEW';
+export const DELETE_VIEW: string = 'DELETE_VIEW';
+export const UPDATE_VIEW: string  = 'UPDATE_VIEW';
+
+export const VIEW_ADDED: string = 'VIEW_ADDED';
+export const VIEWS_LOADED: string = 'VIEWS_LOADED';
+export const VIEW_LOADED: string = 'VIEW_LOADED';

@@ -71,10 +71,10 @@ class ThreeContainer extends Component {
 
 function mapStateToProps(state: Object): Object {
   return {
-    mesh: state.mesh,
-    texture: state.texture,
-    metadata: state.metadata,
-    threeAsset: state.threeAsset,
+    mesh: state.ui.mesh,
+    texture: state.ui.texture,
+    metadata: state.ui.metadata,
+    threeAsset: state.ui.threeAsset,
   }
 
 }

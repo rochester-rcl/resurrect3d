@@ -7,10 +7,6 @@ export default class ThreeViewerAbstractBackend {
    * 3) some authentication in order to get 1 and 2
    */
 
-  constructor(endpoint: string) {
-    // The basename for the API we're going to be using
-    this.endpoint = endpoint;
-  }
   // Although right now authenticate is the same as postThreeAsset, it's likely the method that is going to be overwritten
   authenticate(url: string, body: Object, params, callback: (response: Object) => void): Promise {
     /* csrf token / cookie / set api key to browser storage etc

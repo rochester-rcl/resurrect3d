@@ -11,6 +11,10 @@ import { BrowserRouter as Router, Route } from 'react-router-dom';
 
 // App
 import App from './App';
+// TODO should be in containers
+import ViewForm from '../components/admin/ThreeViewForm';
+import ThreeViews from '../components/admin/ThreeViews';
+import ThreeViewDetails from '../components/admin/ThreeViewDetails';
 
 export default class Root extends Component {
   render() {
@@ -20,7 +24,12 @@ export default class Root extends Component {
     return(
       <Provider store={store}>
         <Router>
-          <Route path={path += ':id'} component={App} />
+          <div>
+            <Route path={path += 'models/:id'} component={App} />
+            <Route path={'/admin/add'} component={ViewForm} />
+            <Route path={'/admin/views'} component={ThreeViews} />
+            <Route path={'/admin/view/:id'} component={ThreeViewDetails} />
+          </div>
         </Router>
       </Provider>
     )

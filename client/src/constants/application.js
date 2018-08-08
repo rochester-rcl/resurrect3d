@@ -4,6 +4,11 @@ export const CM = 'CM';
 export const MM = 'MM';
 export const IN = 'IN';
 export const FT = 'FT';
+
+export const UNITS = [
+  MM, CM, IN, FT
+];
+
 export const DEFAULT_GRADIENT_COLORS = {
   inner: "rgb(105, 105, 105)",
   outer: "rgb(35, 35, 35)",

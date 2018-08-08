@@ -1,10 +1,16 @@
 /* @flow */
 
+// redux
+import { combineReducers } from 'redux';
+
 // Actions
 import * as ActionConstants from '../constants/actions';
 
 // Utils
 import { LinearGradientShader } from '../utils/image';
+
+// Reducers
+import ViewReducer from './ViewReducer';
 
 const defaultState = {
 
@@ -27,7 +33,7 @@ const defaultState = {
   }
 }
 
-export default function appReducer(state: Object = defaultState, action: Object): Object {
+function uiReducer(state: Object = defaultState, action: Object): Object {
 
   switch (action.type) {
 
@@ -83,3 +89,11 @@ export default function appReducer(state: Object = defaultState, action: Object)
   }
 
 }
+
+
+const appReducer = combineReducers({
+    views: ViewReducer,
+    ui: uiReducer,
+  });
+
+export default appReducer;
