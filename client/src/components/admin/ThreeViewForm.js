@@ -215,7 +215,7 @@ class Viewform extends Component {
                     <div className="ui blue ribbon label">
                       <label>Model Units: </label>
                     </div>
-                    <select name="modelUnits" onChange={this.onChange}>
+                    <select name="modelUnits" value={this.state.modelUnits} onChange={this.onChange}>
                       {UNITS.map((unit, index) =>
                         <option key={index} value={unit}>{unit}</option>
                       )}

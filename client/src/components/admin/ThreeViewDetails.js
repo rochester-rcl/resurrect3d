@@ -8,20 +8,18 @@ import { UNITS } from '../../constants/application';
 class ViewDetails extends Component{
 
   readyToLoad = false;
-
+  state = {
+    threeFile: '',
+    threeThumbnail: '',
+    skybox: '',
+    enableLight: false,
+    enableMaterials: false,
+    enableShaders: false,
+    enableMeasurement: false,
+    modelUnits: ''
+  }
   constructor(props){
     super(props);
-    this.state = {
-      threeFile: '',
-      threeThumbnail: '',
-      skybox: '',
-      enableLight: false,
-      enableMaterials: false,
-      enableShaders: false,
-      enableMeasurement: false,
-      modelUnits: ''
-    };
-
     this.onChange = this.onChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
     this.onDiscard = this.onDiscard.bind(this);
@@ -36,7 +34,10 @@ class ViewDetails extends Component{
   }
 
   componentDidUpdate(prevProps) {
-
+    console.log(this.props.view)
+    if (prevProps.view._id !== this.props.view._id) {
+      this.setState({...this.props.view});
+    }
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -51,11 +52,9 @@ class ViewDetails extends Component{
       this.setState({[e.target.name] : e.target.files[0]});
     }
     else if(e.target.name === 'threeThumbnail' ){
-      console.log(e.target.files[0]);
       this.setState({[e.target.name] : e.target.files[0]});
     }
     else if(e.target.name === 'skybox' ){
-      console.log(e.target.files[0]);
       this.setState({[e.target.name] : e.target.files[0]});
     }
     else{
@@ -73,7 +72,6 @@ class ViewDetails extends Component{
 
   onSubmit(e){
     e.preventDefault();
-
     if(this.state.enableLight==='false'){
       this.setState({[this.state.enableLight] : false});
     }else{
@@ -97,25 +95,16 @@ class ViewDetails extends Component{
     }else{
       this.setState({[this.state.enableMeasurement] : true});
     }
-
     const view = {
       _id: this.props.view._id,
-      threeFile: this.state.threeFile,
-      threeThumbnail: this.state.threeThumbnail,
-      skybox:{file: this.state.skybox},
-      enableLight: this.state.enableLight,
-      enableMaterials: this.state.enableMaterials,
-      enableShaders: this.state.enableShaders,
-      enableMeasurements: this.state.enableMeasurement,
-      modelUnits: this.state.modelUnits
+      ...this.state
     }
 
-    console.log({ ViewDetail : view });
+    console.log(view);
 
     const { history } = this.props;
 
     this.props.updateView(view);
-    history.push('/');
   }
 
   render() {
@@ -236,9 +225,9 @@ class ViewDetails extends Component{
                       <div className="ui blue ribbon label">
                         <label>modelUnits: </label>
                       </div>
-                      <select name="modelUnits" onChange={this.onChange}>
+                      <select name="modelUnits" value={this.props.view.modelUnits} onChange={this.onChange}>
                         {UNITS.map((unit, index) =>
-                          <option key={index} value={this.props.modelUnits} value={unit}>{unit}</option>
+                          <option key={index} value={unit}>{unit}</option>
                         )}
                       </select>
                     </div>

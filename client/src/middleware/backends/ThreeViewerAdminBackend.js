@@ -12,7 +12,7 @@ export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend 
     (this: any).getViews = this.getViews.bind(this);
     (this: any).getView = this.getView.bind(this);
     (this: any).getThreeFile = this.getThreeFile.bind(this);
-    // (this: any).updateView = this.updateView.bind(this);
+    (this: any).updateView = this.updateView.bind(this);
     (this: any).addView = this.addView.bind(this);
     (this: any).deleteView = this.deleteView.bind(this);
   }
@@ -26,21 +26,28 @@ export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend 
   }
 
   getThreeFile(id: number): Promise {
-    return this._post(FILE_ENDPOINT + 'id', {}).then((result) => result).catch((error) => console.log(error));
+    return this._get(FILE_ENDPOINT + id, {}).then((result) => result).catch((error) => console.log(error));
   }
 
-  // TODO add _puts or update to abstract class
-
   addView(viewData: Object): Promise {
-    const fd = new FormData();
-    for (let key in viewData) {
-      fd.append(key, viewData[key]);
-    }
+    const fd = ThreeViewerAdminBackend.objToFormData(viewData);
     return this._post(VIEWS_ENDPOINT, fd, {}).then((result) => result).catch((error) => console.log(error));
   }
 
-  deleteView(id: number): Promise {
-    return this._post(VIEWS_ENDPOINT + 'id', {}).then((result) => result).catch((error) => console.log(error));
+  updateView(viewData: Object): Promise {
+    // need to do this in 2 parts
+    /*if (viewData.threeFile.constructor === File) {
+      this.updateFile()
+    }*/
+    const body = ThreeViewerAdminBackend.serialize(viewData);
+    return this._put(VIEWS_ENDPOINT + viewData._id, body, {}).then((result) => result).catch((error) => console.log(error));
   }
 
+  deleteView(id: number): Promise {
+    return this._post(VIEWS_ENDPOINT + id, {}).then((result) => result).catch((error) => console.log(error));
+  }
+
+  updateFile(filename: string, fileData: File): Promise {
+    return this._put(FILE_ENDPOINT + filename, fileData, {}).then((result) => result).catch((error) => console.log(error));
+  }
 }

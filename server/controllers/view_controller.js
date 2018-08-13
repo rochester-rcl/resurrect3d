@@ -45,7 +45,6 @@ exports.addView = (req, res) => {
 
 
 exports.getView = (req, res) => {
-  console.log(req);
   View.findOne(
     {_id: req.params.id},
     (err, view) => {
@@ -58,8 +57,7 @@ exports.getView = (req, res) => {
 
 
 exports.updateView = (req, res) => {
-  console.log(req);
-  console.log(req.params.id);
+  console.log(req.body);
   View.findOneAndUpdate(
     {_id: req.params.id},
     req.body,

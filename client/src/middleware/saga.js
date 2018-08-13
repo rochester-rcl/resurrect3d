@@ -179,10 +179,20 @@ export function* getThreeViewsSaga(getThreeViewsAction: Object): Generator<any, 
 export function* getThreeViewSaga(getThreeViewAction: Object): Generator<any, any, any> {
   try {
     const result = yield adminBackend.getView(getThreeViewAction.id);
+    const fileInfo = yield adminBackend.getThreeFile(result.threeFile);
     yield put({
       type: ActionConstants.VIEW_LOADED,
       view: result
     });
+  } catch(error) {
+    console.log(error);
+  }
+}
+
+export function* updateThreeViewSaga(updateThreeViewAction: Object): Generator<any, any, any> {
+  try{
+    const result = yield adminBackend.updateView(updateThreeViewAction.viewData);
+    console.log(result);
   } catch(error) {
     console.log(error);
   }
@@ -213,6 +223,10 @@ export function* watchForGetThreeView(): Generator <any, any, any> {
   yield takeEvery(ActionConstants.GET_VIEW, getThreeViewSaga);
 }
 
+export function* watchForUpdateThreeView(): Generator <any, any, any> {
+  yield takeEvery(ActionConstants.UPDATE_VIEW, updateThreeViewSaga);
+}
+
 export default function* rootSaga(): Generator < any, any, any > {
   yield [
     watchForGetThreeAsset(),
@@ -221,5 +235,6 @@ export default function* rootSaga(): Generator < any, any, any > {
     watchForAddThreeView(),
     watchForGetThreeViews(),
     watchForGetThreeView(),
+    watchForUpdateThreeView(),
   ];
 }

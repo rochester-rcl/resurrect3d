@@ -1,4 +1,4 @@
-import pako from 'pako';
+import pako from "pako";
 const GZIP_CHUNK_SIZE = 512 * 1024;
 export default class ThreeViewerAbstractBackend {
   /* So we need a few things here -
@@ -8,37 +8,67 @@ export default class ThreeViewerAbstractBackend {
    */
 
   // Although right now authenticate is the same as postThreeAsset, it's likely the method that is going to be overwritten
-  authenticate(url: string, body: Object, params, callback: (response: Object) => void): Promise {
+  authenticate(
+    url: string,
+    body: Object,
+    params,
+    callback: (response: Object) => void
+  ): Promise {
     /* csrf token / cookie / set api key to browser storage etc
      * return true if authenticated, return false if not - should use a try catch
      */
-    return this._post(url, body, params).then((result) => callback(result));
+    return this._post(url, body, params).then(result => callback(result));
   }
 
-  _post(url: string, body: Object, params: Object): Promise {
+  _post(url: string, body: Object | FormData, params: Object): Promise {
     return new Promise((resolve, reject) => {
-      fetch(url, { ...{
-          method: 'POST',
+      fetch(url, {
+        ...{
+          method: "POST",
           body: body
         },
         ...params
-      }).then((response) => {
-        return response.json()
-        .then((json) =>
-          resolve(json)
-        );
-      }).catch((error) => reject(error));
+      })
+        .then(response => {
+          return response.json().then(json => resolve(json));
+        })
+        .catch(error => reject(error));
+    });
+  }
+
+  _put(url: string, body: Object, params: Object): Promise {
+    if (body.constructor === FormData) {
+      console.warn("Body content type must be application/json for put request! You passed FormData.")
+    }
+    return new Promise((resolve, reject) => {
+      fetch(url, {
+          ...{
+            method: "PUT",
+            body: body,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+          ...params
+        })
+        .then(response => {
+          return response.json().then(json => {
+            resolve(json);
+          });
+        })
+        .catch(error => reject(error));
     });
   }
 
   _get(url: string, params: Object): Promise {
     return new Promise((resolve, reject) => {
-      fetch(url, params).then((response) => {
-        return response.json()
-        .then((json) => {
-          resolve(json)
-        });
-      }).catch((error) => reject(error));
+      fetch(url, params)
+        .then(response => {
+          return response.json().then(json => {
+            resolve(json);
+          });
+        })
+        .catch(error => reject(error));
     });
   }
 
@@ -48,21 +78,25 @@ export default class ThreeViewerAbstractBackend {
 
   getThreeAsset(url: string, params: Object): Promise {
     // returns a url to the skybox image
-    return this._get(url, params).then((result) => result).catch((error) => console.log(error));
+    return this._get(url, params)
+      .then(result => result)
+      .catch(error => console.log(error));
   }
 
   postThreeAsset(url: string, body: Object, params: Object): Promise {
-    return this._post(url, body, params).then((result) => result).catch((error) => console.error(error));
+    return this._post(url, body, params)
+      .then(result => result)
+      .catch(error => console.error(error));
   }
 
   static chunkGZippedArray(gzip: string, chunkSize: Number): Promise {
     return new Promise((resolve, reject) => {
-      const inflator = new pako.Inflate({ to: 'string' });
+      const inflator = new pako.Inflate({ to: "string" });
       let done = false;
-      for (let i = 0; i < gzip.length; i+=chunkSize) {
+      for (let i = 0; i < gzip.length; i += chunkSize) {
         let end = i + chunkSize;
         if (end >= gzip.length) done = true;
-        inflator.push(gzip.slice(i, i+chunkSize), done);
+        inflator.push(gzip.slice(i, i + chunkSize), done);
       }
       if (inflator.err) {
         reject(inflator.msg);
@@ -74,23 +108,45 @@ export default class ThreeViewerAbstractBackend {
 
   static loadGZippedAsset(url: string): Promise {
     return new Promise((resolve, reject) => {
-      fetch(url).then((response) => {
-        return response.blob().then((blob) => {
-          let reader = new FileReader();
-          reader.onloadend = () => {
-            // should be Uint8Array
-            let res = reader.result;
-            let uint8 = new Uint8Array(res);
-            return ThreeViewerAbstractBackend.chunkGZippedArray(uint8, GZIP_CHUNK_SIZE)
-            .then((gunzipped) => {
-              // or to blob should work. ^ this is the problem right now
-              let dataURL = 'data:application/json,' + gunzipped;
-              resolve(dataURL);
-            });
-          }
-          reader.readAsArrayBuffer(blob);
+      fetch(url)
+        .then(response => {
+          return response.blob().then(blob => {
+            let reader = new FileReader();
+            reader.onloadend = () => {
+              // should be Uint8Array
+              let res = reader.result;
+              let uint8 = new Uint8Array(res);
+              return ThreeViewerAbstractBackend.chunkGZippedArray(
+                uint8,
+                GZIP_CHUNK_SIZE
+              ).then(gunzipped => {
+                // or to blob should work. ^ this is the problem right now
+                let dataURL = "data:application/json," + gunzipped;
+                resolve(dataURL);
+              });
+            };
+            reader.readAsArrayBuffer(blob);
+          });
+        })
+        .catch(error => {
+          reject(error);
         });
-      }).catch((error) => { reject(error); });
     });
   }
+
+  static serialize(obj: Object): string {
+    console.log(obj);
+    const serialized = JSON.stringify(obj);
+    console.log(serialized);
+    return serialized;
+  }
+
+  static objToFormData(obj: Object): FormData {
+    const fd = new FormData();
+    for (let key in obj) {
+      fd.append(key, obj[key]);
+    }
+    return fd;
+  }
+
 }
