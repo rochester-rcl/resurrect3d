@@ -35,16 +35,12 @@ export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend 
   }
 
   updateView(viewData: Object): Promise {
-    // need to do this in 2 parts
-    /*if (viewData.threeFile.constructor === File) {
-      this.updateFile()
-    }*/
-    const body = ThreeViewerAdminBackend.serialize(viewData);
+    const body = ThreeViewerAdminBackend.objToFormData(viewData);
     return this._put(VIEWS_ENDPOINT + viewData._id, body, {}).then((result) => result).catch((error) => console.log(error));
   }
 
   deleteView(id: number): Promise {
-    return this._post(VIEWS_ENDPOINT + id, {}).then((result) => result).catch((error) => console.log(error));
+    return this._delete(VIEWS_ENDPOINT + id, {}).then((result) => result).catch((error) => console.log(error));
   }
 
   updateFile(filename: string, fileData: File): Promise {

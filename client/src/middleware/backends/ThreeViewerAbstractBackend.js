@@ -37,17 +37,11 @@ export default class ThreeViewerAbstractBackend {
   }
 
   _put(url: string, body: Object, params: Object): Promise {
-    if (body.constructor === FormData) {
-      console.warn("Body content type must be application/json for put request! You passed FormData.")
-    }
     return new Promise((resolve, reject) => {
       fetch(url, {
           ...{
             method: "PUT",
             body: body,
-            headers: {
-              "Content-Type": "application/json",
-            },
           },
           ...params
         })
@@ -63,6 +57,23 @@ export default class ThreeViewerAbstractBackend {
   _get(url: string, params: Object): Promise {
     return new Promise((resolve, reject) => {
       fetch(url, params)
+        .then(response => {
+          return response.json().then(json => {
+            resolve(json);
+          });
+        })
+        .catch(error => reject(error));
+    });
+  }
+
+  _delete(url: string, params: Object): Promise {
+    return new Promise((resolve, reject) => {
+      fetch(url, {
+          ...{
+            method: "DELETE",
+          },
+          ...params
+        })
         .then(response => {
           return response.json().then(json => {
             resolve(json);
@@ -135,17 +146,23 @@ export default class ThreeViewerAbstractBackend {
   }
 
   static serialize(obj: Object): string {
-    console.log(obj);
     const serialized = JSON.stringify(obj);
-    console.log(serialized);
     return serialized;
   }
 
   static objToFormData(obj: Object): FormData {
     const fd = new FormData();
-    for (let key in obj) {
-      fd.append(key, obj[key]);
+    const formatFormData = (obj: Object, rootKey: undefined | string) => {
+      for (let key in obj) {
+        let newKey = (rootKey !== undefined) ? rootKey + '__' + key : key;
+        if (obj[key] !== null && obj[key].constructor === Object) {
+          formatFormData(obj[key], newKey);
+        } else {
+          fd.append(newKey, obj[key]);
+        }
+      }
     }
+    formatFormData(obj);
     return fd;
   }
 

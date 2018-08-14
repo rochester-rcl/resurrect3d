@@ -158,6 +158,7 @@ export function* loadTextureSaga(loadTextureAction: Object): Generator < any, an
 export function* addThreeViewSaga(addThreeViewAction: Object): Generator<any, any, any> {
   try {
     const result = yield adminBackend.addView(addThreeViewAction.viewData);
+    console.log(result);
   } catch(error) {
     console.log(error);
   }
@@ -179,7 +180,6 @@ export function* getThreeViewsSaga(getThreeViewsAction: Object): Generator<any, 
 export function* getThreeViewSaga(getThreeViewAction: Object): Generator<any, any, any> {
   try {
     const result = yield adminBackend.getView(getThreeViewAction.id);
-    const fileInfo = yield adminBackend.getThreeFile(result.threeFile);
     yield put({
       type: ActionConstants.VIEW_LOADED,
       view: result
@@ -190,8 +190,17 @@ export function* getThreeViewSaga(getThreeViewAction: Object): Generator<any, an
 }
 
 export function* updateThreeViewSaga(updateThreeViewAction: Object): Generator<any, any, any> {
-  try{
+  try {
+    console.log(updateThreeViewAction.viewData);
     const result = yield adminBackend.updateView(updateThreeViewAction.viewData);
+  } catch(error) {
+    console.log(error);
+  }
+}
+
+export function* deleteThreeViewSaga(deleteThreeViewAction: Object): Generator<any, any, any> {
+  try{
+    const result = yield adminBackend.deleteView(deleteThreeViewAction.id);
     console.log(result);
   } catch(error) {
     console.log(error);
@@ -227,6 +236,12 @@ export function* watchForUpdateThreeView(): Generator <any, any, any> {
   yield takeEvery(ActionConstants.UPDATE_VIEW, updateThreeViewSaga);
 }
 
+export function* watchForDeleteThreeView(): Generator <any, any, any> {
+  yield takeEvery(ActionConstants.DELETE_VIEW, deleteThreeViewSaga);
+}
+
+
+
 export default function* rootSaga(): Generator < any, any, any > {
   yield [
     watchForGetThreeAsset(),
@@ -236,5 +251,6 @@ export default function* rootSaga(): Generator < any, any, any > {
     watchForGetThreeViews(),
     watchForGetThreeView(),
     watchForUpdateThreeView(),
+    watchForDeleteThreeView(),
   ];
 }

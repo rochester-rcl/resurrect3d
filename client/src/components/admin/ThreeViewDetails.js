@@ -34,7 +34,6 @@ class ViewDetails extends Component{
   }
 
   componentDidUpdate(prevProps) {
-    console.log(this.props.view)
     if (prevProps.view._id !== this.props.view._id) {
       this.setState({...this.props.view});
     }
@@ -55,7 +54,7 @@ class ViewDetails extends Component{
       this.setState({[e.target.name] : e.target.files[0]});
     }
     else if(e.target.name === 'skybox' ){
-      this.setState({[e.target.name] : e.target.files[0]});
+      this.setState({[e.target.name] : { file: e.target.files[0] }});
     }
     else{
       this.setState({[e.target.name] : e.target.value});
@@ -223,9 +222,9 @@ class ViewDetails extends Component{
                   <div className="field">
                     <div className="ui raised segment">
                       <div className="ui blue ribbon label">
-                        <label>modelUnits: </label>
+                        <label>modelUnits: {this.props.view.modelUnits}</label>
                       </div>
-                      <select name="modelUnits" value={this.props.view.modelUnits} onChange={this.onChange}>
+                      <select name="modelUnits" onChange={this.onChange}>
                         {UNITS.map((unit, index) =>
                           <option key={index} value={unit}>{unit}</option>
                         )}

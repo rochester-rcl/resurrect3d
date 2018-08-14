@@ -11,6 +11,7 @@ const crypto = require('crypto');
 const app = express();
 
 const view = require('./models/view');
+const controller = require('./controllers/view_controller');
 const views = require('./routes/view_route');
 const dummyViewData = require('./dummyViewData');
 const serverConfig = require('./config');
@@ -20,13 +21,13 @@ const connPromise = mongoose.Promise = global.Promise;
 const conn = mongoose.connect(
   serverConfig.mongoURL,
   {useMongoClient: true},
-  (error) => {
-    if (error) {
+  (err) => {
+    if (err) {
       console.error('Please make sure Mongodb is installed and running!'); // eslint-disable-line no-console
-      throw error;
+      throw err;
     }
 
-    dummyViewData();
+    //dummyViewData();
   });
 
 // Create storage engine
@@ -35,7 +36,7 @@ const storage = new GridFsStorage({
   file: (req, file) => {
     //console.log("From storage: ",req);
     return new Promise((resolve, reject) => {
-      crypto.randomBytes(16, (err, buf) => {
+      crypto.randomBytes(8, (err, buf) => {
         if (err) {
           return reject(err);
         }
@@ -43,8 +44,7 @@ const storage = new GridFsStorage({
         //const filename = buf.toString('hex') + path.extname(file.originalname);
         const filename = buf.toString('hex') + file.originalname;
         const fileInfo = {
-          filename: filename,
-          bucketName: 'uploads'
+          filename: filename
         };
         resolve(fileInfo);
       });
@@ -80,6 +80,7 @@ app.use(bodyParser.json({ limit: '20mb' }));
 app.use(bodyParser.urlencoded({ limit: '20mb', extended: false }));
 
 views(app, upload, conn, Grid);
+controller.get(app, upload, conn, Grid);
 
 //Start Application
 app.listen(serverConfig.port, (error) => {
@@ -89,4 +90,4 @@ app.listen(serverConfig.port, (error) => {
 });
 
 
-module.exports = app, upload;
+module.exports = app;
