@@ -21,7 +21,7 @@ import * as ActionConstants from '../constants/actions';
 import * as THREE from 'three';
 
 // API
-import endpoint from '../constants/api-endpoints';
+import {} from '../constants/api-endpoints';
 
 import ThreeViewerNodeBackend from './backends/ThreeViewerNodeBackend';
 import ThreeViewerAdminBackend from './backends/ThreeViewerAdminBackend';
@@ -36,10 +36,10 @@ function computeProgress(request: ProgressEvent): string {
 
 function* getThreeAssetSaga(getThreeAssetAction: Object): Generator < any, any, any > {
   try {
-    let apiURL = getThreeAssetAction.url + nodeBackend.endpoint + '/' + getThreeAssetAction.id;
-    console.log(apiURL);
-    let asset = yield nodeBackend.getThreeAsset(apiURL, { method: 'GET', credentials: 'same-origin' });
-    console.log(asset);
+    const asset = yield nodeBackend.getThreeAsset(getThreeAssetAction.id);
+    const threeFile = yield nodeBackend.getThreeFile(asset.threeFile);
+    const ext = asset.threeFile.split('.').pop();
+    yield put({ type: ActionConstants.LOAD_MESH, url: threeFile, ext: ext });
     yield put({ type: ActionConstants.THREE_ASSET_LOADED, threeAsset: asset });
   } catch (error) {
     console.log(error);
@@ -106,11 +106,10 @@ function createLoadProgressChannel(loader: Object, loaderType: string, url): voi
 }
 
 export function* loadMeshSaga(loadMeshAction: Object): Generator < any, any, any > {
-
   // load the mesh
   try {
     let url;
-    let ext = loadMeshAction.url.split('.').pop();
+    let ext = loadMeshAction.ext;
     if (ext === 'gz' || ext === 'gzip') {
       yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Fetching" } });
       let dataURL = yield ThreeViewerNodeBackend.loadGZippedAsset(loadMeshAction.url);

@@ -492,12 +492,13 @@ export default class ThreeView extends Component {
       mesh: this.mesh,
     });
 
-    if (this.props.options.enableLights) {
+    if (this.props.options.enableLight) {
+      console.log('here');
       controls.addComponent('lighting', components.THREE_BUTTON, {
         ...buttonProps,
         content: "lighting: off",
         icon: 'lightbulb',
-        ref: (ref) => this.enableLightsButton = ref,
+        ref: (ref) => this.enableLightButton = ref,
         onClick: () => this.toggleDynamicLighting(),
       });
     }
@@ -1286,7 +1287,7 @@ export default class ThreeView extends Component {
       panelGroup.addGroup('measurement', measurementGroup);
     }
 
-    if (this.props.options.enableLights) {
+    if (this.props.options.enableLight) {
 
       let offsetMax = Number(this.environmentRadius.toFixed(2)) * 2;
       let step = Number((offsetMax / 100).toFixed(2));
@@ -1591,11 +1592,11 @@ export default class ThreeView extends Component {
       if (dynamicLighting) {
         this.pointLights.traverse((light) => light.intensity = 0.1);
         this.ambientLight.intensity = 0.8;
-        this.enableLightsButton.updateLabel("lighting: on");
+        this.enableLightButton.updateLabel("lighting: on");
       } else {
         this.pointLights.traverse((light) => light.intensity = 0.25);
         this.ambientLight.intensity = 1.0;
-        this.enableLightsButton.updateLabel("lighting: off");
+        this.enableLightButton.updateLabel("lighting: off");
       }
 
     });

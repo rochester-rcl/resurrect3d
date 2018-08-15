@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const View = mongoose.model('view');
+const utils = require('../utils');
 var app, upload, conn, Grid;
 var updateAll;
 let gfs;
@@ -110,7 +111,6 @@ exports.getView = (req, res) => {
 
 
 exports.updateView = (req, res) => {
-
   var threeFileBool, threeThumbnailBool, skyboxFileBool = false ;
 
   updateAll(req, res, (err) => {
@@ -120,17 +120,11 @@ exports.updateView = (req, res) => {
     }
 
     if(isEmpty(req.files)){
+      const parsed = utils.flat2nested(req.body);
       new Promise( (resolve, reject) => {
         const newView = new View({
           _id: req.params.id,
-          threeFile: req.body.threeFile,
-          threeThumbnail: req.body.threeThumbnail,
-          skybox: {file: req.body.skybox__file}, // nested objects represented by __ in form data TODO create backend parser or figure out how to do JSON + file data in request
-          enableLight: req.body.enableLight,
-          enableMaterials: req.body.enableMaterials,
-          enableShaders: req.body.enableShaders,
-          enableMeasurement: req.body.enableMeasurement,
-          modelUnits: req.body.modelUnits
+          ...parsed
         });
 
         resolve(newView);

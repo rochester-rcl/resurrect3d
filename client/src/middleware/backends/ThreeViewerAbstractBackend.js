@@ -66,6 +66,18 @@ export default class ThreeViewerAbstractBackend {
     });
   }
 
+  _getBinary(url: string, params: Object): Promise {
+    return new Promise((resolve, reject) => {
+      fetch(url, params)
+        .then(response => {
+          response.blob()
+          .then((blob) => URL.createObjectURL(blob))
+            .then((url) => resolve(url));
+        })
+        .catch(error => reject(error));
+    });
+  }
+
   _delete(url: string, params: Object): Promise {
     return new Promise((resolve, reject) => {
       fetch(url, {
