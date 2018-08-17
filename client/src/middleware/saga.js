@@ -157,7 +157,7 @@ export function* loadTextureSaga(loadTextureAction: Object): Generator < any, an
 export function* addThreeViewSaga(addThreeViewAction: Object): Generator<any, any, any> {
   try {
     const result = yield adminBackend.addView(addThreeViewAction.viewData);
-    console.log(result);
+    // TODO add this to "views"
   } catch(error) {
     console.log(error);
   }
@@ -166,7 +166,6 @@ export function* addThreeViewSaga(addThreeViewAction: Object): Generator<any, an
 export function* getThreeViewsSaga(getThreeViewsAction: Object): Generator<any, any, any> {
   try {
     const results = yield adminBackend.getViews();
-    console.log(results);
     yield put({
       type: ActionConstants.VIEWS_LOADED,
       views: results,

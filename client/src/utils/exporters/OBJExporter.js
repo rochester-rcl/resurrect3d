@@ -1,6 +1,18 @@
 /**
  * @author mrdoob / http://mrdoob.com/
  */
+
+// utils
+import { mapMaterials, exportMap } from "../mesh";
+
+// constants
+import {
+  MAP_TYPES,
+  OBJ_EXT,
+  MTL_EXT,
+  ZIP_EXT
+} from "../../constants/application";
+
 const mtlTemplate = [
   ["#",
   "# Wavefront material file",
@@ -13,17 +25,6 @@ const mtlTemplate = [
   "illum 2",
   "Ns 0.000000\n"].join("\n"),
 ];
-
-// utils
-import { mapMaterials, exportMap } from "../mesh";
-
-// constants
-import {
-  MAP_TYPES,
-  OBJ_EXT,
-  MTL_EXT,
-  ZIP_EXT
-} from "../../constants/application";
 
 export default function loadOBJExporter(threeInstance: Object): typeof Promise {
   return new Promise((resolve, reject) => {

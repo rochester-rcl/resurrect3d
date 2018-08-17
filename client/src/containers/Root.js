@@ -24,7 +24,7 @@ export default class Root extends Component {
     return(
       <Provider store={store}>
         <Router>
-          <div>
+          <div className="three-router">
             <Route path={path += 'models/:id'} component={App} />
             <Route path={'/admin/add'} component={ViewForm} />
             <Route path={'/admin/views'} component={ThreeViews} />

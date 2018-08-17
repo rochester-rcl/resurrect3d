@@ -54,7 +54,7 @@ const storage = new GridFsStorage({
 
 const upload = multer({
   storage: storage,
-  limits: {fileSize: 1024 * 1024 * 100}, //100mbs,
+  limits: {fileSize: 1024 * 1024 * 200}, //200mbs,
   fileFilter: (req, file, cb) => {
     checkFileType(file, cb);
   }

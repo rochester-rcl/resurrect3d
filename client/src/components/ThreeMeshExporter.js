@@ -17,9 +17,6 @@ import {
 // Components
 import ThreeButton from "./ThreeButton";
 
-// short uuid
-const short = require("short-uuid");
-
 // exporters
 import loadExporters from "../utils/exporters";
 
@@ -34,6 +31,9 @@ import JSZip from "jszip";
 
 // constants
 import { OBJ_EXT, STL_EXT, ZIP_EXT } from "../constants/application";
+
+// short uuid
+const short = require("short-uuid");
 
 export default class ThreeMeshExporter extends Component {
   FORMATS: Object = {

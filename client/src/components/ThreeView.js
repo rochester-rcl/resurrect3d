@@ -4,7 +4,7 @@
 import React, { Component } from 'react';
 
 // THREEJS
-import * as THREE from 'three';
+import * as _THREE from 'three';
 
 // Semantic UI
 import LoaderModal from './LoaderModal';
@@ -19,9 +19,6 @@ import ThreeTouchControls from './ThreeTouchControls';
 
 // postprocessing
 import loadPostProcessor from '../utils/postprocessing';
-
-// exporters
-import loadExporters from '../utils/exporters';
 
 // Utils
 import { panLeft, panUp, rotateLeft, rotateUp } from '../utils/camera';
@@ -49,6 +46,9 @@ import ThreeButton from './ThreeButton';
 import ThreeTools from './ThreeTools';
 import ThreeScreenshot from './ThreeScreenshot';
 import ThreeMeshExporter from './ThreeMeshExporter';
+
+// Because of all of the THREE examples' global namespace pollution
+const THREE = _THREE;
 
 export default class ThreeView extends Component {
 
@@ -278,6 +278,7 @@ export default class ThreeView extends Component {
     (this: any).handlePinch = this.handlePinch.bind(this);
     (this: any).handleTouch = this.handleTouch.bind(this);
     (this: any).handleTouchMove = this.handleTouchMove.bind(this);
+
   }
 
   /** COMPONENT LIFECYCYLE
@@ -380,7 +381,7 @@ export default class ThreeView extends Component {
     this.threeContainer = this.refs.threeView;
 
     // init camera
-    this.camera = new THREE.PerspectiveCamera(50, this.width / this.height); // use defaults for fov and near and far frustum;
+    this.camera = new THREE.PerspectiveCamera(50, this.width / this.height, 0.001); // use defaults for fov and near and far frustum;
 
     // Scenes
     this.scene = new THREE.Scene();
@@ -705,6 +706,7 @@ export default class ThreeView extends Component {
             if (child.material) {
               if (child.material instanceof Array) {
                 child.material.forEach((material) => {
+                  material.map.anisotropy = this.webGLRenderer.getMaxAnisotropy();
                   setMicrosurface(material);
                   if (this.props.renderDoubleSided) {
                     material.side = THREE.DoubleSide;
@@ -714,6 +716,7 @@ export default class ThreeView extends Component {
                 setMicrosurface(child.material);
                 child.castShadow = true;
                 child.receiveShadow = true;
+                child.material.map.anisotropy = this.webGLRenderer.getMaxAnisotropy();
                 if (this.props.renderDoubleSided) {
                   child.material.side = THREE.DoubleSide;
                 }
@@ -730,6 +733,7 @@ export default class ThreeView extends Component {
           material.forEach((currentMaterial) => {
             if (this.props.renderDoubleSided) {
               currentMaterial.side = THREE.DoubleSide;
+              currentMaterial.map.anisotropy = this.webGLRenderer.getMaxAnisotropy();
               setMicrosurface(currentMaterial);
             }
           });

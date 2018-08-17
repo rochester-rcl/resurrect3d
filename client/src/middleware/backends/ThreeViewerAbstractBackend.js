@@ -1,4 +1,7 @@
 import pako from "pako";
+// workers
+import InflateWorker from '../../utils/workers/inflate.worker';
+
 const GZIP_CHUNK_SIZE = 512 * 1024;
 export default class ThreeViewerAbstractBackend {
   /* So we need a few things here -
@@ -134,6 +137,8 @@ export default class ThreeViewerAbstractBackend {
       fetch(url)
         .then(response => {
           return response.blob().then(blob => {
+            const inflateWorker = new InflateWorker();
+            inflateWorker.postMessage(blob);
             let reader = new FileReader();
             reader.onloadend = () => {
               // should be Uint8Array

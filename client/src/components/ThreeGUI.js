@@ -6,9 +6,9 @@ import { Accordion, Button, Icon } from 'semantic-ui-react';
 // lodash
 import lodash from 'lodash';
 
-const e = React.createElement;
-
 import { GROUP, COMPONENT } from '../constants/application';
+
+const e = React.createElement;
 
 export default class ThreeGUI {
   components: Object;
