@@ -74,3 +74,10 @@ export const OBJ_EXT = '.obj';
 export const STL_EXT = '.stl';
 export const MTL_EXT = '.mtl';
 export const ZIP_EXT = '.zip';
+
+// Cache
+export const THREE_MODEL_CACHE_GET = 0;
+export const THREE_MODEL_CACHE_SAVE = 1;
+export const THREE_MODEL_CACHE_DB = "ThreeModelCache";
+export const THREE_MODEL_CACHE_INDEX = "ThreeModelCacheIndex";
+export const THREE_MODEL_CACHE_INDEX_ITEMS = ["id"];

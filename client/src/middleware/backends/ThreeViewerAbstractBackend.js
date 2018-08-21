@@ -1,6 +1,9 @@
 import pako from "pako";
 // workers
 import InflateWorker from '../../utils/workers/inflate.worker';
+import ModelCacheWorker from '../../utils/workers/modelcache.worker';
+// constants
+import { THREE_MODEL_CACHE_GET, THREE_MODEL_CACHE_SAVE } from '../../constants/application';
 
 const GZIP_CHUNK_SIZE = 512 * 1024;
 export default class ThreeViewerAbstractBackend {
@@ -115,50 +118,50 @@ export default class ThreeViewerAbstractBackend {
       .catch(error => console.error(error));
   }
 
-  static chunkGZippedArray(gzip: string, chunkSize: Number): Promise {
+  static loadGZippedAsset(id: string, url: string): Promise {
     return new Promise((resolve, reject) => {
-      const inflator = new pako.Inflate({ to: "string" });
-      let done = false;
-      for (let i = 0; i < gzip.length; i += chunkSize) {
-        let end = i + chunkSize;
-        if (end >= gzip.length) done = true;
-        inflator.push(gzip.slice(i, i + chunkSize), done);
-      }
-      if (inflator.err) {
-        reject(inflator.msg);
-      } else {
-        resolve(inflator.result);
-      }
+      ThreeViewerAbstractBackend._checkCache(id).then((res) => {
+        if (res !== false) {
+          console.log(res);
+          console.warn('Retrieving raw model data from cache');
+          resolve(ThreeViewerAbstractBackend._gunzipAsset(res.data.model.raw));
+        } else {
+          console.warn('Retrieving raw model data from server');
+          resolve(ThreeViewerAbstractBackend._fetchGZippedAsset(id, url));
+        }
+      });
     });
   }
 
-  static loadGZippedAsset(url: string): Promise {
+  static _fetchGZippedAsset(id: string, url: string): Promise {
     return new Promise((resolve, reject) => {
       fetch(url)
         .then(response => {
           return response.blob().then(blob => {
-            const inflateWorker = new InflateWorker();
-            inflateWorker.postMessage(blob);
-            let reader = new FileReader();
+            const reader = new FileReader();
             reader.onloadend = () => {
               // should be Uint8Array
-              let res = reader.result;
-              let uint8 = new Uint8Array(res);
-              return ThreeViewerAbstractBackend.chunkGZippedArray(
-                uint8,
-                GZIP_CHUNK_SIZE
-              ).then(gunzipped => {
-                // or to blob should work. ^ this is the problem right now
-                let dataURL = "data:application/json," + gunzipped;
-                resolve(dataURL);
-              });
+              const res = reader.result;
+              // save raw data to cache
+              ThreeViewerAbstractBackend._saveToCache(id, res).then((res) => 
+                ThreeViewerAbstractBackend._gunzipAsset(res.model.raw).then((dataURL) => resolve(dataURL)).catch((error) => reject(error))
+              ).catch((error) => reject(error));
             };
             reader.readAsArrayBuffer(blob);
           });
         })
-        .catch(error => {
-          reject(error);
-        });
+        .catch(error => reject(error));
+    });
+  }
+
+  static _gunzipAsset(buf: ArrayBuffer): Promise {
+    return new Promise((resolve, reject) => {
+      const inflateWorker = new InflateWorker();
+      inflateWorker.postMessage(buf, [buf]);
+      inflateWorker.onmessage = (event: Event) => {
+        const { data } = event;
+        resolve(data);
+      }
     });
   }
 
@@ -181,6 +184,31 @@ export default class ThreeViewerAbstractBackend {
     }
     formatFormData(obj);
     return fd;
+  }
+
+  static _checkCache(id: string): Promise {
+    return new Promise((resolve, reject) => {
+      const cacheWorker = new ModelCacheWorker();
+      cacheWorker.postMessage({ modelData: { id: id}, mode: THREE_MODEL_CACHE_GET });
+      cacheWorker.onmessage = (event: Event) => {
+        const { data } = event;
+        if (data.status === false || data.status === true && data.data === null) resolve(false);
+        resolve(data);
+      }
+    });
+  }
+
+  static _saveToCache(id: string, buf: ArrayBuffer): Promise {
+    return new Promise((resolve, reject) => {
+      const cacheWorker = new ModelCacheWorker();
+      const data = { modelData: { id: id, raw: buf }, mode: THREE_MODEL_CACHE_SAVE };
+      cacheWorker.postMessage(data);
+      cacheWorker.onmessage = (event: Event) => {
+        const { data } = event;
+        if (data.status === false || data.status === true && data.data === null) resolve(false);
+        resolve(data);
+      }
+    });
   }
 
 }

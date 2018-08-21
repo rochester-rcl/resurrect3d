@@ -2,7 +2,7 @@
 
 export default class IndexedCache {
   _connectionOpened: bool = false;
-  _indexedDB: IDBFactory  = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
+  _indexedDB: IDBFactory = indexedDB
   _db: IDBOpenDBRequest | null;
   _idbStore: IDBObjectStore;
   index: Object;
@@ -68,9 +68,9 @@ export default class IndexedCache {
 
   add(val: Object | string | number): Promise<Object> {
     return new Promise((resolve, reject) => {
-      let transaction = this._idbStore.transaction(this.storeKey, "readwrite");
-      let store = transaction.objectStore(this.storeKey);
-      let res = store.put(val);
+      const transaction = this._idbStore.transaction(this.storeKey, "readwrite");
+      const store = transaction.objectStore(this.storeKey);
+      const res = store.put(val);
       res.onsuccess = () => resolve({ data: val, success: true });
       res.onerror = (error) => reject({ data: null, success: false, error: error});
     });
@@ -78,9 +78,9 @@ export default class IndexedCache {
 
   remove(key: string): Promise<Object> {
     return new Promise((resolve, reject) => {
-      let transaction = this._idbStore.transaction(this.storeKey, "readwrite");
-      let store = transaction.objectStore(this.storeKey);
-      let res = store.delete(key);
+      const transaction = this._idbStore.transaction(this.storeKey, "readwrite");
+      const store = transaction.objectStore(this.storeKey);
+      const res = store.delete(key);
       res.onsuccess = () => resolve({ data: null, success: true });
       res.onerror = (error) => reject({ data: null, success: false, error: error});
     });

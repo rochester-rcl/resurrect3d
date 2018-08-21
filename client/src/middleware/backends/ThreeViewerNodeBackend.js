@@ -38,6 +38,9 @@ export default class ThreeViewerNodeBackend extends ThreeViewerAbstractBackend {
         if (_asset[key] !== null && _asset[key].constructor === Object) {
           formatted[key] = format(_asset[key]);
         } else {
+          if (_asset[key] === "null") {
+            _asset[key] = null;
+          }
           formatted[key] = _asset[key];
         }
       }

@@ -39,7 +39,7 @@ function* getThreeAssetSaga(getThreeAssetAction: Object): Generator < any, any, 
     const asset = yield nodeBackend.getThreeAsset(getThreeAssetAction.id);
     const threeFile = yield nodeBackend.getThreeFile(asset.threeFile);
     const ext = asset.threeFile.split('.').pop();
-    yield put({ type: ActionConstants.LOAD_MESH, url: threeFile, ext: ext });
+    yield put({ type: ActionConstants.LOAD_MESH, url: threeFile, ext: ext, id: asset._id });
     yield put({ type: ActionConstants.THREE_ASSET_LOADED, threeAsset: asset });
   } catch (error) {
     console.log(error);
@@ -106,18 +106,18 @@ function createLoadProgressChannel(loader: Object, loaderType: string, url): voi
 }
 
 export function* loadMeshSaga(loadMeshAction: Object): Generator < any, any, any > {
-  // load the mesh
   try {
     let url;
     let ext = loadMeshAction.ext;
     if (ext === 'gz' || ext === 'gzip') {
       yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Fetching" } });
-      let dataURL = yield ThreeViewerNodeBackend.loadGZippedAsset(loadMeshAction.url);
-      yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Decompressing" } });
+      const dataURL = yield ThreeViewerNodeBackend.loadGZippedAsset(loadMeshAction.id, loadMeshAction.url);
+      yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Loading Scene" } });
       url = dataURL;
     } else {
       url = loadMeshAction.url;
     }
+    // This is the last UI bottleneck - should probably do this part in a worker
     const meshLoader = new THREE.ObjectLoader();
     const meshLoaderChannel = yield call(createLoadProgressChannel, meshLoader, 'mesh', url);
     while (true) {
@@ -130,7 +130,6 @@ export function* loadMeshSaga(loadMeshAction: Object): Generator < any, any, any
   } catch (error) {
     console.log(error);
   }
-
 }
 
 export function* loadTextureSaga(loadTextureAction: Object): Generator < any, any, any > {

@@ -18,19 +18,9 @@ const inflate = (gzip: Uint8Array, chunkSize: number ): string => {
 }
 
 self.onmessage = (event: Event) => {
-    console.log(event);
-    /*const reader = new FileReader();
-    reader.onloadend = () => {
-      // should be Uint8Array
-      const res = reader.result;
-      const uint8 = new Uint8Array(res);
-      return inflate(
-        uint8,
-        GZIP_CHUNK_SIZE
-      ).then(gunzipped => {
-        const dataURL = "data:application/json," + gunzipped;
-        resolve(dataURL);
-      });
-    };
-    reader.readAsArrayBuffer(blob);*/
+  const { data } = event;
+  const uint8 = new Uint8Array(data);
+  const gunzipped = inflate(uint8, GZIP_CHUNK_SIZE);
+  const dataURL = "data:application/json," + gunzipped;
+  postMessage(dataURL);
 }

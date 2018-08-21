@@ -1,6 +1,6 @@
 /* @flow */
 
-//TODO change this to a class that allows you to register controls, same with tools 
+//TODO change this to a class that allows you to register controls, same with tools
 
 // React
 import React from 'react';
@@ -42,14 +42,14 @@ const ThreeControls = (props: Object) => {
         labelPosition='right'
         color="grey"
       />
-      <Button
+      {/*}<Button
         className="three-controls-button"
         content="info"
         icon="info"
         onClick={() => { handleToggleInfo() }}
         labelPosition='right'
         color="grey"
-      />
+      />*/}
       <Button
         color="grey"
         labelPosition="right"

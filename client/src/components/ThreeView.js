@@ -47,7 +47,7 @@ import ThreeTools from './ThreeTools';
 import ThreeScreenshot from './ThreeScreenshot';
 import ThreeMeshExporter from './ThreeMeshExporter';
 
-// Because of all of the THREE examples' global namespace pollution
+// Because of all of the THREE examples' global namespace pollu
 const THREE = _THREE;
 
 export default class ThreeView extends Component {
@@ -381,7 +381,7 @@ export default class ThreeView extends Component {
     this.threeContainer = this.refs.threeView;
 
     // init camera
-    this.camera = new THREE.PerspectiveCamera(50, this.width / this.height, 0.001); // use defaults for fov and near and far frustum;
+    this.camera = new THREE.PerspectiveCamera(50, this.width / this.height); // use defaults for fov and near and far frustum;
 
     // Scenes
     this.scene = new THREE.Scene();
