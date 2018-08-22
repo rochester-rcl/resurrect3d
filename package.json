@@ -20,5 +20,7 @@
   },
   "homepage": "https://github.com/rochester-rcl/rcl-react-three#readme",
   "devDependencies": {},
-  "dependencies": {}
+  "dependencies": {
+    "jsdom": "^12.0.0"
+  }
 }

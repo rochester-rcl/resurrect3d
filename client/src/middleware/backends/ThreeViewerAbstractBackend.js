@@ -118,22 +118,7 @@ export default class ThreeViewerAbstractBackend {
       .catch(error => console.error(error));
   }
 
-  static loadGZippedAsset(id: string, url: string): Promise {
-    return new Promise((resolve, reject) => {
-      ThreeViewerAbstractBackend._checkCache(id).then((res) => {
-        if (res !== false) {
-          console.log(res);
-          console.warn('Retrieving raw model data from cache');
-          resolve(ThreeViewerAbstractBackend._gunzipAsset(res.data.model.raw));
-        } else {
-          console.warn('Retrieving raw model data from server');
-          resolve(ThreeViewerAbstractBackend._fetchGZippedAsset(id, url));
-        }
-      });
-    });
-  }
-
-  static _fetchGZippedAsset(id: string, url: string): Promise {
+  static fetchGZippedAsset(id: string, url: string): Promise {
     return new Promise((resolve, reject) => {
       fetch(url)
         .then(response => {
@@ -143,8 +128,8 @@ export default class ThreeViewerAbstractBackend {
               // should be Uint8Array
               const res = reader.result;
               // save raw data to cache
-              ThreeViewerAbstractBackend._saveToCache(id, res).then((res) => 
-                ThreeViewerAbstractBackend._gunzipAsset(res.model.raw).then((dataURL) => resolve(dataURL)).catch((error) => reject(error))
+              ThreeViewerAbstractBackend.saveToCache(id, res).then((res) =>
+                ThreeViewerAbstractBackend.gunzipAsset(res.model.raw).then((dataURL) => resolve(dataURL)).catch((error) => reject(error))
               ).catch((error) => reject(error));
             };
             reader.readAsArrayBuffer(blob);
@@ -154,7 +139,7 @@ export default class ThreeViewerAbstractBackend {
     });
   }
 
-  static _gunzipAsset(buf: ArrayBuffer): Promise {
+  static gunzipAsset(buf: ArrayBuffer): Promise {
     return new Promise((resolve, reject) => {
       const inflateWorker = new InflateWorker();
       inflateWorker.postMessage(buf, [buf]);
@@ -186,7 +171,7 @@ export default class ThreeViewerAbstractBackend {
     return fd;
   }
 
-  static _checkCache(id: string): Promise {
+  static checkCache(id: string): Promise {
     return new Promise((resolve, reject) => {
       const cacheWorker = new ModelCacheWorker();
       cacheWorker.postMessage({ modelData: { id: id}, mode: THREE_MODEL_CACHE_GET });
@@ -198,7 +183,7 @@ export default class ThreeViewerAbstractBackend {
     });
   }
 
-  static _saveToCache(id: string, buf: ArrayBuffer): Promise {
+  static saveToCache(id: string, buf: ArrayBuffer): Promise {
     return new Promise((resolve, reject) => {
       const cacheWorker = new ModelCacheWorker();
       const data = { modelData: { id: id, raw: buf }, mode: THREE_MODEL_CACHE_SAVE };

@@ -26,11 +26,14 @@ import {} from '../constants/api-endpoints';
 import ThreeViewerNodeBackend from './backends/ThreeViewerNodeBackend';
 import ThreeViewerAdminBackend from './backends/ThreeViewerAdminBackend';
 
+// workers
+import ModelLoaderWorker from '../utils/workers/ModelLoaderWorker/modelloader.worker';
+
 const nodeBackend = new ThreeViewerNodeBackend();
 
 const adminBackend = new ThreeViewerAdminBackend();
 
-function computeProgress(request: ProgressEvent): string {
+const computeProgress = (request: ProgressEvent): string => {
   return parseFloat(request.loaded / 1000000).toFixed(2) + ' MB';
 }
 
@@ -105,28 +108,23 @@ function createLoadProgressChannel(loader: Object, loaderType: string, url): voi
 
 }
 
-export function* loadMeshSaga(loadMeshAction: Object): Generator < any, any, any > {
+// In this version EVERYTHING NEEDS TO BE GZIPPED
+export function* loadMeshSaga(loadMeshAction: Object): Generator <any, any, any> {
   try {
-    let url;
-    let ext = loadMeshAction.ext;
-    if (ext === 'gz' || ext === 'gzip') {
-      yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Fetching" } });
-      const dataURL = yield ThreeViewerNodeBackend.loadGZippedAsset(loadMeshAction.id, loadMeshAction.url);
-      yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Loading Scene" } });
-      url = dataURL;
+    const { url, id } = loadMeshAction;
+    let JSONMesh;
+    const result = yield ThreeViewerNodeBackend.checkCache(loadMeshAction.id);
+    if (result) {
+      yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Loading Mesh From Cache" }});
+       JSONMesh = yield ThreeViewerNodeBackend.gunzipAsset(result.data.model.raw)
     } else {
-      url = loadMeshAction.url;
+      yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Fetching Mesh From Server" }});
+      JSONMesh = yield ThreeViewerNodeBackend.fetchGZippedAsset(id, url);
     }
-    // This is the last UI bottleneck - should probably do this part in a worker
-    const meshLoader = new THREE.ObjectLoader();
-    const meshLoaderChannel = yield call(createLoadProgressChannel, meshLoader, 'mesh', url);
-    while (true) {
-      const payload = yield take(meshLoaderChannel);
-      yield put({
-        type: getActionType(payload),
-        payload
-      });
-    }
+    yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Loading Scene" } });
+    const loader = new THREE.ObjectLoader();
+    const object3D = loader.parse(JSONMesh);
+    yield put({ type: ActionConstants.MESH_LOADED, payload: { val: object3D }});
   } catch (error) {
     console.log(error);
   }

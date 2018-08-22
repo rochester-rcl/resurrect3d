@@ -38,7 +38,6 @@ function uiReducer(state: Object = defaultState, action: Object): Object {
   switch (action.type) {
 
     case ActionConstants.MESH_LOADED:
-
       return {
         ...state,
         mesh: {

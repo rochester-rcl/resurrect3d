@@ -1,5 +1,7 @@
 /* @flow */
 import pako from "pako";
+import * as THREE from 'three';
+
 const GZIP_CHUNK_SIZE = 512 * 1024;
 
 const inflate = (gzip: Uint8Array, chunkSize: number ): string => {
@@ -16,11 +18,12 @@ const inflate = (gzip: Uint8Array, chunkSize: number ): string => {
     return inflator.result;
   }
 }
+/* For now this handles geometries only as textures need to be done on the main thread for DOM access
+  Geometries take the longest anyways */
 
 self.onmessage = (event: Event) => {
   const { data } = event;
   const uint8 = new Uint8Array(data);
   const gunzipped = inflate(uint8, GZIP_CHUNK_SIZE);
-  const dataURL = "data:application/json," + gunzipped;
-  postMessage(dataURL);
+  postMessage(JSON.parse(gunzipped));
 }

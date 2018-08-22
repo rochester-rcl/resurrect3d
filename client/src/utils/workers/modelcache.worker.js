@@ -26,7 +26,6 @@ self.getOrCreate = (modelData: Object): Promise => {
     self.get(modelData.id).then((result) => {
       if (result.status === true) {
         if (result.data !== null) {
-          console.log("Model data already saved to cache, retrieved.");
           resolve(result.data);
         } else {
           const { id, raw } = modelData;

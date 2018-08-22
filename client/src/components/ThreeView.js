@@ -1,5 +1,5 @@
 /* @flow */
-
+// TODO Why is loadText not showing? And why is there a huge bottleneck at loadPostProcessor ?????????
 // React
 import React, { Component } from 'react';
 
@@ -321,7 +321,6 @@ export default class ThreeView extends Component {
 
     const { loadProgress, loadText, showInfo, dynamicLighting, detailMode, toolsActive } = this.state;
     const { info } = this.props;
-
     let threeViewClassName = 'three-view ';
     threeViewClassName += toolsActive ? 'tools-active' : 'tools-inactive';
     return(
@@ -494,7 +493,6 @@ export default class ThreeView extends Component {
     });
 
     if (this.props.options.enableLight) {
-      console.log('here');
       controls.addComponent('lighting', components.THREE_BUTTON, {
         ...buttonProps,
         content: "lighting: off",
@@ -859,7 +857,6 @@ export default class ThreeView extends Component {
   }
 
   initPostprocessing(): void {
-
     let rtParams = {
       minFilter: THREE.LinearFilter,
       magFilter: THREE.LinearFilter,
