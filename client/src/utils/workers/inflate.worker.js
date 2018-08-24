@@ -1,6 +1,7 @@
 /* @flow */
 import pako from "pako";
 import * as THREE from 'three';
+import { WORKER_PROGRESS, WORKER_DATA } from '../../constants/application';
 
 const GZIP_CHUNK_SIZE = 512 * 1024;
 
@@ -8,12 +9,17 @@ const inflate = (gzip: Uint8Array, chunkSize: number ): string => {
   const inflator = new pako.Inflate({ to: "string" });
   let done = false;
   for (let i = 0; i < gzip.length; i += chunkSize) {
-    let end = i + chunkSize;
-    if (end >= gzip.length) done = true;
+    const end = i + chunkSize;
+    const progress = Math.floor((end / gzip.length) * 100);
+    postMessage({ type: WORKER_PROGRESS, payload: (progress <= 100) ? progress : 100 });
+    if (end >= gzip.length) {
+      done = true;
+    }
     inflator.push(gzip.slice(i, i + chunkSize), done);
   }
   if (inflator.err) {
     console.warn(inflator.msg);
+    return null;
   } else {
     return inflator.result;
   }
@@ -25,5 +31,8 @@ self.onmessage = (event: Event) => {
   const { data } = event;
   const uint8 = new Uint8Array(data);
   const gunzipped = inflate(uint8, GZIP_CHUNK_SIZE);
-  postMessage(JSON.parse(gunzipped));
+  if (gunzipped !== null) {
+    postMessage({ type: WORKER_DATA,  payload: JSON.parse(gunzipped) });
+  }
+
 }

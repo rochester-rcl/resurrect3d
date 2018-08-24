@@ -54,7 +54,7 @@ class ThreeContainer extends Component {
       if (!WEBGL_SUPPORT) {
         progressStatus = "Your Browser Does Not Currently Support WebGL";
       } else {
-        progressStatus = 'Loading Mesh: ' + mesh.progress + ' | ' + ' Loading Texture: ' + texture.progress;
+        progressStatus = 'Loading Mesh: ' + mesh.progress.label + ' | ' + ' Loading Texture: ' + texture.progress.label;
       }
 
       return(
@@ -62,6 +62,7 @@ class ThreeContainer extends Component {
           text={progressStatus}
           className="three-loader-dimmer"
           active={true}
+          percent={mesh.progress.percent}
           progress={progressStatus}
           progressColor={"#21ba45"}
         />);

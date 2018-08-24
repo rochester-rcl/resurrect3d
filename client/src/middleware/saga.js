@@ -23,6 +23,9 @@ import * as THREE from 'three';
 // API
 import {} from '../constants/api-endpoints';
 
+// constants
+import { WORKER_PROGRESS } from '../constants/application';
+
 import ThreeViewerNodeBackend from './backends/ThreeViewerNodeBackend';
 import ThreeViewerAdminBackend from './backends/ThreeViewerAdminBackend';
 
@@ -65,11 +68,34 @@ function getActionType(payload: Object): string {
   }
 }
 
+function createWorkerProgressChannel(worker: Object, loaderType: string) {
+  return eventChannel((emit) => {
+    worker.onmessage = (event: MessageEvet) => {
+      const { data } = event;
+      if (data.type === WORKER_PROGRESS) {
+        emit({
+          eventType: 'progress',
+          val: data.payload,
+          loaderType: loaderType
+        });
+      } else {
+        emit({
+          eventType: 'loaded',
+          val: data.payload,
+          loaderType: loaderType,
+        });
+      }
+    }
+    const unsubscribe = () => {
+      worker.onmessage = null;
+    }
+    return unsubscribe;
+  });
+}
 // TODO how to handle type checking for polymorphic function that could take an ObjectLoader or TextLoader class
 function createLoadProgressChannel(loader: Object, loaderType: string, url): void {
 
   return eventChannel((emit) => {
-
     loader.load(url,
       (payload: Object) => {
         // We're going to use this as a skybox texture so ...
@@ -112,19 +138,30 @@ function createLoadProgressChannel(loader: Object, loaderType: string, url): voi
 export function* loadMeshSaga(loadMeshAction: Object): Generator <any, any, any> {
   try {
     const { url, id } = loadMeshAction;
-    let JSONMesh;
+    let progressChannel;
     const result = yield ThreeViewerNodeBackend.checkCache(loadMeshAction.id);
     if (result) {
-      yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Loading Mesh From Cache" }});
-       JSONMesh = yield ThreeViewerNodeBackend.gunzipAsset(result.data.model.raw)
+      yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Loading Mesh From Cache", percent: 0 }});
+      progressChannel = yield ThreeViewerNodeBackend.gunzipAssetSaga(result.data.model.raw, createWorkerProgressChannel);
     } else {
-      yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Fetching Mesh From Server" }});
-      JSONMesh = yield ThreeViewerNodeBackend.fetchGZippedAsset(id, url);
+      yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Fetching Mesh From Server", percent: 0 }});
+      progressChannel = yield ThreeViewerNodeBackend.fetchGZippedAssetSaga(id, url, createWorkerProgressChannel);
     }
-    yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Loading Scene" } });
-    const loader = new THREE.ObjectLoader();
-    const object3D = loader.parse(JSONMesh);
-    yield put({ type: ActionConstants.MESH_LOADED, payload: { val: object3D }});
+    while (true) {
+      const payload = yield take(progressChannel);
+      if (payload.eventType === 'loaded') {
+        const loader = new THREE.ObjectLoader();
+        const object3D = loader.parse(payload.val);
+        yield put({ type: ActionConstants.MESH_LOADED, payload: { val: object3D }});
+      } else {
+        yield put({
+          type: getActionType(payload),
+          payload: { val: "Decompressing Mesh",
+          percent: payload.val,
+        }
+        });
+      }
+    }
   } catch (error) {
     console.log(error);
   }

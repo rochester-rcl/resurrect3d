@@ -332,6 +332,7 @@ export default class ThreeView extends Component {
           <LoaderModal
             text={loadText + loadProgress}
             className="three-loader-dimmer"
+            percent={loadProgress}
             active={loadProgress !== 100}
           />
           <ThreeTouchControls

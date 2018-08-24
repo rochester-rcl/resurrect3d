@@ -48,16 +48,16 @@ function uiReducer(state: Object = defaultState, action: Object): Object {
       };
 
     case ActionConstants.UPDATE_MESH_LOAD_PROGRESS:
-
+      console.log(action.payload.percent);
       return {
         ...state,
-        mesh: { ...state.mesh, progress: action.payload.val }
+        mesh: { ...state.mesh, progress: { label: action.payload.val, percent: action.payload.percent } }
       }
 
     case ActionConstants.UPDATE_TEXTURE_LOAD_PROGRESS:
       return {
         ...state,
-        texture: { ...state.texture, progress: action.payload.val }
+        texture: { ...state.texture, progress: { label: action.payload.val, percent: action.payload.percent } }
       }
 
     case ActionConstants.TEXTURE_LOADED:

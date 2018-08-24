@@ -3,7 +3,8 @@ import pako from "pako";
 import InflateWorker from '../../utils/workers/inflate.worker';
 import ModelCacheWorker from '../../utils/workers/modelcache.worker';
 // constants
-import { THREE_MODEL_CACHE_GET, THREE_MODEL_CACHE_SAVE } from '../../constants/application';
+import { THREE_MODEL_CACHE_GET, THREE_MODEL_CACHE_SAVE, WORKER_DATA, WORKER_PROGRESS } from '../../constants/application';
+
 
 const GZIP_CHUNK_SIZE = 512 * 1024;
 export default class ThreeViewerAbstractBackend {
@@ -118,7 +119,7 @@ export default class ThreeViewerAbstractBackend {
       .catch(error => console.error(error));
   }
 
-  static fetchGZippedAsset(id: string, url: string): Promise {
+  static fetchGZippedAssetSaga(id: string, url: string): Promise {
     return new Promise((resolve, reject) => {
       fetch(url)
         .then(response => {
@@ -138,15 +139,12 @@ export default class ThreeViewerAbstractBackend {
         .catch(error => reject(error));
     });
   }
-
-  static gunzipAsset(buf: ArrayBuffer): Promise {
+  // takes optional saga event channel for progress
+  static gunzipAssetSaga(buf: ArrayBuffer, channel: EventChannel): Promise {
     return new Promise((resolve, reject) => {
       const inflateWorker = new InflateWorker();
       inflateWorker.postMessage(buf, [buf]);
-      inflateWorker.onmessage = (event: Event) => {
-        const { data } = event;
-        resolve(data);
-      }
+      resolve(channel(inflateWorker, 'mesh'));
     });
   }
 
