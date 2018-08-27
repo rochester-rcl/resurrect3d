@@ -54,9 +54,8 @@ class ThreeContainer extends Component {
       if (!WEBGL_SUPPORT) {
         progressStatus = "Your Browser Does Not Currently Support WebGL";
       } else {
-        progressStatus = 'Loading Mesh: ' + mesh.progress.label + ' | ' + ' Loading Texture: ' + texture.progress.label;
+        progressStatus = mesh.progress.label;
       }
-
       return(
         <LoaderModal
           text={progressStatus}

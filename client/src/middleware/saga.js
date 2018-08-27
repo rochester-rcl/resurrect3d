@@ -70,7 +70,7 @@ function getActionType(payload: Object): string {
 
 function createWorkerProgressChannel(worker: Object, loaderType: string) {
   return eventChannel((emit) => {
-    worker.onmessage = (event: MessageEvet) => {
+    worker.onmessage = (event: MessageEvent) => {
       const { data } = event;
       if (data.type === WORKER_PROGRESS) {
         emit({
@@ -84,6 +84,7 @@ function createWorkerProgressChannel(worker: Object, loaderType: string) {
           val: data.payload,
           loaderType: loaderType,
         });
+        emit(END);
       }
     }
     const unsubscribe = () => {
@@ -141,22 +142,31 @@ export function* loadMeshSaga(loadMeshAction: Object): Generator <any, any, any>
     let progressChannel;
     const result = yield ThreeViewerNodeBackend.checkCache(loadMeshAction.id);
     if (result) {
-      yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Loading Mesh From Cache", percent: 0 }});
       progressChannel = yield ThreeViewerNodeBackend.gunzipAssetSaga(result.data.model.raw, createWorkerProgressChannel);
     } else {
-      yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Fetching Mesh From Server", percent: 0 }});
+      yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Fetching Mesh From Server", percent: null }});
       progressChannel = yield ThreeViewerNodeBackend.fetchGZippedAssetSaga(id, url, createWorkerProgressChannel);
     }
     while (true) {
       const payload = yield take(progressChannel);
       if (payload.eventType === 'loaded') {
+        yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Building Scene", percent: null }});
+        /*
+          This isn't too much of a bottleneck - it's unfortunate that ObjectLoader relies on <img> tags as we could off-load
+          to a worker. I supposed we could parse geometry in a worker and do images on the main thread if we need to.
+          
+          Some day we can use https://caniuse.com/#feat=offscreencanvas
+        */
+
         const loader = new THREE.ObjectLoader();
         const object3D = loader.parse(payload.val);
+        yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Building Scene", percent: null }});
         yield put({ type: ActionConstants.MESH_LOADED, payload: { val: object3D }});
+        progressChannel.close();
       } else {
         yield put({
           type: getActionType(payload),
-          payload: { val: "Decompressing Mesh",
+          payload: { val: "Decompressing Mesh Data",
           percent: payload.val,
         }
         });

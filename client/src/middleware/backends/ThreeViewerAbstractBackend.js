@@ -119,7 +119,7 @@ export default class ThreeViewerAbstractBackend {
       .catch(error => console.error(error));
   }
 
-  static fetchGZippedAssetSaga(id: string, url: string): Promise {
+  static fetchGZippedAsset(id: string, url: string): Promise {
     return new Promise((resolve, reject) => {
       fetch(url)
         .then(response => {
@@ -139,7 +139,40 @@ export default class ThreeViewerAbstractBackend {
         .catch(error => reject(error));
     });
   }
-  // takes optional saga event channel for progress
+
+  static fetchGZippedAssetSaga(id: string, url: string, channel: EventChannel): Promise {
+    return new Promise((resolve, reject) => {
+      fetch(url)
+        .then(response => {
+          return response.blob().then(blob => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              // should be Uint8Array
+              const res = reader.result;
+              // save raw data to cache
+              ThreeViewerAbstractBackend.saveToCache(id, res).then((res) =>
+                resolve(ThreeViewerAbstractBackend.gunzipAssetSaga(res.model.raw, channel))
+              ).catch((error) => reject(error));
+            };
+            reader.readAsArrayBuffer(blob);
+          });
+        })
+        .catch(error => reject(error));
+    });
+  }
+
+  static gunzipAsset(buf: ArrayBuffer): Promise {
+    return new Promise((resolve, reject) => {
+      const inflateWorker = new InflateWorker();
+      inflateWorker.postMessage(buf, [buf]);
+      inflateWorker.onmessage = (event: Event) => {
+        const { data } = event;
+        resolve(data);
+      }
+    });
+  }
+
+  // takes saga event channel for progress
   static gunzipAssetSaga(buf: ArrayBuffer, channel: EventChannel): Promise {
     return new Promise((resolve, reject) => {
       const inflateWorker = new InflateWorker();

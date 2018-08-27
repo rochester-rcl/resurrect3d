@@ -37,6 +37,11 @@ body {
 
 .three-loader-dimmer {
   background: rgba(0,0,0,1.0) !important;
+  width: 100%;
+}
+
+.dimmer.visible.active {
+  display: flex !important;
 }
 
 .three-loader-dimmer h1 {

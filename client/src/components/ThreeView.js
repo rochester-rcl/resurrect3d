@@ -1617,7 +1617,6 @@ export default class ThreeView extends Component {
   exportObj(): void {
     let exporter = new THREE.OBJExporter();
     let result = exporter.parse(this.mesh);
-    console.log(result);
   }
 
   /** EVENT HANDLERS
