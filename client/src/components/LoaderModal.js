@@ -12,7 +12,7 @@ const LoaderModal = (props: Object) => {
     return(
       <Dimmer className={className} active={active} as={Segment}>
         <h1>{ text }</h1>
-        <Progress percent={percent} indicating progress/>
+        <Progress percent={percent} indicating progress color='green'/>
       </Dimmer>
     )
   } else {

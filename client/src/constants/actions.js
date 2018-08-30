@@ -29,3 +29,7 @@ export const UPDATE_VIEW: string  = 'UPDATE_VIEW';
 export const VIEW_ADDED: string = 'VIEW_ADDED';
 export const VIEWS_LOADED: string = 'VIEWS_LOADED';
 export const VIEW_LOADED: string = 'VIEW_LOADED';
+
+// Settings
+export const SAVE_VIEWER_SETTINGS = 'SAVE_VIEWER_SETTINGS';
+export const LOAD_VIEWER_SETTINGS = 'LOAD_VIEWER_SETTINGS';

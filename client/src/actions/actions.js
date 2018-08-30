@@ -33,3 +33,17 @@ export function noSkyboxTexture(): Object {
     payload: { val: null }
   }
 }
+
+export function saveViewerSettings(settings: Object): Object {
+  return {
+    type: ActionConstants.SAVE_VIEWER_SETTINGS,
+    settings: settings,
+  }
+}
+
+export function loadViewerSettings(settings: Object): Object {
+  return {
+    type: ActionConstants.LOAD_VIEWER_SETTINGS,
+    settings: settings,
+  }
+}

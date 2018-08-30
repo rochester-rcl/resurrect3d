@@ -156,6 +156,9 @@ export default class ThreeView extends Component {
       offset: new THREE.Vector3(),
       lock: false,
     },
+    materialProps: {
+
+    },
     shaderPasses: {
       EDL: {},
     },
@@ -259,10 +262,12 @@ export default class ThreeView extends Component {
     (this: any).drawSpriteTarget = this.drawSpriteTarget.bind(this);
     (this: any).computeSpriteScaleFactor = this.computeSpriteScaleFactor.bind(this);
     (this: any).updateMaterials = this.updateMaterials.bind(this);
+    (this: any).setMaterialsState = this.setMaterialsState.bind(this);
     (this: any).updateShaders = this.updateShaders.bind(this);
     (this: any).updateRenderSize = this.updateRenderSize.bind(this);
     (this: any).setEnvMap = this.setEnvMap.bind(this);
     (this: any).exportObj = this.exportObj.bind(this);
+    (this: any).saveSettings = this.saveSettings.bind(this);
     // event handlers
 
     (this: any).handleMouseDown = this.handleMouseDown.bind(this);
@@ -858,7 +863,7 @@ export default class ThreeView extends Component {
   }
 
   initPostprocessing(): void {
-    let rtParams = {
+    const rtParams = {
       minFilter: THREE.LinearFilter,
       magFilter: THREE.LinearFilter,
       format: THREE.RGBAFormat,
@@ -878,37 +883,37 @@ export default class ThreeView extends Component {
       new THREE.WebGLRenderTarget(this.width, this.height, rtParams));
 
     //The environment
-    let envRenderPass = new THREE.RenderPass(this.envScene, this.camera);
+    const envRenderPass = new THREE.RenderPass(this.envScene, this.camera);
 
     // the model
-    let modelRenderPass = new THREE.RenderPass(this.scene, this.camera);
+    const modelRenderPass = new THREE.RenderPass(this.scene, this.camera);
 
     // the gui
-    let guiRenderPass = new THREE.RenderPass(this.guiScene, this.camera);
+    const guiRenderPass = new THREE.RenderPass(this.guiScene, this.camera);
 
-    let mask = new THREE.MaskPass(this.scene, this.camera);
-    let maskInverse = new THREE.MaskPass(this.scene, this.camera);
+    const mask = new THREE.MaskPass(this.scene, this.camera);
+    const maskInverse = new THREE.MaskPass(this.scene, this.camera);
     maskInverse.inverse = true;
 
-    let guiMask = new THREE.MaskPass(this.guiScene, this.camera);
+    const guiMask = new THREE.MaskPass(this.guiScene, this.camera);
 
-    let copyPass = new THREE.ShaderPass(THREE.CopyShader);
+    const copyPass = new THREE.ShaderPass(THREE.CopyShader);
     copyPass.renderToScreen = true;
 
-    let vignettePass = new THREE.VignettePass(new THREE.Vector2(this.width, this.height),
+    const vignettePass = new THREE.VignettePass(new THREE.Vector2(this.width, this.height),
       0.5, new THREE.Color(0.025, 0.025, 0.025));
 
     this.addShaderPass({vignette: vignettePass});
 
-    let clearMask = new THREE.ClearMaskPass();
+    const clearMask = new THREE.ClearMaskPass();
 
-    let brightnessShader = THREE.BrightnessContrastShader;
-    let brightnessPass = new THREE.ShaderPass(brightnessShader);
+    const brightnessShader = THREE.BrightnessContrastShader;
+    const brightnessPass = new THREE.ShaderPass(brightnessShader);
     brightnessPass.uniforms['contrast'].value = 0.15;
 
-    let bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(this.width, this.height), 1.0, 0.6, 0.90);
+    const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(this.width, this.height), 1.0, 0.6, 0.90);
 
-    let EDLParams = {
+    const EDLParams = {
       screenWidth: this.width,
       screenHeight: this.height,
       opacity: 1.0,
@@ -918,14 +923,13 @@ export default class ThreeView extends Component {
       radius: 0,
     }
 
-    let EDLPass = new THREE.EDLPass(this.scene, this.camera, EDLParams);
-    let chromaKeyPass = new THREE.ChromaKeyPass(false, new THREE.Color(0), 0.5, false);
+    const EDLPass = new THREE.EDLPass(this.scene, this.camera, EDLParams);
+    const chromaKeyPass = new THREE.ChromaKeyPass(false, new THREE.Color(0), 0.5, false);
     chromaKeyPass.renderToScreen = false;
-
     this.addShaderPass({ EDL: EDLPass });
     this.addShaderPass({ ChromaKey: chromaKeyPass });
 
-    let SSAOPass = new THREE.SSAOPass(this.scene, this.camera);
+    const SSAOPass = new THREE.SSAOPass(this.scene, this.camera);
 
     SSAOPass.renderToScreen = false;
 
@@ -938,9 +942,9 @@ export default class ThreeView extends Component {
 
     this.guiComposer.addPass(guiRenderPass);
 
-    let rawScene = new THREE.TexturePass(this.sceneComposer.renderTarget2.texture);
-    let rawModel = new THREE.TexturePass(this.modelComposer.renderTarget2.texture);
-    let rawGui = new THREE.TexturePass(this.guiComposer.renderTarget2.texture);
+    const rawScene = new THREE.TexturePass(this.sceneComposer.renderTarget2.texture);
+    const rawModel = new THREE.TexturePass(this.modelComposer.renderTarget2.texture);
+    const rawGui = new THREE.TexturePass(this.guiComposer.renderTarget2.texture);
 
     this.effectComposer.addPass(rawModel);
     this.effectComposer.addPass(chromaKeyPass);
@@ -1121,11 +1125,32 @@ export default class ThreeView extends Component {
     }
 
     if (!this.state.dynamicLightProps.lock) {
-      let distance = this.camera.position.distanceTo(this.bboxMesh.max);
+      const distance = this.camera.position.distanceTo(this.bboxMesh.max);
       this.dynamicLight.position.copy(this.camera.position).add(this.state.dynamicLightProps.offset);
       this.dynamicLight.distance = distance * 5;
       this.dynamicLight.needsUpdate = true;
     }
+  }
+
+  setMaterialsState(scale: number, prop: string): void {
+    const { materialsInfo } = this.state;
+    const updated = {...materialsInfo};
+    const update = (scale: number, prop: string, obj: Object) => {
+      for (let key in obj) {
+        const val = obj[key];
+        if (val.constructor === Object) {
+          update(scale, prop, obj[key]);
+        } else {
+          if (key === prop) {
+            obj[key] = scale;
+          }
+        }
+      }
+    }
+    update(scale, prop, updated);
+    this.setState({
+      materialsInfo: updated,
+    });
   }
 
   updateMaterials(scale: number, prop: string): void {
@@ -1145,13 +1170,14 @@ export default class ThreeView extends Component {
       children = [this.mesh];
     }
     for (let i=0; i < children.length; i++) {
-      let mesh = children[i];
+      const mesh = children[i];
       mesh.material = mapMaterials(mesh.material, updateFunc);
     }
+    this.setMaterialsState(scale, prop);
   }
 
   updateRenderSize(resolution: Array<number>): void {
-    let [width, height] = resolution.map((val) => Math.floor(val / this.state.quality.current.value));
+    const [width, height] = resolution.map((val) => Math.floor(val / this.state.quality.current.value));
     this.webGLRenderer.setSize(width, height, false);
     this.sceneComposer.setSize(width, height, false);
     this.modelComposer.setSize(width, height, false);
@@ -1168,7 +1194,8 @@ export default class ThreeView extends Component {
 
   updateShaders(value: number | boolean, shaderName: string, uniformProp: string): void {
     const { shaderPasses } = this.state;
-    let pass = shaderPasses[shaderName];
+    // Need to copy prototype properties too
+    const pass = Object.assign(shaderPasses[shaderName]);
 
     switch(uniformProp) {
 
@@ -1197,7 +1224,15 @@ export default class ThreeView extends Component {
         break;
 
     }
-    pass.uniforms[uniformProp].value = value;
+    const uniforms = {...pass.uniforms};
+    uniforms[uniformProp].value = value;
+    pass.uniforms = uniforms;
+    //pass.uniforms[uniformProp].value = value;
+    const updatedPasses = {...shaderPasses};
+    updatedPasses[shaderName] = pass;
+    this.setState({
+      shaderPasses: updatedPasses,
+    })
   }
 
   updateDynamicLighting(value: string | number | THREE.Vector3, prop: string): void {
@@ -1253,7 +1288,7 @@ export default class ThreeView extends Component {
   /** UI
   *****************************************************************************/
   initTools(): void {
-    let { shaderPasses } = this.state;
+    const { shaderPasses } = this.state;
 
     const layouts = this.GUI.layouts;
     const components = this.GUI.components;
@@ -1279,7 +1314,6 @@ export default class ThreeView extends Component {
         { label: 'cm', checked: true, callback: () => this.setState({ units: CM }) },
         { label: 'in', checked: false, callback: () => this.setState({ units: IN }) },
         { label: 'ft', checked: false, callback: () => this.setState({ units: FT })},
-        //{ label: 'ft', checked: false, callback: (value) => console.log(value) },
       ]
       measurementGroup.addComponent('units', components.THREE_TOGGLE_MULTI, {
         buttons: unitButtons,
@@ -1448,34 +1482,37 @@ export default class ThreeView extends Component {
     }
 
     if (this.props.options.enableMaterials) {
-      let materialsGroup = new ThreeGUIGroup('materials');
-      let materialsProps = {
+      const materialsInfo = {};
+      const materialsGroup = new ThreeGUIGroup('materials');
+      const materialsProps = {
         min: 0,
         max: 1,
         step: 0.01,
         defaultVal: 1.0,
         title: "normal scale",
-      }
+      };
       let children = this.mesh.children;
       if (children.length === 0) {
         children = [this.mesh];
       }
       for (let i=0; i < children.length; i++) {
-        let mesh = children[i];
+        const mesh = children[i];
         let material = mesh.material;
         if (material.constructor !== Array) {
           material = [material];
         }
         for (let j=0; j < material.length; j++) {
-          let currentMaterial = material[j];
+          const currentMaterial = material[j];
           if (currentMaterial.normalMap && !materialsGroup.find('normalScale')) {
+            materialsInfo.normalScale = materialsProps.defaultVal;
             materialsGroup.addComponent('normalScale', components.THREE_RANGE_SLIDER, {
               ...materialsProps,
-              defaultVal: 0.25,
+              title: 'normal scale',
               callback: (value) => this.updateMaterials(value, 'normalScale'),
             });
           }
           if (currentMaterial.bumpMap && !materialsGroup.find('bumpScale')) {
+            materialsInfo.bumpScale = materialsProps.defaultVal
             materialsGroup.addComponent('bumpScale', components.THREE_RANGE_SLIDER, {
               ...materialsProps,
               title: "bump scale",
@@ -1483,17 +1520,18 @@ export default class ThreeView extends Component {
             });
           }
           if (currentMaterial.type === 'MeshStandardMaterial' && !materialsGroup.find('microsurface')) {
-            let pbrGroup = new ThreeGUIGroup('pbrTool');
+            const pbrGroup = new ThreeGUIGroup('pbrTool');
+            materialsInfo.pbr = {};
+            materialsInfo.pbr.metalness = 0.0;
             pbrGroup.addComponent('metalness', components.THREE_RANGE_SLIDER, {
               ...materialsProps,
               title: "metalness",
               defaultVal: 0.0,
               callback: (value) => this.updateMaterials(value, 'metalness'),
             });
-
+            materialsInfo.pbr.roughness = materialsProps.defaultVal;
             pbrGroup.addComponent('roughness', components.THREE_RANGE_SLIDER, {
               ...materialsProps,
-              defaultVal: 1.0,
               title: "roughness",
               callback: (value) => this.updateMaterials(value, 'roughness'),
             });
@@ -1502,6 +1540,9 @@ export default class ThreeView extends Component {
         }
       }
       panelGroup.addGroup('materials', materialsGroup);
+      this.setState({
+        materialsInfo: materialsInfo,
+      });
     }
 
     this.panelLayout = <layouts.THREE_PANEL_LAYOUT
@@ -1617,6 +1658,10 @@ export default class ThreeView extends Component {
   exportObj(): void {
     let exporter = new THREE.OBJExporter();
     let result = exporter.parse(this.mesh);
+  }
+
+  saveSettings(): void {
+
   }
 
   /** EVENT HANDLERS
