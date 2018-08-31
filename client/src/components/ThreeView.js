@@ -1732,7 +1732,7 @@ export default class ThreeView extends Component {
     }
     settings.lights = ThreeView.serializeThreeTypes(dynamicLightProps);
     settings.materials = ThreeView.serializeThreeTypes(materialsInfo);
-    console.log(settings);
+    this.props.onSave(settings);
   }
 
   /** EVENT HANDLERS

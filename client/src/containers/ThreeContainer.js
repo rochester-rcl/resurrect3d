@@ -38,7 +38,7 @@ class ThreeContainer extends Component {
   }
 
   render(): Object {
-    const { mesh, texture, metadata, threeAsset } = this.props;
+    const { mesh, texture, metadata, threeAsset, saveViewerSettings } = this.props;
     if (mesh.progress === 'Complete' && texture.progress === 'Complete' && WEBGL_SUPPORT) {
       return(
         <ThreeView
@@ -47,6 +47,7 @@ class ThreeContainer extends Component {
           renderDoubleSided={true}
           info={metadata}
           options={threeAsset}
+          onSave={saveViewerSettings}
         />
       );
     } else {

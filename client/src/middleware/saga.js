@@ -52,6 +52,14 @@ function* getThreeAssetSaga(getThreeAssetAction: Object): Generator < any, any, 
   }
 }
 
+function* saveSettingsSaga(saveSettingsAction: Object): Generator <any, any, any> {
+  try {
+    console.log(saveSettingsAction);
+  } catch(error) {
+    console.log(error);
+  }
+}
+
 function getActionType(payload: Object): string {
   switch (payload.eventType) {
     case 'progress':
@@ -154,7 +162,7 @@ export function* loadMeshSaga(loadMeshAction: Object): Generator <any, any, any>
         /*
           This isn't too much of a bottleneck - it's unfortunate that ObjectLoader relies on <img> tags as we could off-load
           to a worker. I supposed we could parse geometry in a worker and do images on the main thread if we need to.
-          
+
           Some day we can use https://caniuse.com/#feat=offscreencanvas
         */
 
@@ -254,6 +262,10 @@ export function* watchForGetThreeAsset(): Generator < any, any, any > {
   yield takeEvery(ActionConstants.GET_THREE_ASSET, getThreeAssetSaga);
 }
 
+export function* watchForSaveSettings(): Generator <any, any, any> {
+  yield takeEvery(ActionConstants.SAVE_VIEWER_SETTINGS, saveSettingsSaga);
+}
+
 export function* watchForLoadMesh(): Generator < any, any, any > {
   yield takeEvery(ActionConstants.LOAD_MESH, loadMeshSaga);
 }
@@ -287,6 +299,7 @@ export function* watchForDeleteThreeView(): Generator <any, any, any> {
 export default function* rootSaga(): Generator < any, any, any > {
   yield [
     watchForGetThreeAsset(),
+    watchForSaveSettings(),
     watchForLoadMesh(),
     watchForLoadTexture(),
     watchForAddThreeView(),
