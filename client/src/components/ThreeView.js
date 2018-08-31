@@ -1696,7 +1696,7 @@ export default class ThreeView extends Component {
               } else {
                 if (isThreeType(val)) {
                   if (isValidThreeType(val)) {
-                    serialized[key] = serializeThreeType(val);
+                    serialized[key] = { serialized: serializeThreeType(val), origType: val.constructor.name };
                   }
                 } else {
                   serialized[key] = val;
@@ -1710,7 +1710,7 @@ export default class ThreeView extends Component {
             } else {
               if (isThreeType(val)) {
                 if (isValidThreeType(val)) {
-                  serialized[key] = serializeThreeType(val);
+                  serialized[key] = { serialized: serializeThreeType(val), origType: val.constructor.name };
                 }
               } else {
                 serialized[key] = val;
