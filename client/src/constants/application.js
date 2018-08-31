@@ -86,3 +86,10 @@ export const THREE_MODEL_CACHE_INDEX_ITEMS = ["id"];
 // Worker stuff
 export const WORKER_PROGRESS = 'WORKER_PROGRESS';
 export const WORKER_DATA = 'WORKER_DATA';
+
+// Shorthand for THREE types
+export const THREE_COLOR = 'Color';
+export const THREE_VECTOR2 = 'Vector2';
+export const THREE_VECTOR3 = 'Vector3';
+
+export const THREE_TYPES = new Set([THREE_COLOR, THREE_VECTOR2, THREE_VECTOR3]);

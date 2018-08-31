@@ -27,7 +27,7 @@ import { LabelSprite } from '../utils/image';
 import { LinearGradientShader, RadialGradientCanvas } from '../utils/image';
 import ThreePointLights from '../utils/lights';
 import { convertUnits } from '../utils/math';
-
+import { isThreeType, isValidThreeType, serializeThreeType } from '../utils/serialization';
 // Constants
 import {
   DEFAULT_GRADIENT_COLORS,
@@ -115,7 +115,12 @@ export default class ThreeView extends Component {
 
   // DOM
   threeContainer: HTMLElement;
-
+  // Mask for settings we don't want to save (aka uniforms)
+  settingsMask = {
+    materials: new Set([]),
+    lights: new Set([]),
+    shaders: new Set([])
+  }
   state = {
 
     // interaction
@@ -533,7 +538,15 @@ export default class ThreeView extends Component {
         icon: 'wrench',
         onClick: () => this.toggleTools(),
       });
+      // put some logic in here about admin authentication
+      controls.addComponent('save', components.THREE_BUTTON, {
+        ...buttonProps,
+        content: 'save tool settings',
+        icon: 'setting',
+        onClick: () => this.saveSettings(),
+      });
     }
+
     this.controls = <layouts.THREE_GROUP_LAYOUT
         group={controls}
         groupClass='three-controls-container'
@@ -1390,7 +1403,9 @@ export default class ThreeView extends Component {
         checked: shaderPasses.EDL.enableEDL ? shaderPasses.EDL.enableEDL : false
       });
 
-      let edlShadingGroup = new ThreeGUIGroup('edlShading');
+      this.settingsMask.shaders.add('enableEDL');
+
+      const edlShadingGroup = new ThreeGUIGroup('edlShading');
 
       edlShadingGroup.addComponent('edlOnly', components.THREE_TOGGLE, {
         key: 10,
@@ -1399,6 +1414,8 @@ export default class ThreeView extends Component {
         title: 'edl only',
       });
 
+      this.settingsMask.shaders.add('onlyEDL');
+
       edlShadingGroup.addComponent('geometryAndTexture', components.THREE_TOGGLE, {
         key: 11,
         callback: (value) => this.updateShaders(value, 'EDL', 'useTexture'),
@@ -1406,10 +1423,14 @@ export default class ThreeView extends Component {
         title: "geometry + texture",
       });
 
+      this.settingsMask.shaders.add('useTexture');
+
       edlShadingGroup.addComponent('color', components.THREE_MICRO_COLOR_PICKER, {
         title: "color",
         callback: (color) => this.updateShaders(color, 'EDL', 'onlyEDLColor'),
       });
+
+      this.settingsMask.shaders.add('onlyEDLColor');
 
       edlGroup.addComponent('strength', components.THREE_RANGE_SLIDER, {
         key: 2,
@@ -1421,7 +1442,7 @@ export default class ThreeView extends Component {
         ref: (ref) => this.EDLStrengthRangeSlider = ref,
         callback: (value) => this.updateShaders(value, 'EDL', 'edlStrength'),
       });
-
+      this.settingsMask.shaders.add('edlStrength');
       edlGroup.addComponent('radius', components.THREE_RANGE_SLIDER, {
         key: 3,
         min: 0.0,
@@ -1432,6 +1453,7 @@ export default class ThreeView extends Component {
         ref: (ref) => this.EDLRadiusRangeSlider = ref,
         callback: (value) => this.updateShaders(value, 'EDL', 'radius'),
       });
+      this.settingsMask.shaders.add('radius');
 
       edlGroup.addGroup('edl shading', edlShadingGroup);
 
@@ -1454,18 +1476,20 @@ export default class ThreeView extends Component {
         callback: (color) => this.updateShaders(color, 'ChromaKey', 'chroma'),
       });
 
+      this.settingsMask.shaders.add('chroma');
+
       chromaKeyGroup.addComponent('replacement_color', components.THREE_MICRO_COLOR_PICKER, {
         title: "replacement color",
         callback: (color) => this.state.shaderPasses.ChromaKey.setReplacementColor(color),
       });
-
+      // TODO Figure something out for replacement color
       chromaKeyGroup.addComponent('invert', components.THREE_TOGGLE, {
         key: 1,
         callback: (value) => this.updateShaders(value, 'ChromaKey', 'invert'),
         checked: shaderPasses.ChromaKey.invert ? shaderPasses.ChromaKey.invert : false,
         title: 'invert',
       });
-
+      this.settingsMask.shaders.add('invert');
       chromaKeyGroup.addComponent('threshold', components.THREE_RANGE_SLIDER, {
         key: 2,
         min: -1.0,
@@ -1475,7 +1499,7 @@ export default class ThreeView extends Component {
         defaultVal: 0.0,
         callback: (value) => this.updateShaders(value, 'ChromaKey', 'threshold'),
       });
-
+      this.settingsMask.shaders.add('threshold');
       shaderGroup.addGroup('eye dome lighting', edlGroup);
       shaderGroup.addGroup('chroma key', chromaKeyGroup);
       panelGroup.addGroup('shaders', shaderGroup);
@@ -1656,12 +1680,59 @@ export default class ThreeView extends Component {
   }
 
   exportObj(): void {
-    let exporter = new THREE.OBJExporter();
-    let result = exporter.parse(this.mesh);
+    const exporter = new THREE.OBJExporter();
+    const result = exporter.parse(this.mesh);
+  }
+  // _mask can only be applied to level 1 nodes
+  static serializeThreeTypes(threeValues: Object, _mask: Set): Object {
+    const update = (obj, mask) => {
+      const serialized = {};
+      for (let key in obj) {
+        if (mask !== undefined) {
+            if (mask.has(key)) {
+              const val = obj[key];
+              if (val.constructor === Object) {
+                serialized[key] = update(obj[key], undefined);
+              } else {
+                if (isThreeType(val)) {
+                  if (isValidThreeType(val)) {
+                    serialized[key] = serializeThreeType(val);
+                  }
+                } else {
+                  serialized[key] = val;
+                }
+              }
+            }
+          } else {
+            const val = obj[key];
+            if (val.constructor === Object) {
+              serialized[key] = update(obj[key]);
+            } else {
+              if (isThreeType(val)) {
+                if (isValidThreeType(val)) {
+                  serialized[key] = serializeThreeType(val);
+                }
+              } else {
+                serialized[key] = val;
+              }
+            }
+          }
+        }
+      return serialized;
+    }
+    const result = update({...threeValues}, _mask);
+    return result;
   }
 
   saveSettings(): void {
-
+    const { shaderPasses, dynamicLightProps, materialsInfo } = this.state;
+    const settings = { lights: {}, shaders: {}, materials: {} };
+    for (let key in shaderPasses) {
+      settings.shaders[key] = ThreeView.serializeThreeTypes(shaderPasses[key].uniforms, this.settingsMask.shaders);
+    }
+    settings.lights = ThreeView.serializeThreeTypes(dynamicLightProps);
+    settings.materials = ThreeView.serializeThreeTypes(materialsInfo);
+    console.log(settings);
   }
 
   /** EVENT HANDLERS
