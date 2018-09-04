@@ -5,7 +5,6 @@ import ModelCacheWorker from '../../utils/workers/modelcache.worker';
 // constants
 import { THREE_MODEL_CACHE_GET, THREE_MODEL_CACHE_SAVE, WORKER_DATA, WORKER_PROGRESS } from '../../constants/application';
 
-
 const GZIP_CHUNK_SIZE = 512 * 1024;
 export default class ThreeViewerAbstractBackend {
   /* So we need a few things here -
@@ -48,6 +47,9 @@ export default class ThreeViewerAbstractBackend {
       fetch(url, {
           ...{
             method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
             body: body,
           },
           ...params
@@ -226,5 +228,4 @@ export default class ThreeViewerAbstractBackend {
       }
     });
   }
-
 }

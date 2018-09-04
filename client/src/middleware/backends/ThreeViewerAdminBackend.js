@@ -5,6 +5,9 @@ import ThreeViewerAbstractBackend from './ThreeViewerAbstractBackend';
 // constants
 import { FILE_ENDPOINT, VIEWS_ENDPOINT } from '../../constants/api-endpoints';
 
+// serialization
+import {serializeThreeTypes} from '../../utils/serialization';
+
 export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend {
 
   constructor(endpoint: string) {
@@ -35,7 +38,7 @@ export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend 
   }
 
   updateView(viewData: Object): Promise {
-    const body = ThreeViewerAdminBackend.objToFormData(viewData);
+    const body = JSON.stringify(viewData);
     return this._put(VIEWS_ENDPOINT + viewData._id, body, {}).then((result) => result).catch((error) => console.log(error));
   }
 
@@ -46,4 +49,13 @@ export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend 
   updateFile(filename: string, fileData: File): Promise {
     return this._put(FILE_ENDPOINT + filename, fileData, {}).then((result) => result).catch((error) => console.log(error));
   }
+
+  // settings
+  saveViewerSettings(id: Number, settings: Object): Promise {
+    const body = JSON.stringify({ viewerSettings: serializeThreeTypes(settings) });
+    return this._put(VIEWS_ENDPOINT + id, body, {})
+      .then(result => result)
+      .catch(error => console.error(error));
+  }
+
 }

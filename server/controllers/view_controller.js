@@ -120,11 +120,10 @@ exports.updateView = (req, res) => {
     }
 
     if(isEmpty(req.files)){
-      const parsed = utils.flat2nested(req.body);
       new Promise( (resolve, reject) => {
         const newView = new View({
           _id: req.params.id,
-          ...parsed
+          ...req.body
         });
 
         resolve(newView);
@@ -137,7 +136,6 @@ exports.updateView = (req, res) => {
           (err, view) => {
             if (err)
               res.send(err);
-            console.log(view);
             res.json(view);
             console.log({upadte:'View successfully updated'});
         });

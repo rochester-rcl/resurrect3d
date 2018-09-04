@@ -32,6 +32,9 @@ import ThreeViewerAdminBackend from './backends/ThreeViewerAdminBackend';
 // workers
 import ModelLoaderWorker from '../utils/workers/ModelLoaderWorker/modelloader.worker';
 
+// serialization
+import {deserializeThreeTypes} from '../utils/serialization';
+
 const nodeBackend = new ThreeViewerNodeBackend();
 
 const adminBackend = new ThreeViewerAdminBackend();
@@ -43,9 +46,13 @@ const computeProgress = (request: ProgressEvent): string => {
 function* getThreeAssetSaga(getThreeAssetAction: Object): Generator < any, any, any > {
   try {
     const asset = yield nodeBackend.getThreeAsset(getThreeAssetAction.id);
+    const { viewerSettings } = asset;
+    if (viewerSettings !== undefined) {
+      asset.viewerSettings = deserializeThreeTypes(viewerSettings);
+    }
     const threeFile = yield nodeBackend.getThreeFile(asset.threeFile);
     const ext = asset.threeFile.split('.').pop();
-    yield put({ type: ActionConstants.LOAD_MESH, url: threeFile, ext: ext, id: asset._id });
+    yield put({ type: ActionConstants.LOAD_MESH, url: threeFile, sext: ext, id: asset._id });
     yield put({ type: ActionConstants.THREE_ASSET_LOADED, threeAsset: asset });
   } catch (error) {
     console.log(error);
@@ -54,7 +61,9 @@ function* getThreeAssetSaga(getThreeAssetAction: Object): Generator < any, any, 
 
 function* saveSettingsSaga(saveSettingsAction: Object): Generator <any, any, any> {
   try {
-    console.log(saveSettingsAction);
+    const { id, settings } = saveSettingsAction;
+    const result = adminBackend.saveViewerSettings(id, settings);
+    // TODO should have some SETTINGS_SAVED feedback
   } catch(error) {
     console.log(error);
   }

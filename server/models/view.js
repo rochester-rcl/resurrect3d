@@ -43,6 +43,11 @@ var viewSchema = new Schema({
   modelUnits:{
     type: String,
     required: true
+  },
+
+  viewerSettings: {
+    type: Object,
+    required: false,
   }
 });
 

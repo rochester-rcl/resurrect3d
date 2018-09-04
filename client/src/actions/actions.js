@@ -34,16 +34,17 @@ export function noSkyboxTexture(): Object {
   }
 }
 
-export function saveViewerSettings(settings: Object): Object {
+export function saveViewerSettings(id: Number, settings: Object): Object {
   return {
     type: ActionConstants.SAVE_VIEWER_SETTINGS,
     settings: settings,
+    id: id,
   }
 }
 
-export function loadViewerSettings(settings: Object): Object {
+export function loadViewerSettings(id: Number): Object {
   return {
     type: ActionConstants.LOAD_VIEWER_SETTINGS,
-    settings: settings,
+    id: id,
   }
 }

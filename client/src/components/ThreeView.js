@@ -27,13 +27,14 @@ import { LabelSprite } from '../utils/image';
 import { LinearGradientShader, RadialGradientCanvas } from '../utils/image';
 import ThreePointLights from '../utils/lights';
 import { convertUnits } from '../utils/math';
-import { isThreeType, isValidThreeType, serializeThreeType } from '../utils/serialization';
+import { serializeThreeTypes } from '../utils/serialization';
 // Constants
 import {
   DEFAULT_GRADIENT_COLORS,
   DEFAULT_CLEAR_COLOR,
   ZOOM_PINCH_DISTANCE_SIZE,
   CM, IN, MM, FT,
+  THREE_VECTOR3,
 } from '../constants/application';
 
 // Controls
@@ -154,7 +155,7 @@ export default class ThreeView extends Component {
     dynamicLighting: false,
     toolsActive: false,
     dynamicLightProps: {
-      color: 0xc9e2ff,
+      color: new THREE.Color(0xc9e2ff),
       intensity: 0.8,
       distance: 0,
       decay: 2,
@@ -235,6 +236,7 @@ export default class ThreeView extends Component {
     (this: any).initControls = this.initControls.bind(this);
     (this: any).initTools = this.initTools.bind(this);
     (this: any).addShaderPass = this.addShaderPass.bind(this);
+    (this: any).hydrateSettings = this.hydrateSettings.bind(this);
 
     // Updates / Geometry / Rendering
 
@@ -387,7 +389,7 @@ export default class ThreeView extends Component {
     this.GUI.registerLayout('THREE_GROUP_LAYOUT', ThreeGUILayout);
     this.GUI.registerLayout('THREE_PANEL_LAYOUT', ThreeGUIPanelLayout);
 
-    let { color, intensity, decay, distance } = this.state.dynamicLightProps;
+    const { color, intensity, decay, distance } = this.state.dynamicLightProps;
     this.threeContainer = this.refs.threeView;
 
     // init camera
@@ -845,6 +847,14 @@ export default class ThreeView extends Component {
     this.setState({ shaderPasses: {...this.state.shaderPasses, ...pass }});
   }
 
+  hydrateSettings(): void {
+    const { lights, materials } = this.props.options.viewerSettings;
+    for (let key in lights) {
+      console.log(key, lights[key]);
+      this.updateDynamicLighting(lights[key], key);
+    }
+  }
+
   setEnvMap(): void {
 
     let mesh = this.mesh;
@@ -1249,33 +1259,37 @@ export default class ThreeView extends Component {
   }
 
   updateDynamicLighting(value: string | number | THREE.Vector3, prop: string): void {
-    let { dynamicLightProps } = this.state;
+    const { dynamicLightProps } = this.state;
     let updated = {};
     if (!prop.includes('offset')) {
       updated[prop] = value;
     } else {
-      let axis = prop.split('offset')[1];
-      let offset = dynamicLightProps.offset.clone();
-      switch(axis) {
+      if (value.constructor.name === THREE_VECTOR3) {
+        updated[prop] = value;
+      } else {
+        const axis = prop.split('offset')[1];
+        const offset = dynamicLightProps.offset.clone();
+        switch(axis) {
 
-        case('X'):
-          offset.x = value;
-          break;
+          case('X'):
+            offset.x = value;
+            break;
 
-        case('Y'):
-          offset.y = value;
-          break;
+          case('Y'):
+            offset.y = value;
+            break;
 
-        case('Z'):
-          offset.z = value;
-          break;
+          case('Z'):
+            offset.z = value;
+            break;
 
-        default:
-          break;
+          default:
+            break;
 
+        }
+        prop = 'offset';
+        updated.offset = offset;
       }
-      prop = 'offset';
-      updated.offset = offset;
     }
     if (dynamicLightProps[prop] !== undefined) {
       this.setState({
@@ -1577,6 +1591,9 @@ export default class ThreeView extends Component {
       dropdownClass='three-tool-menu-dropdown'
       ref={(ref) => this.toolsMenu = ref}
     />
+    if (this.props.options.viewerSettings !== undefined) {
+      this.hydrateSettings();
+    }
     this.setState((prevState, props) => {
       return { loadProgress: prevState.loadProgress + 10, loadText: "Updating Scene" }
     }, () => {
@@ -1683,56 +1700,16 @@ export default class ThreeView extends Component {
     const exporter = new THREE.OBJExporter();
     const result = exporter.parse(this.mesh);
   }
-  // _mask can only be applied to level 1 nodes
-  static serializeThreeTypes(threeValues: Object, _mask: Set): Object {
-    const update = (obj, mask) => {
-      const serialized = {};
-      for (let key in obj) {
-        if (mask !== undefined) {
-            if (mask.has(key)) {
-              const val = obj[key];
-              if (val.constructor === Object) {
-                serialized[key] = update(obj[key], undefined);
-              } else {
-                if (isThreeType(val)) {
-                  if (isValidThreeType(val)) {
-                    serialized[key] = { serialized: serializeThreeType(val), origType: val.constructor.name };
-                  }
-                } else {
-                  serialized[key] = val;
-                }
-              }
-            }
-          } else {
-            const val = obj[key];
-            if (val.constructor === Object) {
-              serialized[key] = update(obj[key]);
-            } else {
-              if (isThreeType(val)) {
-                if (isValidThreeType(val)) {
-                  serialized[key] = { serialized: serializeThreeType(val), origType: val.constructor.name };
-                }
-              } else {
-                serialized[key] = val;
-              }
-            }
-          }
-        }
-      return serialized;
-    }
-    const result = update({...threeValues}, _mask);
-    return result;
-  }
 
   saveSettings(): void {
     const { shaderPasses, dynamicLightProps, materialsInfo } = this.state;
     const settings = { lights: {}, shaders: {}, materials: {} };
     for (let key in shaderPasses) {
-      settings.shaders[key] = ThreeView.serializeThreeTypes(shaderPasses[key].uniforms, this.settingsMask.shaders);
+      settings.shaders[key] = serializeThreeTypes(shaderPasses[key].uniforms, this.settingsMask.shaders);
     }
-    settings.lights = ThreeView.serializeThreeTypes(dynamicLightProps);
-    settings.materials = ThreeView.serializeThreeTypes(materialsInfo);
-    this.props.onSave(settings);
+    settings.lights = serializeThreeTypes(dynamicLightProps);
+    settings.materials = serializeThreeTypes(materialsInfo);
+    this.props.onSave(this.props.options._id, settings);
   }
 
   /** EVENT HANDLERS
