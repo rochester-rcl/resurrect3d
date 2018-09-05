@@ -24,6 +24,7 @@ const ThreeColorPicker = (props: Object) => {
       <div className="three-color-picker-container">
         <CompactPicker
           className="three-color-picker"
+          color={color}
           onChangeComplete={(color) => callback(rgbString(color.rgb))}
         />
       </div>

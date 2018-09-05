@@ -42,14 +42,11 @@ export default class ThreeViewerAbstractBackend {
     });
   }
 
-  _put(url: string, body: Object, params: Object): Promise {
+  _put(url: string, body: Object, params: Object, ): Promise {
     return new Promise((resolve, reject) => {
       fetch(url, {
           ...{
             method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
             body: body,
           },
           ...params

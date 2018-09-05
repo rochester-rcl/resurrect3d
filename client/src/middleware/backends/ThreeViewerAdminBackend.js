@@ -38,7 +38,7 @@ export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend 
   }
 
   updateView(viewData: Object): Promise {
-    const body = JSON.stringify(viewData);
+    const body = ThreeViewerAdminBackend.objToFormData(viewData);
     return this._put(VIEWS_ENDPOINT + viewData._id, body, {}).then((result) => result).catch((error) => console.log(error));
   }
 
@@ -53,7 +53,7 @@ export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend 
   // settings
   saveViewerSettings(id: Number, settings: Object): Promise {
     const body = JSON.stringify({ viewerSettings: serializeThreeTypes(settings) });
-    return this._put(VIEWS_ENDPOINT + id, body, {})
+    return this._put(VIEWS_ENDPOINT + id, body, { headers: { "Content-Type": "application/json" }})
       .then(result => result)
       .catch(error => console.error(error));
   }

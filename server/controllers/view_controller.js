@@ -118,12 +118,13 @@ exports.updateView = (req, res) => {
       console.log(err);
       return console.log({update:'something happened'});
     }
-
+    const contentType = req.headers['content-type'].split(';')[0];
+    const body = (contentType === utils.APP_CONSTANTS.MULTIPART_FORMDATA) ? utils.flat2nested(req.body) : req.body;
     if(isEmpty(req.files)){
       new Promise( (resolve, reject) => {
         const newView = new View({
           _id: req.params.id,
-          ...req.body
+          ...body
         });
 
         resolve(newView);
@@ -208,11 +209,11 @@ exports.updateView = (req, res) => {
               threeFile: threeFileBool ? req.files.threeFile[0].filename : req.body.threeFile,
               threeThumbnail: threeThumbnailBool ? req.files.threeThumbnail[0].filename : req.body.threeThumbnail,
               skybox: {file: skyboxFileBool ? req.files.skybox[0].filename : req.body.skybox},
-              enableLight: req.body.enableLight,
-              enableMaterials: req.body.enableMaterials,
-              enableShaders: req.body.enableShaders,
-              enableMeasurement: req.body.enableMeasurement,
-              modelUnits: req.body.modelUnits
+              enableLight: body.enableLight,
+              enableMaterials: body.enableMaterials,
+              enableShaders: body.enableShaders,
+              enableMeasurement: body.enableMeasurement,
+              modelUnits: body.modelUnits
             });
 
             //console.log(newView);

@@ -21,6 +21,12 @@ function flat2nested(flat) {
   return out;
 }
 
+const APP_CONSTANTS = {
+  MULTIPART_FORMDATA: 'multipart/form-data',
+  APPLICATION_JSON: 'application/json'
+}
+
 module.exports = {
   flat2nested: flat2nested,
+  APP_CONSTANTS: APP_CONSTANTS,
 }
