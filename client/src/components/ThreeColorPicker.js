@@ -16,6 +16,15 @@ const rgbString = (colorRGB: Object) => {
   return( new THREE.Color('rgb(' + rgb.join(',') + ')'));
 }
 
+const stringToRGB = (hex: String) => {
+  const color = new THREE.Color(parseInt(hex.substring(1), 16)).multiplyScalar(255);
+  return {
+    r: color.r,
+    g: color.g,
+    b: color.b
+  };
+}
+
 const ThreeColorPicker = (props: Object) => {
   const { callback, title, color } = props;
   return (
@@ -33,18 +42,14 @@ const ThreeColorPicker = (props: Object) => {
 }
 
 export const ThreeMicroColorPicker = (props: Object) => {
-  const { callback, title } = props;
-  const rgbString = (colorRGB: Object) => {
-    let { r, g, b } = colorRGB;
-    let rgb = [r, g, b];
-    return( new THREE.Color('rgb(' + rgb.join(',') + ')'));
-  }
+  const { callback, title, color } = props;
   return (
     <Segment className="three-tool-component-container">
       <Label className="three-tool-component-label" attached="top left">{title}</Label>
       <div className="three-color-picker-container">
         <GithubPicker
           className="three-color-picker"
+          color={color}
           onChangeComplete={(color) => callback(rgbString(color.rgb))}
         />
       </div>
@@ -92,7 +97,7 @@ export class ThreeEyeDropperColorPicker extends Component {
       // rgba
       let readBuffer = new Uint8Array(4);
       renderer.readRenderTargetPixels(renderTarget, mouseVector.x, element.height - mouseVector.y, 1, 1, readBuffer);
-      let color = {
+      const color = {
         rgb: {
           r: readBuffer[0],
           g: readBuffer[1],
@@ -113,6 +118,13 @@ export class ThreeEyeDropperColorPicker extends Component {
 
   componentDidMount(): void {
     this.props.renderer.domElement.addEventListener('click', this.pickColor, true);
+    if (this.props.color !== undefined) {
+      // just like the others above we expect a hex string - need to add PropTypes for everything
+      console.log(stringToRGB(this.props.color));
+      this.setState({
+        currentColor: {...stringToRGB(this.props.color)}
+      });
+    }
   }
 
   componentWillUnmount(): void {
@@ -120,7 +132,7 @@ export class ThreeEyeDropperColorPicker extends Component {
   }
 
   render() {
-    const { renderer, renderTarget, title } = this.props;
+    const { renderer, renderTarget, title, color } = this.props;
     return (
       <Segment className="three-tool-component-container">
         <Label className="three-tool-component-label" attached="top left">{title}</Label>

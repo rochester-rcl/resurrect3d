@@ -40,7 +40,7 @@ export default function loadEDLShader(threeInstance: Object): Promise {
 
         "onlyEDL": { value: 0 },
 
-        "onlyEDLColor": { type: '3vf', value: new threeInstance.Vector3(1.0) },
+        "onlyEDLColor": { type: 'c', value: new threeInstance.Color(0xffffff) },
 
         "enableEDL": { value: 0 },
 

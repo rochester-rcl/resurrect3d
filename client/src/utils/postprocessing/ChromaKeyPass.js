@@ -46,7 +46,7 @@ export default function loadChromaKeyPass(threeInstance: Object): typeof Promise
       },
 
 			setReplacementColor: function(threeColor) {
-				this.scene.background = threeColor;
+				// this.scene.background = threeColor;
 			}
     });
     resolve(threeInstance);

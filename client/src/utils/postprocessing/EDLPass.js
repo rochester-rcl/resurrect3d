@@ -20,15 +20,15 @@ export default function loadEDLPass(threeInstance: Object): typeof Promise {
 
 			this.renderToScreen = false;
 
-      let radius = (params.radius !== undefined) ? params.radius : 1.0;
-			let edlStrength = (params.edlStrength !== undefined) ? params.edlStrength : 1.0;
-      let opacity = (params.opacity !== undefined) ? params.opacity : 1.0;
-      let screenWidth = params.screenWidth || window.innerWidth || 1;
-			let screenHeight = params.screenHeight || window.innerHeight || 1;
-			let enableEDL = (params.enableEDL !== undefined) ? params.enableEDL : false;
-			let onlyEDL = (params.onlyEDL !== undefined) ? params.onlyEDL : false;
-			let onlyEDLColor = (params.onlyEDLColor !== undefined) ? params.onlyEDLColor : new threeInstance.Vector3(1.0);
-			let useTexture = (params.useTexture !== undefined) ? params.useTexture : false;
+      const radius = (params.radius !== undefined) ? params.radius : 1.0;
+			const edlStrength = (params.edlStrength !== undefined) ? params.edlStrength : 1.0;
+      const opacity = (params.opacity !== undefined) ? params.opacity : 1.0;
+      const screenWidth = params.screenWidth || window.innerWidth || 1;
+			const screenHeight = params.screenHeight || window.innerHeight || 1;
+			const enableEDL = (params.enableEDL !== undefined) ? params.enableEDL : false;
+			const onlyEDL = (params.onlyEDL !== undefined) ? params.onlyEDL : false;
+			const onlyEDLColor = (params.onlyEDLColor !== undefined) ? params.onlyEDLColor : new threeInstance.Color(0x000000);
+			const useTexture = (params.useTexture !== undefined) ? params.useTexture : false;
       this.camera2 = camera;
       this.scene2 = scene;
 

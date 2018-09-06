@@ -860,19 +860,16 @@ export default class ThreeView extends Component {
     const tasks = [];
     if (this.props.options.viewerSettings !== undefined) {
       const { lights, materials, shaders } = this.props.options.viewerSettings;
-      console.log(shaders);
       tasks.push(this.updateLights(lights, () => Promise.resolve()));
       tasks.push(this.updateMaterials(materials, () => Promise.resolve()));
       const { shaderPasses } = this.state;
       const updatedPasses = {};
-      // Need to copy prototype properties too
-      // TODO this isn't working -- fix this tomorrow
+      // Need to copy prototype properties too, hence the use of Object.assign
       for (let key in shaders) {
-        let pass = Object.assign(shaderPasses[key]);
-        this.deepUpdateShaderPassUniforms(pass.uniforms, shaders[key]);
+        const pass = Object.assign(shaderPasses[key]);
+        pass.uniforms = Object.assign(pass.uniforms, shaders[key]);
         updatedPasses[key] = pass;
       }
-      console.log(updatedPasses);
       tasks.push(this.updateShaders(updatedPasses, () => Promise.resolve()));
     }
     return Promise.all(tasks);
@@ -1296,6 +1293,11 @@ export default class ThreeView extends Component {
           this.EDLRadiusRangeSlider.resetToDefaults();
           this.EDLStrengthRangeSlider.resetToDefaults();
         }
+        break;
+
+      case 'replacementColor':
+        pass.setReplacementColor(value);
+        break;
 
       default:
         break;
@@ -1304,14 +1306,6 @@ export default class ThreeView extends Component {
     const updatedPasses = {...shaderPasses};
     updatedPasses[shaderName] = pass;
     this.updateShaders(updatedPasses);
-  }
-
-  deepUpdateShaderPassUniforms(newUniforms: Obj, oldUniforms: Obj): void {
-    for (let key in newUniforms) {
-      if (oldUniforms[key] !== undefined) {
-        oldUniforms[key] = newUniforms[key];
-      }
-    }
   }
 
   updateLights(obj: Object, cb): void {
@@ -1380,7 +1374,6 @@ export default class ThreeView extends Component {
   /** UI
   *****************************************************************************/
   initTools(): void {
-    const { shaderPasses } = this.state;
 
     const layouts = this.GUI.layouts;
     const components = this.GUI.components;
@@ -1398,14 +1391,14 @@ export default class ThreeView extends Component {
 
       measurementGroup.addComponent('show axes', components.THREE_TOGGLE, {
         callback: this.showAxes,
-        checked: this.state.showAxes,
+        defaultVal: this.state.showAxes,
         title: "show axes",
       });
 
-      let unitButtons = [
-        { label: 'cm', checked: true, callback: () => this.setState({ units: CM }) },
-        { label: 'in', checked: false, callback: () => this.setState({ units: IN }) },
-        { label: 'ft', checked: false, callback: () => this.setState({ units: FT })},
+      const unitButtons = [
+        { label: 'cm', defaultVal: true, callback: () => this.setState({ units: CM }) },
+        { label: 'in', defaultVal: false, callback: () => this.setState({ units: IN }) },
+        { label: 'ft', defaultVal: false, callback: () => this.setState({ units: FT })},
       ]
       measurementGroup.addComponent('units', components.THREE_TOGGLE_MULTI, {
         buttons: unitButtons,
@@ -1423,7 +1416,7 @@ export default class ThreeView extends Component {
       const lightGroup = new ThreeGUIGroup('lights');
       lightGroup.addComponent('helper', components.THREE_TOGGLE, {
         callback: this.showLightHelper,
-        checked: this.state.showLightHelper,
+        defaultVal: this.state.showLightHelper,
         title: "show light helper",
       });
       lightGroup.addComponent('intensity', components.THREE_RANGE_SLIDER, {
@@ -1442,7 +1435,7 @@ export default class ThreeView extends Component {
       let offsetGroup = new ThreeGUIGroup('three-tool-group');
       offsetGroup.addComponent('lock', components.THREE_TOGGLE, {
         title: "lock",
-        checked: dynamicLightProps.lock,
+        defaultVal: dynamicLightProps.lock,
         callback: (value) => this.updateDynamicLighting(value, 'lock'),
       });
       let offsetProps = {
@@ -1475,14 +1468,19 @@ export default class ThreeView extends Component {
       panelGroup.addGroup('lights', lightGroup);
     }
 
+    /****************************** SHADERS ***********************************/
+
     if (this.props.options.enableShaders) {
-      let shaderGroup = new ThreeGUIGroup('shaders');
-      let edlGroup = new ThreeGUIGroup('edl');
+
+      const { EDL, ChromaKey } = this.state.shaderPasses;
+      const shaderGroup = new ThreeGUIGroup('shaders');
+      const edlGroup = new ThreeGUIGroup('edl');
+
       edlGroup.addComponent('enable', components.THREE_TOGGLE, {
         key: 0,
         title: "enable",
         callback: (value) => this.updateDynamicShaders(value, 'EDL', 'enableEDL'),
-        checked: shaderPasses.EDL.enableEDL ? shaderPasses.EDL.enableEDL : false
+        defaultVal: EDL.uniforms.enableEDL.value
       });
 
       this.settingsMask.shaders.add('enableEDL');
@@ -1492,7 +1490,7 @@ export default class ThreeView extends Component {
       edlShadingGroup.addComponent('edlOnly', components.THREE_TOGGLE, {
         key: 10,
         callback: (value) => this.updateDynamicShaders(value, 'EDL', 'onlyEDL'),
-        checked: shaderPasses.EDL.onlyEDL ? shaderPasses.EDL.onlyEDL : false,
+        defaultVal: EDL.uniforms.onlyEDL.value,
         title: 'edl only',
       });
 
@@ -1501,14 +1499,14 @@ export default class ThreeView extends Component {
       edlShadingGroup.addComponent('geometryAndTexture', components.THREE_TOGGLE, {
         key: 11,
         callback: (value) => this.updateDynamicShaders(value, 'EDL', 'useTexture'),
-        checked: shaderPasses.EDL.useTexture ? shaderPasses.EDL.useTexture : false,
+        defaultVal: EDL.uniforms.useTexture.value,
         title: "geometry + texture",
       });
 
       this.settingsMask.shaders.add('useTexture');
-
       edlShadingGroup.addComponent('color', components.THREE_MICRO_COLOR_PICKER, {
         title: "color",
+        color: '#' + EDL.uniforms.onlyEDLColor.value.getHexString(),
         callback: (color) => this.updateDynamicShaders(color, 'EDL', 'onlyEDLColor'),
       });
 
@@ -1520,18 +1518,20 @@ export default class ThreeView extends Component {
         max: 100.0,
         step: 0.01,
         title: "strength",
-        defaultVal: 0.0,
+        defaultVal: EDL.uniforms.edlStrength.value,
         ref: (ref) => this.EDLStrengthRangeSlider = ref,
         callback: (value) => this.updateDynamicShaders(value, 'EDL', 'edlStrength'),
       });
+
       this.settingsMask.shaders.add('edlStrength');
+
       edlGroup.addComponent('radius', components.THREE_RANGE_SLIDER, {
         key: 3,
         min: 0.0,
         max: 5.0,
         step: 0.01,
         title: "radius",
-        defaultVal: 0.0,
+        defaultVal: EDL.uniforms.radius.value,
         ref: (ref) => this.EDLRadiusRangeSlider = ref,
         callback: (value) => this.updateDynamicShaders(value, 'EDL', 'radius'),
       });
@@ -1541,34 +1541,38 @@ export default class ThreeView extends Component {
 
       // Chroma Key
 
-      let chromaKeyGroup = new ThreeGUIGroup('chromaKey');
+      const chromaKeyGroup = new ThreeGUIGroup('chromaKey');
 
       chromaKeyGroup.addComponent('enable', components.THREE_TOGGLE, {
         key: 1,
         callback: (value) => this.updateDynamicShaders(value, 'ChromaKey', 'enable'),
-        checked: shaderPasses.ChromaKey.enable ? shaderPasses.ChromaKey.enable : false,
+        defaultVal: ChromaKey.uniforms.enable.value,
         title: 'enable',
       });
-
+      this.settingsMask.shaders.add('enable');
       chromaKeyGroup.addComponent('eyedropper', components.THREE_EYEDROPPER_COLOR_PICKER, {
         renderer: this.webGLRenderer,
         // pull from the model pass only so we ignore all the edl effects other shaders
         renderTarget: this.modelComposer.renderTarget2,
         title: 'chroma',
+        color: '#' + ChromaKey.uniforms.chroma.value.getHexString(),
         callback: (color) => this.updateDynamicShaders(color, 'ChromaKey', 'chroma'),
       });
-
       this.settingsMask.shaders.add('chroma');
 
       chromaKeyGroup.addComponent('replacement_color', components.THREE_MICRO_COLOR_PICKER, {
         title: "replacement color",
-        callback: (color) => this.state.shaderPasses.ChromaKey.setReplacementColor(color),
+        // add this to state somehow
+        callback: (color) => {
+          this.updateDynamicShaders(color, 'ChromaKey', 'replacementColor')
+        }
       });
+      this.settingsMask.shaders.add('replacementColor');
       // TODO Figure something out for replacement color
       chromaKeyGroup.addComponent('invert', components.THREE_TOGGLE, {
         key: 1,
         callback: (value) => this.updateDynamicShaders(value, 'ChromaKey', 'invert'),
-        checked: shaderPasses.ChromaKey.invert ? shaderPasses.ChromaKey.invert : false,
+        defaultVal: ChromaKey.uniforms.invert.value,
         title: 'invert',
       });
       this.settingsMask.shaders.add('invert');
@@ -1578,7 +1582,7 @@ export default class ThreeView extends Component {
         max: 1.0,
         step: 0.01,
         title: "threshold",
-        defaultVal: 0.0,
+        defaultVal: ChromaKey.uniforms.threshold.value,
         callback: (value) => this.updateDynamicShaders(value, 'ChromaKey', 'threshold'),
       });
       this.settingsMask.shaders.add('threshold');

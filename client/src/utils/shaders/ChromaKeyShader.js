@@ -7,6 +7,7 @@ export default function loadChromaKeyShader(threeInstance: Object): Promise {
         threshold: { type: 'f', value: 0.5 },
         invert: { type: 'b', value: false },
         enable: { type: 'b', value: false },
+        replacementColor: { type: 'c', value: new threeInstance.Color(0x000000)}
       },
 
       vertexShader: [
@@ -24,13 +25,15 @@ export default function loadChromaKeyShader(threeInstance: Object): Promise {
         "uniform float threshold;",
         "uniform bool invert;",
         "uniform bool enable;",
+        "uniform vec3 replacementColor;",
 				"varying vec2 vUv;",
 				"void main() {",
 					// inital setup
 					"vec3 color = texture2D(tDiffuse, vUv).rgb;",
           "float subLength = invert ? -length(color-chroma) : length(color-chroma);",
-          "float alpha = enable ? (subLength - threshold) * 6.0 : 1.0;",
-          "gl_FragColor = vec4(color, alpha);",
+          "float alpha = (subLength - threshold) * 20.0;",
+          "subLength = enable ? subLength : 1.0;",
+          "gl_FragColor = subLength < threshold ? vec4(-mix(color, replacementColor, alpha), 1.0) : vec4(color, 1.0);",
 				"}"
 			].join( "\n" ),
 
