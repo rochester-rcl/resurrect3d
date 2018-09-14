@@ -1,0 +1,40 @@
+.three-converter-form-mesh-group {
+  flex-wrap: wrap !important;
+  background: #1c1c1c;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 50px !important;
+  justify-content: center;
+}
+
+.three-converter-form {
+  margin: 10%;
+  font-family: 'Source Code Pro', monospace;
+}
+
+.three-converter-form-field {
+  margin: 20px !important;
+}
+
+.three-converter-form-field .input {
+  font-family: 'Source Code Pro', monospace;
+}
+
+.three-converter-form-field .input input {
+  background: #1b1b1b !important;
+  color: #fff !important;
+}
+
+.three-converter-form-field .input input[type="file"],
+.three-converter-form-field .input input[type="text"]
+{
+  font-family: 'Source Code Pro', monospace !important;
+}
+
+.three-converter-form-submit {
+  align-self: flex-end;
+  float: right;
+  background: #1c1c1c !important;
+  color: #fff !important;
+  font-family: 'Source Code Pro', monospace !important;
+}

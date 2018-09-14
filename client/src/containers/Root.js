@@ -15,6 +15,7 @@ import App from './App';
 import ViewForm from '../components/admin/ThreeViewForm';
 import ThreeViews from '../components/admin/ThreeViews';
 import ThreeViewDetails from '../components/admin/ThreeViewDetails';
+import ConverterContainer from './converter/ConverterContainer';
 
 export default class Root extends Component {
   render() {
@@ -29,6 +30,7 @@ export default class Root extends Component {
             <Route path={'/admin/add'} component={ViewForm} />
             <Route path={'/admin/views'} component={ThreeViews} />
             <Route path={'/admin/view/:id'} component={ThreeViewDetails} />
+            <Route path={'/converter'} component={ConverterContainer} />
           </div>
         </Router>
       </Provider>

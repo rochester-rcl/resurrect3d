@@ -35,6 +35,9 @@ import ModelLoaderWorker from '../utils/workers/ModelLoaderWorker/modelloader.wo
 // serialization
 import {deserializeThreeTypes} from '../utils/serialization';
 
+// Converter
+import convertObjToThree from '../utils/converter/objToThree';
+
 const nodeBackend = new ThreeViewerNodeBackend();
 
 const adminBackend = new ThreeViewerAdminBackend();
@@ -266,6 +269,17 @@ export function* deleteThreeViewSaga(deleteThreeViewAction: Object): Generator<a
   }
 }
 
+// Converter
+
+export function* runConversionSaga(conversionAction: Object): Generator<any, any, any> {
+  try {
+    const converted = yield convertObjToThree(conversionAction.inputData);
+    console.log(converted);
+  } catch(error) {
+    console.log(error);
+  }
+}
+
 /*************************** Observers ****************************************/
 export function* watchForGetThreeAsset(): Generator < any, any, any > {
   yield takeEvery(ActionConstants.GET_THREE_ASSET, getThreeAssetSaga);
@@ -303,6 +317,10 @@ export function* watchForDeleteThreeView(): Generator <any, any, any> {
   yield takeEvery(ActionConstants.DELETE_VIEW, deleteThreeViewSaga);
 }
 
+// Converter
+export function* watchForConversion(): Generator<any, any, any> {
+  yield takeEvery(ActionConstants.START_CONVERSION, runConversionSaga);
+}
 
 
 export default function* rootSaga(): Generator < any, any, any > {
@@ -316,5 +334,6 @@ export default function* rootSaga(): Generator < any, any, any > {
     watchForGetThreeView(),
     watchForUpdateThreeView(),
     watchForDeleteThreeView(),
+    watchForConversion(),
   ];
 }

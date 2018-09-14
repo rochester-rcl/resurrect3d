@@ -11,9 +11,7 @@ import App from '../containers/App';
 
 // Components
 import ViewForm from '../components/admin/ThreeViewForm';
-const blah = () => {
-  return <div>HI</div>;
-}
+
 
 const routes = () => {
   return(

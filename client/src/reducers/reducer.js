@@ -11,6 +11,7 @@ import { LinearGradientShader } from '../utils/image';
 
 // Reducers
 import ViewReducer from './ViewReducer';
+import ConverterReducer from './ConverterReducer';
 
 const defaultState = {
 
@@ -98,6 +99,7 @@ function uiReducer(state: Object = defaultState, action: Object): Object {
 const appReducer = combineReducers({
     views: ViewReducer,
     ui: uiReducer,
+    converter: ConverterReducer,
   });
 
 export default appReducer;

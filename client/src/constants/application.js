@@ -93,3 +93,11 @@ export const THREE_VECTOR2 = 'Vector2';
 export const THREE_VECTOR3 = 'Vector3';
 
 export const THREE_TYPES = new Set([THREE_COLOR, THREE_VECTOR2, THREE_VECTOR3]);
+
+// Converter
+export const VALID_IMAGE_FORMATS = ".jpg,.png,.bmp,.gif,.jpeg";
+export const VALID_MESH_FORMATS = ".obj";
+export const VALID_MATERIAL_FORMATS = ".mtl";
+export const CHECKBOX = 'checkbox';
+export const MAP = 'map';
+export const FILE = 'file';

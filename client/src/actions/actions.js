@@ -48,3 +48,10 @@ export function loadViewerSettings(id: Number): Object {
     id: id,
   }
 }
+
+export function startConversion(inputData: Object): Object {
+  return {
+    type: ActionConstants.START_CONVERSION,
+    inputData: inputData,
+  }
+}
