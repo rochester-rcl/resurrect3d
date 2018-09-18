@@ -2,8 +2,7 @@
 import pako from "pako";
 import * as THREE from 'three';
 import { WORKER_PROGRESS, WORKER_DATA } from '../../constants/application';
-
-const GZIP_CHUNK_SIZE = 512 * 1024;
+import {GZIP_CHUNK_SIZE} from '../../constants/application';
 
 const inflate = (gzip: Uint8Array, chunkSize: number ): string => {
   const inflator = new pako.Inflate({ to: "string" });

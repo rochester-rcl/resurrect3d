@@ -31,6 +31,7 @@ import ThreeViewerAdminBackend from './backends/ThreeViewerAdminBackend';
 
 // workers
 import ModelLoaderWorker from '../utils/workers/ModelLoaderWorker/modelloader.worker';
+import DeflateWorker from '../utils/workers/deflate.worker';
 
 // serialization
 import {deserializeThreeTypes} from '../utils/serialization';
@@ -76,14 +77,19 @@ function getActionType(payload: Object): string {
   switch (payload.eventType) {
     case 'progress':
       if (payload.loaderType === 'texture') return ActionConstants.UPDATE_TEXTURE_LOAD_PROGRESS;
+      if (payload.loaderType === 'converter') return ActionConstants.UPDATE_CONVERSION_PROGRESS;
       return ActionConstants.UPDATE_MESH_LOAD_PROGRESS;
 
     case 'loaded':
       if (payload.loaderType === 'texture') return ActionConstants.TEXTURE_LOADED;
+      if (payload.loaderType === 'converter') return ActionConstants.CONVERSION_COMPLETE;
+      // put in logic for converter
       return ActionConstants.MESH_LOADED;
+
 
     default:
       if (payload.loaderType === 'texture') return ActionConstants.TEXTURE_LOAD_ERROR;
+      if (payload.loaderType === 'converter') return ActionConstants.CONVERSION_ERROR;
       return ActionConstants.MESH_LOAD_ERROR;
   }
 }
@@ -177,7 +183,6 @@ export function* loadMeshSaga(loadMeshAction: Object): Generator <any, any, any>
 
           Some day we can use https://caniuse.com/#feat=offscreencanvas
         */
-
         const loader = new THREE.ObjectLoader();
         const object3D = loader.parse(payload.val);
         yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Building Scene", percent: null }});
@@ -274,7 +279,26 @@ export function* deleteThreeViewSaga(deleteThreeViewAction: Object): Generator<a
 export function* runConversionSaga(conversionAction: Object): Generator<any, any, any> {
   try {
     const converted = yield convertObjToThree(conversionAction.inputData);
-    console.log(converted);
+    const deflateWorker = new DeflateWorker();
+    deflateWorker.postMessage(converted);
+    const progressChannel = yield createWorkerProgressChannel(deflateWorker, 'converter');
+    while (true) {
+      const payload = yield take(progressChannel);
+      if (payload.eventType === 'loaded') {
+        yield put({
+          type: getActionType(payload),
+          file: payload.val
+        });
+        progressChannel.close();
+      } else {
+        yield put({
+          type: getActionType(payload),
+          payload: { val: "Compressing Mesh Data",
+          percent: payload.val,
+        }
+      });
+      }
+    }
   } catch(error) {
     console.log(error);
   }

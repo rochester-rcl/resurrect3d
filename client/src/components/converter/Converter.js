@@ -17,28 +17,28 @@ import {
 export default class ConverterForm extends Component {
   state = {
     maps: {
-      normal: {
+      normalMap: {
         label: "Normal Map",
         file: null,
         info: "https://en.wikipedia.org/wiki/Normal_mapping",
         type: FILE,
         accept: VALID_IMAGE_FORMATS
       },
-      ao: {
+      aoMap: {
         label: "Ambient Occlusion Map",
         file: null,
         info: "https://en.wikipedia.org/wiki/Ambient_occlusion",
         type: FILE,
         accept: VALID_IMAGE_FORMATS
       },
-      diffuse: {
+      map: {
         label: "Diffuse Map",
         file: null,
         info: "http://docs.cryengine.com/display/SDKDOC2/Diffuse+Maps",
         type: FILE,
         accept: VALID_IMAGE_FORMATS
       },
-      roughness: {
+      roughnessMap: {
         label: "Roughness Map",
         file: null,
         info:
@@ -46,7 +46,7 @@ export default class ConverterForm extends Component {
         type: FILE,
         accept: VALID_IMAGE_FORMATS
       },
-      metalness: {
+      metalnessMap: {
         label: "Metalness Map",
         file: null,
         info:
@@ -54,7 +54,7 @@ export default class ConverterForm extends Component {
         type: FILE,
         accept: VALID_IMAGE_FORMATS
       },
-      displacement: {
+      displacementMap: {
         label: "Displacement Map",
         file: null,
         info: "https://en.wikipedia.org/wiki/Displacement_mapping",
@@ -93,6 +93,7 @@ export default class ConverterForm extends Component {
     (this: any).renderGroup = this.renderGroup.bind(this);
     (this: any).checkFileUploadType = this.checkFileUploadType.bind(this);
     (this: any).handleSubmit = this.handleSubmit.bind(this);
+    (this: any).prepare = this.prepare.bind(this);
   }
 
   checkFileUploadType(key: string): string {
@@ -118,10 +119,30 @@ export default class ConverterForm extends Component {
     this.setState({ options: shallowCopy }, () => console.log(this.state));
   }
 
+  prepare(data: Object): Object {
+    const { mesh, material, maps, options } = data;
+    const toSubmit = {};
+    toSubmit.mesh = mesh.file;
+    toSubmit.material = material.file;
+    toSubmit.maps = {};
+    toSubmit.options = {};
+    for (let key in maps) {
+      let val = maps[key];
+      if (val.file !== null) {
+        toSubmit.maps[key] = val.file;
+      }
+    }
+    for (let key in options) {
+      let option = options[key];
+      toSubmit.options[key] = option.val;
+    }
+    return toSubmit;
+  }
+
   handleSubmit(event: SyntheticEvent): void {
     event.preventDefault();
     event.stopPropagation();
-    this.props.startConversion(this.state);
+    this.props.startConversion(this.prepare(this.state));
   }
 
   renderGroup(group: Object): Form.Group {
