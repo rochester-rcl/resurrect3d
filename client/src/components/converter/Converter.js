@@ -147,7 +147,7 @@ export default class ConverterForm extends Component {
 
   renderGroup(group: Object): Form.Group {
     return (
-      <Form.Group className="three-converter-form-mesh-group">
+      <Form.Group className="three-converter-form-group">
         {Object.keys(group).map((key, index) => {
           let field = group[key];
           return (
@@ -185,7 +185,14 @@ export default class ConverterForm extends Component {
           Options
         </Divider>
         {this.renderGroup(options)}
-        <Button size="large" className="three-converter-form-submit" onClick={this.handleSubmit}>convert</Button>
+        <Button
+          size="large"
+          className="three-converter-form-submit"
+          color="green"
+          onClick={this.handleSubmit}
+        >
+          convert
+        </Button>
       </Form>
     );
   }

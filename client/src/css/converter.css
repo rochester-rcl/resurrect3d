@@ -1,4 +1,4 @@
-.three-converter-form-mesh-group {
+.three-converter-form-group {
   flex-wrap: wrap !important;
   background: #1c1c1c;
   padding: 10px;
@@ -34,7 +34,6 @@
 .three-converter-form-submit {
   align-self: flex-end;
   float: right;
-  background: #1c1c1c !important;
   color: #fff !important;
   font-family: 'Source Code Pro', monospace !important;
 }

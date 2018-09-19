@@ -5,6 +5,7 @@ const defaultState = {
   conversionComplete: false,
   conversionStarted: false,
   file: null,
+  progress: { label: 'performing conversion (this will take a while).', percent: null }
 }
 
 export default function ConverterReducer(state: Object = defaultState, action: Object): Object {
@@ -15,11 +16,21 @@ export default function ConverterReducer(state: Object = defaultState, action: O
         ...{ conversionStarted: true }
       }
 
+    case ActionConstants.UPDATE_CONVERSION_PROGRESS:
+      return {
+        ...state,
+        progress: { label: action.payload.val, percent: action.payload.percent }
+      }
+
     case ActionConstants.CONVERSION_COMPLETE:
-      console.log(action);
       return {
         ...state,
         ...{ conversionComplete: true, file: action.file }
+      }
+
+    case ActionConstants.RESTART_CONVERTER:
+      return {
+        ...defaultState,
       }
 
     default:

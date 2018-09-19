@@ -74,7 +74,7 @@ export const OBJ_EXT = '.obj';
 export const STL_EXT = '.stl';
 export const MTL_EXT = '.mtl';
 export const ZIP_EXT = '.zip';
-
+export const GZIP_EXT = '.gz';
 // Cache
 export const THREE_MODEL_CACHE_GET = 0;
 export const THREE_MODEL_CACHE_SAVE = 1;
@@ -96,7 +96,7 @@ export const THREE_GROUP = 'Group';
 export const THREE_MESH = 'Mesh';
 export const THREE_DIFFUSE_MAP = 'map';
 export const THREE_TYPES = new Set([THREE_COLOR, THREE_VECTOR2, THREE_VECTOR3]);
-
+export const THREE_MESH_STANDARD_MATERIAL = 'MeshStandardMaterial';
 // Converter
 export const VALID_IMAGE_FORMATS = ".jpg,.png,.bmp,.gif,.jpeg";
 export const VALID_MESH_FORMATS = ".obj";

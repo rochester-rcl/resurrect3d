@@ -55,3 +55,9 @@ export function startConversion(inputData: Object): Object {
     inputData: inputData,
   }
 }
+
+export function restartConverter(): Object {
+  return {
+    type: ActionConstants.RESTART_CONVERTER,
+  }
+}

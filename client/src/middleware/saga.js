@@ -278,9 +278,10 @@ export function* deleteThreeViewSaga(deleteThreeViewAction: Object): Generator<a
 
 export function* runConversionSaga(conversionAction: Object): Generator<any, any, any> {
   try {
+    yield put({ type: ActionConstants.CONVERSION_STARTED });
     const converted = yield convertObjToThree(conversionAction.inputData);
     const deflateWorker = new DeflateWorker();
-    deflateWorker.postMessage(converted);
+    deflateWorker.postMessage(converted.threeFile);
     const progressChannel = yield createWorkerProgressChannel(deflateWorker, 'converter');
     while (true) {
       const payload = yield take(progressChannel);

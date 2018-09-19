@@ -8,25 +8,26 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 // Actions
-import { startConversion } from '../../actions/actions';
+import { startConversion, restartConverter } from '../../actions/actions';
 
 // Components
 import ConverterForm from '../../components/converter/Converter';
-
+import LoaderModal from '../../components/LoaderModal';
+import ConverterSave from '../../components/converter/ConverterSave';
 
 class ConverterContainer extends Component {
 
   render(): Object {
-    const { startConversion, conversionStarted, conversionComplete, threeFile } = this.props;
+    const { startConversion, restartConverter, conversionStarted, conversionComplete, file, progress } = this.props;
     if (conversionStarted === false) {
       return(
         <ConverterForm startConversion={startConversion} />
       );
     } else {
       if (conversionComplete === false) {
-        <div>LOADER GOES HERE</div>
+        return(<LoaderModal className="three-loader-dimmer" text={progress.label} percent={progress.percent} active={true} />);
       } else {
-        <div>DOWNLOAD PAGE GOES HERE</div>
+        return(<ConverterSave file={file} restartConverter={restartConverter} />);
       }
     }
   }
@@ -38,4 +39,4 @@ function mapStateToProps(state: Object): Object {
   }
 
 }
-export default connect(mapStateToProps, { startConversion })(ConverterContainer);
+export default connect(mapStateToProps, { startConversion, restartConverter })(ConverterContainer);

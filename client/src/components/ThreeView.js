@@ -35,6 +35,7 @@ import {
   ZOOM_PINCH_DISTANCE_SIZE,
   CM, IN, MM, FT,
   THREE_VECTOR3,
+  THREE_MESH_STANDARD_MATERIAL,
 } from '../constants/application';
 
 // Controls
@@ -720,7 +721,7 @@ export default class ThreeView extends Component {
   initMesh(): void {
       this.mesh = this.props.mesh.object3D;
       const setMicrosurface = (material) => {
-        if (material.type === 'MeshStandardMaterial') {
+        if (material.type === THREE_MESH_STANDARD_MATERIAL) {
           material.metalness = 0.0;
           material.roughness = 1.0;
         }
@@ -883,7 +884,7 @@ export default class ThreeView extends Component {
     }
 
     const setEnv = (material) => {
-      if (material.type === 'MeshStandardMaterial') {
+      if (material.type === THREE_MESH_STANDARD_MATERIAL) {
         if (this.props.skyboxTexture.image) {
           material.envMap = this.props.skyboxTexture.image;
           material.envMap.mapping = THREE.EquirectangularReflectionMapping;
@@ -1628,7 +1629,7 @@ export default class ThreeView extends Component {
               callback: (value) => this.updateDynamicMaterials(value, 'bumpScale'),
             });
           }
-          if (currentMaterial.type === 'MeshStandardMaterial' && !materialsGroup.find('microsurface')) {
+          if (currentMaterial.type === THREE_MESH_STANDARD_MATERIAL && !materialsGroup.find('microsurface')) {
             const pbrGroup = new ThreeGUIGroup('pbrTool');
             pbrGroup.addComponent('metalness', components.THREE_RANGE_SLIDER, {
               ...materialsProps,

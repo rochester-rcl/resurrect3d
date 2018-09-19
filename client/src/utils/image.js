@@ -185,3 +185,5 @@ export function base64ImageToBlob(b64String: string, chunkSize: number): Object 
   }
   return { rawData: new Blob(bytes, {type: contentType}), ext: ext };
 }
+
+// normal map from texture
