@@ -26,6 +26,7 @@ const deflate = (inputData: string, chunkSize: number): Uint8Array => {
 self.onmessage = (event: Event) => {
   const { data } = event;
   let inputData = data;
+  console.log('data in worker', data);
   if (data.constructor !== String) {
     inputData = JSON.stringify(data);
   }

@@ -1,20 +1,20 @@
 /* @flow */
 
 // React
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
 // semantic-ui-react
-import { Label, Segment } from 'semantic-ui-react';
+import { Label, Segment } from "semantic-ui-react";
 
 // input range
-import InputRange from 'react-input-range';
-import 'react-input-range/lib/css/index.css';
+import InputRange from "react-input-range";
+import "react-input-range/lib/css/index.css";
 
 export default class ThreeRangeSlider extends Component {
   state: Object = {
     value: 0,
     minValue: 0,
-    maxValue: 100,
+    maxValue: 100
   };
   constructor(props: Object) {
     super(props);
@@ -32,7 +32,7 @@ export default class ThreeRangeSlider extends Component {
       defaults: {
         stepValue: this.props.step,
         minValue: this.props.min,
-        maxValue: this.props.max,
+        maxValue: this.props.max
       }
     });
   }
@@ -47,7 +47,7 @@ export default class ThreeRangeSlider extends Component {
     this.setState({
       minValue: minValue,
       maxValue: maxValue,
-      stepValue: stepValue,
+      stepValue: stepValue
     });
   }
 
@@ -59,9 +59,11 @@ export default class ThreeRangeSlider extends Component {
   render() {
     const { callback, title } = this.props;
     const { minValue, maxValue, stepValue } = this.state;
-    return(
+    return (
       <Segment className="three-tool-component-container">
-        <Label className="three-tool-component-label" attached="top left">{title}</Label>
+        <Label className="three-tool-component-label" attached="top left">
+          {title}
+        </Label>
         <InputRange
           className="three-range-slider"
           step={stepValue}
@@ -69,7 +71,7 @@ export default class ThreeRangeSlider extends Component {
           minValue={minValue}
           draggableTrack={true}
           value={Number(this.state.value.toFixed(2))}
-          onChange={(value) => this.updateRange(value, callback)}
+          onChange={value => this.updateRange(value, callback)}
         />
       </Segment>
     );

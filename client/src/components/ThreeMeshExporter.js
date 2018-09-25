@@ -102,7 +102,10 @@ export default class ThreeMeshExporter extends Component {
   export(event: SyntheticEvent, format: string): void {
     event.preventDefault();
     event.stopPropagation();
-    let name = (this.props.mesh.children[0] !== undefined) ? this.props.mesh.children[0].name : this.props.mesh.name;
+    let name =
+      this.props.mesh.children[0] !== undefined
+        ? this.props.mesh.children[0].name
+        : this.props.mesh.name;
     if (this.state.dbLoaded !== false) {
       let result = this._cache
         .get([name, format])
@@ -128,7 +131,10 @@ export default class ThreeMeshExporter extends Component {
   }
 
   save(format: string): void {
-    let name = (this.props.mesh.children[0] !== undefined) ? this.props.mesh.children[0].name : this.props.mesh.name;
+    let name =
+      this.props.mesh.children[0] !== undefined
+        ? this.props.mesh.children[0].name
+        : this.props.mesh.name;
     let meshData = this.FORMATS[format].exporter.parse(
       this.props.mesh,
       this.uuid.new()
@@ -202,19 +208,7 @@ export default class ThreeMeshExporter extends Component {
     }
     return (
       <div className="three-export-button-container">
-        <Modal
-          basic
-          className="three-export-modal"
-          trigger={
-            <ThreeButton
-              content="save mesh"
-              className="three-controls-button"
-              icon="cube"
-              labelPosition="right"
-              color="grey"
-            />
-          }
-        >
+        <Modal>
           <Modal.Header className="three-export-modal-header">
             {" "}
             Select an export format{" "}

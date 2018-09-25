@@ -347,14 +347,13 @@ export default class ThreeView extends Component {
     threeViewClassName += toolsActive ? 'tools-active' : 'tools-inactive';
     return(
       <div className="three-gui-container">
-        {this.controls ? this.controls : <span></span>}
+        {this.controls ? this.controls : null}
         <div className='three-view-container'>
           {this.panelLayout ? this.panelLayout : <span></span>}
           <InfoModal className="three-info-modal" active={showInfo} info={info} />
           <LoaderModal
             text={loadText + loadProgress}
             className="three-loader-dimmer"
-            percent={loadProgress}
             active={loadProgress !== 100}
           />
           <ThreeTouchControls
@@ -365,7 +364,7 @@ export default class ThreeView extends Component {
             onPinchEndCallback={this.handlePinch}
             onPinchMoveCallback={this.handlePinchMove}
           >
-            <div ref="threeView" className={threeViewClassName}
+            <div ref={(ref) => { this.threeView = ref }} className={threeViewClassName}
               onMouseDown={this.handleMouseDown}
               onMouseMove={this.handleMouseMove}
               onMouseUp={this.handleMouseUp}
@@ -379,7 +378,6 @@ export default class ThreeView extends Component {
         </div>
       </div>
     );
-
   }
 
   /** THREE JS 'LIFECYCYLE'
@@ -400,7 +398,7 @@ export default class ThreeView extends Component {
     this.GUI.registerLayout('THREE_PANEL_LAYOUT', ThreeGUIPanelLayout);
 
     const { color, intensity, decay, distance } = this.state.dynamicLightProps;
-    this.threeContainer = this.refs.threeView;
+    this.threeContainer = this.threeView;
 
     // init camera
     this.camera = new THREE.PerspectiveCamera(50, this.width / this.height); // use defaults for fov and near and far frustum;
@@ -858,6 +856,7 @@ export default class ThreeView extends Component {
   }
 
   hydrateSettings(): Promise {
+    console.log('here ???');
     const tasks = [];
     if (this.props.options.viewerSettings !== undefined) {
       const { lights, materials, shaders } = this.props.options.viewerSettings;
@@ -1001,7 +1000,6 @@ export default class ThreeView extends Component {
     this.effectComposer.addPass(rawGui);
     this.effectComposer.addPass(clearMask);
     this.effectComposer.addPass(copyPass);
-
     this.updateCamera();
     this.setState((prevState, props) => {
       return { loadProgress: prevState.loadProgress + 25, loadText: "Loading Tools" }
@@ -1375,7 +1373,6 @@ export default class ThreeView extends Component {
   /** UI
   *****************************************************************************/
   initTools(): void {
-
     const layouts = this.GUI.layouts;
     const components = this.GUI.components;
     let panelGroup = new ThreeGUIGroup('tools');

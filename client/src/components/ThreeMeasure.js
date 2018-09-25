@@ -1,16 +1,15 @@
 /* @flow */
 
 // React
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
 // THREEJS
-import * as THREE from 'three';
+import * as THREE from "three";
 
 // Semantic UI
-import { Button, Icon } from 'semantic-ui-react';
+import { Button, Icon } from "semantic-ui-react";
 
 export default class ThreeMeasure extends Component {
-
   raycaster: THREE.RayCaster;
 
   defaultState = {
@@ -18,9 +17,9 @@ export default class ThreeMeasure extends Component {
     points: {
       a: null,
       b: null,
-      distance: null,
+      distance: null
     },
-    secondClick: false,
+    secondClick: false
   };
   // Object spread doesn't do a deep copy so we need to do this
   state = {
@@ -28,9 +27,9 @@ export default class ThreeMeasure extends Component {
     points: {
       a: null,
       b: null,
-      distance: null,
+      distance: null
     },
-    secondClick: false,
+    secondClick: false
   };
   constructor(props: Object) {
     super(props);
@@ -43,33 +42,38 @@ export default class ThreeMeasure extends Component {
   }
 
   componentDidMount(): void {
-    this.props.target.addEventListener('click', this.measure, true);
+    this.props.target.addEventListener("click", this.measure, true);
   }
 
   componentWillUnmount(): void {
-    this.props.target.removeEventListener('click', this.measure, true);
+    this.props.target.removeEventListener("click", this.measure, true);
   }
 
   activate(): void {
-    this.setState({
-      active: !this.state.active
-    }, this.reset);
+    this.setState(
+      {
+        active: !this.state.active
+      },
+      this.reset
+    );
   }
 
   reset(): void {
     if (!this.state.active) {
-      this.setState({
-        ...this.defaultState
-      }, this.doCallback)
+      this.setState(
+        {
+          ...this.defaultState
+        },
+        this.doCallback
+      );
     }
   }
 
   doCallback(): void {
-    this.props.updateCallback( this.state.active ? this.state.points : null);
+    this.props.updateCallback(this.state.active ? this.state.points : null);
   }
 
   measure(event: MouseEvent): void {
-
     if (this.state.active) {
       let { camera, mesh } = this.props;
 
@@ -95,31 +99,38 @@ export default class ThreeMeasure extends Component {
     let { points } = this.state;
     if (!this.state.secondClick) {
       points.a = intersection.point;
-      points.b = null,
-      points.distance = null,
-      this.setState({
-        points: points,
-        secondClick: true
-      }, this.doCallback);
+      (points.b = null),
+        (points.distance = null),
+        this.setState(
+          {
+            points: points,
+            secondClick: true
+          },
+          this.doCallback
+        );
     } else {
       points.b = intersection.point;
-      points.distance = points.a && points.b ? points.a.distanceTo(points.b) : null; // Need to figure out a way to enforce presence of 'a'
-      this.setState({
-        points: points,
-        secondClick: false
-      }, this.doCallback);
+      points.distance =
+        points.a && points.b ? points.a.distanceTo(points.b) : null; // Need to figure out a way to enforce presence of 'a'
+      this.setState(
+        {
+          points: points,
+          secondClick: false
+        },
+        this.doCallback
+      );
     }
   }
 
   render() {
-    return(
+    return (
       <div className="three-measure-tool-container">
         <Button
           className="three-controls-button"
           content="measure"
           icon="pencil"
           onClick={this.activate}
-          labelPosition='right'
+          labelPosition="right"
           color="grey"
           active={this.state.active}
           inverted

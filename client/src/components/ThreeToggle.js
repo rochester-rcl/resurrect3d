@@ -1,13 +1,13 @@
 /* @flow */
 
 // React
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
 // semantic-ui-react
-import { Label, Segment, Checkbox } from 'semantic-ui-react';
+import { Label, Segment, Checkbox } from "semantic-ui-react";
 
 export class ThreeToggleMulti extends Component {
-  state = { toggleButtons: [] }
+  state = { toggleButtons: [] };
 
   constructor(props: Object): void {
     super(props);
@@ -21,27 +21,32 @@ export class ThreeToggleMulti extends Component {
   updateChecked(index: number): void {
     const { toggleButtons } = this.state;
     let cloned = toggleButtons.slice(0);
-    cloned.forEach((button) => {
+    cloned.forEach(button => {
       button.checked = false;
     });
     cloned[index].checked = !toggleButtons[index].checked;
-    this.setState({
-      toggleButtons: cloned,
-    }, () => {
-      const { toggleButtons } = this.state;
-      toggleButtons[index].callback(toggleButtons[index].checked)
-    });
+    this.setState(
+      {
+        toggleButtons: cloned
+      },
+      () => {
+        const { toggleButtons } = this.state;
+        toggleButtons[index].callback(toggleButtons[index].checked);
+      }
+    );
   }
 
   render() {
     const { title } = this.props;
     const { toggleButtons } = this.state;
-    return(
+    return (
       <Segment className="three-tool-component-container">
-        <Label className="three-tool-component-label" attached="top left">{title}</Label>
+        <Label className="three-tool-component-label" attached="top left">
+          {title}
+        </Label>
         <div className="three-tool-toggle-container">
           <div className="three-toggle-multi-container">
-            {toggleButtons.map((button, index) =>
+            {toggleButtons.map((button, index) => (
               <div className="three-toggle-multi">
                 <span className="three-toggle-multi-label">{button.label}</span>
                 <Checkbox
@@ -50,9 +55,11 @@ export class ThreeToggleMulti extends Component {
                   toggle
                   onClick={() => this.updateChecked(index)}
                 />
-                <span className="three-toggle-status">{ button.checked ? 'on' : 'off'}</span>
+                <span className="three-toggle-status">
+                  {button.checked ? "on" : "off"}
+                </span>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </Segment>
@@ -61,7 +68,7 @@ export class ThreeToggleMulti extends Component {
 }
 
 export default class ThreeToggle extends Component {
-  state = { checked: false }
+  state = { checked: false };
 
   constructor(props: Object): void {
     super(props);
@@ -74,17 +81,22 @@ export default class ThreeToggle extends Component {
 
   updateChecked(): void {
     let newVal = !this.state.checked;
-    this.setState({
-      checked: newVal
-    }, this.props.callback(newVal));
+    this.setState(
+      {
+        checked: newVal
+      },
+      this.props.callback(newVal)
+    );
   }
 
   render() {
     const { title } = this.props;
     const { checked } = this.state;
-    return(
+    return (
       <Segment className="three-tool-component-container">
-        <Label className="three-tool-component-label" attached="top left">{title}</Label>
+        <Label className="three-tool-component-label" attached="top left">
+          {title}
+        </Label>
         <div className="three-tool-toggle-container">
           <Checkbox
             className="three-tool-toggle"
@@ -92,7 +104,7 @@ export default class ThreeToggle extends Component {
             toggle
             onClick={this.updateChecked}
           />
-          <span className="three-toggle-status">{ checked ? 'on' : 'off'}</span>
+          <span className="three-toggle-status">{checked ? "on" : "off"}</span>
         </div>
       </Segment>
     );

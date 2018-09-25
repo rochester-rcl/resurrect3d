@@ -15,34 +15,26 @@ import {
 // Pako
 import pako from "pako";
 
+// postrprocessing options
+
+import { getChildren, centerGeometry } from './geometry';
+
+import { createNormalMap } from './normals';
+
 // super obnoxious pattern.
 const THREE = _THREE;
 // TODO have this emit progress events !!!!!!!!!!!!!!!
 
-const centerGeometry = (mesh: THREE.Group | THREE.Mesh): Promise => {
-  return new Promise((resolve, reject) => {
-    const box = new THREE.Box3().setFromObject(mesh);
-    const offset = box
-      .getCenter()
-      .negate()
-      .toArray();
-    let children;
-    if (mesh.constructor.name === THREE_MESH) {
-      children = [mesh];
-    } else {
-      children = mesh.children;
-    }
-    children.forEach(child => {
-      child.geometry.translate(...offset);
-    });
-    resolve(mesh);
-  });
-};
+// Move these functions to a new file
+
+// returns reference to mesh children
+
 
 // TODO all available options should live in a const
 class ThreeConverter {
   OPTIONS_MAP = {
-    center: centerGeometry
+    center: centerGeometry,
+    createNormalMap: createNormalMap,
   };
   constructor(mesh: File, maps: Object, options: Object) {
     this.meshFile = mesh;
