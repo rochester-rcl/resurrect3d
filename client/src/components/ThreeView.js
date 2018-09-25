@@ -765,7 +765,7 @@ export default class ThreeView extends Component {
             }
           });
        }
-
+      console.log(this.mesh);
       this.scene.add(this.mesh);
 
       this.bboxMesh = new THREE.Box3().setFromObject(this.mesh);

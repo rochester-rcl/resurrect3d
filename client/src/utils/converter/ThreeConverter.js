@@ -132,6 +132,7 @@ export default class ThreeObjConverter extends ThreeConverter {
     this.loadObj = this.loadObj.bind(this);
     this.loadMtl = this.loadMtl.bind(this);
     this.setUpMaterials = this.setUpMaterials.bind(this);
+    this.rectifyDataURLs = this.rectifyDataURLs.bind(this);
   }
 
   loadObj(material: THREE.MeshStandardMaterial) {
@@ -147,8 +148,7 @@ export default class ThreeObjConverter extends ThreeConverter {
             objLoader.setPath("");
             if (material !== undefined) objLoader.setMaterials(material);
             this.mesh = objLoader.parse(meshData);
-            this.setUpMaterials();
-            resolve(this.mesh);
+            this.setUpMaterials().then(() => resolve(this.mesh));
           });
         } else {
           resolve(new THREE.Mesh());
@@ -172,8 +172,36 @@ export default class ThreeObjConverter extends ThreeConverter {
     }
   }
 
+  rectifyDataURLs(serialized: object) {
+    serialized.images.forEach((image) => {
+      let map = this.maps.find((_map) => {
+        console.log(_map.uuid, image.uuid);
+        return _map.uuid === image.uuid
+      });
+      if (map !== undefined) {
+        image.url = map.dataURL;
+      }
+    });
+  }
+
+  loadTexture(url: string, onLoad, onErr): Promise {
+    return new Promise((resolve, reject) =>{
+      const tex = new THREE.TextureLoader();
+      const _onLoad = (_tex) => {
+        onLoad(_tex);
+        resolve(_tex);
+      }
+      const _onErr = (err) => {
+        onErr(err);
+        reject(err);
+      }
+      tex.load(url, _onLoad, undefined, _onErr);
+    });
+  }
+
   // TODO so far only working with ONE MAP - will have to think about how to do it otherwise, UUIDs will work
-  setUpMaterials(): Object {
+  setUpMaterials(): Promise {
+    const tasks = [];
     let children;
     if (this.mesh.constructor.name === THREE_MESH) {
       children = [this.mesh];
@@ -192,13 +220,15 @@ export default class ThreeObjConverter extends ThreeConverter {
       for (let key in this.maps) {
         let map = this.maps[key];
         // because diffuse is handled in the loader via map_kd
-        if (map.type !== THREE_DIFFUSE_MAP) {
-          child.material[map.type] = new THREE.TextureLoader().load(
-            map.dataURL
-          );
-        }
+        let task = this.loadTexture(map.dataURL, (tex) => {
+          child.material[map.type] = tex;
+          tex.image.uuid = THREE.Math.generateUUID();
+          map.uuid = tex.image.uuid;
+        });
+        tasks.push(task);
       }
     });
+    return Promise.all(tasks);
   }
 
   loadMtl() {
@@ -230,7 +260,11 @@ export default class ThreeObjConverter extends ThreeConverter {
     return this.loadMtl().then(material =>
       this.loadObj(material).then(() => {
         super.convert();
-        return this.handleOptions().then(mesh => Promise.resolve(mesh));
+        return this.handleOptions().then((mesh) => {
+          const exported = mesh.toJSON();
+          this.rectifyDataURLs(exported);
+          return Promise.resolve(exported)
+        });
       })
     );
   }

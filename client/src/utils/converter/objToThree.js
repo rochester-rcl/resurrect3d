@@ -9,7 +9,8 @@ export default function convertObjToThree(threeData: Object): Promise {
       .init()
       .then(_converter => _converter.convert())
       .then(threeObj => {
-        resolve({ threeFile: threeObj.toJSON() })
+        console.log(threeObj);
+        resolve({ threeFile: threeObj })
       });
   });
 }

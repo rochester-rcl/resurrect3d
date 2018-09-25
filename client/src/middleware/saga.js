@@ -185,6 +185,7 @@ export function* loadMeshSaga(loadMeshAction: Object): Generator <any, any, any>
         */
         const loader = new THREE.ObjectLoader();
         const object3D = loader.parse(payload.val);
+        console.log(object3D);
         yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Building Scene", percent: null }});
         yield put({ type: ActionConstants.MESH_LOADED, payload: { val: object3D }});
         progressChannel.close();
