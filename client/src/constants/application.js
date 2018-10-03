@@ -97,6 +97,7 @@ export const THREE_MESH = 'Mesh';
 export const THREE_DIFFUSE_MAP = 'map';
 export const THREE_TYPES = new Set([THREE_COLOR, THREE_VECTOR2, THREE_VECTOR3]);
 export const THREE_MESH_STANDARD_MATERIAL = 'MeshStandardMaterial';
+
 // Converter
 export const VALID_IMAGE_FORMATS = ".jpg,.png,.bmp,.gif,.jpeg";
 export const VALID_MESH_FORMATS = ".obj";
@@ -104,3 +105,5 @@ export const VALID_MATERIAL_FORMATS = ".mtl";
 export const CHECKBOX = 'checkbox';
 export const MAP = 'map';
 export const FILE = 'file';
+export const DATA_URL_JPEG = 'data:image/jpeg;base64,';
+export const DATA_URL_PNG = 'data:image/jpeg;base64,';

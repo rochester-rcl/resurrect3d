@@ -175,7 +175,6 @@ export default class ThreeObjConverter extends ThreeConverter {
   rectifyDataURLs(serialized: object) {
     serialized.images.forEach((image) => {
       let map = this.maps.find((_map) => {
-        console.log(_map.uuid, image.uuid);
         return _map.uuid === image.uuid
       });
       if (map !== undefined) {

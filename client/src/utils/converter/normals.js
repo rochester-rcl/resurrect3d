@@ -47,6 +47,13 @@ export function toUint8(val: Number): Number {
   return parseInt((val + 1.0) * (255.0 / 2.0), 10);
 }
 
+// sigma = 10
+const gaussianKernel = nj.array([
+  [0.110741, 0.111296, 0.110741],
+  [0.111296, 0.111853, 0.111296],
+  [0.110741, 0.111296, 0.110741]
+], 'float32');
+
 // Actually need a sobel function that handles vertical and horizontal operators so slightly rewriting nj.images.sobel
 
 const sobelKernel = [
@@ -94,28 +101,49 @@ const sobelY = cwise({
   }
 });
 
+const convolve3x3 = cwise({
+  args: [
+    'array', // c
+    'array', // xe
+    'scalar', // fa
+    'scalar', // fb
+    'scalar', // fc
+    'scalar', // fd
+    'scalar', // fe
+    'scalar', // ff
+    'scalar', // fg
+    'scalar', // fh
+    'scalar', // fi
+    {offset: [-1, -1], array: 1}, // xa
+    {offset: [-1, 0], array: 1}, // xb
+    {offset: [-1, 1], array: 1}, // xc
+    {offset: [0, -1], array: 1}, // xd
+    // {offset:[ 9,  0], array:1}, // useless since available already
+    {offset: [0, 1], array: 1}, // xf
+    {offset: [1, -1], array: 1}, // xg
+    {offset: [1, 0], array: 1}, // xh
+    {offset: [1, 1], array: 1} // xi
+  ],
+  body: function (c, xe, fa, fb, fc, fd, fe, ff, fg, fh, fi, xa, xb, xc, xd, xf, xg, xh, xi) {
+    c = xa * fi + xb * fh + xc * fg + xd * ff + xe * fe + xf * fd + xg * fc + xh * fb + xi * fa;
+  }
+});
+
+function gaussianBlur(arr) {
+  const gk = gaussianKernel.selection;
+  const out = new nj.NdArray(new Float32Array(shapeSize(arr.shape)), arr.shape);
+  convolve3x3(out.selection, arr.selection, gk.get(0,0), gk.get(0, 1), gk.get(0, 2), gk.get(1,0), gk.get(1,1), gk.get(1,2), gk.get(2,0), gk.get(2,1), gk.get(2,2));
+  return out;
+}
+
 export function sobel(img: nj.NDArray): Object {
   let gray = nj.images.rgb2gray(img);
+  gray = gaussianBlur(gray);
   const iShape = gray.shape;
   const iH = iShape[0];
   const iW = iShape[1];
-  let outX = new nj.NdArray(new Float32Array(shapeSize(iShape)), iShape);
-  let outY = new nj.NdArray(new Float32Array(shapeSize(iShape)), iShape);
-  sobelX(outX.selection, gray.selection);
-  sobelY(outY.selection, gray.selection);
-
-  const zeroBorders = (arr: nj.NdArray) => {
-    ops.assigns(arr.selection.pick(0, null), 0);
-    ops.assigns(arr.selection.pick(null, 0), 0);
-    ops.assigns(arr.selection.pick(iH - 1, null), 0);
-    ops.assigns(arr.selection.pick(null, iW - 1), 0);
-  }
-
-  zeroBorders(outX);
-  zeroBorders(outY);
-
-  outX.divide(outX.max(), false);
-  outY.divide(outY.max(), false);
-
-  return nj.stack([outX, outY], -1);
+  let out = new nj.NdArray(new Float32Array(iH * iW * 2), [iH, iW, 2]);
+  sobelX(out.selection.pick(null, null, 0), gray.selection);
+  sobelY(out.selection.pick(null, null, 1), gray.selection);
+  return out;
 }
