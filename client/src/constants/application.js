@@ -99,8 +99,11 @@ export const THREE_TYPES = new Set([THREE_COLOR, THREE_VECTOR2, THREE_VECTOR3]);
 export const THREE_MESH_STANDARD_MATERIAL = 'MeshStandardMaterial';
 
 // Converter
+export const CONVERSION_TYPE_MESH = "CONVERSION_TYPE_MESH";
+export const CONVERSION_TYPE_RTI = "CONVERSION_TYPE_RTI";
 export const VALID_IMAGE_FORMATS = ".jpg,.png,.bmp,.gif,.jpeg";
 export const VALID_MESH_FORMATS = ".obj";
+export const VALID_RTI_FORMATS = ".ptm";
 export const VALID_MATERIAL_FORMATS = ".mtl";
 export const CHECKBOX = 'checkbox';
 export const MAP = 'map';

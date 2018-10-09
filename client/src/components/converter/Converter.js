@@ -78,7 +78,7 @@ export default class ConverterForm extends Component {
     },
     options: {
       center: { label: "Re-Center Geometry", val: false, type: CHECKBOX },
-      compress: { label: "Use JPEG Compression on Textures", val: true, type: CHECKBOX },
+      compress: { label: "Use JPEG Compression on Textures", val: false, type: CHECKBOX },
       createNormalMap: {
         label: "Generate Normal Map from Diffuse",
         val: false,

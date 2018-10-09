@@ -856,7 +856,6 @@ export default class ThreeView extends Component {
   }
 
   hydrateSettings(): Promise {
-    console.log('here ???');
     const tasks = [];
     if (this.props.options.viewerSettings !== undefined) {
       const { lights, materials, shaders } = this.props.options.viewerSettings;

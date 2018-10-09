@@ -38,6 +38,7 @@ import {deserializeThreeTypes} from '../utils/serialization';
 
 // Converter
 import convertObjToThree from '../utils/converter/objToThree';
+import convertPtmToThree from '../utils/converter/ptmToThree';
 
 const nodeBackend = new ThreeViewerNodeBackend();
 
@@ -280,7 +281,13 @@ export function* deleteThreeViewSaga(deleteThreeViewAction: Object): Generator<a
 export function* runConversionSaga(conversionAction: Object): Generator<any, any, any> {
   try {
     yield put({ type: ActionConstants.CONVERSION_STARTED });
-    const converted = yield convertObjToThree(conversionAction.inputData);
+    const { inputData } = conversionAction;
+    let converted;
+    if (inputData.mesh === undefined) {
+      converted = yield convertPtmToThree(inputData);
+    } else {
+      converted = yield convertObjToThree(inputData);
+    }
     const deflateWorker = new DeflateWorker();
     deflateWorker.postMessage(converted.threeFile);
     const progressChannel = yield createWorkerProgressChannel(deflateWorker, 'converter');
