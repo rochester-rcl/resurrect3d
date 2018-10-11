@@ -186,7 +186,6 @@ export function* loadMeshSaga(loadMeshAction: Object): Generator <any, any, any>
         */
         const loader = new THREE.ObjectLoader();
         const object3D = loader.parse(payload.val);
-        console.log(object3D);
         yield put({ type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS, payload: { val: "Building Scene", percent: null }});
         yield put({ type: ActionConstants.MESH_LOADED, payload: { val: object3D }});
         progressChannel.close();
@@ -288,25 +287,31 @@ export function* runConversionSaga(conversionAction: Object): Generator<any, any
     } else {
       converted = yield convertObjToThree(inputData);
     }
-    const deflateWorker = new DeflateWorker();
-    deflateWorker.postMessage(converted.threeFile);
-    const progressChannel = yield createWorkerProgressChannel(deflateWorker, 'converter');
-    while (true) {
-      const payload = yield take(progressChannel);
-      if (payload.eventType === 'loaded') {
-        yield put({
-          type: getActionType(payload),
-          file: payload.val
+    const { options } = inputData;
+    if (options.zlib === true) {
+      // TODO break into function
+      const deflateWorker = new DeflateWorker();
+      deflateWorker.postMessage(converted.threeFile);
+      const progressChannel = yield createWorkerProgressChannel(deflateWorker, 'converter');
+      while (true) {
+        const payload = yield take(progressChannel);
+        if (payload.eventType === 'loaded') {
+          yield put({
+            type: getActionType(payload),
+            file: payload.val
+          });
+          progressChannel.close();
+        } else {
+          yield put({
+            type: getActionType(payload),
+            payload: { val: "Compressing Mesh Data",
+            percent: payload.val,
+          }
         });
-        progressChannel.close();
-      } else {
-        yield put({
-          type: getActionType(payload),
-          payload: { val: "Compressing Mesh Data",
-          percent: payload.val,
         }
-      });
       }
+    } else {
+      yield put({ type: ActionConstants.CONVERSION_COMPLETE, file: JSON.stringify(converted.threeFile) });
     }
   } catch(error) {
     console.log(error);

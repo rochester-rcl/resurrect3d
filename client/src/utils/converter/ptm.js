@@ -12,11 +12,68 @@ const formatOffsets = {
   PTM_FORMAT_LRGB: 9
 };
 
-const getNormal = coefficients => {
-  const [a0, a1, a2, a3, a4, a5] = coefficients;
-  const u = (a2 * a4 - 2 * a1 * a3) / (4 * a0 * a1 - a2 ** 2);
-  const v = (a2 * a3 - 2 * a0 * a4) / (4 * a0 * a1 - a2 ** 2);
-  return new THREE.Vector3(u, v, Math.sqrt(1 - u ** 2 - v ** 2)).normalize();
+const ZERO_TOL = 1.0e-5;
+
+const fixNormal = (vec: THREE.Vector3): void => {
+  if (isNaN(vec.x)) {
+    if (vec.x === -Infinity) {
+      vec.setX(-1.0);
+    } else {
+      vec.setX(1.0);
+    }
+  }
+  if (isNaN(vec.y)) {
+    if (vec.x === -Infinity) {
+      vec.setY(-1.0);
+    } else {
+      vec.setY(1.0);
+    }
+  }
+  if (isNaN(vec.z)) {
+    if (vec.x === -Infinity) {
+      vec.setZ(0.0);
+    } else {
+      vec.setZ(1.0);
+    }
+  }
+}
+
+const checkNormal = (vec: THREE.Vector3): bool => {
+  if (isNaN(vec.x)) return false;
+  if (isNaN(vec.y)) return false;
+  if (isNaN(vec.z)) return false;
+  return true;
+}
+
+// Can port over the much more robust python code
+
+const getNormal = (coefficients) => {
+  if (coefficients.includes(0)) return new THREE.Vector3(0.0, 0.0, 1.0);
+  const [a0, a1, a2, a3, a4, a5] = coefficients.map((val) => val / 255);
+  let u;
+  let v;
+  if (Math.abs(4 * a1 * a0 - a2 * a2) < ZERO_TOL) {
+    u = 0.0;
+    v = 0.0;
+  } else {
+    if (Math.abs(a2) < ZERO_TOL) {
+      u = -a3 / (2.0 * a0);
+      v = -a4 / (2.0 * a1);
+    } else {
+      u = (a2 * a4 - 2 * a1 * a3) / (4 * a0 * a1 - a2 ** 2);
+      v = (a2 * a3 - 2 * a0 * a4) / (4 * a0 * a1 - a2 ** 2);
+    }
+  }
+
+  let z = 1 - (u ** 2) - (v ** 2);
+  if (z < 0.0) {
+    z = 0.0;
+  }
+  const vec = new THREE.Vector3(u, v, z).normalize();
+  if (checkNormal(vec) === false) {
+    fixNormal(vec);
+  }
+  return vec;
 };
 
 const formatHeader = (ascii: string) => {
@@ -55,73 +112,92 @@ const ceilPowerOfTwo = (val: Number): Number => {
   return Math.pow(2, Math.ceil(Math.log(val) / Math.LN2));
 };
 
-const pad = (arr: nj.NdArray, squareSize: Number): nj.NdArray => {
-  const [h, w, ...rest] = arr.shape;
-  const padded = nj.zeros([squareSize, squareSize, 4]); // adding alpha
+const pad = (arr: Uint8Array, squareSize: Number, w: Number, h: Number, padded: Uint8Array): nj.NdArray => {
   const offsetTop = Math.floor((squareSize - h) / 2);
   const offsetLeft = Math.floor((squareSize - w) / 2);
   for (let i = 0; i < h; i++) {
     for (let j = 0; j < w; j++) {
       for (let k = 0; k < 4; k++) {
+        const index = (i * w + j) * 3;
         if (k !== 3) {
-          const val = arr.get(i, j, k);
-          padded.set(i + offsetTop, j + offsetLeft, k, val);
+          const val = arr[index + k];
+          padded[offsetTop + index + k] = 255;
         } else {
-          padded.set(i + offsetTop, j + offsetLeft, k, 255);
+          padded[index + k] = 255;
         }
       }
     }
   }
+  // Keeping this notation in here since it's handy and completely undocumented, but we can't use it for the bigger stuff
+  /*
+  padded.slice([offsetTop, offsetTop + h], [offsetLeft, offsetLeft + w], [0, 3]).assign(arr, false);
+  padded.slice([offsetTop, offsetTop + h], [offsetLeft, offsetLeft + w], [3, 4]).assign(255, false);
+  */
   return padded;
 };
 
 // Instantiating more than 4 NdArrays at a higher resolution leads to a segfault!
 export default function readPtm(ptmData: ArrayBuffer | Uint8Array): Promise {
   return new Promise((resolve, reject) => {
+    // ptm data
     const header = readHeader(ptmData);
     const { w, h, format, scale, bias, byteLength } = header;
     const offset = w * h * formatOffsets[format];
     const chars = new Uint8Array(ptmData.slice(byteLength));
     const nPixels = w * h;
+
+    // buffers
     const normalMap = new Uint8Array(h * w * 3);
     const diffuse = new Uint8Array(h * w * 3);
+
+    // Canvas stuff
+    const squareVal = ceilPowerOfTwo(Math.max(h, w));
     const outCanvas = document.createElement("canvas");
-    const getDataURL = (data: nj.NdArray) => {
-      nj.images.save(data, outCanvas);
+    outCanvas.width = squareVal;
+    outCanvas.height = squareVal;
+    const ctx = outCanvas.getContext('2d');
+    const offsetTop = Math.floor((squareVal - h) / 2);
+    const offsetLeft = Math.floor((squareVal - w) / 2);
+    const rgba = new Uint8ClampedArray(h * w * 4);
+    const getDataURL = (data: Uint8Array) => {
+      let chan = 0;
+      let achan = 0;
+      for (let i = 0; i < w * h; i++, chan += 3, achan += 4) {
+        rgba[achan] = data[chan];
+        rgba[achan+1] = data[chan+1];
+        rgba[achan+2] = data[chan+2];
+        rgba[achan+3] = 255;
+      }
+      const imageData = new ImageData(rgba, w, h);
+      ctx.putImageData(imageData, offsetLeft, offsetTop, 0, 0, w, h);
       return outCanvas.toDataURL();
     };
+
     for (let i = 0; i < h; i++) {
       for (let j = 0; j < w; j++) {
         const pixel = i * w + j;
         const coefficient = [];
         const cIndex = pixel * 6;
         for (let k = 0; k < 6; k++) {
-          coefficient[k] = ((chars[cIndex + k] - bias[k]) * scale[k]) / 255.0;
+          coefficient[k] = ((chars[cIndex + k] - bias[k]) * scale[k]);
         }
-        const normal = getNormal(coefficient)
-          .toArray()
-          .map(val => parseInt((val + 1) * (255 / 2), 10));
+        const normal = getNormal(coefficient).toArray().map(val => Math.floor((val + 1) * (255 / 2), 10));
+        const index = ((h - 1 - i) * w + j) * 3;
         for (let c = 0; c < 3; c++) {
-          const index = ((h - 1 - i) * w + j) * 3;
           normalMap[index + c] = normal[c];
           diffuse[index + c] = chars[nPixels * 6 + pixel * 3 + c];
         }
       }
     }
-    const squareVal = ceilPowerOfTwo(Math.max(h, w));
-    outCanvas.width = squareVal;
-    outCanvas.height = squareVal;
+
     /* clean up some garbage - can also see if there's a way to swap
     underlying buffer for the NdArray, probably not */
-    let rgbArray = new nj.NdArray(diffuse, [h, w, 3]);
-    const rgbURL = getDataURL(pad(rgbArray, squareVal));
-    rgbArray = null;
-    let normalArray = new nj.NdArray(normalMap, [h, w, 3]);
-    const normURL = getDataURL(pad(normalArray, squareVal));
-    normalArray = null;
+    // const out = nj.zeros([squareVal, squareVal, 4]);
+    const rgbURL = getDataURL(diffuse);
+    const normURL = getDataURL(normalMap);
     resolve({
       normalMap: normURL,
-      diffuse: rgbURL
+      diffuse: rgbURL,
     });
   });
 }

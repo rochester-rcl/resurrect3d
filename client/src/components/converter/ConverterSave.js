@@ -5,7 +5,7 @@ import React, { Component } from "react";
 import * as THREE from "three";
 
 // constants
-import { GZIP_EXT } from "../../constants/application";
+import { GZIP_EXT, JSON_EXT } from "../../constants/application";
 
 // semantic ui react
 import { Form, Divider, Button } from "semantic-ui-react";
@@ -16,7 +16,9 @@ import { Redirect } from "react-router-dom";
 export default class ConverterSave extends Component {
   state = {
     filename: THREE.Math.generateUUID(),
-    url: null
+    url: null,
+    ext: null,
+    filesize: 0,
   };
 
   constructor(props: Object) {
@@ -24,16 +26,21 @@ export default class ConverterSave extends Component {
     this.onSave = this.onSave.bind(this);
     this.onName = this.onName.bind(this);
     this.performRedirect = this.performRedirect.bind(this);
-    this.filesize = null;
     this.formatFileLabel = this.formatFileLabel.bind(this);
   }
 
   componentDidMount() {
     // set URL blob here
     const { file } = this.props;
-    this.filesize = (file.length / 1048576).toFixed(2);
+    let ext = GZIP_EXT;
+    if (file.constructor !== Uint8Array) {
+      ext = JSON_EXT;
+    }
+    const filesize = (file.length / 1048576).toFixed(2);
     this.setState({
-      url: window.URL.createObjectURL(new Blob([file]))
+      url: window.URL.createObjectURL(new Blob([file])),
+      ext: ext,
+      filesize: filesize,
     });
   }
 
@@ -60,19 +67,20 @@ export default class ConverterSave extends Component {
   }
 
   formatFileLabel(): string {
+    const { filename, ext, filesize } = this.state;
     return (
       "current filename: " +
-      this.state.filename +
-      GZIP_EXT +
+      filename +
+      ext +
       " (" +
-      this.filesize +
+      filesize +
       " MB" +
       ")"
     );
   }
 
   render() {
-    const { filename, url } = this.state;
+    const { filename, url, ext, filesize } = this.state;
     return (
       <Form inverted className="three-converter-form">
         <Divider className="three-converter-form-divider" inverted horizontal>
@@ -110,7 +118,7 @@ export default class ConverterSave extends Component {
           <a
             ref={ref => (this.downloadLink = ref)}
             href={url}
-            download={filename + GZIP_EXT}
+            download={filename + ext}
           />
         </Form.Group>
       </Form>

@@ -75,6 +75,7 @@ export const STL_EXT = '.stl';
 export const MTL_EXT = '.mtl';
 export const ZIP_EXT = '.zip';
 export const GZIP_EXT = '.gz';
+export const JSON_EXT = '.js';
 // Cache
 export const THREE_MODEL_CACHE_GET = 0;
 export const THREE_MODEL_CACHE_SAVE = 1;

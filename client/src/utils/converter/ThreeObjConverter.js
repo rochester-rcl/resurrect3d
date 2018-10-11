@@ -34,6 +34,7 @@ export default class ThreeObjConverter extends ThreeConverter {
     this.loadMtl = this.loadMtl.bind(this);
     this.setUpMaterials = this.setUpMaterials.bind(this);
     this.rectifyDataURLs = this.rectifyDataURLs.bind(this);
+    this.loadedMaps = {};
   }
 
   loadObj(material: THREE.MeshStandardMaterial) {
@@ -75,11 +76,13 @@ export default class ThreeObjConverter extends ThreeConverter {
 
   rectifyDataURLs(serialized: object) {
     serialized.images.forEach((image) => {
-      let map = this.maps.find((_map) => {
-        return _map.uuid === image.uuid
+      let mapKey = Object.keys(this.loadedMaps).find((key) => {
+        const _map = this.loadedMaps[key];
+        return _map.image.uuid === image.uuid
       });
+      const map = this.loadedMaps[mapKey];
       if (map !== undefined) {
-        image.url = map.dataURL;
+        image.url = map.image.currentSrc;
       }
     });
   }
@@ -107,8 +110,7 @@ export default class ThreeObjConverter extends ThreeConverter {
         // because diffuse is handled in the loader via map_kd
         let task = this.loadTexture(map.dataURL, (tex) => {
           child.material[map.type] = tex;
-          tex.image.uuid = THREE.Math.generateUUID();
-          map.uuid = tex.image.uuid;
+          this.loadedMaps[map.type] = tex;
         });
         tasks.push(task);
       }
@@ -141,16 +143,20 @@ export default class ThreeObjConverter extends ThreeConverter {
     });
   }
 
-  convert(): void {
-    return this.loadMtl().then(material =>
-      this.loadObj(material).then(() => {
-        super.convert();
-        return this.handleOptions().then((mesh) => {
-          const exported = mesh.toJSON();
-          this.rectifyDataURLs(exported);
-          return Promise.resolve(exported)
-        });
-      })
-    );
+  convert(): Promise {
+    return new Promise((resolve, reject) => {
+      this.loadMtl().then(material =>
+        this.loadObj(material).then(() => {
+          super.convert();
+          return this.handleOptions().then((mesh) => {
+            const exported = mesh.toJSON();
+            if (!this.options.compress) {
+              this.rectifyDataURLs(exported);
+            }
+            resolve(exported);
+          });
+        })
+      );
+    });
   }
 }

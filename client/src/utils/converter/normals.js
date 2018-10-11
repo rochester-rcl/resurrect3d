@@ -14,7 +14,7 @@ export function createNormalMap(mesh: THREE.Group | THREE.Mesh): Promise {
   return new Promise((resolve, reject) => {
     try {
       const children = getChildren(mesh);
-      const zScale = 1.0 / 8.0;
+      const zScale = 300;
       children.forEach(child => {
         child.geometry = smoothFaceNormals(child.geometry);
         const data = nj.images.read(child.material.map.image);

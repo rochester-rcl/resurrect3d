@@ -28,7 +28,8 @@ export default class PtmConverterForm extends ConverterForm {
     },
     options: {
       createMesh: { label: "Create Mesh from Surface Normals", val: false, type: CHECKBOX },
-      compress: { label: "Use JPEG Compression on Textures", val: false, type: CHECKBOX },
+      compress: { label: "Use JPEG Compression on Large Textures", val: false, type: CHECKBOX },
+      zlib: { label: "Use zlib Compression on the Output Mesh", val: false, type: CHECKBOX },
     }
   };
 

@@ -1,6 +1,6 @@
 /* @flow */
 import * as THREE from "three";
-import ThreeObjConverter from "./ThreeConverter";
+import ThreeObjConverter from "./ThreeObjConverter";
 export default function convertObjToThree(threeData: Object): Promise {
   return new Promise((resolve, reject) => {
     const { mesh, material, maps, options } = threeData;

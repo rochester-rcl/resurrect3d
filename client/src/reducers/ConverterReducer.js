@@ -23,6 +23,7 @@ export default function ConverterReducer(state: Object = defaultState, action: O
       }
 
     case ActionConstants.CONVERSION_COMPLETE:
+      console.log(action);
       return {
         ...state,
         ...{ conversionComplete: true, file: action.file }
