@@ -2,6 +2,7 @@
 // TODO This should really be in a Worker
 import * as _THREE from "three";
 import * as nj from "numjs";
+import { ZERO_TOL, computeMaxOnCircle } from './normals';
 
 const THREE = _THREE;
 const MAX_LINES = 6;
@@ -11,8 +12,6 @@ const CHUNK_SIZE = 665536;
 const formatOffsets = {
   PTM_FORMAT_LRGB: 9
 };
-
-const ZERO_TOL = 1.0e-5;
 
 const fixNormal = (vec: THREE.Vector3): void => {
   if (isNaN(vec.x)) {
@@ -49,9 +48,9 @@ const checkNormal = (vec: THREE.Vector3): bool => {
 
 const getNormal = (coefficients) => {
   if (coefficients.includes(0)) return new THREE.Vector3(0.0, 0.0, 1.0);
-  const [a0, a1, a2, a3, a4, a5] = coefficients.map((val) => val / 255);
-  let u;
-  let v;
+  const coeffs = coefficients.map((val) => val / 255);
+  const [a0, a1, a2, a3, a4, a5] = coeffs;
+  let u, v, z, d;
   if (Math.abs(4 * a1 * a0 - a2 * a2) < ZERO_TOL) {
     u = 0.0;
     v = 0.0;
@@ -64,15 +63,37 @@ const getNormal = (coefficients) => {
       v = (a2 * a3 - 2 * a0 * a4) / (4 * a0 * a1 - a2 ** 2);
     }
   }
-
-  let z = 1 - (u ** 2) - (v ** 2);
-  if (z < 0.0) {
+  if (coefficients.slice(0, coefficients.length-1).every((coeff) => Math.abs(coeff) < ZERO_TOL)) {
+    u = 0.0;
+    v = 0.0;
     z = 0.0;
+  } else {
+    let maxfound;
+    let length2d = u * u + v * v;
+    if (4 * a0 * a1 - a2 * a2 > ZERO_TOL && a0 < -ZERO_TOL) {
+      maxfound = 1;
+    } else {
+      maxfound = 0;
+    }
+    if (length2d > 1 - ZERO_TOL || maxfound === 0) {
+      let stat;
+      [u, v, stat] = computeMaxOnCircle(coeffs, u, v);
+      if (stat === -1) {
+        length2d = Math.sqrt(length2d);
+        if (length2d > ZERO_TOL) {
+          u /= length2d;
+          v /= length2d;
+        }
+      }
+    }
+    d = 1.0 - u * u - v * v;
+    if (d < 0.0) {
+      z = 0.0;
+    } else {
+      z = Math.sqrt(d);
+    }
   }
   const vec = new THREE.Vector3(u, v, z).normalize();
-  if (checkNormal(vec) === false) {
-    fixNormal(vec);
-  }
   return vec;
 };
 

@@ -147,3 +147,234 @@ export function sobel(img: nj.NDArray): Object {
   sobelY(out.selection.pick(null, null, 1), gray.selection);
   return out;
 }
+
+//  all utils ported from https://github.com/bakulf/RTIViewer/blob/master/rtiviewer/src/util.h
+
+export const ZERO_TOL = 1.0e-5;
+
+export function solveCubic(c: Array, s: Array) {
+
+    const a = c[2] / c[3];
+    const b = c[1] / c[3];
+    const _c = c[0] / c[3];
+
+    const sq_a = a*a;
+    const p = 1.0 / 3 * (-1.0 / 3 * sq_a + b);
+    const q = 1.0 / 2 * (2.0 / 27 * a * sq_a - 1.0 / 3 * a * b + _c);
+
+    const cb_p = p*p*p;
+    const d = q*q + cb_p;
+    let num;
+    let u;
+    let v;
+    if (isZero(d)) {
+        if (isZero(q)) {
+            s[0] = 0;
+            num = 1;
+        } else {
+            u = cubeRoot(-q);
+            s[0] = 2 * u;
+            s[1] = -u;
+            num = 2;
+        }
+    } else if (d < 0) {
+        const phi = 1.0 / 3 * Math.acos(-q / Math.sqrt(-cb_p));
+        const t = 2 * Math.sqrt(-p);
+
+        s[0] = t * Math.cos(phi);
+        s[1] = -t * Math.cos(phi + Math.PI / 3);
+        s[2] = -t * Math.cos(phi - Math.PI / 3);
+        num = 3;
+    } else {
+        const sqrt_d = Math.sqrt(d);
+        u = cubeRoot(sqrt_d - q);
+        v = -cubeRoot(sqrt_d + q);
+        s[0] = u + v;
+        num = 1;
+    }
+    const sub = 1.0 / 3 * a;
+
+    for (let i = 0; i < num; i++) {
+      s[i] -= sub;
+    }
+
+    return [s, num];
+}
+
+export function solveQuadric(c: Array, s: Array, _n: Number) {
+    const n = (_n !== undefined) ? _n : 0;
+
+    const p = c[1] / (2 * c[2]);
+    const q = c[0] / c[2];
+
+    const d = p * p - q;
+
+    if (isZero(d)) {
+        s[0 + n] = -p;
+        return [s, 1]
+    } else if (d < 0) {
+      return [s, 0];
+    } else if (d > 0) {
+      const sqrt_d = Math.sqrt(d);
+      s[0 + n] = sqrt_d - p;
+      s[1 + n] = -sqrt_d - p;
+      return [s, 2];
+    }
+    return [s, -1];
+}
+
+export function solveQuartic(c: Array, _s: Array) {
+    const a = c[3] / c[4];
+    const b = c[2] / c[4];
+    const _c = c[1] / c[4];
+    const d = c[0] / c[4];
+    const coeffs = new Float32Array(4);
+    const sq_a = a*a;
+    const p = -3.0 / 8 * sq_a + b;
+    const q = 1.0 / 8 * sq_a * a - 1.0 / 2 * a * b + _c;
+    const r = -3.0 / 256 * sq_a * sq_a + 1.0 / 16 * sq_a * b - 1.0 / 4 * a * _c + d;
+    let u, v, rest, _num, num;
+    let s = _s;
+    if (isZero(r)) {
+        coeffs[0] = q;
+        coeffs[1] = p;
+        coeffs[2] = 0.0;
+        coeffs[3] = 1.0;
+        [s, num] = solveCubic(coeffs, s);
+        num += 1;
+        s[num] = 0;
+        return [s, num];
+    } else {
+        coeffs[0] = 1.0 / 2 * r * p - 1.0 / 8 * q * q;
+        coeffs[1] = -r;
+        coeffs[2] = (-1.0 / 2) * p;
+        coeffs[3] = 1;
+        [s, ...rest] = solveCubic(coeffs, _s);
+
+        const z = s[0];
+
+        u = z * z - r;
+        v = 2 * z - p;
+
+        if (isZero(u)) {
+            u = 0;
+        } else if (u > 0) {
+            u = Math.sqrt(u);
+        } else {
+            return [s, 0];
+        }
+
+        if (isZero(v)) {
+            v = 0;
+        } else if (v > 0) {
+            v = Math.sqrt(v);
+        } else {
+            return [s, 0];
+        }
+
+        coeffs[0] = z - u;
+        coeffs[1] = (q < 0) ? -v : v;
+        coeffs[2] = 1;
+        [s, _num, ...rest] = solveQuadric(coeffs, s, 0);
+        coeffs[0] = z + u;
+        coeffs[1] = (q < 0) ? v : -v;
+        coeffs[2] = 1;
+        let [s, num] = solveQuadric(coeffs, s, _num);
+        num += _num;
+    const sub = 1.0 / 4 * a;
+    for (let i = 0; i < num; i++) {
+      s[i] -= sub;
+    }
+    return [s, num];
+  }
+}
+
+export function isZero(num: Number): bool {
+    const limit = 1e-9;
+    if (num > -limit && num < limit) {
+        return true;
+    } else {
+      return false;
+    }
+}
+
+export function cubeRoot(num: Number): Number {
+    if (num > 0) {
+        return num ** (1.0 / 3.0);
+    } else if (num < 0) {
+      return -Math.pow(-num, 1.0 / 3.0);
+    }
+    return 0;
+}
+
+export function computeMaxOnCircle(a, _x, _y) {
+    let max_u = -1;
+    let max_v = -1;
+    let x = _x;
+    let y = _y;
+    let zeros = new Float32Array(5);
+    const db0 = a[2] - a[3];
+    const db1 = 4 * a[1] - 2 * a[4] - 4 * a[0];
+    const db2 = -6 * a[2];
+    const db3 = -4 * a[1] - 2 * a[4] + 4 * a[0];
+    const db4 = a[2] + a[3];
+    let c, nroots, index, u, v;
+
+    if (Math.abs(db0) < ZERO_TOL && Math.abs(db1) < ZERO_TOL && Math.abs(db2) < ZERO_TOL && Math.abs(db3) < ZERO_TOL && Math.abs(db4) < ZERO_TOL) {
+        return [0.0, 1.0, 1];
+    }
+
+    if (db0 !== 0) {
+        c = new Float32Array([db4, db3, db2, db1, db0]);
+        [zeros, nroots] = solveQuartic(c, zeros);
+    } else if (db1 !== 0) {
+        c = new Float32Array([db4, db3, db2, db1]);
+        [zeros, nroots] = solveCubic(c, zeros);
+    } else {
+        c = new Float32Array([db4, db3, db2]);
+        [zeros, nroots] = solveQuadric(c, zeros, 0);
+    }
+    if (nroots <= 0) {
+        return [x, y, -1];
+    }
+
+    if (nroots === 1) {
+        index = 0;
+    } else {
+        let vals = new Float32Array(nroots);
+        index = 0;
+        for (let i = 0; i < nroots; i++) {
+          u = 2 * zeros[i] / (1 + zeros[i] * zeros[i]);
+          v = (1 - zeros[i] * zeros[i]) / (1 + zeros[i] * zeros[i]);
+          vals[i] = a[0] * u * u + a[1] * v * v + a[2] * u * v + a[3] * u + a[4] * v + a[5];
+          if (vals[i] > vals[index]) {
+              index = i;
+          }
+        }
+    }
+
+    x = 2 * zeros[index] / (1 + zeros[index] * zeros[index]);
+    y = (1 - zeros[index] * zeros[index]) / (1 + zeros[index]**2);
+
+    let maxval = -1000;
+    for (let k = 0; k < 20; k++) {
+      let inc = (1 / 9.0) / 20 * k;
+      let arg = Math.PI * (26.0 / 18.0 + inc);
+      u = Math.cos(arg);
+      v = Math.sin(arg);
+      let polyval = a[0] * u * u + a[1] * v * v + a[2] * u * v + a[3] * u + a[4] * v + a[5];
+      if (maxval < polyval) {
+          maxval = polyval;
+          max_u = u;
+          max_v = v;
+      }
+    }
+    u = 2 * zeros[index] / (1 + zeros[index] * zeros[index]);
+    v = (1 - zeros[index] * zeros[index]) / (1 + zeros[index] * zeros[index]);
+    let val1 = a[0] * u * u + a[1] * v * v + a[2] * u * v + a[3] * u + a[4] * v + a[5]
+    if (maxval > val1) {
+        x = max_u
+        y = max_v
+    }
+    return [x, y, 1];
+}
