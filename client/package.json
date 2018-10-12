@@ -2,12 +2,14 @@
   "name": "rcl-react-redux-boilerplate",
   "version": "0.1.0",
   "private": true,
+  "homepage": "http://localhost/threejs-tools",
   "devDependencies": {
     "flow-bin": "^0.39.0",
     "react-app-rewired": "^1.5.2",
     "react-scripts": "^1.1.5"
   },
   "dependencies": {
+    "history": "^4.7.2",
     "interweave": "^8.1.0",
     "jszip": "^3.1.5",
     "ndarray-ops": "^1.2.2",

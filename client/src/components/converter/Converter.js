@@ -17,6 +17,13 @@ import {
 export default class ConverterForm extends Component {
   state = {
     maps: {
+      map: {
+        label: "Diffuse Map",
+        file: null,
+        info: "http://docs.cryengine.com/display/SDKDOC2/Diffuse+Maps",
+        type: FILE,
+        accept: VALID_IMAGE_FORMATS
+      },
       normalMap: {
         label: "Normal Map",
         file: null,
@@ -24,17 +31,17 @@ export default class ConverterForm extends Component {
         type: FILE,
         accept: VALID_IMAGE_FORMATS
       },
+      displacementMap: {
+        label: "Displacement Map",
+        file: null,
+        info: "https://en.wikipedia.org/wiki/Displacement_mapping",
+        type: FILE,
+        accept: VALID_IMAGE_FORMATS
+      },
       aoMap: {
         label: "Ambient Occlusion Map",
         file: null,
         info: "https://en.wikipedia.org/wiki/Ambient_occlusion",
-        type: FILE,
-        accept: VALID_IMAGE_FORMATS
-      },
-      map: {
-        label: "Diffuse Map",
-        file: null,
-        info: "http://docs.cryengine.com/display/SDKDOC2/Diffuse+Maps",
         type: FILE,
         accept: VALID_IMAGE_FORMATS
       },
@@ -54,13 +61,6 @@ export default class ConverterForm extends Component {
         type: FILE,
         accept: VALID_IMAGE_FORMATS
       },
-      displacementMap: {
-        label: "Displacement Map",
-        file: null,
-        info: "https://en.wikipedia.org/wiki/Displacement_mapping",
-        type: FILE,
-        accept: VALID_IMAGE_FORMATS
-      }
     },
     mesh: {
       label: "Mesh File (OBJ)",

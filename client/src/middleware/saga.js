@@ -30,7 +30,9 @@ import ThreeViewerNodeBackend from './backends/ThreeViewerNodeBackend';
 import ThreeViewerAdminBackend from './backends/ThreeViewerAdminBackend';
 
 // workers
+// eslint-disable-line
 import ModelLoaderWorker from '../utils/workers/ModelLoaderWorker/modelloader.worker';
+// eslint-disable-line
 import DeflateWorker from '../utils/workers/deflate.worker';
 
 // serialization

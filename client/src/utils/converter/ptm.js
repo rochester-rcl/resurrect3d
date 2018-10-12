@@ -3,7 +3,7 @@
 import * as _THREE from "three";
 import * as nj from "numjs";
 import { ZERO_TOL, computeMaxOnCircle } from './normals';
-
+import { strideRGB } from './depth';
 const THREE = _THREE;
 const MAX_LINES = 6;
 // default in Node ReadStream
@@ -180,17 +180,17 @@ export default function readPtm(ptmData: ArrayBuffer | Uint8Array): Promise {
     const offsetTop = Math.floor((squareVal - h) / 2);
     const offsetLeft = Math.floor((squareVal - w) / 2);
     const rgba = new Uint8ClampedArray(h * w * 4);
-    const getDataURL = (data: Uint8Array) => {
+    const getDataURL = (data: Uint8Array, _w: Number, _h: Number) => {
       let chan = 0;
       let achan = 0;
-      for (let i = 0; i < w * h; i++, chan += 3, achan += 4) {
+      for (let i = 0; i < _w * _h; i++, chan += 3, achan += 4) {
         rgba[achan] = data[chan];
         rgba[achan+1] = data[chan+1];
         rgba[achan+2] = data[chan+2];
         rgba[achan+3] = 255;
       }
-      const imageData = new ImageData(rgba, w, h);
-      ctx.putImageData(imageData, offsetLeft, offsetTop, 0, 0, w, h);
+      const imageData = new ImageData(rgba, _w, _h);
+      ctx.putImageData(imageData, offsetLeft, offsetTop, 0, 0, _w, _h);
       return outCanvas.toDataURL();
     };
 
@@ -214,8 +214,8 @@ export default function readPtm(ptmData: ArrayBuffer | Uint8Array): Promise {
     /* clean up some garbage - can also see if there's a way to swap
     underlying buffer for the NdArray, probably not */
     // const out = nj.zeros([squareVal, squareVal, 4]);
-    const rgbURL = getDataURL(diffuse);
-    const normURL = getDataURL(normalMap);
+    const rgbURL = getDataURL(diffuse, w, h);
+    const normURL = getDataURL(normalMap, w, h);
     resolve({
       normalMap: normURL,
       diffuse: rgbURL,
