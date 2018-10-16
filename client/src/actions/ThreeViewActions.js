@@ -1,4 +1,4 @@
-import {GET_VIEWS, GET_VIEW, GET_THREEFILE, UPDATE_VIEW, ADD_VIEW, DELETE_VIEW} from '../constants/actions';
+import {GET_VIEWS, GET_VIEW, GET_THREEFILE, UPDATE_VIEW, ADD_VIEW, DELETE_VIEW, AUTHENTICATE} from '../constants/actions';
 
 import endpoint from '../constants/api-endpoints';
 
@@ -41,5 +41,13 @@ export const deleteView = (id: number): Object => {
   return {
     type: DELETE_VIEW,
     id: id
+  }
+}
+
+export const authenticate = (username: String, password: String) => {
+  return {
+    type: AUTHENTICATE,
+    username: username,
+    password: password
   }
 }

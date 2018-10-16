@@ -9,7 +9,9 @@ const path = require('path');
 const crypto = require('crypto');
 
 const app = express();
-
+const session = require('express-session');
+const passport = require('passport');
+const constants = require('./constants');
 const view = require('./models/view');
 const controller = require('./controllers/view_controller');
 const views = require('./routes/view_route');
@@ -76,6 +78,9 @@ checkFileType = (file, cb) => {
 }
 
 app.use(cors());
+app.use(session({ secret: constants.PRIVATE_KEY, resave: false, saveUninitialized: true }));
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(bodyParser.json({ limit: '20mb' }));
 app.use(bodyParser.urlencoded({ limit: '20mb', extended: false }));
 

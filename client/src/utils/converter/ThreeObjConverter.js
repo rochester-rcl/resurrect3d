@@ -27,6 +27,10 @@ import ThreeConverter from './ThreeConverter';
 const THREE = _THREE;
 
 export default class ThreeObjConverter extends ThreeConverter {
+  OPTIONS_MAP: {
+    center: centerGeometry,
+    createNormalMap: createNormalMap,
+  }
   constructor(mesh: File, materials: File, maps: Object, options: Object) {
     super(mesh, maps, options);
     this.mtlFile = materials;

@@ -19,6 +19,8 @@ export const TEXTURE_LOADED: string = 'TEXTURE_LOADED';
 export const LOAD_TEXTURE: string = 'LOAD_TEXTURE';
 
 // Admin
+export const AUTHENTICATE: string = 'AUTHENTICATE';
+export const USER_AUTHENTICATED: string = 'USER_AUTHENTICATED';
 export const GET_VIEWS: string = 'GET_VIEWS';
 export const GET_VIEW: string = 'GET_VIEW';
 export const GET_THREEFILE: string = 'GET_THREEFILE';

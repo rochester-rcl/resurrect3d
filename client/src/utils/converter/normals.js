@@ -5,18 +5,21 @@ import * as THREE from "three";
 // image processing
 import * as nj from "numjs";
 import * as cwise from "cwise";
-import * as ops from 'ndarray-ops';
+import * as ops from 'ndarray-ops'
 
 // geometry
 import { smoothFaceNormals, getChildren } from './geometry';
 
+// TODO apparently need to implement my own image loader now? This currently doesn't work once everything has been minified / optimized.
 export function createNormalMap(mesh: THREE.Group | THREE.Mesh): Promise {
+  const canvas = document.createElement('canvas');
   return new Promise((resolve, reject) => {
     try {
       const children = getChildren(mesh);
       const zScale = 300;
       children.forEach(child => {
         child.geometry = smoothFaceNormals(child.geometry);
+        const image = child.material.map.image;
         const data = nj.images.read(child.material.map.image);
         const grad = sobel(data);
         const [h, w, ...rest] = grad.shape;

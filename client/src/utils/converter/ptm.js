@@ -8,7 +8,7 @@ const THREE = _THREE;
 const MAX_LINES = 6;
 // default in Node ReadStream
 const CHUNK_SIZE = 665536;
-
+const MAX_SQUARE_VAL = 8192;
 const formatOffsets = {
   PTM_FORMAT_LRGB: 9
 };
@@ -172,7 +172,8 @@ export default function readPtm(ptmData: ArrayBuffer | Uint8Array): Promise {
     const diffuse = new Uint8Array(h * w * 3);
 
     // Canvas stuff
-    const squareVal = ceilPowerOfTwo(Math.max(h, w));
+    const ceilPowTwo = ceilPowerOfTwo(Math.max(h, w))
+    const squareVal = (ceilPowTwo < MAX_SQUARE_VAL) ? ceilPowTwo : MAX_SQUARE_VAL;
     const outCanvas = document.createElement("canvas");
     outCanvas.width = squareVal;
     outCanvas.height = squareVal;

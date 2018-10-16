@@ -1,8 +1,8 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+const UserSchema = require('./user');
 
 var viewSchema = new Schema({
-
   threeFile:{
     type: String,
     required: true
@@ -48,7 +48,13 @@ var viewSchema = new Schema({
   viewerSettings: {
     type: Object,
     required: false,
+  },
+
+  createdBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User'
   }
+  
 });
 
 module.exports = mongoose.model('view', viewSchema);

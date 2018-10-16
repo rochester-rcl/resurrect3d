@@ -4,6 +4,12 @@ const lodashCloneDeep = require('lodash/cloneDeep');
 
 module.exports = function override(config, env) {
     // Add worker-loader by hijacking configuration for regular .js files.
+    const uglifyIndex = config.plugins.findIndex((plugin) => plugin.constructor.name === 'UglifyJsPlugin');
+    // cannot have unused code removal as it messes up numjs
+    if (uglifyIndex !== -1) {
+      let { compress } = config.plugins[uglifyIndex].options;
+      config.plugins[uglifyIndex].options.compress = {...compress, ...{ unused: false } }
+    }
 
     const workerExtension = /\.worker\.js$/;
 

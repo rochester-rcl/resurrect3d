@@ -3,6 +3,7 @@ import * as ActionConstants from '../constants/actions';
 const initialState = {
   views: [],
   view: {},
+  user: null,
   file: {}
 }
 
@@ -23,6 +24,12 @@ export default function(state = initialState, action){
       return {
         ...state,
         view: action.view,
+      }
+
+    case ActionConstants.USER_AUTHENTICATED:
+      return {
+        ...state,
+        user: action.user,
       }
     /*case GET_VIEWS:
       console.log('get action');
