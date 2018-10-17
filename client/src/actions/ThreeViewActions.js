@@ -43,16 +43,3 @@ export const deleteView = (id: number): Object => {
     id: id
   }
 }
-
-export const loginUser = (loginInfo: Object): Object => {
-  return {
-    type: LOGIN_USER,
-    loginInfo: loginInfo,
-  }
-}
-
-export const authenticate = (): Object => {
-  return {
-    type: AUTHENTICATE,
-  }
-}
