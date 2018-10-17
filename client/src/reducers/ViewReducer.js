@@ -3,7 +3,10 @@ import * as ActionConstants from '../constants/actions';
 const initialState = {
   views: [],
   view: {},
-  user: null,
+  user: {
+    loggedIn: false,
+    loginError: false,
+  },
   file: {}
 }
 
@@ -26,41 +29,24 @@ export default function(state = initialState, action){
         view: action.view,
       }
 
-    case ActionConstants.USER_AUTHENTICATED:
+    case ActionConstants.USER_LOGGED_IN:
       return {
         ...state,
         user: action.user,
       }
-    /*case GET_VIEWS:
-      console.log('get action');
+
+    case ActionConstants.LOGIN_ERROR:
       return {
-        views: action.views
-      };
-    case GET_VIEW:
-      console.log('get action');
-      return {
-        view: action.view
-      };
-    case GET_THREEFILE:
-      console.log('get action');
-      return {
-        file: action.file
+        ...state,
+        user: { ...state.user, ...{ loginError: true } },
       }
-    case UPDATE_VIEW:
-      console.log('put action');
+
+    case ActionConstants.REMOVE_LOGIN_ERROR:
       return {
-        view: action.view
-      };
-    case ADD_VIEW:
-      console.log('add action');
-      return {
-        view: action.view
-      };
-    case DELETE_VIEW:
-      console.log('delete action');
-      return {
-        view: action.view
-      };*/
+        ...state,
+        user: { ...state.user, ...{ loginError: false } },
+      }
+
     default:
       return state;
   }

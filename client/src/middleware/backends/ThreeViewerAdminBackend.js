@@ -1,15 +1,19 @@
 /* @flow */
 
-import ThreeViewerAbstractBackend from './ThreeViewerAbstractBackend';
+import ThreeViewerAbstractBackend from "./ThreeViewerAbstractBackend";
 
 // constants
-import { FILE_ENDPOINT, VIEWS_ENDPOINT } from '../../constants/api-endpoints';
+import {
+  FILE_ENDPOINT,
+  VIEWS_ENDPOINT,
+  USERS_ENDPOINT,
+  LOGIN_ENDPOINT
+} from "../../constants/api-endpoints";
 
 // serialization
-import {serializeThreeTypes} from '../../utils/serialization';
+import { serializeThreeTypes } from "../../utils/serialization";
 
 export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend {
-
   constructor(endpoint: string) {
     super(endpoint);
     (this: any).getViews = this.getViews.bind(this);
@@ -20,42 +24,66 @@ export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend 
     (this: any).deleteView = this.deleteView.bind(this);
   }
 
+  login(userData: Object): Promise {
+    const body = JSON.stringify(userData);
+    return this._post(LOGIN_ENDPOINT, body, { headers: { "Content-Type": "application/json" }})
+      .then(result => result)
+      .catch(error => console.log(error));
+  }
+
   getViews(): Promise {
-    return this._get(VIEWS_ENDPOINT, {}).then((result) => result).catch((error) => console.log(error));
+    return this._get(VIEWS_ENDPOINT, {})
+      .then(result => result)
+      .catch(error => console.log(error));
   }
 
   getView(id: number): Promise {
-    return this._get(VIEWS_ENDPOINT + id, {}).then((result) => result).catch((error) => console.log(error));
+    return this._get(VIEWS_ENDPOINT + id, {})
+      .then(result => result)
+      .catch(error => console.log(error));
   }
 
   getThreeFile(id: number): Promise {
-    return this._get(FILE_ENDPOINT + id, {}).then((result) => result).catch((error) => console.log(error));
+    return this._get(FILE_ENDPOINT + id, {})
+      .then(result => result)
+      .catch(error => console.log(error));
   }
 
   addView(viewData: Object): Promise {
     const fd = ThreeViewerAdminBackend.objToFormData(viewData);
-    return this._post(VIEWS_ENDPOINT, fd, {}).then((result) => result).catch((error) => console.log(error));
+    return this._post(VIEWS_ENDPOINT, fd, {})
+      .then(result => result)
+      .catch(error => console.log(error));
   }
 
   updateView(viewData: Object): Promise {
     const body = ThreeViewerAdminBackend.objToFormData(viewData);
-    return this._put(VIEWS_ENDPOINT + viewData._id, body, {}).then((result) => result).catch((error) => console.log(error));
+    return this._put(VIEWS_ENDPOINT + viewData._id, body, {})
+      .then(result => result)
+      .catch(error => console.log(error));
   }
 
   deleteView(id: number): Promise {
-    return this._delete(VIEWS_ENDPOINT + id, {}).then((result) => result).catch((error) => console.log(error));
+    return this._delete(VIEWS_ENDPOINT + id, {})
+      .then(result => result)
+      .catch(error => console.log(error));
   }
 
   updateFile(filename: string, fileData: File): Promise {
-    return this._put(FILE_ENDPOINT + filename, fileData, {}).then((result) => result).catch((error) => console.log(error));
+    return this._put(FILE_ENDPOINT + filename, fileData, {})
+      .then(result => result)
+      .catch(error => console.log(error));
   }
 
   // settings
   saveViewerSettings(id: Number, settings: Object): Promise {
-    const body = JSON.stringify({ viewerSettings: serializeThreeTypes(settings) });
-    return this._put(VIEWS_ENDPOINT + id, body, { headers: { "Content-Type": "application/json" }})
+    const body = JSON.stringify({
+      viewerSettings: serializeThreeTypes(settings)
+    });
+    return this._put(VIEWS_ENDPOINT + id, body, {
+      headers: { "Content-Type": "application/json" }
+    })
       .then(result => result)
       .catch(error => console.error(error));
   }
-
 }

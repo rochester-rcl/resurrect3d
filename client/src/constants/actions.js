@@ -20,6 +20,10 @@ export const LOAD_TEXTURE: string = 'LOAD_TEXTURE';
 
 // Admin
 export const AUTHENTICATE: string = 'AUTHENTICATE';
+export const LOGIN_USER: string = 'LOGIN_USER';
+export const USER_LOGGED_IN: string = 'USER_LOGGED_IN';
+export const LOGIN_ERROR: string = 'LOGIN_ERROR';
+export const REMOVE_LOGIN_ERROR: string = 'REMOVE_LOGIN_ERROR';
 export const USER_AUTHENTICATED: string = 'USER_AUTHENTICATED';
 export const GET_VIEWS: string = 'GET_VIEWS';
 export const GET_VIEW: string = 'GET_VIEW';

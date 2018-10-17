@@ -17,7 +17,7 @@ import ViewForm from "../components/admin/ThreeViewForm";
 import ThreeViews from "../components/admin/ThreeViews";
 import ThreeViewDetails from "../components/admin/ThreeViewDetails";
 import ConverterContainer from "./converter/ConverterContainer";
-
+import LoginContainer from "./LoginContainer";
 // actions
 import { authenticate } from "../actions/ThreeViewActions";
 
@@ -37,8 +37,9 @@ class RouterContainer extends Component {
   }
 
   authenticateRoute(props: Object, component: Component) {
-    console.log(props);
-    return this._element(component, props, null);
+    /*console.log(props);
+    return this._element(component, props, null);*/
+    return <LoginContainer />
   }
 
   render() {

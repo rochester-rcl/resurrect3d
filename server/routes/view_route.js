@@ -28,10 +28,12 @@ module.exports = (app, upload, conn, Grid) => {
     .put(view.updateView)
     .delete(view.deleteView);
 
-  app.route("/api/authenticate")
+  app.route("/api/users/login")
     .post(user.authenticate, user.onAuthenticated);
 
-  app.route("/api/users/:id")
+  app.route("/api/users/")
     .post(user.add)
-    .delete(user.delete);
+
+  app.route("/api/users/:id")
+    .delete(user.delete)
 };

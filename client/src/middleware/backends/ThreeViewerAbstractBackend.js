@@ -13,19 +13,6 @@ export default class ThreeViewerAbstractBackend {
    * 3) some authentication in order to get 1 and 2
    */
 
-  // Although right now authenticate is the same as postThreeAsset, it's likely the method that is going to be overwritten
-  authenticate(
-    url: string,
-    body: Object,
-    params,
-    callback: (response: Object) => void
-  ): Promise {
-    /* csrf token / cookie / set api key to browser storage etc
-     * return true if authenticated, return false if not - should use a try catch
-     */
-    return this._post(url, body, params).then(result => callback(result));
-  }
-
   _post(url: string, body: Object | FormData, params: Object): Promise {
     return new Promise((resolve, reject) => {
       fetch(url, {
@@ -36,7 +23,11 @@ export default class ThreeViewerAbstractBackend {
         ...params
       })
         .then(response => {
-          return response.json().then(json => resolve(json));
+          if (response.ok === true) {
+            return response.json().then(json => resolve(json));
+          } else {
+            resolve({ error: true });
+          }
         })
         .catch(error => reject(error));
     });

@@ -11,7 +11,7 @@ const addUser = (req, res) => {
   let user = req.body;
   const { password, ...info } = user;
   // for now let's set it to never expire, it's really not that big a deal
-  const token = jwt.sign(info, constants.PRIVATE_KEY);
+  const token = jwt.sign({ email: info.email }, constants.PRIVATE_KEY);
   const hash = bcrypt.hashSync(password, constants.SALT_ROUNDS);
   user = new User({
     username: info.username,
