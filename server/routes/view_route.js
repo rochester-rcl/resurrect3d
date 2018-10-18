@@ -8,12 +8,13 @@ module.exports = (app, upload, conn, Grid) => {
   app
     .route("/api/file/:filename")
     .get(view.getFile)
-    .delete(view.deleteFile);
+    .delete(user.authenticateServer, view.deleteFile);
 
   app
     .route("/api/views")
     .get(view.getViews)
     .post(
+      user.authenticateServer,
       upload.fields([
         { name: "threeFile", maxcount: 1 },
         { name: "threeThumbnail", maxcount: 1 },
@@ -25,15 +26,21 @@ module.exports = (app, upload, conn, Grid) => {
   app
     .route("/api/views/:id")
     .get(view.getView)
-    .put(view.updateView)
-    .delete(view.deleteView);
+    .put(user.authenticateServer, view.updateView)
+    .delete(user.authenticateServer, view.deleteView);
 
   app.route("/api/users/login")
-    .post(user.authenticate, user.onAuthenticated);
+    .post(user.login, user.onLogin);
+
+  app.route("/api/users/logout")
+    .get(user.logout);
+
+  app.route("/api/users/authenticate")
+    .get(user.authenticateClient);
 
   app.route("/api/users/")
     .post(user.add)
-
+  // Needs custom authentication - need to check user ID against the id of the user in stored in req.session - same with all other deletes and puts
   app.route("/api/users/:id")
-    .delete(user.delete)
+    .delete(user.authenticateServer, user.delete)
 };

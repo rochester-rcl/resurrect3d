@@ -1734,7 +1734,7 @@ export default class ThreeView extends Component {
       const { dynamicLighting } = this.state;
       this.dynamicLight.visible = dynamicLighting;
       if (dynamicLighting) {
-        this.pointLights.traverse((light) => light.intensity = 0.1);
+        this.pointLights.traverse((light) => light.intensity = 0.0);
         this.ambientLight.intensity = 0.8;
         this.enableLightButton.updateLabel("lighting: on");
       } else {
@@ -1742,7 +1742,6 @@ export default class ThreeView extends Component {
         this.ambientLight.intensity = 1.0;
         this.enableLightButton.updateLabel("lighting: off");
       }
-
     });
   }
 

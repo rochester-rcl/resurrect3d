@@ -48,7 +48,12 @@ const deleteUser = (req, res) => {
   );
 };
 
-const onAuthenticated = (req, res) => {
+const logout = (req, res) => {
+  req.logout();
+  res.json({ loggedOut: true });
+}
+
+const onLogin = (req, res) => {
   const { username, email, token, _id } = req.user;
   res.json({
     username: username,
@@ -57,6 +62,28 @@ const onAuthenticated = (req, res) => {
     id: _id
   });
 };
+
+// Sends a response - this is so we can do authentication on the client side
+const authenticateClient = (req, res) => {
+  if (req.user === undefined) {
+    res.json({
+      authenticated: false,
+    });
+  } else {
+    res.json({
+      authenticated: true
+    });
+  }
+}
+
+const authenticateServer = (req, res, next) => {
+  if (req.user === undefined) {
+    return res.status(401).json({
+      authenticated: false
+    });
+  }
+  return next();
+}
 
 passport.use(
   new LocalStrategy(function(email, password, done) {
@@ -98,9 +125,12 @@ passport.deserializeUser(function(id, done) {
 });
 
 module.exports = {
-  authenticate: passport.authenticate("local"),
+  login: passport.authenticate("local"),
+  logout: logout,
   protect: passport.authenticate("bearer"),
   add: addUser,
   delete: deleteUser,
-  onAuthenticated: onAuthenticated
+  onLogin: onLogin,
+  authenticateClient: authenticateClient,
+  authenticateServer: authenticateServer,
 };

@@ -18,6 +18,7 @@ export default class ThreeViewerAbstractBackend {
       fetch(url, {
         ...{
           method: "POST",
+          credentials: "include",
           body: body
         },
         ...params
@@ -38,6 +39,7 @@ export default class ThreeViewerAbstractBackend {
       fetch(url, {
           ...{
             method: "PUT",
+            credentials: "include",
             body: body,
           },
           ...params
@@ -53,7 +55,7 @@ export default class ThreeViewerAbstractBackend {
 
   _get(url: string, params: Object): Promise {
     return new Promise((resolve, reject) => {
-      fetch(url, params)
+      fetch(url, { method: "GET", credentials: "include"}, params)
         .then(response => {
           return response.json().then(json => {
             resolve(json);

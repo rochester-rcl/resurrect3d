@@ -2,9 +2,14 @@ import React, { Component } from "react";
 import PropTypes from 'prop-types';
 import { connect } from "react-redux";
 import { Form, Button, Message, Radio, Icon } from "semantic-ui-react";
-import { loginUser } from "../actions/ThreeViewActions";
+import { loginUser } from "../actions/UserActions";
 import ToggleIcon from '../components/ToggleIcon';
 import { Redirect, Link } from 'react-router-dom';
+// actions
+import { authenticate } from "../actions/UserActions";
+
+// constants
+import { BASENAME } from '../constants/application';
 
 class LoginContainer extends Component {
   // TODO rewrite with semantic ui form
@@ -23,14 +28,10 @@ class LoginContainer extends Component {
     this.handleShowPassword = this.handleShowPassword.bind(this);
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (this.props.loggedIn) {
-      // this.props.history.push("/dashboard");
-    }
-  }
-
   componentDidMount() {
-
+    if (this.props.loggedIn === false) {
+      this.props.authenticate();
+    }
   }
 
   handleSubmit(event) {
@@ -162,17 +163,18 @@ class LoginContainer extends Component {
         </div>
       );
     } else {
-      return <Redirect path="/" />;
+      // likely need to use process info here to properly redirect when building
+      return <Redirect to={BASENAME + 'admin/views'} />;
     }
   }
 }
 
 function mapStateToProps(state) {
   return {
-    loggedIn: state.views.user.loggedIn,
-    loginError: state.views.user.loginError
+    loggedIn: state.user.loggedIn,
+    loginError: state.user.loginError
   };
 }
 
 //donot connect to store
-export default connect(mapStateToProps, { loginUser })(LoginContainer);
+export default connect(mapStateToProps, { loginUser, authenticate })(LoginContainer);

@@ -15,7 +15,21 @@ export default function(state = defaultState, action){
     case ActionConstants.USER_LOGGED_IN:
       return {
         ...state,
+        loggedIn: true,
         info: action.user,
+      }
+
+    case ActionConstants.USER_LOGGED_OUT:
+      return {
+        ...state,
+        loggedIn: false,
+        info: {},
+      }
+      
+    case ActionConstants.AUTHENTICATE_ATTEMPTED:
+      return {
+        ...state,
+        authenticateAttempted: action.value,
       }
 
     case ActionConstants.USER_AUTHENTICATED:

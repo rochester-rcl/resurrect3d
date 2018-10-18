@@ -7,7 +7,7 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 
 // React-Router
-import { BrowserRouter as Router, Route } from "react-router-dom";
+import { BrowserRouter as Router, Route, Redirect } from "react-router-dom";
 
 // App
 import App from "./App";
@@ -15,18 +15,26 @@ import App from "./App";
 // TODO should be in containers
 import ViewForm from "../components/admin/ThreeViewForm";
 import ThreeViews from "../components/admin/ThreeViews";
+import AdminMenu from "../components/admin/ThreeViewAdminMenu";
 import ThreeViewDetails from "../components/admin/ThreeViewDetails";
+import LoaderModal from "../components/LoaderModal";
 import ConverterContainer from "./converter/ConverterContainer";
 import LoginContainer from "./LoginContainer";
+import LogoutContainer from "./LogoutContainer";
+
 // actions
-import { authenticate } from "../actions/ThreeViewActions";
+import { authenticate, logout } from "../actions/UserActions";
 
 // constants
 import {
   CONVERSION_TYPE_RTI,
-  CONVERSION_TYPE_MESH
+  CONVERSION_TYPE_MESH,
+  BASENAME
 } from "../constants/application";
 
+const AuthenticatingLoader = () => <LoaderModal active={true} text="Authenticating ..." />;
+
+const process = require('process');
 
 class RouterContainer extends Component {
   _element = React.createElement;
@@ -37,30 +45,44 @@ class RouterContainer extends Component {
   }
 
   authenticateRoute(props: Object, component: Component) {
-    /*console.log(props);
-    return this._element(component, props, null);*/
-    return <LoginContainer />
+    const { user } = this.props;
+    const { authenticateAttempted } = user;
+    if (user.loggedIn !== false) {
+      return this._element(component, props, null);
+    } else {
+      if (authenticateAttempted === false) {
+        this.props.authenticate();
+        return <AuthenticatingLoader />;
+      } else {
+        // Need to use process.env
+        return <Redirect to={BASENAME + 'admin/login'}/>;
+      }
+    }
   }
 
   render() {
-    const { store } = this.props;
+    const { store, user } = this.props;
     // need this for Omeka or embedding in any other system that has its own routing
     let path = window.publicUrl ? window.publicUrl : "/";
+
     return (
-        <Router>
+        <Router basename={BASENAME}>
           <div className="three-router">
-            <Route path="*/models/:id" component={App} />
-            <Route path="*/admin/add" render={(props) => this.authenticateRoute(props, ViewForm)} />
-            <Route path="*/admin/views" render={(props) => this.authenticateRoute(props, ThreeViews)} />
-            <Route path="*/admin/view/:id" render={(props) => this.authenticateRoute(props, ThreeViewDetails)} />
+            <Route path="/models/:id" component={App} />
+            <AdminMenu active={user.loggedIn} />
+            <Route path="/admin/login" component={LoginContainer} />
+            <Route path="/admin/logout" component={LogoutContainer} />
+            <Route path="/admin/add" render={(props) => this.authenticateRoute(props, ViewForm)} />
+            <Route path="/admin/views" render={(props) => this.authenticateRoute(props, ThreeViews)} />
+            <Route path="/admin/view/:id" render={(props) => this.authenticateRoute(props, ThreeViewDetails)} />
             <Route
-              path="*/converter"
+              path="/converter"
               render={props => (
                 <ConverterContainer conversionType={CONVERSION_TYPE_MESH} />
               )}
             />
             <Route
-              path="*/ptm-converter"
+              path="/ptm-converter"
               render={props => (
                 <ConverterContainer conversionType={CONVERSION_TYPE_RTI} />
               )}
@@ -73,7 +95,7 @@ class RouterContainer extends Component {
 
 function mapStateToProps(state, ownProps) {
   return {
-    user: state.views.user,
+    user: state.user,
   }
 }
 

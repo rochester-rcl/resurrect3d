@@ -8,7 +8,8 @@ import { Dimmer, Loader, Segment, Progress } from 'semantic-ui-react';
 
 const LoaderModal = (props: Object) => {
   let { text, active, className, percent } = props;
-  if (percent !== null) {
+
+  if (percent) {
     return(
       <Dimmer className={className} active={active} as={Segment}>
         <h1>{ text }</h1>

@@ -1,3 +1,7 @@
+const process = require('process');
+
+export const BASENAME = (process.env.PUBLIC_URL !== undefined) ? process.env.PUBLIC_URL : '/';
+
 export const GROUP = 'GROUP';
 export const COMPONENT = 'COMPONENT';
 export const CM = 'CM';

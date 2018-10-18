@@ -7,7 +7,9 @@ import {
   FILE_ENDPOINT,
   VIEWS_ENDPOINT,
   USERS_ENDPOINT,
-  LOGIN_ENDPOINT
+  LOGIN_ENDPOINT,
+  LOGOUT_ENDPOINT,
+  AUTHENTICATE_ENDPOINT
 } from "../../constants/api-endpoints";
 
 // serialization
@@ -26,7 +28,21 @@ export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend 
 
   login(userData: Object): Promise {
     const body = JSON.stringify(userData);
-    return this._post(LOGIN_ENDPOINT, body, { headers: { "Content-Type": "application/json" }})
+    return this._post(LOGIN_ENDPOINT, body, {
+      headers: { "Content-Type": "application/json" }
+    })
+      .then(result => result)
+      .catch(error => console.log(error));
+  }
+
+  logout(): Promise {
+    return this._get(LOGOUT_ENDPOINT, {})
+      .then(result => result)
+      .catch(error => console.log(error));
+  }
+
+  authenticate(): Promise {
+    return this._get(AUTHENTICATE_ENDPOINT, {})
       .then(result => result)
       .catch(error => console.log(error));
   }

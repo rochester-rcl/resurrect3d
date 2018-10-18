@@ -135,3 +135,29 @@
 .toggle-icon-label {
   cursor: pointer;
 }
+
+/** ADMIN MENU **/
+
+.three-menu-admin-container {
+  display: flex;
+  justify-content: flex-end;
+  margin: 30px;
+}
+
+.three-menu-admin-trigger.icon {
+  color: #21ba45 !important;
+}
+
+.three-menu-admin {
+  font-family: "Source Code Pro", monospace !important;
+  color: #fff !important;
+  background: #21ba45 !important;
+}
+
+.three-menu-admin .item {
+  color: #fff !important;
+}
+
+.three-menu-admin .item a {
+  color: #fff;
+}

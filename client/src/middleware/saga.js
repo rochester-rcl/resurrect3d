@@ -14,7 +14,7 @@ import * as THREE from "three";
 
 // constants
 import { WORKER_PROGRESS,  } from "../constants/application";
-import { USER_LOGGED_IN, LOGIN_ERROR } from "../constants/actions";
+import { USER_LOGGED_IN, LOGIN_ERROR, USER_AUTHENTICATED, AUTHENTICATE_ATTEMPTED, LOGOUT_USER, USER_LOGGED_OUT } from "../constants/actions";
 
 import ThreeViewerNodeBackend from "./backends/ThreeViewerNodeBackend";
 import ThreeViewerAdminBackend from "./backends/ThreeViewerAdminBackend";
@@ -280,6 +280,27 @@ function* loginSaga(loginAction: Object): Generator<any, any, any> {
   }
 }
 
+function* logoutSaga(): Generator<any, any, any> {
+  try {
+    const status = yield adminBackend.logout();
+    if (status.loggedOut === true) {
+      yield put({ type: USER_LOGGED_OUT });
+    }
+  } catch(error) {
+    console.log(error);
+  }
+}
+
+export function* authenticateSaga(): Generator<any, any, any> {
+  try {
+    const status = yield adminBackend.authenticate();
+    yield put({ type: USER_AUTHENTICATED, loggedIn: status.authenticated });
+    yield put({ type: AUTHENTICATE_ATTEMPTED, value: true });
+  } catch(error) {
+    console.log(error);
+  }
+}
+
 export function* addThreeViewSaga(
   addThreeViewAction: Object
 ): Generator<any, any, any> {
@@ -416,6 +437,14 @@ export function* watchForLogin(): Generator<any, any, any> {
   yield takeEvery(ActionConstants.LOGIN_USER, loginSaga);
 }
 
+export function* watchForLogout(): Generator<any, any, any> {
+  yield takeEvery(ActionConstants.LOGOUT_USER, logoutSaga);
+}
+
+export function* watchForAuthenticate(): Generator<any, any, any> {
+  yield takeEvery(ActionConstants.AUTHENTICATE, authenticateSaga);
+}
+
 export function* watchForAddThreeView(): Generator<any, any, any> {
   yield takeEvery(ActionConstants.ADD_VIEW, addThreeViewSaga);
 }
@@ -448,6 +477,8 @@ export default function* rootSaga(): Generator<any, any, any> {
     watchForLoadMesh(),
     watchForLoadTexture(),
     watchForLogin(),
+    watchForLogout(),
+    watchForAuthenticate(),
     watchForAddThreeView(),
     watchForGetThreeViews(),
     watchForGetThreeView(),
