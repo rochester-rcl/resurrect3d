@@ -19,22 +19,26 @@ const addUser = (req, res) => {
     password: hash,
     token: token
   });
-
-  user.save((err, savedUser) => {
-    if (err) res.send(err);
-    if (savedUser !== undefined) {
-      const response = {
-        username: savedUser.username,
-        email: savedUser.email,
-        token: savedUser.token,
-        id: savedUser._id,
-      };
-      // can put a callback here eventually - which then sends the response so we know an email was sent
-      savedUser.sendVerificationEmail();
-      res.json(response);
+  savedUser.sendVerificationEmail(function(err, info) {
+    if (err) {
+      res.json({ status: false, message: 'Invalid e-mail address!'});
+    } else {
+      // only save the user if the email actually exists - can check info.accepted length > 0
+      user.save((err, savedUser) => {
+        if (err) res.send(err);
+        if (savedUser !== undefined) {
+          const response = {
+            username: savedUser.username,
+            email: savedUser.email,
+            token: savedUser.token,
+            id: savedUser._id,
+          };
+          res.json(response);
+        }
+      });
     }
   });
-};
+}
 
 const deleteUser = (req, res) => {
   User.findOne(

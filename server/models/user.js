@@ -40,13 +40,13 @@ UserSchema.methods.validPassword = function (password) {
   return bcrypt.compareSync(password, this.password);
 }
 
-UserSchema.methods.sendVerificationEmail = function() {
+UserSchema.methods.sendVerificationEmail = function(callback) {
   const message = {
     to: this.email,
     html: mail.greeting + this.token,
     ...mail.message,
   }
-  mail.transporter.sendMail(message, (error) => { console.log(error) });
+  mail.transporter.sendMail(message, callback);
 }
 
 module.exports = mongoose.model('User', UserSchema);
