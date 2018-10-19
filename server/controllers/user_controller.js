@@ -29,6 +29,8 @@ const addUser = (req, res) => {
         token: savedUser.token,
         id: savedUser._id,
       };
+      // can put a callback here eventually - which then sends the response so we know an email was sent
+      savedUser.sendVerificationEmail();
       res.json(response);
     }
   });

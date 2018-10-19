@@ -25,9 +25,20 @@ export const LOGIN_USER: string = 'LOGIN_USER';
 export const LOGOUT_USER: string = 'LOGOUT_USER';
 export const USER_LOGGED_IN: string = 'USER_LOGGED_IN';
 export const USER_LOGGED_OUT: string = 'USER_LOGGED_OUT';
+
+export const ADD_USER: string = 'ADD_USER';
+export const USER_ADDED: string = 'USER_ADDED';
+export const VERIFY_USER: string = 'VERIFY_USER';
+export const USER_VERIFIED: string = 'USER_VERIFIED';
+export const DELETE_USER: string = 'DELETE_USER';
+export const USER_DELETED: string = 'USER_DELETED';
+export const UPDATE_USER: string = 'UPDATE_USER';
+export const USER_UPDATED: string = 'USER_UPDATED';
+
 export const LOGIN_ERROR: string = 'LOGIN_ERROR';
 export const REMOVE_LOGIN_ERROR: string = 'REMOVE_LOGIN_ERROR';
 export const USER_AUTHENTICATED: string = 'USER_AUTHENTICATED';
+
 export const GET_VIEWS: string = 'GET_VIEWS';
 export const GET_VIEW: string = 'GET_VIEW';
 export const GET_THREEFILE: string = 'GET_THREEFILE';

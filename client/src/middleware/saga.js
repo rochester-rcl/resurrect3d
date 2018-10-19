@@ -261,6 +261,14 @@ export function* loadTextureSaga(
 
 /***************** ADMIN ADDITIONS ********************************************/
 
+function* addUserSaga(userAction: Object): Generator<any, any, any> {
+  try {
+    const user = yield adminBackend.addUser(userAction.userInfo);
+    console.log(user);
+  } catch(error) {
+    console.log(error);
+  }
+}
 
 function* loginSaga(loginAction: Object): Generator<any, any, any> {
   try {
@@ -433,6 +441,10 @@ export function* watchForLoadTexture(): Generator<any, any, any> {
   yield takeEvery(ActionConstants.LOAD_TEXTURE, loadTextureSaga);
 }
 
+export function* watchForAddUser(): Generator<any, any, any> {
+  yield takeEvery(ActionConstants.ADD_USER, addUserSaga);
+}
+
 export function* watchForLogin(): Generator<any, any, any> {
   yield takeEvery(ActionConstants.LOGIN_USER, loginSaga);
 }
@@ -476,6 +488,7 @@ export default function* rootSaga(): Generator<any, any, any> {
     watchForSaveSettings(),
     watchForLoadMesh(),
     watchForLoadTexture(),
+    watchForAddUser(),
     watchForLogin(),
     watchForLogout(),
     watchForAuthenticate(),

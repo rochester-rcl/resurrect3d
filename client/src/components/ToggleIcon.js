@@ -1,6 +1,6 @@
 /* @flow */
 import React, { Component } from "react";
-import { Icon, Label } from "semantic-ui-react";
+import { Icon, Label, Button } from "semantic-ui-react";
 
 export default class ToggleIcon extends Component {
   state = { toggled: false };
@@ -11,11 +11,13 @@ export default class ToggleIcon extends Component {
   }
 
   handleClick(event: SyntheticEvent) {
+    event.preventDefault();
+    event.stopPropagation();
     this.setState(
       {
         toggled: !this.state.toggled
       },
-      () => this.props.onClick(event)
+      () => this.props.onClick()
     );
   }
 
@@ -43,7 +45,9 @@ export default class ToggleIcon extends Component {
     }
 
     return (
-      <Label
+      <Button
+        icon
+        labelPosition='left'
         onClick={this.handleClick}
         color={_color}
         key={0}
@@ -56,7 +60,7 @@ export default class ToggleIcon extends Component {
           name={_icon}
         />
         {_label}
-      </Label>
+      </Button>
     );
   }
 }

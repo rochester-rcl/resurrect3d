@@ -1,171 +1,50 @@
 import React, { Component } from "react";
-import PropTypes from 'prop-types';
+import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { Form, Button, Message, Radio, Icon } from "semantic-ui-react";
 import { loginUser } from "../actions/UserActions";
-import ToggleIcon from '../components/ToggleIcon';
-import { Redirect, Link } from 'react-router-dom';
+import ToggleIcon from "../components/ToggleIcon";
+import { Redirect, Link } from "react-router-dom";
 // actions
-import { authenticate } from "../actions/UserActions";
+import { authenticate, addUser } from "../actions/UserActions";
 
 // constants
-import { BASENAME } from '../constants/application';
+import { BASENAME } from "../constants/application";
+
+// components
+import Login from "../components/Login";
+import AdminSignUpModal from "../components/admin/ThreeViewAdminSignUp";
 
 class LoginContainer extends Component {
-  // TODO rewrite with semantic ui form
-  state = {
-    email: '',
-    password: '',
-    showPassword: false
-  }
-
-  constructor(props) {
-    super(props);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleKeyPress = this.handleKeyPress.bind(this);
-    this.handleEmailChange = this.handleEmailChange.bind(this);
-    this.handlePasswordChange = this.handlePasswordChange.bind(this);
-    this.handleShowPassword = this.handleShowPassword.bind(this);
-  }
-
   componentDidMount() {
     if (this.props.loggedIn === false) {
       this.props.authenticate();
     }
   }
 
-  handleSubmit(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    const { email, password } = this.state;
-    if (this.props.loggedIn) {
-      this.context.router.push("/");
-    } else {
-      const loginInfo = {
-        username: email,
-        password: encodeURIComponent(password),
-      };
-      this.props.loginUser(loginInfo);
-      // this.props.getSession();
-      this.setState({
-        loginAttempted: true
-      });
-    }
-  }
-
-  handleEmailChange(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    this.setState({
-      email: event.target.value
-    });
-  }
-
-  handlePasswordChange(event, { value }) {
-    event.preventDefault();
-    event.stopPropagation();
-    this.setState({
-      password: value
-    });
-  }
-
-  handleShowPassword(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    this.setState({
-      showPassword: !this.state.showPassword
-    });
-  }
-
-  handleKeyPress(event) {
-    if (event.charCode === 13) {
-      this.handleSubmit(event);
-    }
-  }
-
   render() {
-    const { password, showPassword } = this.state;
-    const { loginError, loggedIn } = this.props;
-    let messageClass = "login-error ";
-    messageClass += loginError === true ? "show" : "hide";
-    if (loggedIn === false) {
-      return (
-        <div className="hp-body-container">
-          <div className="hp-overlay">
-            <div className="hp-content">
-              <p className="hp-tagline">
-                Some great tagline about 3D stuff
-              </p>
-              <div className="hp-login-container">
-                <div className="ui middle aligned center aligned grid">
-                  <div className="column">
-                    <Form
-                      className="login-form"
-                      onSubmit={this.handleSubmit}
-                    >
-                      <Form.Input
-                        className="login-form-field"
-                        icon="mail"
-                        iconPosition="left"
-                        onKeyPress={this.handleKeyPress}
-                        onChange={this.handleEmailChange}
-                        placeholder="email"
-                        name="email"
-                        type="text"
-                        error={loginError}
-                      />
-                      <Form.Input
-                        className="login-form-field"
-                        icon="lock"
-                        iconPosition="left"
-                        onKeyPress={this.handleKeyPress}
-                        onChange={this.handlePasswordChange}
-                        placeholder="password"
-                        name="password"
-                        value={password}
-                        type={(showPassword === true) ? "text" : "password"}
-                        error={loginError}
-                      />
-                      <Message negative className={messageClass}>
-                        <Message.Header>
-                          There was a problem logging in!
-                        </Message.Header>
-                        <p>Username or password is incorrect</p>
-                      </Message>
-                      <Button
-                        className="login-submit"
-                        type="submit"
-                        color="green"
-                      >
-                        Login
-                      </Button>
-                      <ToggleIcon
-                        className="login-form-button"
-                        id="show-password"
-                        onClick={this.handleShowPassword}
-                        onColor="grey"
-                        offColor="black"
-                        onIcon="hide"
-                        offIcon="eye"
-                        onLabel="hide password"
-                        offLabel="show password"
-                      />
-                    </Form>
-                  </div>
-                </div>
-                <div className="hp-forgot-pass-container">
-                  <a href="/">Sign Up</a>
-                  <a href="/">Request New</a>
-                </div>
+    const { loginError, loggedIn, loginUser, addUser } = this.props;
+    return (
+      <div className="hp-body-container">
+        <div className="hp-overlay">
+          <div className="hp-content">
+            <p className="hp-tagline">
+              Some great tagline about 3D stuff
+            </p>
+            <div className="hp-login-container">
+              <Login
+                loginError={loginError}
+                loggedIn={loggedIn}
+                loginUser={loginUser}
+              />
+              <div className="hp-forgot-pass-container">
+                <AdminSignUpModal trigger={<a>sign up</a>} signUpUser={addUser} />
               </div>
             </div>
           </div>
         </div>
-      );
-    } else {
-      // likely need to use process info here to properly redirect when building
-      return <Redirect to={BASENAME + 'admin/views'} />;
-    }
+      </div>
+    );
   }
 }
 
@@ -177,4 +56,7 @@ function mapStateToProps(state) {
 }
 
 //donot connect to store
-export default connect(mapStateToProps, { loginUser, authenticate })(LoginContainer);
+export default connect(
+  mapStateToProps,
+  { loginUser, authenticate, addUser }
+)(LoginContainer);

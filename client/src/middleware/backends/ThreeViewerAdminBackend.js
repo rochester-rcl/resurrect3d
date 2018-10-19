@@ -26,6 +26,15 @@ export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend 
     (this: any).deleteView = this.deleteView.bind(this);
   }
 
+  addUser(userInfo: Object): Promise {
+    const body = JSON.stringify(userInfo);
+    return this._post(USERS_ENDPOINT, body, {
+      headers: { "Content-Type": "application/json" }
+    })
+      .then(result => result)
+      .catch(error => console.log(error));
+  }
+
   login(userData: Object): Promise {
     const body = JSON.stringify(userData);
     return this._post(LOGIN_ENDPOINT, body, {

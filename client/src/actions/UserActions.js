@@ -1,6 +1,14 @@
 /* @flow */
 // constants
-import { LOGIN_USER, AUTHENTICATE, LOGOUT_USER, REMOVE_LOGIN_ERROR } from '../constants/actions';
+import { LOGIN_USER, AUTHENTICATE, LOGOUT_USER, REMOVE_LOGIN_ERROR, ADD_USER } from '../constants/actions';
+
+export const addUser = (userInfo: Object): Object => {
+  return {
+    type: ADD_USER,
+    userInfo: userInfo,
+  }
+}
+
 export const loginUser = (loginInfo: Object): Object => {
   return {
     type: LOGIN_USER,

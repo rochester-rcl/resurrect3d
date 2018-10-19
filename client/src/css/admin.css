@@ -67,12 +67,13 @@
     color: white;
     padding: 30px;
 }
-.hp-forgot-pass-container a{
+.hp-forgot-pass-container a {
     background: rgba(0, 0, 0, 0.5);
     padding: 5px 15px;
     margin: 0 5px;
     border-radius: 2px;
     color: #21ba45;
+    cursor: pointer;
 }
 
 .hp-forgot-pass-container a:hover {
@@ -115,20 +116,24 @@
   border: 1px solid #21ba45 !important;
 }
 
+.toggle-icon-label {
+  font-family: "Source Code Pro", monospace !important;
+}
+
 .login-submit {
   margin-top: 20px !important;
   font-family: "Source Code Pro", monospace !important;
 }
 
-.login-error .header {
+.login-error .header, .signup-error .header {
   font-family: "Source Code Pro", monospace !important;
 }
 
-.login-error.show {
+.login-error.show, .signup-error.show {
   display: block;
 }
 
-.login-error.hide {
+.login-error.hide, .signup-error.hide {
   display: none;
 }
 
@@ -160,4 +165,14 @@
 
 .three-menu-admin .item a {
   color: #fff;
+  cursor: pointer;
+}
+
+/** Signup Modal **/
+.three-admin-signup-modal {
+  font-family: "Source Code Pro", monospace !important;
+}
+
+.three-admin-signup-modal .header {
+  font-family: "Source Code Pro", monospace !important;
 }
