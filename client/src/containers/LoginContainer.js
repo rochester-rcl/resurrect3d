@@ -23,7 +23,7 @@ class LoginContainer extends Component {
   }
 
   render() {
-    const { loginError, loggedIn, loginUser, addUser } = this.props;
+    const { loginError, loggedIn, loginUser, addUser, info } = this.props;
     return (
       <div className="hp-body-container">
         <div className="hp-overlay">
@@ -38,7 +38,7 @@ class LoginContainer extends Component {
                 loginUser={loginUser}
               />
               <div className="hp-forgot-pass-container">
-                <AdminSignUpModal trigger={<a>sign up</a>} signUpUser={addUser} />
+                <AdminSignUpModal trigger={<a>sign up</a>} signUpUser={addUser} status={info.email !== undefined} />
               </div>
             </div>
           </div>
@@ -51,7 +51,8 @@ class LoginContainer extends Component {
 function mapStateToProps(state) {
   return {
     loggedIn: state.user.loggedIn,
-    loginError: state.user.loginError
+    loginError: state.user.loginError,
+    info: state.user.info,
   };
 }
 

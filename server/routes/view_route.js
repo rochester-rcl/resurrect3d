@@ -40,7 +40,11 @@ module.exports = (app, upload, conn, Grid) => {
 
   app.route("/api/users/")
     .post(user.add)
+
   // Needs custom authentication - need to check user ID against the id of the user in stored in req.session - same with all other deletes and puts
   app.route("/api/users/:id")
     .delete(user.authenticateServer, user.delete)
+
+  app.route("/api/users/verify/:token")
+    .get(user.verify);
 };

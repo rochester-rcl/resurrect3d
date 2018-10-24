@@ -9,7 +9,8 @@ import {
   USERS_ENDPOINT,
   LOGIN_ENDPOINT,
   LOGOUT_ENDPOINT,
-  AUTHENTICATE_ENDPOINT
+  AUTHENTICATE_ENDPOINT,
+  VERIFY_ENDPOINT,
 } from "../../constants/api-endpoints";
 
 // serialization
@@ -31,6 +32,18 @@ export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend 
     return this._post(USERS_ENDPOINT, body, {
       headers: { "Content-Type": "application/json" }
     })
+      .then(result => result)
+      .catch(error => console.log(error));
+  }
+
+  deleteUser(id: Number): Promise {
+    return this._delete(USERS_ENDPOINT + id, {})
+      .then(result => result)
+      .catch(error => console.log(error));
+  }
+
+  verifyUser(token: string): Promise {
+    return this._get(VERIFY_ENDPOINT + token, {})
       .then(result => result)
       .catch(error => console.log(error));
   }

@@ -11,7 +11,6 @@ export function getThreeAssetAction(assetId: Number, url: string): Object {
   }
 }
 
-
 export function loadMeshAction(url: string): Object {
   return {
     type: ActionConstants.LOAD_MESH,

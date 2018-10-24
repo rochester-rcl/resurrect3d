@@ -25,7 +25,7 @@ export default function(state = defaultState, action){
         loggedIn: false,
         info: {},
       }
-      
+
     case ActionConstants.AUTHENTICATE_ATTEMPTED:
       return {
         ...state,
@@ -48,6 +48,25 @@ export default function(state = defaultState, action){
       return {
         ...state,
         loginError: false,
+      }
+
+    case ActionConstants.USER_ADDED:
+      return {
+        ...state,
+        loggedIn: false,
+        info: action.info,
+      }
+
+    case ActionConstants.USER_DELETED:
+      return {
+        ...state,
+        info: action.info,
+      }
+
+    case ActionConstants.USER_VERIFIED:
+      return {
+        ...state,
+        info: action.info,
       }
 
     default:

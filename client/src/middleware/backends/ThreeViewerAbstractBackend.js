@@ -82,6 +82,7 @@ export default class ThreeViewerAbstractBackend {
       fetch(url, {
           ...{
             method: "DELETE",
+            credentials: "include"
           },
           ...params
         })

@@ -1,20 +1,24 @@
 const nodemailer = require('nodemailer');
-// TODO will create the default transport here. Will load in host etc from a json file
+const mailConfig = require('./email.json'); // DONT CHECK THIS IN
+
 const transporter = nodemailer.createTransport({
-  host: '',
-  port: 587,
-  secure: false,
+  service: mailConfig.service,
+  auth: {
+    user: mailConfig.email,
+    pass: mailConfig.password
+  }
 });
 
-const greeting = '<p>Greetings from blah! To verify your account, click on the link provided below: </p><br>';
+const greeting = '<p>Greetings from Resurrect3D! To verify your account, click on the link provided below: </p><br>';
 
 const message = {
-  from: '<admin@example.com>',
-  subject: 'Your Blah Account'
+  from: mailConfig.email,
+  subject: 'Your Resurrect3D Account'
 }
 
 module.exports = {
   transporter: transporter,
   message: message,
   greeting: greeting,
+  verificationRoute: mailConfig.verificationRoute,
 }

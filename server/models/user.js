@@ -40,10 +40,14 @@ UserSchema.methods.validPassword = function (password) {
   return bcrypt.compareSync(password, this.password);
 }
 
+function formatLink(token) {
+  return '<a href="' + mail.verificationRoute + token + '">Verify your Resurrect3D Account</a>';
+}
+
 UserSchema.methods.sendVerificationEmail = function(callback) {
   const message = {
     to: this.email,
-    html: mail.greeting + this.token,
+    html: mail.greeting + formatLink(this.token),
     ...mail.message,
   }
   mail.transporter.sendMail(message, callback);

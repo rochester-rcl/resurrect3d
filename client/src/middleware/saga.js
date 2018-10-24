@@ -14,7 +14,7 @@ import * as THREE from "three";
 
 // constants
 import { WORKER_PROGRESS,  } from "../constants/application";
-import { USER_LOGGED_IN, LOGIN_ERROR, USER_AUTHENTICATED, AUTHENTICATE_ATTEMPTED, LOGOUT_USER, USER_LOGGED_OUT } from "../constants/actions";
+import { USER_LOGGED_IN, LOGIN_ERROR, USER_AUTHENTICATED, AUTHENTICATE_ATTEMPTED, LOGOUT_USER, USER_LOGGED_OUT, USER_DELETED } from "../constants/actions";
 
 import ThreeViewerNodeBackend from "./backends/ThreeViewerNodeBackend";
 import ThreeViewerAdminBackend from "./backends/ThreeViewerAdminBackend";
@@ -38,7 +38,13 @@ const adminBackend = new ThreeViewerAdminBackend();
 
 const computeProgress = (request: ProgressEvent): string => {
   return parseFloat(request.loaded / 1000000).toFixed(2) + " MB";
-};
+}
+
+const sleep = (duration: Number): Promise => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => resolve(), duration);
+  });
+}
 
 function* getThreeAssetSaga(
   getThreeAssetAction: Object
@@ -264,7 +270,31 @@ export function* loadTextureSaga(
 function* addUserSaga(userAction: Object): Generator<any, any, any> {
   try {
     const user = yield adminBackend.addUser(userAction.userInfo);
-    console.log(user);
+    if (user.id !== undefined) {
+      const { token, id, ...rest } = user;
+      yield put({ type: ActionConstants.USER_ADDED, info: rest });
+    }
+  } catch(error) {
+    console.log(error);
+  }
+}
+
+function* deleteUserSaga(userAction: Object): Generator<any, any, any> {
+  try {
+    const deleted = yield adminBackend.deleteUser(userAction.id);
+    yield put({ type: ActionConstants.USER_DELETED, info: deleted });
+    yield sleep(5000);
+    yield put({ type: ActionConstants.USER_LOGGED_OUT });
+  } catch(error) {
+    console.log(error);
+  }
+}
+
+function* verifyUserSaga(verifyAction: Object): Generator<any, any, any> {
+  try {
+    const verified = yield adminBackend.verifyUser(verifyAction.token);
+    console.log(verified);
+    yield put({ type: ActionConstants.USER_VERIFIED, info: verified });
   } catch(error) {
     console.log(error);
   }
@@ -445,6 +475,14 @@ export function* watchForAddUser(): Generator<any, any, any> {
   yield takeEvery(ActionConstants.ADD_USER, addUserSaga);
 }
 
+export function* watchForVerifyUser(): Generator<any, any, any> {
+  yield takeEvery(ActionConstants.VERIFY_USER, verifyUserSaga);
+}
+
+export function* watchForDeleteUser(): Generator<any, any, any> {
+  yield takeEvery(ActionConstants.DELETE_USER, deleteUserSaga);
+}
+
 export function* watchForLogin(): Generator<any, any, any> {
   yield takeEvery(ActionConstants.LOGIN_USER, loginSaga);
 }
@@ -489,6 +527,8 @@ export default function* rootSaga(): Generator<any, any, any> {
     watchForLoadMesh(),
     watchForLoadTexture(),
     watchForAddUser(),
+    watchForVerifyUser(),
+    watchForDeleteUser(),
     watchForLogin(),
     watchForLogout(),
     watchForAuthenticate(),

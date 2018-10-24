@@ -176,3 +176,86 @@
 .three-admin-signup-modal .header {
   font-family: "Source Code Pro", monospace !important;
 }
+
+/** Accoint Settings **/
+.three-admin-account-settings-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  background-color: #1c1c1c;
+  margin: 10%;
+  font-family: "Source Code Pro", monospace !important;
+  color: #fff;
+}
+
+.three-admin-account-settings-divider {
+  color: #fff !important;
+  font-family: "Source Code Pro", monospace !important;
+}
+
+/** Delete Account Component **/
+.three-admin-delete-account-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.three-admin-delete-account-container h3 {
+  font-family: "Source Code Pro", monospace !important;
+}
+
+/** Admin Confirm **/
+
+.three-admin-confirm {
+  font-family: "Source Code Pro", monospace !important;
+}
+
+.three-admin-confirm .button {
+  font-family: "Source Code Pro", monospace !important;
+}
+
+.three-admin-confirm .primary.button {
+  background-color: #21ba45 !important;
+}
+
+.three-admin-button {
+  background-color: #21ba45 !important;
+  color: #fff !important;
+}
+
+.three-admin-button-confirm {
+  background-color: #de3b3b !important;
+  color: #fff !important;
+}
+
+/** Verification **/
+.three-admin-verify-user-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  font-family: "Source Code Pro", monospace !important;
+}
+
+.header {
+  font-family: "Source Code Pro", monospace !important;
+}
+
+.three-admin-content-link {
+  margin-top: 10px;
+  border-top: 1px solid #ccc;
+  padding-top: 5px;
+}
+
+.three-admin-home-link {
+  color: inherit !important;
+  font-weight: bold;
+}
+
+.three-admin-home-link:hover {
+  opacity: 0.8;
+}

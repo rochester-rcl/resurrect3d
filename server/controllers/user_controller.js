@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const constants = require("../constants");
 const bcrypt = require("bcrypt");
+
 // Create
 const addUser = (req, res) => {
   let user = req.body;
@@ -19,45 +20,73 @@ const addUser = (req, res) => {
     password: hash,
     token: token
   });
-  savedUser.sendVerificationEmail(function(err, info) {
-    if (err) {
-      res.json({ status: false, message: 'Invalid e-mail address!'});
-    } else {
-      // only save the user if the email actually exists - can check info.accepted length > 0
-      user.save((err, savedUser) => {
-        if (err) res.send(err);
-        if (savedUser !== undefined) {
-          const response = {
-            username: savedUser.username,
-            email: savedUser.email,
-            token: savedUser.token,
-            id: savedUser._id,
-          };
+  // should likely put this in a separate function
+  user.save((err, savedUser) => {
+    if (err) res.send(err);
+    if (savedUser !== undefined) {
+      const response = {
+        username: savedUser.username,
+        email: savedUser.email,
+        token: savedUser.token,
+        id: savedUser._id
+      };
+      savedUser.sendVerificationEmail(function(err, info) {
+        if (err) {
+          res.json({ status: false, message: "Invalid e-mail address!" });
+        } else {
           res.json(response);
         }
       });
     }
   });
-}
+};
 
 const deleteUser = (req, res) => {
-  User.findOne(
-    {
-      _id: req.params.id
-    },
-    (err, user) => {
-      User.remove({ _id: user._id }, (err, user) => {
-        if (err) res.send(err);
-        res.json({ success: "User successfully deleted" });
+  if (req.user._id == req.params.id) {
+    User.findOne(
+      {
+        _id: req.params.id
+      },
+      (err, user) => {
+        User.remove({ _id: user._id }, (err, user) => {
+          if (err) res.send(err);
+          req.logout();
+          res.json({ status: true, message: "User successfully deleted" });
+        });
+      }
+    );
+  } else {
+    res
+      .status(403)
+      .json({
+        status: false,
+        message: "You can only delete your own account!"
       });
-    }
-  );
+  }
 };
+
+const verifyUser = (req, res) => {
+  const token = req.params.token;
+  User.findOne({
+    token: token,
+  }, (err, user) => {
+    if (err) res.send(err)
+    if (user !== null) {
+      user.verified = true;
+      user.save((err, savedUser) => {
+        if (err) res.send(err);
+        res.json({ status: true, message: 'Account verified for ' + savedUser.email });
+      });
+    } else {
+      res.json({ status: false, message: 'No token found. Did you sign up for an account?' });
+    }
+  });
+}
 
 const logout = (req, res) => {
   req.logout();
   res.json({ loggedOut: true });
-}
+};
 
 const onLogin = (req, res) => {
   const { username, email, token, _id } = req.user;
@@ -73,14 +102,14 @@ const onLogin = (req, res) => {
 const authenticateClient = (req, res) => {
   if (req.user === undefined) {
     res.json({
-      authenticated: false,
+      authenticated: false
     });
   } else {
     res.json({
       authenticated: true
     });
   }
-}
+};
 
 const authenticateServer = (req, res, next) => {
   if (req.user === undefined) {
@@ -89,7 +118,7 @@ const authenticateServer = (req, res, next) => {
     });
   }
   return next();
-}
+};
 
 passport.use(
   new LocalStrategy(function(email, password, done) {
@@ -102,6 +131,9 @@ passport.use(
       }
       if (!user.validPassword(_password)) {
         return done(null, false, { message: "incorrect password" });
+      }
+      if (!user.verified) {
+        return done(null, false, { message: "user is not verified" });
       }
       return done(null, user);
     });
@@ -136,7 +168,8 @@ module.exports = {
   protect: passport.authenticate("bearer"),
   add: addUser,
   delete: deleteUser,
+  verify: verifyUser,
   onLogin: onLogin,
   authenticateClient: authenticateClient,
-  authenticateServer: authenticateServer,
+  authenticateServer: authenticateServer
 };
