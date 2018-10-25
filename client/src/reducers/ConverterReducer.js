@@ -10,6 +10,7 @@ const defaultState = {
 
 export default function ConverterReducer(state: Object = defaultState, action: Object): Object {
   switch(action.type) {
+
     case ActionConstants.CONVERSION_STARTED:
       return {
         ...state,
@@ -23,7 +24,6 @@ export default function ConverterReducer(state: Object = defaultState, action: O
       }
 
     case ActionConstants.CONVERSION_COMPLETE:
-      console.log(action);
       return {
         ...state,
         ...{ conversionComplete: true, file: action.file }

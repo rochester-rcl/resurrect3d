@@ -29,7 +29,7 @@ import DeflateWorker from "../utils/workers/deflate.worker";
 import { deserializeThreeTypes } from "../utils/serialization";
 
 // Converter
-import convertObjToThree from "../utils/converter/objToThree";
+import { convertObjToThreeWithProgress } from "../utils/converter/objToThree";
 import convertPtmToThree from "../utils/converter/ptmToThree";
 
 const nodeBackend = new ThreeViewerNodeBackend();
@@ -60,7 +60,8 @@ function* getThreeAssetSaga(
     yield put({
       type: ActionConstants.LOAD_MESH,
       url: threeFile,
-      sext: ext,
+      ext: ext,
+      fileId: asset.threeFile,
       id: asset._id
     });
     yield put({ type: ActionConstants.THREE_ASSET_LOADED, threeAsset: asset });
@@ -182,9 +183,9 @@ export function* loadMeshSaga(
   loadMeshAction: Object
 ): Generator<any, any, any> {
   try {
-    const { url, id } = loadMeshAction;
+    const { url, id, fileId } = loadMeshAction;
     let progressChannel;
-    const result = yield ThreeViewerNodeBackend.checkCache(loadMeshAction.id);
+    const result = yield ThreeViewerNodeBackend.checkCache(id, fileId);
     if (result) {
       progressChannel = yield ThreeViewerNodeBackend.gunzipAssetSaga(
         result.data.model.raw,
@@ -198,6 +199,7 @@ export function* loadMeshSaga(
       progressChannel = yield ThreeViewerNodeBackend.fetchGZippedAssetSaga(
         id,
         url,
+        fileId,
         createWorkerProgressChannel
       );
     }
@@ -404,6 +406,33 @@ export function* deleteThreeViewSaga(
 
 // Converter
 
+function* compressConvertedFile(data: Object): void {
+  const deflateWorker = new DeflateWorker();
+  deflateWorker.postMessage(data.threeFile);
+  const progressChannel = yield createWorkerProgressChannel(
+    deflateWorker,
+    "converter"
+  );
+  while (true) {
+    const payload = yield take(progressChannel);
+    if (payload.eventType === "loaded") {
+      yield put({
+        type: getActionType(payload),
+        file: payload.val
+      });
+      progressChannel.close();
+    } else {
+      yield put({
+        type: getActionType(payload),
+        payload: {
+          val: "Compressing Mesh Data",
+          percent: payload.val
+        }
+      });
+    }
+  }
+}
+
 export function* runConversionSaga(
   conversionAction: Object
 ): Generator<any, any, any> {
@@ -414,35 +443,12 @@ export function* runConversionSaga(
     if (inputData.mesh === undefined) {
       converted = yield convertPtmToThree(inputData);
     } else {
-      converted = yield convertObjToThree(inputData);
+      converted = yield convertObjToThreeWithProgress(inputData);
     }
+    console.log(converted);
     const { options } = inputData;
     if (options.zlib === true) {
-      // TODO break into function
-      const deflateWorker = new DeflateWorker();
-      deflateWorker.postMessage(converted.threeFile);
-      const progressChannel = yield createWorkerProgressChannel(
-        deflateWorker,
-        "converter"
-      );
-      while (true) {
-        const payload = yield take(progressChannel);
-        if (payload.eventType === "loaded") {
-          yield put({
-            type: getActionType(payload),
-            file: payload.val
-          });
-          progressChannel.close();
-        } else {
-          yield put({
-            type: getActionType(payload),
-            payload: {
-              val: "Compressing Mesh Data",
-              percent: payload.val
-            }
-          });
-        }
-      }
+      yield compressConvertedFile(converted);
     } else {
       yield put({
         type: ActionConstants.CONVERSION_COMPLETE,

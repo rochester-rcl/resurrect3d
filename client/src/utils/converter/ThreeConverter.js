@@ -15,6 +15,9 @@ import {
 // Pako
 import pako from "pako";
 
+// ConverterProgress
+import ConverterProgress from './ConverterProgress';
+
 // postrprocessing options
 
 import { getChildren, centerGeometry } from './geometry';
@@ -32,10 +35,11 @@ export default class ThreeConverter {
     center: centerGeometry,
     createNormalMap: createNormalMap,
   };
-  constructor(mesh: File, maps: Object, options: Object) {
+  constructor(mesh: File, maps: Object, options: Object, progress: ConverterProgress) {
     this.meshFile = mesh;
     this.mapFiles = maps;
     this.options = options;
+    this.progress = progress;
     this.loadersInitialized = false;
     this.converted = false;
   }
@@ -138,6 +142,31 @@ export default class ThreeConverter {
   convert() {
     // needs implementation in derived classes
     this.converted = true;
+  }
+
+  emitProgress(label: string, percent: Number) {
+    if (this.progress !== undefined) {
+      this.progress.dispatch(this.progress.EVENT_TYPES.UPDATE_CONVERSION_PROGRESS, {
+        val: label,
+        percent: percent,
+      });
+    }
+  }
+
+  emitError(message: string) {
+    if (this.progress !== undefined) {
+      this.progress.dispatch(this.progress.EVENT_TYPES.CONVERSION_ERROR, {
+        message: message,
+      });
+    }
+  }
+
+  emitDone(file: Object) {
+    if (this.progress !== undefined) {
+      this.progress.dispatch(this.progress.EVENT_TYPES.DONE, {
+        file: file,
+      });
+    }
   }
 
   export() {

@@ -9,12 +9,15 @@ self._dbLoaded = false;
 
 self._cache.open().then(() => self._dbLoaded = true);
 
-self.get = (id: string): Promise => {
+self.get = (id: string, fileId: string): Promise => {
   return new Promise((resolve, reject) => {
     self._cache.get([id]).then((query) => {
       if (query.data === null) {
         resolve({ status: true, data: null });
       } else {
+        if (query.data.fileId !== fileId) {
+          resolve({ status: true, data: null});
+        }
         resolve({ status: true, data: query.data });
       }
     });
@@ -28,9 +31,10 @@ self.getOrCreate = (modelData: Object): Promise => {
         if (result.data !== null) {
           resolve(result.data);
         } else {
-          const { id, raw } = modelData;
+          const { id, raw, fileId } = modelData;
           self._cache.add({
             id: id,
+            fileId: fileId,
             model: {
               raw: raw,
             }
@@ -56,7 +60,7 @@ self.query = (data: Object) => {
       break;
 
     case THREE_MODEL_CACHE_GET:
-      self.get(data.modelData.id).then((result) => postMessage(result));
+      self.get(data.modelData.id, data.modelData.fileId).then((result) => postMessage(result));
 
     default:
       break;

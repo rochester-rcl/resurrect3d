@@ -20,7 +20,6 @@ export default class ThreeViewerNodeBackend extends ThreeViewerAbstractBackend {
       this._get(VIEWS_ENDPOINT + id, {}).then((result) => result).catch((error) => console.log(error))
         .then((asset) => {
           const formatted = this.formatAsset(asset);
-          console.log(formatted);
           resolve(formatted);
         });
     });

@@ -31,8 +31,8 @@ export default class ThreeObjConverter extends ThreeConverter {
     center: centerGeometry,
     createNormalMap: createNormalMap,
   }
-  constructor(mesh: File, materials: File, maps: Object, options: Object) {
-    super(mesh, maps, options);
+  constructor(mesh: File, materials: File, maps: Object, options: Object, progress: ConverterProgress) {
+    super(mesh, maps, options, progress);
     this.mtlFile = materials;
     this.loadObj = this.loadObj.bind(this);
     this.loadMtl = this.loadMtl.bind(this);
@@ -149,18 +149,24 @@ export default class ThreeObjConverter extends ThreeConverter {
 
   convert(): Promise {
     return new Promise((resolve, reject) => {
-      this.loadMtl().then(material =>
+      this.emitProgress('Reading Material Data', 25)
+      this.loadMtl().then((material) => {
+        this.emitProgress('Reading Geometry Data', 50);
         this.loadObj(material).then(() => {
           super.convert();
+          this.emitProgress('Applying Post-Processing Options', 75)
           return this.handleOptions().then((mesh) => {
+            this.emitProgress('Serializing Mesh Data', 100)
             const exported = mesh.toJSON();
+            this.emitProg
             if (!this.options.compress) {
               this.rectifyDataURLs(exported);
             }
+            this.emitDone(exported);
             resolve(exported);
           });
-        })
-      );
+        });
+      });
     });
   }
 }
