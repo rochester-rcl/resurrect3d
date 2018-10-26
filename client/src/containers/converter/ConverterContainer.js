@@ -21,14 +21,14 @@ import { CONVERSION_TYPE_RTI } from '../../constants/application';
 class ConverterContainer extends Component {
 
   render(): Object {
-    const { startConversion, restartConverter, conversionStarted, conversionComplete, file, progress, conversionType } = this.props;
+    const { startConversion, restartConverter, conversionStarted, conversionComplete, file, progress, conversionType, error } = this.props;
     if (conversionStarted === false) {
       return(
         conversionType !== CONVERSION_TYPE_RTI ? <ConverterForm startConversion={startConversion} /> : <PtmConverterForm startConversion={startConversion} />
       );
     } else {
       if (conversionComplete === false) {
-        return(<LoaderModal className="three-loader-dimmer" text={progress.label} percent={progress.percent} active={true} />);
+        return(<LoaderModal className="three-loader-dimmer" text={progress.label} percent={progress.percent} active={true} error />);
       } else {
         return(<ConverterSave file={file} restartConverter={restartConverter} />);
       }

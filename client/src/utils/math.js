@@ -14,6 +14,7 @@ export function inchesToCM(measurement: number): number {
 }
 
 export function convertUnits(from: string, to: string, measurement: number): number {
+  console.log(from, to);
   from = from.toUpperCase();
   if (from === to) return measurement;
   let conversion = from + '_TO_' + to;

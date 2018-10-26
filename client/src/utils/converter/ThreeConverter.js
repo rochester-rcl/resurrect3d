@@ -139,6 +139,11 @@ export default class ThreeConverter {
     });
   }
 
+  handleError(error: Error): Promise {
+    this.emitError(error);
+    return Promise.reject(error);
+  }
+
   convert() {
     // needs implementation in derived classes
     this.converted = true;
@@ -153,10 +158,10 @@ export default class ThreeConverter {
     }
   }
 
-  emitError(message: string) {
+  emitError(error: Error) {
     if (this.progress !== undefined) {
       this.progress.dispatch(this.progress.EVENT_TYPES.CONVERSION_ERROR, {
-        message: message,
+        error: error,
       });
     }
   }

@@ -55,14 +55,18 @@ export const DISPLAY_DEVICE = {
 }
 
 export const CONVERSIONS = {
-  CM_TO_IN: (measurement: number) => measurement * 0.393701,
-  IN_TO_CM: (measurement: number) => measurement * 2.54,
-  MM_TO_CM: (measurement: number) => measurement * 10,
-  CM_TO_MM: (measurement: number) => measurement * 0.1,
-  FT_TO_IN: (measurement: number) => measurement * 12,
-  FT_TO_CM: (measurement: number) => measurement * 30.48,
-  CM_TO_FT: (measurement: number) => measurement * 0.0328084,
-  IN_TO_FT: (measurement: number) => measurement * 0.0833333,
+  MM_TO_CM: (measurement: Number) => measurement / 10,
+  MM_TO_IN: (measurement: Number) => measurement / 25.4,
+  MM_TO_FT: (measurement: Number) => measurement / 304.8,
+  CM_TO_IN: (measurement: Number) => measurement / 2.54,
+  CM_TO_MM: (measurement: Number) => measurement * 10,
+  CM_TO_FT: (measurement: Number) => measurement / 30.48,
+  IN_TO_FT: (measurement: Number) => measurement / 12,
+  IN_TO_CM: (measurement: Number) => measurement * 2.54,
+  IN_TO_MM: (measurement: Number) => measurement * 25.4,
+  FT_TO_IN: (measurement: Number) => measurement * 12,
+  FT_TO_CM: (measurement: Number) => measurement * 30.48,
+  FT_TO_MM: (measurement: Number) => measurement * 304.8,
 }
 
 // Mesh exports

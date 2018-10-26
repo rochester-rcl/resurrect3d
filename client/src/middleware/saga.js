@@ -445,15 +445,16 @@ export function* runConversionSaga(
     } else {
       converted = yield convertObjToThreeWithProgress(inputData);
     }
-    console.log(converted);
     const { options } = inputData;
-    if (options.zlib === true) {
-      yield compressConvertedFile(converted);
-    } else {
-      yield put({
-        type: ActionConstants.CONVERSION_COMPLETE,
-        file: JSON.stringify(converted.threeFile)
-      });
+    if (converted !== undefined) {
+      if (options.zlib === true) {
+        yield compressConvertedFile(converted);
+      } else {
+        yield put({
+          type: ActionConstants.CONVERSION_COMPLETE,
+          file: JSON.stringify(converted.threeFile)
+        });
+      }
     }
   } catch (error) {
     console.log(error);

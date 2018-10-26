@@ -14,7 +14,8 @@ export default function convertObjToThree(threeData: Object): Promise {
       .then((_converter) => _converter.convert())
       .then((threeObj) => {
         resolve({ threeFile: threeObj })
-      });
+      })
+      .catch((error) => console.warn(error));
   });
 }
 
@@ -23,7 +24,7 @@ export function* convertObjToThreeWithProgress(threeData: Object): Generator<any
   const progress = new ConverterProgress();
   const converterChannel = createConverterProgressChannel(progress);
   const converter = new ThreeObjConverter(mesh, material, maps, options, progress);
-  converter.init().then(_converter => _converter.convert());
+  converter.init().then(_converter => _converter.convert()).catch((error) => console.warn(error));
   while(true) {
     const payload = yield take(converterChannel);
     if (payload.type === progress.EVENT_TYPES.DONE) {

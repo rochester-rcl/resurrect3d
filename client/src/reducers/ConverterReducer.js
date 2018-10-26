@@ -4,6 +4,7 @@ import * as ActionConstants from '../constants/actions';
 const defaultState = {
   conversionComplete: false,
   conversionStarted: false,
+  error: false,
   file: null,
   progress: { label: 'performing conversion (this will take a while).', percent: null }
 }
@@ -18,6 +19,7 @@ export default function ConverterReducer(state: Object = defaultState, action: O
       }
 
     case ActionConstants.UPDATE_CONVERSION_PROGRESS:
+      console.log(action);
       return {
         ...state,
         progress: { label: action.payload.val, percent: action.payload.percent }
@@ -27,6 +29,13 @@ export default function ConverterReducer(state: Object = defaultState, action: O
       return {
         ...state,
         ...{ conversionComplete: true, file: action.file }
+      }
+
+    case ActionConstants.CONVERSION_ERROR:
+      return {
+        ...state,
+        error: true,
+        progress: { label: action.message, percent: 100 }
       }
 
     case ActionConstants.RESTART_CONVERTER:

@@ -21,6 +21,9 @@ import { getChildren, centerGeometry } from './geometry';
 
 import { createNormalMap } from './normals';
 
+// lodash
+import lodash from 'lodash';
+
 // Abstract Base Class
 import ThreeConverter from './ThreeConverter';
 // super obnoxious pattern.
@@ -35,7 +38,10 @@ export default class ThreeObjConverter extends ThreeConverter {
     super(mesh, maps, options, progress);
     this.mtlFile = materials;
     this.loadObj = this.loadObj.bind(this);
+    this.loadObjCallback = this.loadObjCallback.bind(this);
     this.loadMtl = this.loadMtl.bind(this);
+    this.loadMTLCallback = this.loadMTLCallback.bind(this);
+    this.handleOptionsCallback = this.handleOptionsCallback.bind(this);
     this.setUpMaterials = this.setUpMaterials.bind(this);
     this.rectifyDataURLs = this.rectifyDataURLs.bind(this);
     this.loadedMaps = {};
@@ -43,22 +49,26 @@ export default class ThreeObjConverter extends ThreeConverter {
 
   loadObj(material: THREE.MeshStandardMaterial) {
     return new Promise((resolve, reject) => {
-      if (this.loadersInitialized === false) {
-        reject(
-          "ThreeConverter.init must be called before you can convert this mesh."
-        );
-      } else {
-        if (this.meshFile !== null) {
-          this.readASCII(this.meshFile).then(meshData => {
-            const objLoader = new THREE.OBJLoader();
-            objLoader.setPath("");
-            if (material !== undefined) objLoader.setMaterials(material);
-            this.mesh = objLoader.parse(meshData);
-            this.setUpMaterials().then(() => resolve(this.mesh));
-          });
+      try {
+        if (this.loadersInitialized === false) {
+          reject(
+            "ThreeConverter.init must be called before you can convert this mesh."
+          );
         } else {
-          resolve(new THREE.Mesh());
+          if (this.meshFile !== null) {
+            this.readASCII(this.meshFile).then(meshData => {
+              const objLoader = new THREE.OBJLoader();
+              objLoader.setPath("");
+              if (material !== undefined) objLoader.setMaterials(material);
+              this.mesh = objLoader.parse(meshData);
+              this.setUpMaterials().then(() => resolve(this.mesh));
+            }).catch(error => reject(error));
+          } else {
+            resolve(new THREE.Mesh());
+          }
         }
+      } catch(error) {
+        reject(error);
       }
     });
   }
@@ -124,49 +134,62 @@ export default class ThreeObjConverter extends ThreeConverter {
 
   loadMtl() {
     return new Promise((resolve, reject) => {
-      if (this.loadersInitialized === false) {
-        reject(
-          "ThreeConverter.init must be called before you can convert this material."
-        );
-      } else {
-        if (this.mtlFile !== null) {
-          this.readASCII(this.mtlFile).then(mtlData => {
-            const mtlLoader = new THREE.MTLLoader();
-            mtlLoader.setPath("");
-            this.materials = mtlLoader.parse(mtlData);
-            this.readMaps(this.mapFiles).then(maps => {
-              this.maps = maps;
-              this.rectifyTextureURL(this.materials, this.maps);
-              resolve(this.materials);
-            });
-          });
+      try {
+        if (this.loadersInitialized === false) {
+          reject(
+            "ThreeConverter.init must be called before you can convert this material."
+          );
         } else {
-          resolve(new THREE.MeshStandardMaterial());
+          if (this.mtlFile !== null) {
+            this.readASCII(this.mtlFile).then(mtlData => {
+              const mtlLoader = new THREE.MTLLoader();
+              mtlLoader.setPath("");
+              this.materials = mtlLoader.parse(mtlData);
+              if (!lodash.isEmpty(this.mapFiles)) {
+                this.readMaps(this.mapFiles).then(maps => {
+                  this.maps = maps;
+                  this.rectifyTextureURL(this.materials, this.maps);
+                });
+              }
+              resolve(this.materials);
+            }).catch(error => reject(error));
+          } else {
+            resolve(new THREE.MeshStandardMaterial());
+          }
         }
+      } catch(error) {
+        console.log(error);
+        reject(error);
       }
     });
   }
 
+  loadMTLCallback(material) {
+    this.emitProgress('Reading Geometry Data', 50);
+    return this.loadObj(material);
+  }
+
+  loadObjCallback(mesh) {
+    super.convert();
+    this.emitProgress('Applying Post-Processing Options', 75)
+    return this.handleOptions();
+  }
+
+  handleOptionsCallback(mesh) {
+    const exported = mesh.toJSON();
+    if (!this.options.compress && this.maps !== undefined) {
+      this.rectifyDataURLs(exported);
+    }
+    this.emitDone(exported);
+  }
+
   convert(): Promise {
-    return new Promise((resolve, reject) => {
-      this.emitProgress('Reading Material Data', 25)
-      this.loadMtl().then((material) => {
-        this.emitProgress('Reading Geometry Data', 50);
-        this.loadObj(material).then(() => {
-          super.convert();
-          this.emitProgress('Applying Post-Processing Options', 75)
-          return this.handleOptions().then((mesh) => {
-            this.emitProgress('Serializing Mesh Data', 100)
-            const exported = mesh.toJSON();
-            this.emitProg
-            if (!this.options.compress) {
-              this.rectifyDataURLs(exported);
-            }
-            this.emitDone(exported);
-            resolve(exported);
-          });
-        });
-      });
-    });
+    this.emitProgress('Reading Material Data', 25);
+    return this.loadMtl()
+      .then(this.loadMTLCallback)
+      .then(this.loadObjCallback)
+      .then(this.handleOptionsCallback)
+      .then((exported) => Promise.resolve(exported))
+      .catch((error) => this.handleError(error));
   }
 }

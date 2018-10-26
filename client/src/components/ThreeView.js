@@ -733,7 +733,9 @@ export default class ThreeView extends Component {
             if (child.material) {
               if (child.material instanceof Array) {
                 child.material.forEach((material) => {
-                  material.map.anisotropy = this.webGLRenderer.getMaxAnisotropy();
+                  if (material.map !== null) {
+                    material.map.anisotropy = this.webGLRenderer.getMaxAnisotropy();
+                  }
                   setMicrosurface(material);
                   if (this.props.renderDoubleSided) {
                     material.side = THREE.DoubleSide;
@@ -743,7 +745,9 @@ export default class ThreeView extends Component {
                 setMicrosurface(child.material);
                 child.castShadow = true;
                 child.receiveShadow = true;
-                child.material.map.anisotropy = this.webGLRenderer.getMaxAnisotropy();
+                if (child.material.map !== null) {
+                  child.material.map.anisotropy = this.webGLRenderer.getMaxAnisotropy();
+                }
                 if (this.props.renderDoubleSided) {
                   child.material.side = THREE.DoubleSide;
                 }
@@ -1393,6 +1397,7 @@ export default class ThreeView extends Component {
       });
 
       const unitButtons = [
+        { label: 'mm', defaultVal: true, callback: () => this.setState({ units: MM }) },
         { label: 'cm', defaultVal: true, callback: () => this.setState({ units: CM }) },
         { label: 'in', defaultVal: false, callback: () => this.setState({ units: IN }) },
         { label: 'ft', defaultVal: false, callback: () => this.setState({ units: FT })},

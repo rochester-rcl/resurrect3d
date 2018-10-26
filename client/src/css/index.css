@@ -43,12 +43,28 @@ body {
   width: 100%;
 }
 
+.three-loader-dimmer .content {
+  width: 80% !important;
+}
+
 .dimmer.visible.active {
   display: flex !important;
 }
 
 .three-loader-dimmer h1 {
   color: #fff;
+  font-family: 'Source Code Pro', monospace;
+}
+
+.loader-modal-error-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Source Code Pro', monospace;
+}
+
+.loader-modal-error-label {
   font-family: 'Source Code Pro', monospace;
 }
 
