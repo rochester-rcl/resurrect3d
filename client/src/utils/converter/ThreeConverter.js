@@ -26,9 +26,7 @@ import { createNormalMap } from './normals';
 
 // super obnoxious pattern.
 const THREE = _THREE;
-// TODO have this emit progress events !!!!!!!!!!!!!!!
 
-// TODO all available options should live in a const
 // TODO should move whatever processing we can to a worker
 export default class ThreeConverter {
   OPTIONS_MAP = {

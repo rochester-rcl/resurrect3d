@@ -42,6 +42,8 @@ export default class ThreeObjConverter extends ThreeConverter {
     this.loadMtl = this.loadMtl.bind(this);
     this.loadMTLCallback = this.loadMTLCallback.bind(this);
     this.handleOptionsCallback = this.handleOptionsCallback.bind(this);
+    this.convertWithMaterials = this.convertWithMaterials.bind(this);
+    this.convertNoMaterials = this.convertNoMaterials.bind(this);
     this.setUpMaterials = this.setUpMaterials.bind(this);
     this.rectifyDataURLs = this.rectifyDataURLs.bind(this);
     this.loadedMaps = {};
@@ -183,13 +185,28 @@ export default class ThreeObjConverter extends ThreeConverter {
     this.emitDone(exported);
   }
 
-  convert(): Promise {
-    this.emitProgress('Reading Material Data', 25);
+  convertWithMaterials() {
     return this.loadMtl()
       .then(this.loadMTLCallback)
       .then(this.loadObjCallback)
       .then(this.handleOptionsCallback)
       .then((exported) => Promise.resolve(exported))
       .catch((error) => this.handleError(error));
+  }
+
+  convertNoMaterials() {
+    return this.loadObj()
+      .then(this.loadObjCallback)
+      .then(this.handleOptionsCallback)
+      .then((exported) => Promise.resolve(exported))
+      .catch((error) => this.handleError(error));
+  }
+
+  convert(): Promise {
+    this.emitProgress('Reading Material Data', 25);
+    if (this.mtlFile !== null) {
+      return this.convertWithMaterials();
+    }
+    return this.convertNoMaterials();
   }
 }

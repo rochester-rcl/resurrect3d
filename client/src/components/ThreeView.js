@@ -508,7 +508,7 @@ export default class ThreeView extends Component {
       renderer: this.webGLRenderer,
     });
 
-    controls.addComponent('screenshot', components.THREE_MESH_EXPORTER, {
+    controls.addComponent('mesh-export', components.THREE_MESH_EXPORTER, {
       threeInstance: THREE,
       mesh: this.mesh,
     });

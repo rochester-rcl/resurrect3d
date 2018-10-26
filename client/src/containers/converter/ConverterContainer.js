@@ -28,7 +28,7 @@ class ConverterContainer extends Component {
       );
     } else {
       if (conversionComplete === false) {
-        return(<LoaderModal className="three-loader-dimmer" text={progress.label} percent={progress.percent} active={true} error />);
+        return(<LoaderModal className="three-loader-dimmer" text={progress.label} percent={progress.percent} active={true} error={error} />);
       } else {
         return(<ConverterSave file={file} restartConverter={restartConverter} />);
       }

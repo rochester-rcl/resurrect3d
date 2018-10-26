@@ -41,14 +41,17 @@ export function mapMaterials(materials: Array<Materials> , callback): Array<Mate
 
 export function exportMap(material: Materials): Array<Object> {
   let images = [];
-  if (material.map.image !== undefined) {
-    let imageData = base64ImageToBlob(material.map.image.currentSrc, 1024);
-    images.push({ rawData: imageData.rawData, ext: imageData.ext, type: MAP_TYPES.DIFFUSE_MAP });
+  if (material.map !== null) {
+    if (material.map.image !== undefined) {
+      let imageData = base64ImageToBlob(material.map.image.currentSrc, 1024);
+      images.push({ rawData: imageData.rawData, ext: imageData.ext, type: MAP_TYPES.DIFFUSE_MAP });
+    }
   }
-  if (material.normalMap.image !== undefined) {
-    let imageData = base64ImageToBlob(material.normalMap.image.currentSrc, 1024);
-    images.push({ rawData: imageData.rawData, ext: imageData.ext, type: MAP_TYPES.NORMAL_MAP });
+  if (material.normalMap !== null) {
+    if (material.normalMap.image !== undefined) {
+      let imageData = base64ImageToBlob(material.normalMap.image.currentSrc, 1024);
+      images.push({ rawData: imageData.rawData, ext: imageData.ext, type: MAP_TYPES.NORMAL_MAP });
+    }
   }
-
   return images;
 }
