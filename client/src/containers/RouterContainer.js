@@ -36,8 +36,6 @@ import {
 
 const AuthenticatingLoader = () => <LoaderModal active={true} text="Authenticating ..." />;
 
-const process = require('process');
-
 class RouterContainer extends Component {
   _element = React.createElement;
 
@@ -57,7 +55,7 @@ class RouterContainer extends Component {
         return <AuthenticatingLoader />;
       } else {
         // Need to use process.env
-        return <Redirect to={BASENAME + 'admin/login'}/>;
+        return <Redirect to={BASENAME + '/admin/login'}/>;
       }
     }
   }

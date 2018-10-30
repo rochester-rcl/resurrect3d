@@ -19,14 +19,14 @@ const AdminMenu = (props: Object) => {
           <Dropdown className="three-menu-admin-dropdown" direction="left" trigger={trigger}>
             <Dropdown.Menu className="three-menu-admin">
               <Dropdown.Item>
-                <Link to={BASENAME + 'admin/account'}>Account</Link>
+                <Link to={BASENAME + '/admin/account'}>Account</Link>
               </Dropdown.Item>
               <Dropdown.Item>
-                <Link to={BASENAME + 'admin/views'}>My Meshes</Link>
+                <Link to={BASENAME + '/admin/views'}>My Meshes</Link>
               </Dropdown.Item>
               <Dropdown.Divider />
               <Dropdown.Item>
-                <Link to={BASENAME + 'admin/logout'}>Log Out</Link>
+                <Link to={BASENAME + '/admin/logout'}>Log Out</Link>
               </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>

@@ -25,7 +25,7 @@ class Logout extends Component {
     const { loggedIn } = this.props.user;
     if (loggedIn === false) {
       return(
-        <Redirect to={ BASENAME + 'admin/login'} />
+        <Redirect to={ BASENAME + '/admin/login'} />
       );
     } else {
       return(

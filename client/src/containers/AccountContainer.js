@@ -42,7 +42,7 @@ class AccountContainer extends Component {
         <DeleteAccount
           onDelete={this.handleDeleteUser}
           user={user}
-          onSuccessRedirect={<Redirect to={BASENAME + "admin/login"} />}
+          onSuccessRedirect={<Redirect to={BASENAME + "/admin/login"} />}
         />
       </div>
     );

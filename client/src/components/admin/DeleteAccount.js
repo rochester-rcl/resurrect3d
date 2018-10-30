@@ -15,7 +15,7 @@ import { Link } from "react-router-dom";
 import { BASENAME } from "../../constants/application";
 
 const link = (
-  <Link className="three-admin-home-link" to={BASENAME + "admin/login"}>
+  <Link className="three-admin-home-link" to={BASENAME + "/admin/login"}>
     Back to Login
   </Link>
 );

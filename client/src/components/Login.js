@@ -123,7 +123,7 @@ export default class Login extends Component {
       );
     } else {
       // likely need to use process info here to properly redirect when building
-      return <Redirect to={BASENAME + "admin/views"} />;
+      return <Redirect to={BASENAME + "/admin/views"} />;
     }
   }
 }

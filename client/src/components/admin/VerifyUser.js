@@ -15,7 +15,7 @@ import { Link } from 'react-router-dom';
 import { BASENAME } from '../../constants/application';
 
 const verifyLoader = () => <LoaderModal active={true} text="Verifying Account ..." />;
-const link = <Link className="three-admin-home-link" to={BASENAME + 'admin/login'}>Back to Login</Link>
+const link = <Link className="three-admin-home-link" to={BASENAME + '/admin/login'}>Back to Login</Link>
 
 const VerifyUser = (props: Object) => {
   const { verified, message } = props;

@@ -8,9 +8,6 @@ import { Redirect, Link } from "react-router-dom";
 // actions
 import { authenticate, addUser } from "../actions/UserActions";
 
-// constants
-import { BASENAME } from "../constants/application";
-
 // components
 import Login from "../components/Login";
 import AdminSignUpModal from "../components/admin/ThreeViewAdminSignUp";
