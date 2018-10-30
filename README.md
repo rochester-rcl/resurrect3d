@@ -1,72 +1,36 @@
-# Work in Progress Cultural Heritage 3D Viewer Platform
-Built with React, Node, and three.js
+# rcl-react-redux-boilerplate
+Finally! A template for all of our React projects. This template currently integrates the following into the React stack:
 
-## Dependencies
+[Redux](https://github.com/reactjs/redux) - for state management
 
-Node.js >= v8.9.0
+[Redux-Saga](https://github.com/redux-saga/redux-saga) - for handling side-effects in Redux
 
-npm >= 5.5.1
+[Flow](https://flowtype.org/) - for static type-checking
 
-MongoDB >= v3.0
+[Semantic-UI-React](http://react.semantic-ui.com/introduction) - for UI components
 
-## Installation
-Clone this repo and run:
+[React-Router](https://github.com/ReactTraining/react-router) - for routing
 
-`npm install-all`
 
-to install both the server and client apps.
+## Usage
+Clone the repository with the project name of your choice:
 
-The server app requires 2 configuration files located in the server/ folder:
+`git clone https://github.com/rochester-rcl/rcl-react-redux-boilerplate.git my-project-name`
 
-###### *privatekey.json*
+cd into the project directory and run `npm install`
 
-Stores the private key used for JWT generation, eg:
-
-```
-{
-  "key": "myprivatekey"
-}
-```
-
-###### *email.json*
-Stores the email configuration for the server app, eg:
+Since this is just a slight variation on the [Create React App](https://github.com/facebookincubator/create-react-app) template all of
+those npm scripts are available here, including:
 
 ```
-{
-  "verificationRoute": "http://localhost:3000/admin/verify/",
-  "service": "gmail",
-  "email": "myemail@gmail.com",
-  "password": "mypassword"
-}
+npm start
+npm run build
+npm test
+npm run eject
 ```
 
-service, email, and password are standard Nodemailer transport options. vertificationRoute is the client side (React Router) route that will be linked in the body of all verification e-mails. The user's verification token will be appended to that route.
+Simply run `npm start` and head to localhost:3000
 
-An optional *config.js* file can be added to the server folder, allowing customization of both the MongoDB URL and the API server port:
+Any additional packages can be installed in the usual manner, eg:
 
-```
-const config = {
-  mongoURL: 'mongodb://localhost:27017/mydb',
-  port: 3001
-};
-
-module.exports = config;
-```
-
-All of the above files have sample versions (i.e. sample-config.js) you can reference in the server folder.
-
-##### To run in dev mode:
-
-`npm run dev`
-
-This runs the API server on localhost:3001 and the create-react-app dev server on localhost:3000. All API requests are proxied from port 3000 to 3001.
-
-##### To run with a production build of the client app:
-Change the "homepage" property in client/package.json in order to set process.env.PUBLIC_URL to the URL that the app will be served from, i.e.
-"https://myapps/threejs-app".
-
-Build the client app with the environment variable REACT_APP_API_URL to specify the API URL for the server app, i.e.
-
-API_URL='https://myapps/threejs-server' npm run build
-
-Follow the instructions in the terminal to deploy the client app.
+` npm install --save d3 `
