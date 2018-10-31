@@ -13,11 +13,12 @@ import * as ActionConstants from "../constants/actions";
 import * as THREE from "three";
 
 // constants
-import { WORKER_PROGRESS,  } from "../constants/application";
+import { WORKER_PROGRESS } from "../constants/application";
 import { USER_LOGGED_IN, LOGIN_ERROR, USER_AUTHENTICATED, AUTHENTICATE_ATTEMPTED, LOGOUT_USER, USER_LOGGED_OUT, USER_DELETED } from "../constants/actions";
 
-import ThreeViewerNodeBackend from "./backends/ThreeViewerNodeBackend";
-import ThreeViewerAdminBackend from "./backends/ThreeViewerAdminBackend";
+import threeViewerBackendFactory from "./backends/threeViewerBackendFactory";
+
+import ThreeViewerAbstractBackend from "./backends/ThreeViewerAbstractBackend";
 
 // workers
 // eslint-disable-line
@@ -32,9 +33,9 @@ import { deserializeThreeTypes } from "../utils/serialization";
 import { convertObjToThreeWithProgress } from "../utils/converter/objToThree";
 import convertPtmToThree from "../utils/converter/ptmToThree";
 
-const nodeBackend = new ThreeViewerNodeBackend();
+const backend = threeViewerBackendFactory();
 
-const adminBackend = new ThreeViewerAdminBackend();
+const genericAPIRouteMessage = 'Attempting to access an API route that has not been registered in ' + backend.constructor.name;
 
 const computeProgress = (request: ProgressEvent): string => {
   return parseFloat(request.loaded / 1000000).toFixed(2) + " MB";
@@ -50,12 +51,12 @@ function* getThreeAssetSaga(
   getThreeAssetAction: Object
 ): Generator<any, any, any> {
   try {
-    const asset = yield nodeBackend.getThreeAsset(getThreeAssetAction.id);
+    const asset = yield backend.getThreeAsset(getThreeAssetAction.id);
     const { viewerSettings } = asset;
     if (viewerSettings !== undefined) {
       asset.viewerSettings = deserializeThreeTypes(viewerSettings);
     }
-    const threeFile = yield nodeBackend.getThreeFile(asset.threeFile);
+    const threeFile = yield backend.getThreeFile(asset.threeFile);
     const ext = asset.threeFile.split(".").pop();
     yield put({
       type: ActionConstants.LOAD_MESH,
@@ -69,13 +70,13 @@ function* getThreeAssetSaga(
     console.log(error);
   }
 }
-
+// TODO this can work for both node and omeka backend so saveViewerSettings needs to be put in implemented in both
 function* saveSettingsSaga(
   saveSettingsAction: Object
 ): Generator<any, any, any> {
   try {
     const { id, settings } = saveSettingsAction;
-    const result = adminBackend.saveViewerSettings(id, settings);
+    const result = backend.saveViewerSettings(id, settings);
     // TODO should have some SETTINGS_SAVED feedback
   } catch (error) {
     console.log(error);
@@ -185,9 +186,9 @@ export function* loadMeshSaga(
   try {
     const { url, id, fileId } = loadMeshAction;
     let progressChannel;
-    const result = yield ThreeViewerNodeBackend.checkCache(id, fileId);
+    const result = yield ThreeViewerAbstractBackend.checkCache(id, fileId);
     if (result) {
-      progressChannel = yield ThreeViewerNodeBackend.gunzipAssetSaga(
+      progressChannel = yield ThreeViewerAbstractBackend.gunzipAssetSaga(
         result.data.model.raw,
         createWorkerProgressChannel
       );
@@ -196,7 +197,8 @@ export function* loadMeshSaga(
         type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
         payload: { val: "Fetching Mesh From Server", percent: null }
       });
-      progressChannel = yield ThreeViewerNodeBackend.fetchGZippedAssetSaga(
+      console.log(backend);
+      progressChannel = yield ThreeViewerAbstractBackend.fetchGZippedAssetSaga(
         id,
         url,
         fileId,
@@ -271,10 +273,14 @@ export function* loadTextureSaga(
 
 function* addUserSaga(userAction: Object): Generator<any, any, any> {
   try {
-    const user = yield adminBackend.addUser(userAction.userInfo);
-    if (user.id !== undefined) {
-      const { token, id, ...rest } = user;
-      yield put({ type: ActionConstants.USER_ADDED, info: rest });
+    if (backend.hasAdminBackend) {
+      const user = yield backend.adminBackend.addUser(userAction.userInfo);
+      if (user.id !== undefined) {
+        const { token, id, ...rest } = user;
+        yield put({ type: ActionConstants.USER_ADDED, info: rest });
+      }
+    } else {
+      console.warn(genericAPIRouteMessage);
     }
   } catch(error) {
     console.log(error);
@@ -283,10 +289,14 @@ function* addUserSaga(userAction: Object): Generator<any, any, any> {
 
 function* deleteUserSaga(userAction: Object): Generator<any, any, any> {
   try {
-    const deleted = yield adminBackend.deleteUser(userAction.id);
-    yield put({ type: ActionConstants.USER_DELETED, info: deleted });
-    yield sleep(5000);
-    yield put({ type: ActionConstants.USER_LOGGED_OUT });
+    if (backend.hasAdminBackend) {
+      const deleted = yield backend.adminBackend.deleteUser(userAction.id);
+      yield put({ type: ActionConstants.USER_DELETED, info: deleted });
+      yield sleep(5000);
+      yield put({ type: ActionConstants.USER_LOGGED_OUT });
+    } else {
+      console.warn(genericAPIRouteMessage);
+    }
   } catch(error) {
     console.log(error);
   }
@@ -294,9 +304,12 @@ function* deleteUserSaga(userAction: Object): Generator<any, any, any> {
 
 function* verifyUserSaga(verifyAction: Object): Generator<any, any, any> {
   try {
-    const verified = yield adminBackend.verifyUser(verifyAction.token);
-    console.log(verified);
-    yield put({ type: ActionConstants.USER_VERIFIED, info: verified });
+    if (backend.hasAdminBackend) {
+      const verified = yield backend.adminBackend.verifyUser(verifyAction.token);
+      yield put({ type: ActionConstants.USER_VERIFIED, info: verified });
+    } else {
+      console.warn(genericAPIRouteMessage);
+    }
   } catch(error) {
     console.log(error);
   }
@@ -304,16 +317,20 @@ function* verifyUserSaga(verifyAction: Object): Generator<any, any, any> {
 
 function* loginSaga(loginAction: Object): Generator<any, any, any> {
   try {
-    const user = yield adminBackend.login(loginAction.loginInfo);
-    if (user.error) {
-      yield put({
-        type: LOGIN_ERROR
-      });
+    if (backend.hasAdminBackend) {
+      const user = yield backend.adminBackend.login(loginAction.loginInfo);
+      if (user.error) {
+        yield put({
+          type: LOGIN_ERROR
+        });
+      } else {
+        yield put({
+          type: USER_LOGGED_IN,
+          user: { ...user, loginError: false }
+        });
+      }
     } else {
-      yield put({
-        type: USER_LOGGED_IN,
-        user: { ...user, loginError: false }
-      });
+      console.warn(genericAPIRouteMessage);
     }
   } catch(error) {
     console.log(error);
@@ -322,9 +339,13 @@ function* loginSaga(loginAction: Object): Generator<any, any, any> {
 
 function* logoutSaga(): Generator<any, any, any> {
   try {
-    const status = yield adminBackend.logout();
-    if (status.loggedOut === true) {
-      yield put({ type: USER_LOGGED_OUT });
+    if (backend.hasAdminBackend) {
+      const status = yield backend.adminBackend.logout();
+      if (status.loggedOut === true) {
+        yield put({ type: USER_LOGGED_OUT });
+      }
+    } else {
+      console.warn(genericAPIRouteMessage);
     }
   } catch(error) {
     console.log(error);
@@ -333,9 +354,13 @@ function* logoutSaga(): Generator<any, any, any> {
 
 export function* authenticateSaga(): Generator<any, any, any> {
   try {
-    const status = yield adminBackend.authenticate();
-    yield put({ type: USER_AUTHENTICATED, loggedIn: status.authenticated });
-    yield put({ type: AUTHENTICATE_ATTEMPTED, value: true });
+    if (backend.hasAdminBackend) {
+      const status = yield backend.adminBackend.authenticate();
+      yield put({ type: USER_AUTHENTICATED, loggedIn: status.authenticated });
+      yield put({ type: AUTHENTICATE_ATTEMPTED, value: true });
+    } else {
+      console.warn(genericAPIRouteMessage);
+    }
   } catch(error) {
     console.log(error);
   }
@@ -345,8 +370,12 @@ export function* addThreeViewSaga(
   addThreeViewAction: Object
 ): Generator<any, any, any> {
   try {
-    const result = yield adminBackend.addView(addThreeViewAction.viewData);
-    // TODO add this to "views"
+    if (backend.hasAdminBackend) {
+      const result = yield backend.adminBackend.addView(addThreeViewAction.viewData);
+      // TODO add this to "views"
+    } else {
+      console.warn(genericAPIRouteMessage);
+    }
   } catch (error) {
     console.log(error);
   }
@@ -356,11 +385,15 @@ export function* getThreeViewsSaga(
   getThreeViewsAction: Object
 ): Generator<any, any, any> {
   try {
-    const results = yield adminBackend.getViews();
-    yield put({
-      type: ActionConstants.VIEWS_LOADED,
-      views: results
-    });
+    if (backend.hasAdminBackend) {
+      const results = yield backend.adminBackend.getViews();
+      yield put({
+        type: ActionConstants.VIEWS_LOADED,
+        views: results
+      });
+    } else {
+      console.warn(genericAPIRouteMessage)
+    }
   } catch (error) {
     console.log(error);
   }
@@ -370,11 +403,15 @@ export function* getThreeViewSaga(
   getThreeViewAction: Object
 ): Generator<any, any, any> {
   try {
-    const result = yield adminBackend.getView(getThreeViewAction.id);
-    yield put({
-      type: ActionConstants.VIEW_LOADED,
-      view: result
-    });
+    if (backend.hasAdminBackend) {
+      const result = yield backend.adminBackend.getView(getThreeViewAction.id);
+      yield put({
+        type: ActionConstants.VIEW_LOADED,
+        view: result
+      });
+    } else {
+      console.warn(genericAPIRouteMessage);
+    }
   } catch (error) {
     console.log(error);
   }
@@ -384,10 +421,13 @@ export function* updateThreeViewSaga(
   updateThreeViewAction: Object
 ): Generator<any, any, any> {
   try {
-    console.log(updateThreeViewAction.viewData);
-    const result = yield adminBackend.updateView(
-      updateThreeViewAction.viewData
-    );
+    if (backend.hasAdminBackend) {
+      const result = yield backend.adminBackend.updateView(
+        updateThreeViewAction.viewData
+      );
+    } else {
+      console.warn(genericAPIRouteMessage);
+    }
   } catch (error) {
     console.log(error);
   }
@@ -397,8 +437,11 @@ export function* deleteThreeViewSaga(
   deleteThreeViewAction: Object
 ): Generator<any, any, any> {
   try {
-    const result = yield adminBackend.deleteView(deleteThreeViewAction.id);
-    console.log(result);
+    if (backend.hasAdminBackend) {
+      const result = yield backend.adminBackend.deleteView(deleteThreeViewAction.id);
+    } else {
+      console.warn(genericAPIRouteMessage);
+    }
   } catch (error) {
     console.log(error);
   }

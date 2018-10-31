@@ -13,9 +13,6 @@ import {
   VERIFY_ENDPOINT,
 } from "../../constants/api-endpoints";
 
-// serialization
-import { serializeThreeTypes } from "../../utils/serialization";
-
 export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend {
   constructor(endpoint: string) {
     super(endpoint);
@@ -111,17 +108,5 @@ export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend 
     return this._put(FILE_ENDPOINT + filename, fileData, {})
       .then(result => result)
       .catch(error => console.log(error));
-  }
-
-  // settings
-  saveViewerSettings(id: Number, settings: Object): Promise {
-    const body = JSON.stringify({
-      viewerSettings: serializeThreeTypes(settings)
-    });
-    return this._put(VIEWS_ENDPOINT + id, body, {
-      headers: { "Content-Type": "application/json" }
-    })
-      .then(result => result)
-      .catch(error => console.error(error));
   }
 }

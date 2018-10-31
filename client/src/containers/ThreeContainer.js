@@ -38,7 +38,8 @@ class ThreeContainer extends Component {
   }
 
   render(): Object {
-    const { mesh, texture, metadata, threeAsset, saveViewerSettings } = this.props;
+    const { mesh, texture, metadata, threeAsset, saveViewerSettings, user } = this.props;
+    // Need to put some logic in here -- if the user is logged in AND they own the mesh
     if (mesh.progress === 'Complete' && texture.progress === 'Complete' && WEBGL_SUPPORT) {
       return(
         <ThreeView
@@ -48,6 +49,7 @@ class ThreeContainer extends Component {
           info={metadata}
           options={threeAsset}
           onSave={saveViewerSettings}
+          loggedIn={user.loggedIn}
         />
       );
     } else {
@@ -76,6 +78,7 @@ function mapStateToProps(state: Object): Object {
     texture: state.ui.texture,
     metadata: state.ui.metadata,
     threeAsset: state.ui.threeAsset,
+    user: state.user,
   }
 
 }

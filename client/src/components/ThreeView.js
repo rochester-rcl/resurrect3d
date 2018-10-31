@@ -329,6 +329,7 @@ export default class ThreeView extends Component {
     if (nextState.detailMode !== this.state.detailMode) return true;
     if (nextState.toolsActive !== this.state.toolsActive) return true;
     if (nextState.units !== this.state.units) return true;
+    if (nextProps.loggedIn !== this.props.loggedIn) return true;
     return false;
 
   }
@@ -548,13 +549,15 @@ export default class ThreeView extends Component {
         icon: 'wrench',
         onClick: () => this.toggleTools(),
       });
-      // put some logic in here about admin authentication
-      controls.addComponent('save', components.THREE_BUTTON, {
-        ...buttonProps,
-        content: 'save tool settings',
-        icon: 'setting',
-        onClick: () => this.saveSettings(),
-      });
+      console.log(this.props.loggedIn);
+      if (this.props.loggedIn === true) {
+        controls.addComponent('save', components.THREE_BUTTON, {
+          ...buttonProps,
+          content: 'save tool settings',
+          icon: 'setting',
+          onClick: () => this.saveSettings(),
+        });
+      }
     }
 
     this.controls = <layouts.THREE_GROUP_LAYOUT

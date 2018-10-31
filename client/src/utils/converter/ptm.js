@@ -3,7 +3,7 @@
 import * as _THREE from "three";
 import * as nj from "numjs";
 import { ZERO_TOL, computeMaxOnCircle } from './normals';
-import { strideRGB } from './depth';
+
 const THREE = _THREE;
 const MAX_LINES = 6;
 // default in Node ReadStream

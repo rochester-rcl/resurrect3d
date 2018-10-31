@@ -134,7 +134,6 @@ export default class ThreeViewerAbstractBackend {
   }
 
   static fetchGZippedAssetSaga(id: string, url: string, fileId: string, channel: EventChannel): Promise {
-    console.log(fileId);
     return new Promise((resolve, reject) => {
       fetch(url)
         .then(response => {

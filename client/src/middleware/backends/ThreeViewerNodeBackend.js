@@ -1,7 +1,25 @@
+/* @flow */
+// Abstract Base class
 import ThreeViewerAbstractBackend from './ThreeViewerAbstractBackend';
+
+// React
 import React from 'react';
+
+// API constants
 import { VIEWS_ENDPOINT, FILE_ENDPOINT } from '../../constants/api-endpoints';
+
+// Admin backend
+import ThreeViewerAdminBackend from './ThreeViewerAdminBackend';
+
+// serialization
+import { serializeThreeTypes } from "../../utils/serialization";
+
 export default class ThreeViewerNodeBackend extends ThreeViewerAbstractBackend {
+  constructor(options: Object) {
+    super(options);
+    this.adminBackend = new ThreeViewerAdminBackend();
+    this.hasAdminBackend = true;
+  }
   authenticate(url: string, username: string, password: string, callback: (response: Object) => void): Promise {
     /* csrf token / cookie / set api key to browser storage etc
      * return true if authenticated, return false if not - should use a try catch
@@ -47,4 +65,17 @@ export default class ThreeViewerNodeBackend extends ThreeViewerAbstractBackend {
     }
     return format(asset);
   }
+
+  // settings
+  saveViewerSettings(id: Number, settings: Object): Promise {
+    const body = JSON.stringify({
+      viewerSettings: serializeThreeTypes(settings)
+    });
+    return this._put(VIEWS_ENDPOINT + id, body, {
+      headers: { "Content-Type": "application/json" }
+    })
+      .then(result => result)
+      .catch(error => console.error(error));
+  }
+
 }

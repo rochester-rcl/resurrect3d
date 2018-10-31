@@ -263,9 +263,8 @@ exports.deleteFile = (req, res) => {
 exports.deleteView = (req, res) => {
   View.findOne({ _id: req.params.id }, (err, view) => {
     if (err) console.log({ err: "View could not be found" });
-
     gfs.exist({ filename: view.threeFile }, (err, found) => {
-      if (err) return console.log({ exsists: "File does not exsist" });
+      if (err) return console.log({ exists: "Three File does not exsist" });
       found
         ? gfs.remove({ filename: view.threeFile }, err => {
             if (err)
@@ -273,11 +272,11 @@ exports.deleteView = (req, res) => {
                 delete: `delete of ${view.threeFile} - failed`
               });
           })
-        : console.log("File does not exsist");
+        : console.log("Three File does not exsist");
     });
 
     gfs.exist({ filename: view.threeThumbnail }, (err, found) => {
-      if (err) return console.log({ exsists: "File does not exsist" });
+      if (err) return console.log({ exsists: "Thumbnail File does not exsist" });
       found
         ? gfs.remove({ filename: view.threeThumbnail }, err => {
             if (err)
@@ -285,11 +284,11 @@ exports.deleteView = (req, res) => {
                 delete: `delete of ${view.threeThumbnail} - failed`
               });
           })
-        : console.log("File does not exsist");
+        : console.log("Thumbnail File does not exsist");
     });
 
     gfs.exist({ filename: view.skybox.file }, (err, found) => {
-      if (err) return console.log({ exsists: "File does not exsist" });
+      if (err) return console.log({ exsists: "Skybox File does not exsist" });
       found
         ? gfs.remove({ filename: view.skybox.file }, err => {
             if (err)
@@ -297,7 +296,7 @@ exports.deleteView = (req, res) => {
                 delete: `delete of ${view.skybox.file} - failed`
               });
           })
-        : console.log("File does not exsist");
+        : console.log("Skybox File does not exsist");
     });
 
     View.remove({ _id: req.params.id }, (err, view) => {

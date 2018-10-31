@@ -7,6 +7,10 @@ import lodash from 'lodash';
 import { Markup } from 'interweave';
 
 export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend {
+  constructor(options: Object) {
+    super(options);
+    this.hasAdminBackend = false;
+  }
   authenticate(): Promise {
     return new Promise((resolve, reject) => {
       let apiKey = localStorage.getItem('omekaApiKey');

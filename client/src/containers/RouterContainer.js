@@ -42,6 +42,7 @@ class RouterContainer extends Component {
   constructor(props: Object) {
     super(props);
     (this: any).authenticateRoute = this.authenticateRoute.bind(this);
+    (this: any).authenticateRouteWithoutRedirect = this.authenticateRouteWithoutRedirect.bind(this);
   }
 
   authenticateRoute(props: Object, component: Component) {
@@ -59,6 +60,22 @@ class RouterContainer extends Component {
       }
     }
   }
+  // i.e. for the routes that you could optionally be signed in for
+  authenticateRouteWithoutRedirect(props: Object, component: Component) {
+    const { user } = this.props;
+    const { authenticateAttempted } = user;
+    if (user.loggedIn !== false) {
+      return this._element(component, props, null);
+    } else {
+      if (authenticateAttempted === false) {
+        this.props.authenticate();
+        return <AuthenticatingLoader />;
+      } else {
+        // up to the component to update the user prop when authentication is done
+        return this._element(component, props, null);
+      }
+    }
+  }
 
   render() {
     const { store, user } = this.props;
@@ -68,7 +85,7 @@ class RouterContainer extends Component {
     return (
         <Router basename={BASENAME}>
           <div className="three-router">
-            <Route path="/models/:id" component={App} />
+            <Route path="/models/:id" render={(props) => this.authenticateRouteWithoutRedirect(props, App)} />
             <AdminMenu active={user.loggedIn} />
             <Route path="/admin/login" component={LoginContainer} />
             <Route path="/admin/logout" component={LogoutContainer} />
