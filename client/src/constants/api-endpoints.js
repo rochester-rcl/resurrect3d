@@ -1,5 +1,6 @@
 /* @flow */
 const API_URL = (process.env.REACT_APP_API_URL !== undefined) ? process.env.REACT_APP_API_URL : '';
+export const OMEKA_API_ENDPOINT: string = window.rootUrl + 'api/threejs_viewers/';
 export const API_ENDPOINT: string = API_URL + '/api';
 export const VIEWS_ENDPOINT: string = API_ENDPOINT + '/views/';
 export const FILE_ENDPOINT: string = API_ENDPOINT + '/file/';

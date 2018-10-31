@@ -77,14 +77,15 @@ checkFileType = (file, cb) => {
   }
 }
 
+const router = express.Router();
 app.use(cors());
 app.use(session({ secret: constants.PRIVATE_KEY, resave: false, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(bodyParser.json({ limit: '20mb' }));
 app.use(bodyParser.urlencoded({ limit: '20mb', extended: false }));
-
-views(app, upload, conn, Grid);
+views(app, upload, conn, Grid, router);
+app.use(serverConfig.basename, router);
 controller.get(app, upload, conn, Grid);
 
 //Start Application

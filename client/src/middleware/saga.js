@@ -354,13 +354,9 @@ function* logoutSaga(): Generator<any, any, any> {
 
 export function* authenticateSaga(): Generator<any, any, any> {
   try {
-    if (backend.hasAdminBackend) {
-      const status = yield backend.adminBackend.authenticate();
-      yield put({ type: USER_AUTHENTICATED, loggedIn: status.authenticated });
-      yield put({ type: AUTHENTICATE_ATTEMPTED, value: true });
-    } else {
-      console.warn(genericAPIRouteMessage);
-    }
+    const status = yield backend.authenticate();
+    yield put({ type: USER_AUTHENTICATED, loggedIn: status.authenticated });
+    yield put({ type: AUTHENTICATE_ATTEMPTED, value: true });
   } catch(error) {
     console.log(error);
   }

@@ -1,16 +1,17 @@
-module.exports = (app, upload, conn, Grid) => {
+
+module.exports = (app, upload, conn, Grid, router) => {
   const view = require("../controllers/view_controller");
   const mongoose = require("mongoose");
   const user = require("../controllers/user_controller");
 
-  app.route("/").get(view.getFile);
+  // router.route("/").get(view.getFile);
 
-  app
+  router
     .route("/api/file/:filename")
     .get(view.getFile)
     .delete(user.authenticateServer, view.deleteFile);
 
-  app
+  router
     .route("/api/views")
     .get(view.getViews)
     .post(
@@ -23,28 +24,29 @@ module.exports = (app, upload, conn, Grid) => {
       view.addView
     );
 
-  app
+  router
     .route("/api/views/:id")
     .get(view.getView)
     .put(user.authenticateServer, view.updateView)
     .delete(user.authenticateServer, view.deleteView);
 
-  app.route("/api/users/login")
+  router.route("/api/users/login")
     .post(user.login, user.onLogin);
 
-  app.route("/api/users/logout")
+  router.route("/api/users/logout")
     .get(user.logout);
 
-  app.route("/api/users/authenticate")
+  router.route("/api/users/authenticate")
     .get(user.authenticateClient);
 
-  app.route("/api/users/")
+  router.route("/api/users/")
     .post(user.add)
 
   // Needs custom authentication - need to check user ID against the id of the user in stored in req.session - same with all other deletes and puts
-  app.route("/api/users/:id")
+  router.route("/api/users/:id")
     .delete(user.authenticateServer, user.delete)
 
-  app.route("/api/users/verify/:token")
+  router.route("/api/users/verify/:token")
     .get(user.verify);
+
 };

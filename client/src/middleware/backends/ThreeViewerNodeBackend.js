@@ -6,7 +6,7 @@ import ThreeViewerAbstractBackend from './ThreeViewerAbstractBackend';
 import React from 'react';
 
 // API constants
-import { VIEWS_ENDPOINT, FILE_ENDPOINT } from '../../constants/api-endpoints';
+import { VIEWS_ENDPOINT, FILE_ENDPOINT, AUTHENTICATE_ENDPOINT } from '../../constants/api-endpoints';
 
 // Admin backend
 import ThreeViewerAdminBackend from './ThreeViewerAdminBackend';
@@ -20,17 +20,11 @@ export default class ThreeViewerNodeBackend extends ThreeViewerAbstractBackend {
     this.adminBackend = new ThreeViewerAdminBackend();
     this.hasAdminBackend = true;
   }
-  authenticate(url: string, username: string, password: string, callback: (response: Object) => void): Promise {
-    /* csrf token / cookie / set api key to browser storage etc
-     * return true if authenticated, return false if not - should use a try catch
-     */
-    const body = {
-      username: username,
-      password: password,
-      token: null // will use Cookies.get()
-    }
-    const params = {}
-    return this._post(url, body, params).then((result) => callback(result));
+
+  authenticate(): Promise {
+    return this._get(AUTHENTICATE_ENDPOINT, {})
+      .then(result => result)
+      .catch(error => console.log(error));
   }
 
   getThreeAsset(id: string): Promise {

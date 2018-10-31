@@ -143,7 +143,8 @@ exports.updateView = (req, res) => {
           if (!isEmpty(req.files.threeFile)) {
             threeFileBool = true;
             gfs.exist({ filename: view.threeFile }, (err, found) => {
-              if (err) reject(console.log({ exsists: "File does not exsist" }));
+              if (err)
+                reject(console.log({ exsists: "Three File does not exsist" }));
 
               if (found !== req.body.threeFile) {
                 gfs.remove({ filename: view.threeFile }, err => {
@@ -161,7 +162,10 @@ exports.updateView = (req, res) => {
           if (!isEmpty(req.files.threeThumbnail)) {
             threeThumbnailBool = true;
             gfs.exist({ filename: view.threeThumbnail }, (err, found) => {
-              if (err) reject(console.log({ exsists: "File does not exsist" }));
+              if (err)
+                reject(
+                  console.log({ exsists: "Thumbnail File does not exsist" })
+                );
 
               if (found !== req.body.threeThumbnail) {
                 gfs.remove({ filename: view.threeThumbnail }, err => {
@@ -179,7 +183,8 @@ exports.updateView = (req, res) => {
           if (!isEmpty(req.files.skybox)) {
             skyboxFileBool = true;
             gfs.exist({ filename: view.skybox.file }, (err, found) => {
-              if (err) reject(console.log({ exsists: "File does not exsist" }));
+              if (err)
+                reject(console.log({ exsists: "Skybox File does not exsist" }));
 
               if (found !== req.body.skybox) {
                 gfs.remove({ filename: view.skybox.file }, err => {
@@ -276,7 +281,8 @@ exports.deleteView = (req, res) => {
     });
 
     gfs.exist({ filename: view.threeThumbnail }, (err, found) => {
-      if (err) return console.log({ exsists: "Thumbnail File does not exsist" });
+      if (err)
+        return console.log({ exsists: "Thumbnail File does not exsist" });
       found
         ? gfs.remove({ filename: view.threeThumbnail }, err => {
             if (err)

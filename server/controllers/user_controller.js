@@ -42,6 +42,7 @@ const addUser = (req, res) => {
 };
 
 const deleteUser = (req, res) => {
+  console.log(req.user._id, req.params.id);
   if (req.user._id == req.params.id) {
     User.findOne(
       {
@@ -122,6 +123,7 @@ const authenticateServer = (req, res, next) => {
 
 passport.use(
   new LocalStrategy(function(email, password, done) {
+    console.log('here');
     // no idea why this is being set to undefined below, but this works
     const _password = password;
     User.findOne({ email: email }, function(err, user) {
