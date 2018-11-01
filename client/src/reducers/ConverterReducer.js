@@ -19,7 +19,6 @@ export default function ConverterReducer(state: Object = defaultState, action: O
       }
 
     case ActionConstants.UPDATE_CONVERSION_PROGRESS:
-      console.log(action);
       return {
         ...state,
         progress: { label: action.payload.val, percent: action.payload.percent }

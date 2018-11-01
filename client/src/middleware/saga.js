@@ -200,6 +200,8 @@ function* loadJSONMesh(meshData: Object) {
   });
 }
 
+// TODO set up caching for JSON Asset
+
 function* loadGzippedMesh(loadMeshAction) {
   const { payload, id, fileId } = loadMeshAction;
   let progressChannel;

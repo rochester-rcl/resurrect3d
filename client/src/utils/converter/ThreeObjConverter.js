@@ -151,9 +151,11 @@ export default class ThreeObjConverter extends ThreeConverter {
                 this.readMaps(this.mapFiles).then(maps => {
                   this.maps = maps;
                   this.rectifyTextureURL(this.materials, this.maps);
+                  resolve(this.materials);
                 });
+              } else {
+                resolve(this.materials);
               }
-              resolve(this.materials);
             }).catch(error => reject(error));
           } else {
             resolve(new THREE.MeshStandardMaterial());
