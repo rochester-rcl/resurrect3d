@@ -80,6 +80,7 @@ function walkThreeObject(values: Object, _mask: Set, func: any): Object {
 export function serializeThreeTypes(threeValues: Object, _mask: Set): Object {
   const serialize = (val, key, serializedObj) => {
     if (isThreeType(val)) {
+      console.log('not a three type????');
       if (isValidThreeType(val)) {
         serializedObj[key] = '__' + val.constructor.name + '__' + serializeThreeType(val);
       }
