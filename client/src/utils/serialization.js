@@ -88,6 +88,8 @@ export function serializeThreeTypes(threeValues: Object, _mask: Set): Object {
     }
   }
   const result = walkThreeObject(threeValues, _mask, serialize);
+  console.log('after serializeThreeTypes');
+  console.log(result);
   return result;
 }
 

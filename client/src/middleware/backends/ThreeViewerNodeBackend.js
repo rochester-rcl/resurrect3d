@@ -62,9 +62,13 @@ export default class ThreeViewerNodeBackend extends ThreeViewerAbstractBackend {
 
   // settings
   saveViewerSettings(id: Number, settings: Object): Promise {
+    console.log('pre-serialized settings');
+    console.log(settings);
     const body = JSON.stringify({
       viewerSettings: serializeThreeTypes(settings)
     });
+    console.log('serialized settings');
+    console.log(body);
     return this._put(VIEWS_ENDPOINT + id, body, {
       headers: { "Content-Type": "application/json" }
     })
