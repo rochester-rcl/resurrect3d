@@ -41,6 +41,10 @@ export default class ThreeViewerNodeBackend extends ThreeViewerAbstractBackend {
     return this._getBinary(FILE_ENDPOINT + id, {}).then((result) => result).catch((error) => console.log(error));
   }
 
+  getThreeFileURL(id: string): Promise {
+    return new Promise((resolve, reject) => resolve(FILE_ENDPOINT + id));
+  }
+
   formatAsset(asset: Object): Object {
     // replace 'null' with null
     const format = (_asset) => {

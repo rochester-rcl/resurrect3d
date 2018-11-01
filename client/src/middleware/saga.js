@@ -57,7 +57,7 @@ function* getThreeAssetSaga(
     if (viewerSettings !== undefined) {
       asset.viewerSettings = deserializeThreeTypes(viewerSettings);
     }
-    const threeFile = yield backend.getThreeFile(asset.threeFile);
+    const threeFile = yield backend.getThreeFileURL(asset.threeFile);
     const ext = getExtension(asset.threeFile);
     let id;
     if (backend.isOmekaBackend) {

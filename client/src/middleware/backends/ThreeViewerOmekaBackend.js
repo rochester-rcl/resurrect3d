@@ -56,6 +56,11 @@ export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend 
     }
   }
 
+  // Incredibly stupid but allows for polymorphism between the different backends
+  getThreeFileURL(path: string): Promise {
+    return new Promise((resolve, reject) => resolve(path));
+  }
+
   getMetadata(url: string, params: Object) {
     return this._get(url, params).then((result) => {
       return ThreeViewerOmekaBackend.parseMetadata(result.element_texts);
