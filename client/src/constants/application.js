@@ -105,7 +105,7 @@ export const THREE_VECTOR3 = 'Vector3';
 export const THREE_GROUP = 'Group';
 export const THREE_MESH = 'Mesh';
 export const THREE_DIFFUSE_MAP = 'map';
-export const THREE_TYPES = new Set([THREE_COLOR, THREE_VECTOR2, THREE_VECTOR3]);
+export const THREE_TYPES = new Set([THREE_COLOR, THREE_VECTOR2, THREE_VECTOR3, THREE_GROUP, THREE_MESH]);
 export const THREE_MESH_STANDARD_MATERIAL = 'MeshStandardMaterial';
 
 // Converter

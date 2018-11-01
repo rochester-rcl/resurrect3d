@@ -11,7 +11,7 @@ export function isValidThreeType(value: Object) {
 }
 
 export function isThreeType(value: Object) {
-  return THREE[value.constructor.name] !== undefined
+  return THREE[value.constructor.name] !== undefined;
 }
 
 function serializeThreeType(value: Object): Object {
@@ -80,7 +80,6 @@ function walkThreeObject(values: Object, _mask: Set, func: any): Object {
 export function serializeThreeTypes(threeValues: Object, _mask: Set): Object {
   const serialize = (val, key, serializedObj) => {
     if (isThreeType(val)) {
-      console.log('not a three type????');
       if (isValidThreeType(val)) {
         serializedObj[key] = '__' + val.constructor.name + '__' + serializeThreeType(val);
       }
@@ -89,8 +88,6 @@ export function serializeThreeTypes(threeValues: Object, _mask: Set): Object {
     }
   }
   const result = walkThreeObject(threeValues, _mask, serialize);
-  console.log('after serializeThreeTypes');
-  console.log(result);
   return result;
 }
 
