@@ -9,7 +9,7 @@ import { Redirect, Link } from "react-router-dom";
 import { authenticate } from "../actions/UserActions";
 
 // constants
-import { BASENAME } from "../constants/application";
+import { BASENAME } from "../constants/api-endpoints";
 
 export default class Login extends Component {
   state = {

@@ -55,3 +55,7 @@ export function exportMap(material: Materials): Array<Object> {
   }
   return images;
 }
+
+export function getExtension(path: string): string {
+  return '.' + path.split('.').pop();
+}

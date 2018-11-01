@@ -1,4 +1,5 @@
 /* @flow */
+import 'babel-polyfill';
 import pako from "pako";
 import { WORKER_PROGRESS, WORKER_DATA } from '../../constants/application';
 import {GZIP_CHUNK_SIZE} from '../../constants/application';

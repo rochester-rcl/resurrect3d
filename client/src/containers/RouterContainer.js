@@ -31,8 +31,9 @@ import { authenticate, logout } from "../actions/UserActions";
 import {
   CONVERSION_TYPE_RTI,
   CONVERSION_TYPE_MESH,
-  BASENAME
 } from "../constants/application";
+
+import { BASENAME } from "../constants/api-endpoints";
 
 const AuthenticatingLoader = () => <LoaderModal active={true} text="Authenticating ..." />;
 

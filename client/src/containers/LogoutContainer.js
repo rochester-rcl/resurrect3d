@@ -12,7 +12,7 @@ import LoaderModal from "../components/LoaderModal";
 import { logoutUser, resetLoginErrorMessage } from "../actions/UserActions";
 
 // constants
-import { BASENAME } from "../constants/application";
+import { BASENAME } from "../constants/api-endpoints";
 
 const LogoutLoader = () => <LoaderModal active={true} text="Logging Out ..." />;
 

@@ -1,4 +1,5 @@
 /* @flow */
+import 'babel-polyfill';
 import pako from "pako";
 import * as THREE from 'three';
 import { WORKER_PROGRESS, WORKER_DATA } from '../../constants/application';

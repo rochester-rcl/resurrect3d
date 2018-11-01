@@ -12,7 +12,7 @@ import { deleteUser } from "../actions/UserActions";
 import { Segment, Divider } from "semantic-ui-react";
 
 // constants
-import { BASENAME } from "../constants/application";
+import { BASENAME } from "../constants/api-endpoints";
 
 // components
 import DeleteAccount from "../components/admin/DeleteAccount";

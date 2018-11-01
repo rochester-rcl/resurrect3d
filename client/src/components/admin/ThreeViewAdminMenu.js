@@ -5,7 +5,7 @@ import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 
 // constants
-import { BASENAME } from '../../constants/application';
+import { BASENAME } from '../../constants/api-endpoints';
 
 // semantic-ui-react
 import { Dropdown, Menu, Icon } from 'semantic-ui-react';

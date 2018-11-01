@@ -2,7 +2,6 @@
 export const BUILD_ENV_OMEKA = 'BUILD_ENV_OMEKA';
 export const BUILD_ENV_NODE = 'BUILD_ENV_NODE';
 export const BUILD_ENV = (process.env.REACT_APP_BUILD_ENV === 'OMEKA') ? BUILD_ENV_OMEKA : BUILD_ENV_NODE;
-export const BASENAME = (BUILD_ENV === BUILD_ENV_OMEKA) ? window.publicUrl : process.env.PUBLIC_URL;
 
 // Units
 export const GROUP = 'GROUP';

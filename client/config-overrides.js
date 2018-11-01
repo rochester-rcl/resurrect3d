@@ -11,27 +11,26 @@ module.exports = function override(config, env) {
       config.plugins[uglifyIndex].options.compress = {...compress, ...{ unused: false } }
     }
 
-    const workerExtension = /\.worker\.js$/;
-
     const babelLoader = config.module.rules[1].oneOf.find(
       (loader) => loader.loader.includes('babel-loader') !== false
     );
 
-    const workerLoader = lodashCloneDeep(babelLoader);
-    workerLoader.test = workerExtension;
-    workerLoader.use = [
-        'worker-loader',
-        { // Old babel-loader configuration goes here.
-            loader: workerLoader.loader,
-            options: workerLoader.options,
-        },
-    ];
-    delete workerLoader.loader;
-    delete workerLoader.options;
+    const workerExtension = /\.worker\.js$/;
 
-    babelLoader.exclude = (babelLoader.exclude || []).concat([workerExtension]);
-
-    config.module.rules[1].oneOf.push(workerLoader);
-
+    config.module.rules.push({
+      test: workerExtension,
+      use: [{
+        loader: 'worker-loader',
+        options: {
+          inline: true,
+          fallback: false,
+        }
+      },
+      {
+        loader: babelLoader.loader,
+        options: babelLoader.options,
+      }
+      ]
+    });
     return config;
 };

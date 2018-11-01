@@ -13,7 +13,7 @@ import * as ActionConstants from "../constants/actions";
 import * as THREE from "three";
 
 // constants
-import { WORKER_PROGRESS } from "../constants/application";
+import { WORKER_PROGRESS, GZIP_EXT } from "../constants/application";
 import { USER_LOGGED_IN, LOGIN_ERROR, USER_AUTHENTICATED, AUTHENTICATE_ATTEMPTED, LOGOUT_USER, USER_LOGGED_OUT, USER_DELETED } from "../constants/actions";
 
 import threeViewerBackendFactory from "./backends/threeViewerBackendFactory";
@@ -21,9 +21,7 @@ import threeViewerBackendFactory from "./backends/threeViewerBackendFactory";
 import ThreeViewerAbstractBackend from "./backends/ThreeViewerAbstractBackend";
 
 // workers
-// eslint-disable-line
 import ModelLoaderWorker from "../utils/workers/ModelLoaderWorker/modelloader.worker";
-// eslint-disable-line
 import DeflateWorker from "../utils/workers/deflate.worker";
 
 // serialization
@@ -32,6 +30,9 @@ import { deserializeThreeTypes } from "../utils/serialization";
 // Converter
 import { convertObjToThreeWithProgress } from "../utils/converter/objToThree";
 import convertPtmToThree from "../utils/converter/ptmToThree";
+
+// other utils
+import { getExtension } from "../utils/mesh";
 
 const backend = threeViewerBackendFactory();
 
@@ -57,13 +58,20 @@ function* getThreeAssetSaga(
       asset.viewerSettings = deserializeThreeTypes(viewerSettings);
     }
     const threeFile = yield backend.getThreeFile(asset.threeFile);
-    const ext = asset.threeFile.split(".").pop();
+    const ext = getExtension(asset.threeFile);
+    let id;
+    if (backend.isOmekaBackend) {
+      id = getThreeAssetAction.id;
+    } else {
+      // node backend
+      id = asset._id;
+    }
     yield put({
       type: ActionConstants.LOAD_MESH,
-      url: threeFile,
+      payload: threeFile,
       ext: ext,
       fileId: asset.threeFile,
-      id: asset._id
+      id: id
     });
     yield put({ type: ActionConstants.THREE_ASSET_LOADED, threeAsset: asset });
   } catch (error) {
@@ -179,65 +187,75 @@ function createLoadProgressChannel(
   });
 }
 
-// In this version EVERYTHING NEEDS TO BE GZIPPED
+function* loadJSONMesh(meshData: Object) {
+  const loader = new THREE.ObjectLoader();
+  const object3D = loader.parse(meshData);
+  yield put({
+    type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
+    payload: { val: "Building Scene", percent: null }
+  });
+  yield put({
+    type: ActionConstants.MESH_LOADED,
+    payload: { val: object3D }
+  });
+}
+
+function* loadGzippedMesh(loadMeshAction) {
+  const { payload, id, fileId } = loadMeshAction;
+  let progressChannel;
+  const result = yield ThreeViewerAbstractBackend.checkCache(id, fileId);
+  if (result) {
+    progressChannel = yield ThreeViewerAbstractBackend.gunzipAssetSaga(
+      result.data.model.raw,
+      createWorkerProgressChannel
+    );
+  } else {
+    yield put({
+      type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
+      payload: { val: "Fetching Mesh From Server", percent: null }
+    });
+    progressChannel = yield ThreeViewerAbstractBackend.fetchGZippedAssetSaga(
+      id,
+      payload,
+      fileId,
+      createWorkerProgressChannel
+    );
+  }
+  while (true) {
+    const payload = yield take(progressChannel);
+    if (payload.eventType === "loaded") {
+      yield put({
+        type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
+        payload: { val: "Building Scene", percent: null }
+      });
+      /*
+        This isn't too much of a bottleneck - it's unfortunate that ObjectLoader relies on <img> tags as we could off-load
+        to a worker. I supposed we could parse geometry in a worker and do images on the main thread if we need to.
+
+        Some day we can use https://caniuse.com/#feat=offscreencanvas
+      */
+      yield loadJSONMesh(payload.val);
+      progressChannel.close();
+    } else {
+      yield put({
+        type: getActionType(payload),
+        payload: {
+          val: "Decompressing Mesh Data",
+          percent: payload.val
+        }
+      });
+    }
+  }
+}
+
 export function* loadMeshSaga(
   loadMeshAction: Object
 ): Generator<any, any, any> {
   try {
-    const { url, id, fileId } = loadMeshAction;
-    let progressChannel;
-    const result = yield ThreeViewerAbstractBackend.checkCache(id, fileId);
-    if (result) {
-      progressChannel = yield ThreeViewerAbstractBackend.gunzipAssetSaga(
-        result.data.model.raw,
-        createWorkerProgressChannel
-      );
+    if (loadMeshAction.ext === GZIP_EXT) {
+      yield loadGzippedMesh(loadMeshAction);
     } else {
-      yield put({
-        type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
-        payload: { val: "Fetching Mesh From Server", percent: null }
-      });
-      console.log(backend);
-      progressChannel = yield ThreeViewerAbstractBackend.fetchGZippedAssetSaga(
-        id,
-        url,
-        fileId,
-        createWorkerProgressChannel
-      );
-    }
-    while (true) {
-      const payload = yield take(progressChannel);
-      if (payload.eventType === "loaded") {
-        yield put({
-          type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
-          payload: { val: "Building Scene", percent: null }
-        });
-        /*
-          This isn't too much of a bottleneck - it's unfortunate that ObjectLoader relies on <img> tags as we could off-load
-          to a worker. I supposed we could parse geometry in a worker and do images on the main thread if we need to.
-
-          Some day we can use https://caniuse.com/#feat=offscreencanvas
-        */
-        const loader = new THREE.ObjectLoader();
-        const object3D = loader.parse(payload.val);
-        yield put({
-          type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
-          payload: { val: "Building Scene", percent: null }
-        });
-        yield put({
-          type: ActionConstants.MESH_LOADED,
-          payload: { val: object3D }
-        });
-        progressChannel.close();
-      } else {
-        yield put({
-          type: getActionType(payload),
-          payload: {
-            val: "Decompressing Mesh Data",
-            percent: payload.val
-          }
-        });
-      }
+      yield loadJSONMesh(loadMeshAction.payload);
     }
   } catch (error) {
     console.log(error);

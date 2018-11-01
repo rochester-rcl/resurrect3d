@@ -1,4 +1,6 @@
 /* @flow */
+import { BUILD_ENV, BUILD_ENV_OMEKA } from './application';
+export const BASENAME = (BUILD_ENV === BUILD_ENV_OMEKA) ? window.publicUrl : process.env.PUBLIC_URL;
 const API_URL = (process.env.REACT_APP_API_URL !== undefined) ? process.env.REACT_APP_API_URL : '';
 export const OMEKA_API_ENDPOINT: string = window.rootUrl + 'api/threejs_viewers/';
 export const API_ENDPOINT: string = API_URL + '/api';

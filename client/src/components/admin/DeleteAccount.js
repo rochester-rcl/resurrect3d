@@ -12,7 +12,7 @@ import LoaderModal from "../LoaderModal";
 import { Link } from "react-router-dom";
 
 // constants
-import { BASENAME } from "../../constants/application";
+import { BASENAME } from "../../constants/api-endpoints";
 
 const link = (
   <Link className="three-admin-home-link" to={BASENAME + "/admin/login"}>

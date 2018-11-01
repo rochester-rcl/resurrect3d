@@ -12,7 +12,7 @@ import LoaderModal from '../LoaderModal';
 import { Link } from 'react-router-dom';
 
 // constants
-import { BASENAME } from '../../constants/application';
+import { BASENAME } from '../../constants/api-endpoints';
 
 const verifyLoader = () => <LoaderModal active={true} text="Verifying Account ..." />;
 const link = <Link className="three-admin-home-link" to={BASENAME + '/admin/login'}>Back to Login</Link>

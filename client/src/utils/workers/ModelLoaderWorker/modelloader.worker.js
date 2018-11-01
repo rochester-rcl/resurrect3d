@@ -1,3 +1,5 @@
+import 'babel-polyfill';
+
 import * as THREE from 'three';
 
 const computeProgress = (request: ProgressEvent): string => {

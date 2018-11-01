@@ -1,3 +1,4 @@
+import 'babel-polyfill';
 import { THREE_MODEL_CACHE_DB, THREE_MODEL_CACHE_INDEX, THREE_MODEL_CACHE_INDEX_ITEMS, THREE_MODEL_CACHE_GET, THREE_MODEL_CACHE_SAVE } from '../../constants/application';
 import IndexedCache from '../cache/Cache'
 self._cache = new IndexedCache(THREE_MODEL_CACHE_DB, {
