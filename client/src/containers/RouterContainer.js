@@ -35,6 +35,8 @@ import {
 
 import { BASENAME } from "../constants/api-endpoints";
 
+import { BUILD_ENV, BUILD_ENV_OMEKA } from "../constants/application";
+
 const AuthenticatingLoader = () => <LoaderModal active={true} text="Authenticating ..." />;
 
 class RouterContainer extends Component {
@@ -82,19 +84,11 @@ class RouterContainer extends Component {
     const { store, user } = this.props;
     // need this for Omeka or embedding in any other system that has its own routing
     let path = window.publicUrl ? window.publicUrl : "/";
-
-    return (
+    if (BUILD_ENV === BUILD_ENV_OMEKA) {
+      return(
         <Router basename={BASENAME}>
           <div className="three-router">
             <Route path="/models/:id" render={(props) => this.authenticateRouteWithoutRedirect(props, App)} />
-            <AdminMenu active={user.loggedIn} />
-            <Route path="/admin/login" component={LoginContainer} />
-            <Route path="/admin/logout" component={LogoutContainer} />
-            <Route path="/admin/verify/:token" component={VerifyUserContainer} />
-            <Route path="/admin/account" render={(props) => this.authenticateRoute(props, AccountContainer)} />
-            <Route path="/admin/add" render={(props) => this.authenticateRoute(props, ViewForm)} />
-            <Route path="/admin/views" render={(props) => this.authenticateRoute(props, ThreeViews)} />
-            <Route path="/admin/view/:id" render={(props) => this.authenticateRoute(props, ThreeViewDetails)} />
             <Route
               path="/converter"
               render={props => (
@@ -109,7 +103,36 @@ class RouterContainer extends Component {
             />
           </div>
         </Router>
-    );
+      );
+    } else {
+      return (
+          <Router basename={BASENAME}>
+            <div className="three-router">
+              <Route path="/models/:id" render={(props) => this.authenticateRouteWithoutRedirect(props, App)} />
+              <AdminMenu active={user.loggedIn} />
+              <Route path="/admin/login" component={LoginContainer} />
+              <Route path="/admin/logout" component={LogoutContainer} />
+              <Route path="/admin/verify/:token" component={VerifyUserContainer} />
+              <Route path="/admin/account" render={(props) => this.authenticateRoute(props, AccountContainer)} />
+              <Route path="/admin/add" render={(props) => this.authenticateRoute(props, ViewForm)} />
+              <Route path="/admin/views" render={(props) => this.authenticateRoute(props, ThreeViews)} />
+              <Route path="/admin/view/:id" render={(props) => this.authenticateRoute(props, ThreeViewDetails)} />
+              <Route
+                path="/converter"
+                render={props => (
+                  <ConverterContainer conversionType={CONVERSION_TYPE_MESH} />
+                )}
+              />
+              <Route
+                path="/ptm-converter"
+                render={props => (
+                  <ConverterContainer conversionType={CONVERSION_TYPE_RTI} />
+                )}
+              />
+            </div>
+          </Router>
+        );
+    }
   }
 }
 
