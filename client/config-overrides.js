@@ -39,16 +39,17 @@ module.exports = function override(config, env) {
   if (process.env.REACT_APP_BUILD_ENV === "OMEKA") {
     workerRule.use = [
       {
-        loader: babelLoader.loader,
-        options: babelLoader.options
-      },
-      {
         loader: "worker-loader",
         options: {
           inline: true,
           fallback: false
-      }
-    }];
+        }
+      },
+      {
+        loader: babelLoader.loader,
+        options: babelLoader.options
+      },
+    ];
   }
 
   config.module.rules.push(workerRule);

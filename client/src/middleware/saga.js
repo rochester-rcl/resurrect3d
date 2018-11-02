@@ -84,7 +84,7 @@ function* saveSettingsSaga(
 ): Generator<any, any, any> {
   try {
     const { id, settings } = saveSettingsAction;
-    const result = backend.saveViewerSettings(id, settings);
+    const result = yield backend.saveViewerSettings(id, settings);
     // TODO should have some SETTINGS_SAVED feedback
   } catch (error) {
     console.log(error);

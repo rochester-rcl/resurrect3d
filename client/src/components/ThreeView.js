@@ -1172,11 +1172,9 @@ export default class ThreeView extends Component {
         panOffset: this.state.panOffset.set(0, 0, 0),
       });
     }
-
     if (!this.state.dynamicLightProps.lock) {
       const distance = this.camera.position.distanceTo(this.bboxMesh.max);
       this.dynamicLight.position.copy(this.camera.position).add(this.state.dynamicLightProps.offset);
-      this.dynamicLight.distance = distance * 5;
       this.dynamicLight.needsUpdate = true;
     }
   }
@@ -1776,7 +1774,9 @@ export default class ThreeView extends Component {
     }
     settings.lights = serializeThreeTypes(dynamicLightProps);
     settings.materials = serializeThreeTypes(materialsInfo);
-    this.props.onSave(this.props.options._id, settings);
+    const id = (this.props.options._id === undefined) ? this.props.options.id : this.props.options._id;
+    // TODO should likely change _id to id in the saga
+    this.props.onSave(id, settings);
   }
 
   /** EVENT HANDLERS

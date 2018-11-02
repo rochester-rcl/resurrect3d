@@ -15,6 +15,9 @@ import { JSON_EXT, GZIP_EXT } from '../../constants/application';
 // utils
 import { getExtension } from '../../utils/mesh';
 
+// serialization
+import { serializeThreeTypes } from "../../utils/serialization";
+
 export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend {
 
   constructor(options: Object) {
@@ -41,7 +44,6 @@ export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend 
           }
           normalized[lodash.camelCase(key)] = result[key];
         });
-        console.log(normalized);
         return normalized;
       })
       .catch((error) => console.log(error));
@@ -75,5 +77,21 @@ export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend 
         value: <Markup content={element.text} />
       }
     });
+  }
+
+  // settings
+  saveViewerSettings(id: Number, settings: Object): Promise {
+
+    const body = JSON.stringify({
+      viewer_settings: serializeThreeTypes(settings)
+    });
+
+    const apiKey = '?key=' + localStorage.getItem('omekaApiKey');
+
+    return this._put(OMEKA_API_ENDPOINT + id + apiKey, body, {
+      headers: { "Content-Type": "application/json" }
+    })
+      .then(result => result)
+      .catch(error => console.error(error));
   }
 }
