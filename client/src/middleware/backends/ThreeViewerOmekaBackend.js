@@ -44,7 +44,7 @@ export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend 
           }
           normalized[lodash.camelCase(key)] = result[key];
         });
-        return normalized;
+        return Promise.resolve(normalized);
       })
       .catch((error) => console.log(error));
   }

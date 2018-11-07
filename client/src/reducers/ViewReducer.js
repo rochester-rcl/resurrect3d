@@ -25,30 +25,6 @@ export default function(state = initialState, action){
         view: action.view,
       }
 
-    case ActionConstants.USER_LOGGED_IN:
-      return {
-        ...state,
-        user: action.user,
-      }
-
-    case ActionConstants.USER_AUTHENTICATED:
-      return {
-        ...state,
-        user: { ...state.user, ...{ loggedIn: action.loggedIn } }
-      }
-
-    case ActionConstants.LOGIN_ERROR:
-      return {
-        ...state,
-        user: { ...state.user, ...{ loginError: true } },
-      }
-
-    case ActionConstants.REMOVE_LOGIN_ERROR:
-      return {
-        ...state,
-        user: { ...state.user, ...{ loginError: false } },
-      }
-
     default:
       return state;
   }

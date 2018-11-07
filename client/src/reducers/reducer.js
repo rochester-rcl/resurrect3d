@@ -6,6 +6,9 @@ import { combineReducers } from 'redux';
 // Actions
 import * as ActionConstants from '../constants/actions';
 
+// Application Constants
+import { PROGRESS_COMPLETE } from '../constants/application';
+
 // Utils
 import { LinearGradientShader } from '../utils/image';
 
@@ -38,7 +41,8 @@ const defaultState = {
 
   threeAsset: {
 
-  }
+  },
+  saveStatus: null,
 }
 
 function uiReducer(state: Object = defaultState, action: Object): Object {
@@ -50,7 +54,7 @@ function uiReducer(state: Object = defaultState, action: Object): Object {
         ...state,
         mesh: {
           loaded: true,
-          progress: 'Complete',
+          progress: PROGRESS_COMPLETE,
           object3D: action.payload.val
         }
       };
@@ -73,7 +77,7 @@ function uiReducer(state: Object = defaultState, action: Object): Object {
         texture: {
           ...state.texture,
           loaded: true,
-          progress: 'Complete',
+          progress: PROGRESS_COMPLETE,
           image: action.payload.val
         }
       }
@@ -88,6 +92,24 @@ function uiReducer(state: Object = defaultState, action: Object): Object {
       return {
         ...state,
         metadata: action.metadata,
+      }
+
+    case ActionConstants.VIEWER_SETTINGS_SAVED:
+      return {
+        ...state,
+        saveStatus: true,
+      }
+
+    case ActionConstants.VIEWER_SETTINGS_ERROR:
+      return {
+        ...state,
+        saveStatus: false,
+      }
+
+    case ActionConstants.RESET_SAVE_STATUS:
+      return {
+        ...state,
+        saveStatus: null,
       }
 
     default:

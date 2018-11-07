@@ -129,7 +129,7 @@ exports.updateView = (req, res) => {
           (err, view) => {
             if (err) res.send(err);
             res.json(view);
-            console.log({ upadte: "View successfully updated" });
+            console.log({ update: "View successfully updated" });
           }
         );
       });
@@ -229,7 +229,6 @@ exports.updateView = (req, res) => {
             { new: true },
             (err, view) => {
               if (err) res.send(err);
-              console.log(view);
               res.json(view);
               console.log({ update: "View successfully updated" });
             }

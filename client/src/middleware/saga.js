@@ -62,6 +62,10 @@ function* getThreeAssetSaga(
     let id;
     if (backend.isOmekaBackend) {
       id = getThreeAssetAction.id;
+      const metadata = yield backend.getMetadata(asset.itemUrl);
+      if (metadata) {
+        yield put({ type: ActionConstants.THREE_METADATA_LOADED, metadata: metadata });
+      }
     } else {
       // node backend
       id = asset._id;
@@ -75,19 +79,27 @@ function* getThreeAssetSaga(
     });
     yield put({ type: ActionConstants.THREE_ASSET_LOADED, threeAsset: asset });
   } catch (error) {
+    // TODO add THREE_ASSET_ERROR
     console.log(error);
   }
 }
-// TODO this can work for both node and omeka backend so saveViewerSettings needs to be put in implemented in both
+
 function* saveSettingsSaga(
   saveSettingsAction: Object
 ): Generator<any, any, any> {
   try {
     const { id, settings } = saveSettingsAction;
     const result = yield backend.saveViewerSettings(id, settings);
-    // TODO should have some SETTINGS_SAVED feedback
+    if (result.viewerSettings) {
+      yield put({ type: ActionConstants.VIEWER_SETTINGS_SAVED });
+      yield sleep(2000);
+      yield put({ type: ActionConstants.RESET_SAVE_STATUS });
+    }
   } catch (error) {
     console.log(error);
+    yield put({ type: ActionConstants.VIEWER_SETTINGS_ERROR });
+    yield sleep(2000);
+    yield put({ type: ActionConstants.RESET_SAVE_STATUS });
   }
 }
 
@@ -187,7 +199,7 @@ function createLoadProgressChannel(
   });
 }
 
-function* loadJSONMesh(meshData: Object) {
+function* parseJSONMesh(meshData: Object) {
   const loader = new THREE.ObjectLoader();
   const object3D = loader.parse(meshData);
   yield put({
@@ -200,6 +212,30 @@ function* loadJSONMesh(meshData: Object) {
   });
 }
 
+function* loadJSONMesh(loadMeshAction) {
+  const { payload, id, fileId } = loadMeshAction;
+  let result = yield ThreeViewerAbstractBackend.checkCache(id, fileId);
+  let data;
+  if (result) {
+    yield put({
+      type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
+      payload: { val: "Loading Mesh From Cache", percent: null }
+    });
+    data = result.data.model.raw;
+  } else {
+    yield put({
+      type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
+      payload: { val: "Fetching Mesh From Server", percent: null }
+    });
+    data = yield ThreeViewerAbstractBackend.fetchJSONAssetSaga(id, payload, fileId);
+  }
+  yield put({
+    type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
+    payload: { val: "Parsing Mesh Data", percent: null }
+  });
+  yield parseJSONMesh(data);
+}
+
 // TODO set up caching for JSON Asset
 
 function* loadGzippedMesh(loadMeshAction) {
@@ -207,6 +243,10 @@ function* loadGzippedMesh(loadMeshAction) {
   let progressChannel;
   const result = yield ThreeViewerAbstractBackend.checkCache(id, fileId);
   if (result) {
+    yield put({
+      type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
+      payload: { val: "Loading Mesh From Cache", percent: null }
+    });
     progressChannel = yield ThreeViewerAbstractBackend.gunzipAssetSaga(
       result.data.model.raw,
       createWorkerProgressChannel
@@ -236,7 +276,7 @@ function* loadGzippedMesh(loadMeshAction) {
 
         Some day we can use https://caniuse.com/#feat=offscreencanvas
       */
-      yield loadJSONMesh(payload.val);
+      yield parseJSONMesh(payload.val);
       progressChannel.close();
     } else {
       yield put({
@@ -257,7 +297,7 @@ export function* loadMeshSaga(
     if (loadMeshAction.ext === GZIP_EXT) {
       yield loadGzippedMesh(loadMeshAction);
     } else {
-      yield loadJSONMesh(loadMeshAction.payload);
+      yield loadJSONMesh(loadMeshAction);
     }
   } catch (error) {
     console.log(error);

@@ -53,7 +53,7 @@ const LoaderModal = (props: Object) => {
   } else {
     return (
       <Dimmer className={className} active={active} as={Segment}>
-        {message}
+        <Loader size="huge">{message}</Loader>
       </Dimmer>
     )
   }

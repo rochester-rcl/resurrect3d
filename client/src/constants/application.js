@@ -93,6 +93,9 @@ export const THREE_MODEL_CACHE_DB = "ThreeModelCache";
 export const THREE_MODEL_CACHE_INDEX = "ThreeModelCacheIndex";
 export const THREE_MODEL_CACHE_INDEX_ITEMS = ["id"];
 
+// Mesh Loading Progress
+export const PROGRESS_COMPLETE = 'PROGRESS_COMPLETE';
+
 // Worker stuff
 export const WORKER_PROGRESS = 'WORKER_PROGRESS';
 export const WORKER_DATA = 'WORKER_DATA';

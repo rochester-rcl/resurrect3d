@@ -5,6 +5,8 @@ import ModelCacheWorker from '../../utils/workers/modelcache.worker';
 // constants
 import { THREE_MODEL_CACHE_GET, THREE_MODEL_CACHE_SAVE, WORKER_DATA, WORKER_PROGRESS } from '../../constants/application';
 
+// TODO - Refactoring - Remove Promise constructor anti-pattern (i.e. return new Promise((resolve, reject) => {}))
+
 const GZIP_CHUNK_SIZE = 512 * 1024;
 export default class ThreeViewerAbstractBackend {
   /* So we need a few things here -
@@ -151,6 +153,20 @@ export default class ThreeViewerAbstractBackend {
           });
         })
         .catch(error => reject(error));
+    });
+  }
+
+  static fetchJSONAssetSaga(id: string, url: string, fileId: string): Promise {
+    return new Promise((resolve, reject) => {
+      fetch(url)
+        .then(response => {
+          return response.json().then((json) => {
+              // save raw data to cache
+              ThreeViewerAbstractBackend.saveToCache(id, json, fileId).then((res) =>
+                resolve(res.model.raw)
+              ).catch((error) => reject(error));
+            }).catch((error) => reject(error));
+          }).catch(error => reject(error));
     });
   }
 

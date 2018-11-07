@@ -285,6 +285,7 @@ export default class ThreeView extends Component {
     (this: any).setEnvMap = this.setEnvMap.bind(this);
     (this: any).exportObj = this.exportObj.bind(this);
     (this: any).saveSettings = this.saveSettings.bind(this);
+    (this: any).updateButtonLabel = this.updateButtonLabel.bind(this);
     // event handlers
 
     (this: any).handleMouseDown = this.handleMouseDown.bind(this);
@@ -318,6 +319,9 @@ export default class ThreeView extends Component {
       this.removeAxisLabels();
       this.addAxisLabels();
     }
+    if (prevProps.saveStatus !== this.props.saveStatus) {
+      this.updateButtonLabel(this.saveToolSettingsButton, 'save tool settings', 'settings saved', 'settings save failed');
+    }
   }
 
   shouldComponentUpdate(nextProps: Object, nextState: Object): boolean {
@@ -330,6 +334,7 @@ export default class ThreeView extends Component {
     if (nextState.toolsActive !== this.state.toolsActive) return true;
     if (nextState.units !== this.state.units) return true;
     if (nextProps.loggedIn !== this.props.loggedIn) return true;
+    if (nextProps.saveStatus !== this.props.saveStatus) return true;
     return false;
 
   }
@@ -344,6 +349,7 @@ export default class ThreeView extends Component {
 
     const { loadProgress, loadText, showInfo, dynamicLighting, detailMode, toolsActive } = this.state;
     const { info } = this.props;
+    console.log(info);
     let threeViewClassName = 'three-view ';
     threeViewClassName += toolsActive ? 'tools-active' : 'tools-inactive';
     return(
@@ -549,12 +555,12 @@ export default class ThreeView extends Component {
         icon: 'wrench',
         onClick: () => this.toggleTools(),
       });
-      console.log(this.props.loggedIn);
       if (this.props.loggedIn === true) {
         controls.addComponent('save', components.THREE_BUTTON, {
           ...buttonProps,
           content: 'save tool settings',
           icon: 'setting',
+          ref: (ref) => this.saveToolSettingsButton = ref,
           onClick: () => this.saveSettings(),
         });
       }
@@ -1777,6 +1783,24 @@ export default class ThreeView extends Component {
     const id = (this.props.options._id === undefined) ? this.props.options.id : this.props.options._id;
     // TODO should likely change _id to id in the saga
     this.props.onSave(id, settings);
+  }
+
+  updateButtonLabel(buttonRef, neutral: string, success: string, failure: string): void {
+    const { saveStatus } = this.props;
+    if (buttonRef !== undefined) {
+      let statusClass = "save-status ";
+      let textContent = neutral;
+      if (saveStatus === true) {
+        statusClass += "success";
+        textContent = success;
+      }
+      if (saveStatus === false) {
+        statusClass += "failure";
+        textContent = failure;
+      }
+      const label = <div className={statusClass}>{textContent}</div>;
+      this.saveToolSettingsButton.updateLabel(label);
+    }
   }
 
   /** EVENT HANDLERS

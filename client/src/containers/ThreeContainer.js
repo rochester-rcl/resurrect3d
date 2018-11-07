@@ -18,7 +18,7 @@ import ThreeView from '../components/ThreeView';
 import LoaderModal from '../components/LoaderModal';
 
 // Constants
-import { WEBGL_SUPPORT } from '../constants/application';
+import { WEBGL_SUPPORT, PROGRESS_COMPLETE } from '../constants/application';
 
 class ThreeContainer extends Component {
 
@@ -38,9 +38,10 @@ class ThreeContainer extends Component {
   }
 
   render(): Object {
-    const { mesh, texture, metadata, threeAsset, saveViewerSettings, user } = this.props;
-    // Need to put some logic in here -- if the user is logged in AND they own the mesh
-    if (mesh.progress === 'Complete' && texture.progress === 'Complete' && WEBGL_SUPPORT) {
+    const { mesh, texture, metadata, threeAsset, saveViewerSettings, user, saveStatus } = this.props;
+    // TODO Need to put some logic in here -- if the user is logged in AND they own the mesh
+    // TODO Complete needs to be a constant
+    if (mesh.progress === PROGRESS_COMPLETE && texture.progress === PROGRESS_COMPLETE && WEBGL_SUPPORT) {
       return(
         <ThreeView
           skyboxTexture={texture}
@@ -49,6 +50,7 @@ class ThreeContainer extends Component {
           info={metadata}
           options={threeAsset}
           onSave={saveViewerSettings}
+          saveStatus={saveStatus}
           loggedIn={user.loggedIn}
         />
       );
@@ -79,6 +81,7 @@ function mapStateToProps(state: Object): Object {
     metadata: state.ui.metadata,
     threeAsset: state.ui.threeAsset,
     user: state.user,
+    saveStatus: state.ui.saveStatus,
   }
 
 }
