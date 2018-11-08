@@ -1,25 +1,24 @@
 // Abstract backend class
-import ThreeViewerAbstractBackend from './ThreeViewerAbstractBackend';
-import React from 'react';
+import ThreeViewerAbstractBackend from "./ThreeViewerAbstractBackend";
+import React from "react";
 
-import lodash from 'lodash';
+import lodash from "lodash";
 
-import { Markup } from 'interweave';
+import { Markup } from "interweave";
 
 // API endpoints
-import { OMEKA_API_ENDPOINT } from '../../constants/api-endpoints';
+import { OMEKA_API_ENDPOINT } from "../../constants/api-endpoints";
 
 // constants
-import { JSON_EXT, GZIP_EXT } from '../../constants/application';
+import { JSON_EXT, GZIP_EXT } from "../../constants/application";
 
 // utils
-import { getExtension } from '../../utils/mesh';
+import { getExtension } from "../../utils/mesh";
 
 // serialization
 import { serializeThreeTypes } from "../../utils/serialization";
 
 export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend {
-
   constructor(options: Object) {
     super(options);
     this.hasAdminBackend = false;
@@ -28,33 +27,47 @@ export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend 
 
   authenticate(): Promise {
     return new Promise((resolve, reject) => {
-      const apiKey = localStorage.getItem('omekaApiKey');
+      const apiKey = localStorage.getItem("omekaApiKey");
       const status = {};
-      status.authenticated = (apiKey !== null) ? true : false;
+      status.authenticated = apiKey !== null ? true : false;
       resolve(status);
     });
   }
 
-  getThreeAsset(assetId: string | Number, params: Object): Promise {
-    return super.getThreeAsset(OMEKA_API_ENDPOINT + assetId, params).then((result) => {
-        let normalized = {};
-        Object.keys(result).forEach((key) => {
-          if (key === 'model_units') {
-            normalized[lodash.camelCase(key)] = result[key].toUpperCase();
+  static formatOmekaResponse(response: Object): Object {
+    return new Promise((resolve, reject) => {
+      try {
+        const normalized = {};
+        Object.keys(response).forEach(key => {
+          if (key === "model_units") {
+            normalized[lodash.camelCase(key)] = response[key].toUpperCase();
           }
-          normalized[lodash.camelCase(key)] = result[key];
+          normalized[lodash.camelCase(key)] = response[key];
         });
-        return Promise.resolve(normalized);
-      })
-      .catch((error) => console.log(error));
+        resolve(normalized);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  getThreeAsset(assetId: string | Number, params: Object): Promise {
+    return super
+      .getThreeAsset(OMEKA_API_ENDPOINT + assetId, params)
+      .then(ThreeViewerOmekaBackend.formatOmekaResponse)
+      .catch(error => console.log(error));
   }
 
   getThreeFile(path: string): Promise {
     const ext = getExtension(path);
     if (ext === GZIP_EXT) {
-      return this._getBinary(path, {}).then((result) => result).catch((error) => console.log(error));
+      return this._getBinary(path, {})
+        .then(result => result)
+        .catch(error => console.log(error));
     } else {
-      return this._get(path, {}).then((result) => result).catch((error) => console.log(error));
+      return this._get(path, {})
+        .then(result => result)
+        .catch(error => console.log(error));
     }
   }
 
@@ -64,34 +77,35 @@ export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend 
   }
 
   getMetadata(url: string, params: Object) {
-    return this._get(url, params).then((result) => {
-      return ThreeViewerOmekaBackend.parseMetadata(result.element_texts);
-    }).catch((error) => console.log(error));
+    return this._get(url, params)
+      .then(result => {
+        return ThreeViewerOmekaBackend.parseMetadata(result.element_texts);
+      })
+      .catch(error => console.log(error));
   }
 
   // need to parse a cleaner key-value representation of the item metadata
-  static parseMetadata(elementTexts: Array < Object > ): Object {
-    return elementTexts.map((element) => {
+  static parseMetadata(elementTexts: Array<Object>): Object {
+    return elementTexts.map(element => {
       return {
         label: element.element.name,
         value: <Markup content={element.text} />
-      }
+      };
     });
   }
 
   // settings
   saveViewerSettings(id: Number, settings: Object): Promise {
-
     const body = JSON.stringify({
       viewer_settings: serializeThreeTypes(settings)
     });
 
-    const apiKey = '?key=' + localStorage.getItem('omekaApiKey');
+    const apiKey = "?key=" + localStorage.getItem("omekaApiKey");
 
     return this._put(OMEKA_API_ENDPOINT + id + apiKey, body, {
       headers: { "Content-Type": "application/json" }
     })
-      .then(result => result)
-      .catch(error => console.error(error));
+      .then(ThreeViewerOmekaBackend.formatOmekaResponse)
+      .catch(error => console.log(error));
   }
 }
