@@ -3,6 +3,12 @@
 // Three
 import * as THREE from 'three';
 
+// constants
+import { SIMPLEX_2D } from '../constants/application';
+
+// noise function
+import { loadNoiseFunc } from './noise';
+
 // Abstract Base Class
 class ImageGenerator {
 
@@ -45,11 +51,14 @@ export class LinearGradientShader {
     'uniform vec3 topColor;',
     'uniform vec3 bottomColor;',
     'uniform vec2 resolution;',
-
+    loadNoiseFunc(SIMPLEX_2D),
     'void main() {',
       'vec2 pixel = gl_FragCoord.xy / resolution.xy;',
-      'vec3 color = mix(bottomColor, topColor, distance(vec2(pixel.x, pixel.y), vec2(0.5)));',
-      'gl_FragColor = vec4(color,1.0);',
+      'float distance = distance(vec2(pixel.x, pixel.y), vec2(0.5));',
+      'float noise = snoise(512.0 * pixel);',
+      'vec3 color = mix(topColor, bottomColor, distance);',
+      'color = mix(color, vec3(noise), 0.0175);',
+      'gl_FragColor = vec4(color, 1.0);',
     '}'
   ].join('\n');
 
@@ -72,6 +81,7 @@ export class LinearGradientShader {
     return new THREE.ShaderMaterial({
       uniforms: this.uniforms,
       fragmentShader: this.fragmentShader,
+      dithering: true,
       side: THREE.DoubleSide
     });
   };

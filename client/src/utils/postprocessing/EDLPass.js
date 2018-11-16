@@ -27,7 +27,7 @@ export default function loadEDLPass(threeInstance: Object): typeof Promise {
 			const screenHeight = params.screenHeight || window.innerHeight || 1;
 			const enableEDL = (params.enableEDL !== undefined) ? params.enableEDL : false;
 			const onlyEDL = (params.onlyEDL !== undefined) ? params.onlyEDL : false;
-			const onlyEDLColor = (params.onlyEDLColor !== undefined) ? params.onlyEDLColor : new threeInstance.Color(0x000000);
+			const onlyEDLColor = (params.onlyEDLColor !== undefined) ? params.onlyEDLColor : new threeInstance.Color(0xffffff);
 			const useTexture = (params.useTexture !== undefined) ? params.useTexture : false;
       this.camera2 = camera;
       this.scene2 = scene;

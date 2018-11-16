@@ -1,6 +1,8 @@
 /*@flow*/
 import { CM, MM, IN, CONVERSIONS } from '../constants/application';
 
+import * as THREE from 'three';
+
 export function cmToInches(measurement: number): number {
   return measurement * 0.393701;
 }
@@ -14,10 +16,26 @@ export function inchesToCM(measurement: number): number {
 }
 
 export function convertUnits(from: string, to: string, measurement: number): number {
-  console.log(from, to);
   from = from.toUpperCase();
   if (from === to) return measurement;
   let conversion = from + '_TO_' + to;
   let cback = CONVERSIONS[conversion];
   return (cback !== undefined) ? cback(measurement) : measurement;
+}
+
+function sleep(duration: Number): Promise {
+  return new Promise((resolve, reject) => setTimeout(() => resolve(), duration));
+}
+
+export function animateLerp(from: THREE.Vector3, to: THREE.Vector3, duration: Number, steps: Number): void {
+  let tasks = [];
+  for (let i = 0; i < steps; i++) {
+    let alpha = i / steps;
+    tasks.push(sleep(duration).then(
+      () => {
+        from.lerpVectors(from, to, alpha)
+      }
+    ));
+  }
+  return Promise.all(tasks);
 }

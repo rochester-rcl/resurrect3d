@@ -10,6 +10,7 @@ import loadBlurShader from './shaders/BlurShader';
 import loadVignetteShader from './shaders/VignetteShader';
 import loadBrightnessContrastShader from './shaders/BrightnessContrastShader';
 import loadConvolutionShader from './shaders/ConvolutionShader';
+import loadAdditiveBlendShader from './shaders/AdditiveBlendShader';
 import loadEffectComposer from './postprocessing/EffectComposer';
 import loadShaderPass from './postprocessing/ShaderPass';
 import loadRenderPass from './postprocessing/RenderPass';
@@ -21,6 +22,7 @@ import loadEDLPass from './postprocessing/EDLPass';
 import loadChromaKeyPass from './postprocessing/ChromaKeyPass';
 import loadUnrealBloomPass from './postprocessing/UnrealBloomPass';
 import loadTexturePass from './postprocessing/TexturePass';
+import loadAdditiveBlendPass from './postprocessing/AdditiveBlendPass';
 import { loadMaskPass, loadClearMaskPass } from './postprocessing/MaskPass';
 
 export default function loadPostProcessor(threeInstance: Object): Promise<*> {
@@ -35,6 +37,7 @@ export default function loadPostProcessor(threeInstance: Object): Promise<*> {
     loadEDLShader(threeInstance),
     loadChromaKeyShader(threeInstance),
     loadVignetteShader(threeInstance),
+    loadAdditiveBlendShader(threeInstance),
   ];
   const tasks = [
     loadEffectComposer(threeInstance),
@@ -49,7 +52,8 @@ export default function loadPostProcessor(threeInstance: Object): Promise<*> {
     loadBokehPass(threeInstance),
     loadUnrealBloomPass(threeInstance),
     loadMaskPass(threeInstance),
-    loadClearMaskPass(threeInstance)
+    loadClearMaskPass(threeInstance),
+    loadAdditiveBlendPass(threeInstance),
   ];
   return Promise.all(shaders).then(() => { return Promise.all(tasks) });
 }

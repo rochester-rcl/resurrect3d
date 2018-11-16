@@ -69,10 +69,18 @@ body {
 }
 
 .three-view {
-  cursor: default;
   flex: 1;
   height: auto;
   width: 100%;
+  cursor: grab;
+}
+
+.three-view.dragging {
+  cursor: grabbing;
+}
+
+.three-view.color-picker-active {
+  cursor: crosshair;
 }
 
 .three-view.tools-active {

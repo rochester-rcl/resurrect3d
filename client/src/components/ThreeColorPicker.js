@@ -7,6 +7,9 @@ import { CompactPicker, GithubPicker } from "react-color";
 
 import * as THREE from "three";
 
+// three toggle
+import ThreeToggle from './ThreeToggle';
+
 // semantic-ui-react
 import { Label, Segment, Checkbox, Button } from "semantic-ui-react";
 
@@ -83,6 +86,10 @@ export class ThreeEyeDropperColorPicker extends Component {
   activate(): void {
     this.setState({
       active: !this.state.active
+    }, () => {
+      if (this.props.onActiveCallback !== undefined) {
+        this.props.onActiveCallback(this.state.active);
+      }
     });
   }
 
@@ -162,16 +169,7 @@ export class ThreeEyeDropperColorPicker extends Component {
           {title}
         </Label>
         <div className="three-color-picker-container">
-          <Button
-            className="three-controls-button"
-            content="pick color"
-            icon="eyedropper"
-            onClick={this.activate}
-            labelPosition="right"
-            color="grey"
-            active={this.state.active}
-            inverted
-          />
+          <ThreeToggle title='pick color' callback={this.activate} />
           <CompactPicker
             className="three-color-picker"
             color={this.state.currentColor}

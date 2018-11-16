@@ -7,7 +7,7 @@
 
 export default function loadUnrealBloomPass(threeInstance: Object): Promise {
   return new Promise((resolve, reject) => {
-      threeInstance.UnrealBloomPass = function ( resolution, strength, radius, threshold ) {
+      threeInstance.UnrealBloomPass = function ( resolution, strength, radius, threshold, overrideTex ) {
 
       	threeInstance.Pass.call( this );
 
@@ -27,6 +27,8 @@ export default function loadUnrealBloomPass(threeInstance: Object): Promise {
       	this.renderTargetBright = new threeInstance.WebGLRenderTarget( resx, resy, pars );
       	this.renderTargetBright.texture.name = "UnrealBloomPass.bright";
       	this.renderTargetBright.texture.generateMipmaps = false;
+
+        this.overrideTex = overrideTex;
 
       	for ( var i = 0; i < this.nMips; i ++ ) {
 
@@ -122,7 +124,8 @@ export default function loadUnrealBloomPass(threeInstance: Object): Promise {
       		blending: threeInstance.AdditiveBlending,
       		depthTest: false,
       		depthWrite: false,
-      		transparent: true
+      		transparent: true,
+          dithering: true,
       	} );
 
       	this.enabled = true;
@@ -201,7 +204,7 @@ export default function loadUnrealBloomPass(threeInstance: Object): Promise {
       		if ( this.renderToScreen ) {
 
       			this.quad.material = this.basic;
-      			this.basic.map = readBuffer.texture;
+      			this.basic.map = (this.overrideTex === undefined) ? readBuffer.texture : this.overrideTex;
 
       			renderer.render( this.scene, this.camera, undefined, true );
 
@@ -209,7 +212,7 @@ export default function loadUnrealBloomPass(threeInstance: Object): Promise {
 
       		// 1. Extract Bright Areas
 
-      		this.highPassUniforms[ "tDiffuse" ].value = readBuffer.texture;
+      		this.highPassUniforms[ "tDiffuse" ].value = (this.overrideTex === undefined) ? readBuffer.texture : this.overrideTex;
       		this.highPassUniforms[ "luminosityThreshold" ].value = this.threshold;
       		this.quad.material = this.materialHighPassFilter;
 

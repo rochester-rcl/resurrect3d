@@ -16,11 +16,14 @@ export const UNITS = [
 ];
 
 export const DEFAULT_GRADIENT_COLORS = {
-  inner: "rgb(105, 105, 105)",
+  inner: "rgb(145, 145, 145)",
   outer: "rgb(35, 35, 35)",
 }
 export const MIN_SCALE = 0;
 export const MAX_SCALE = 2.5;
+
+// Controls
+export const DEFAULT_DAMPING_FACTOR: Number = 0.7;
 
 // Touch controls
 export const PINCH_END = 'pinchend';
@@ -123,3 +126,6 @@ export const MAP = 'map';
 export const FILE = 'file';
 export const DATA_URL_JPEG = 'data:image/jpeg;base64,';
 export const DATA_URL_PNG = 'data:image/jpeg;base64,';
+
+// Shader stuff
+export const SIMPLEX_2D = 'SIMPLEX_2D';

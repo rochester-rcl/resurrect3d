@@ -85,7 +85,7 @@ export default class ThreeToggle extends Component {
       {
         checked: newVal
       },
-      this.props.callback(newVal)
+      () => { if (this.props.callback !== undefined) this.props.callback(newVal) }
     );
   }
 

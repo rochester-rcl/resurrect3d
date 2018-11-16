@@ -1,3 +1,9 @@
+// constants
+import { SIMPLEX_2D } from '../../constants/application';
+
+// noise function
+import { loadNoiseFunc } from '../noise';
+
 export default function loadVignetteShader(threeInstance: Object): Promise {
   return new Promise((resolve, reject) => {
     threeInstance.VignetteShader = {
@@ -32,17 +38,17 @@ export default function loadVignetteShader(threeInstance: Object): Promise {
         "uniform vec3 color;",
         "uniform vec2 resolution;",
     		"varying vec2 vUv;",
-
+        loadNoiseFunc(SIMPLEX_2D),
     		"void main() {",
-
-          "vec2 pos = (gl_FragCoord.xy / resolution.xy);",
-          "pos *= 1.0 - pos.yx;",
+          "vec2 uv = (gl_FragCoord.xy / resolution.xy);",
+          "vec2 pos =  uv * (1.0 - uv.yx);",
+          'float noise = snoise(512.0 * uv);',
           "float vignette = pos.x * pos.y * 15.0;",
           "vignette = pow(vignette, strength);",
           "vec4 vignetteColor = vec4(color * (1.0 - vignette), (1.0-vignette));",
     			"vec4 tColor = texture2D(tDiffuse, vUv);",
-
-    			"gl_FragColor = mix(tColor, vignetteColor, (1.0-vignette));",
+    			"vignetteColor = mix(tColor, vignetteColor, (1.0-vignette));",
+          "gl_FragColor = vec4(mix(vignetteColor.rgb, vec3(noise), 0.0175), 1.0);",
 
     		"}"
 
