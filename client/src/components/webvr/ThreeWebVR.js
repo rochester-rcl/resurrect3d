@@ -81,14 +81,14 @@ export default class ThreeWebVR extends Component {
     } else if ('getVRDisplays' in navigator) {
       navigator
         .getVRDisplays()
-        .then(displays => {
+        .then((displays) => {
           if (displays.length > 0) {
             this.enterCallback = this.enterVR(displays[0]);
           } else {
             this.handleVRNotFound();
           }
         })
-        .catch(this.handleVRNotFound);
+        .catch((error) => console.log(error));
     } else {
       this.setState({
         displayStatus: WEBVR_SUPPORT.NOT_SUPPORTED
@@ -127,18 +127,34 @@ export default class ThreeWebVR extends Component {
   }
 
   enterVR(device) {
-    const { renderer } = this.props;
-    renderer.setDevice(device);
+    const { renderer, onEnterCallback, onExitCallback } = this.props;
+    renderer.vr.setDevice(device);
     this.setState({
       displayStatus: WEBVR_SUPPORT.DEVICE_FOUND
     });
     return(() => {
-      device.isPresenting ? device.exitPresent() : device.requestPresent([{ source: renderer.domElement }]);
+      if (device.isPresenting === true) {
+        device.exitPresent();
+        renderer.vr.enabled = false;
+        this.setState({
+          vrActive: false
+        }, () => {
+          if (onExitCallback !== undefined) onExitCallback();
+        });
+      } else {
+        renderer.vr.enabled = true;
+        device.requestPresent([{ source: renderer.domElement }]);
+        this.setState({
+          vrActive: true
+        }, () => {
+          if (onEnterCallback !== undefined) onEnterCallback();
+        });
+      }
     });
   }
 
   enterXR(device) {
-    this.props.renderer.setDevice(device);
+    this.props.renderer.vr.setDevice(device);
     this.setState({
       displayStatus: WEBVR_SUPPORT.DEVICE_FOUND
     });
@@ -183,16 +199,17 @@ export default class ThreeWebVR extends Component {
         icon = 'exclamation';
         break;
     }
-    className = (className !== undefined) ? className : ''
+    className = (className !== undefined) ? className : '';
     return(
       <div className="three-webvr-button-container">
         <ThreeButton
+          ref={(ref) => this.vrButton = ref}
           className={'three-webvr-button ' + className}
           color={color}
           icon={icon}
           labelPosition={labelPosition}
           content={message}
-          onClick={this.enterCallback}
+          onClick={() => this.enterCallback()}
         />
         <a
           ref={(ref) => this.infoLink = ref}
@@ -206,8 +223,11 @@ export default class ThreeWebVR extends Component {
 
   render() {
     const { hideOnUnsupported } = this.props;
-    return (
-      (hideOnUnsupported === true) ? null : this.createButton()
-    );
+    const { displayStatus } = this.state;
+    if (hideOnUnsupported === true && displayStatus === WEBVR_SUPPORT.NOT_SUPPORTED) {
+      return(null);
+    } else {
+      return(this.createButton());
+    }
   }
 }

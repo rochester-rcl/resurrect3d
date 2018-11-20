@@ -220,6 +220,7 @@ export default class ThreeView extends Component {
       }
     },
     isRaycasting: false,
+    vrActive: false,
     units: CM
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
@@ -248,7 +249,7 @@ export default class ThreeView extends Component {
     (this: any).lastCameraTarget = new THREE.Vector3();
     (this: any).EDL_TEXTURE_RADIUS = 1.0;
     (this: any).EDL_TEXTURE_STEP = 0.01;
-
+    // TODO needs serious refactoring for VR to work
     /** Methods
      ***************************************************************************/
 
@@ -309,6 +310,8 @@ export default class ThreeView extends Component {
     (this: any).saveSettings = this.saveSettings.bind(this);
     (this: any).updateButtonLabel = this.updateButtonLabel.bind(this);
     (this: any).toggleRaycasting = this.toggleRaycasting.bind(this);
+    (this: any).enterVR = this.enterVR.bind(this);
+    (this: any).exitVR = this.exitVR.bind(this);
     // event handlers
 
     (this: any).handleMouseDown = this.handleMouseDown.bind(this);
@@ -457,6 +460,8 @@ export default class ThreeView extends Component {
 
     // init camera
     this.camera = new THREE.PerspectiveCamera(50, this.width / this.height); // use defaults for fov and near and far frustum;
+    this.vrCamera = new THREE.PerspectiveCamera();
+    this.camera.add(this.vrCamera);
     this.spherical = new THREE.Spherical();
     this.offset = new THREE.Vector3();
     this.quat = new THREE.Quaternion().setFromUnitVectors(
@@ -524,7 +529,6 @@ export default class ThreeView extends Component {
     this.camera.aspect = this.width / this.height;
     this.webGLRenderer.setSize(this.width, this.height, false);
     this.camera.updateProjectionMatrix();
-    this.threeView.style.cursor = 'grab';
 
     this.setState((prevState, props) => {
       return {
@@ -630,6 +634,8 @@ export default class ThreeView extends Component {
       ...buttonProps,
       renderer: this.webGLRenderer,
       hideOnUnsupported: true,
+      onExitCallback: this.exitVR,
+      onEnterCallback: this.enterVR,
       className: 'three-controls-button'
     });
 
@@ -651,14 +657,15 @@ export default class ThreeView extends Component {
     if (
       this.sceneComposer !== undefined &&
       this.modelComposer !== undefined &&
-      this.effectComposer !== undefined
+      this.effectComposer !== undefined &&
+      this.state.vrActive === false
     ) {
       this.sceneComposer.render(0.01);
       this.modelComposer.render(0.01);
       this.guiComposer.render(0.01);
       this.effectComposer.render(0.01);
     } else {
-      this.webGLRenderer.render(this.scene, this.camera);
+      this.webGLRenderer.render(this.scene, (this.state.vrActive === true) ? this.vrCamera : this.camera);
     }
   }
 
@@ -887,6 +894,7 @@ export default class ThreeView extends Component {
     this.maxDistance = this.environmentRadius * 2;
     this.minDistance = Math.ceil(this.meshDepth - this.bboxMesh.max.z);
     this.minDistance = (this.minDistance <= 0) ? 0.1 : this.minDistance;
+
     let labelSphereMaterial = new THREE.MeshPhongMaterial({
       color: 0xcccccc,
       depthTest: false,
@@ -1264,7 +1272,7 @@ export default class ThreeView extends Component {
 
   updateCamera(): void {
     // Borrowed from THREEJS OrbitControls
-    const { sphericalDelta, panOffset, zoomScale } = this.state;
+    const { sphericalDelta, panOffset, zoomScale, vrActive } = this.state;
     const { spherical } = this;
     let { scale } = this.state;
     this.offset.copy(this.camera.position).sub(this.camera.target);
@@ -2057,6 +2065,19 @@ export default class ThreeView extends Component {
     });
   }
 
+  enterVR(): void {
+    this.setState({
+      vrActive: true,
+    });
+  }
+
+  exitVR(): void {
+    this.setState({
+      vrActive: false,
+    });
+    this.centerCamera();
+  }
+
   /** EVENT HANDLERS
    *****************************************************************************/
 
@@ -2115,7 +2136,7 @@ export default class ThreeView extends Component {
   }
 
   handleKeyDown(event: SyntheticKeyboardEvent): void {
-    // TODO redo rotation 
+    // TODO redo rotation
     // this.mesh.getWorldQuaternion(this.rotationTarget);
     switch (event.keyCode) {
       /*case 39:

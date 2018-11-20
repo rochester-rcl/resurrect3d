@@ -18,6 +18,14 @@ export default class ThreeButton extends Component {
     });
   }
 
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.content !== this.props.content) {
+      this.setState({
+        label: this.props.content,
+      });
+    }
+  }
+
   constructor(props: Object) {
     super(props);
     (this: any).updateLabel = this.updateLabel.bind(this);
