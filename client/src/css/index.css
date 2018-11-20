@@ -79,7 +79,7 @@ body {
   cursor: grabbing;
 }
 
-.three-view.color-picker-active {
+.three-view.raycasting {
   cursor: crosshair;
 }
 
@@ -356,16 +356,20 @@ body {
   font-family: 'Source Code Pro', monospace;
 }
 
-.three-tool-toggle-container .ui.toggle.checkbox input:checked ~ label:before {
-  background-color: rgb(0, 180, 0) !important;
-}
-
 .three-tool-toggle label:before {
   background-color: #ccc !important;
 }
 
+.ui.toggle.checkbox .box:before, .ui.toggle.checkbox label:before {
+    background-color: grey;
+}
+
 .three-toggle-status {
   padding-left: 5px;
+}
+
+.three-toggle-multi-label {
+  margin-right: 15px;
 }
 
 /*** Screenshots ***/

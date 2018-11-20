@@ -9,6 +9,9 @@ import * as THREE from "three";
 // Semantic UI
 import { Button, Icon } from "semantic-ui-react";
 
+// ThreeToggle
+import ThreeToggle from './ThreeToggle';
+
 export default class ThreeMeasure extends Component {
   raycaster: THREE.RayCaster;
 
@@ -66,6 +69,9 @@ export default class ThreeMeasure extends Component {
         },
         this.doCallback
       );
+    }
+    if (this.props.onActiveCallback) {
+      this.props.onActiveCallback(this.state.active);
     }
   }
 
@@ -125,16 +131,7 @@ export default class ThreeMeasure extends Component {
   render() {
     return (
       <div className="three-measure-tool-container">
-        <Button
-          className="three-controls-button"
-          content="measure"
-          icon="pencil"
-          onClick={this.activate}
-          labelPosition="right"
-          color="grey"
-          active={this.state.active}
-          inverted
-        />
+        <ThreeToggle title='measure' callback={this.activate} />
       </div>
     );
   }

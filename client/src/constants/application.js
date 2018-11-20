@@ -129,3 +129,15 @@ export const DATA_URL_PNG = 'data:image/jpeg;base64,';
 
 // Shader stuff
 export const SIMPLEX_2D = 'SIMPLEX_2D';
+
+// WebVR
+export const WEBVR_DEVICE_NOT_FOUND: string = 'WEBVR DEVICE NOT FOUND';
+export const WEBVR_NOT_SUPPORTED: string = "WEBVR NOT SUPPORTED";
+export const WEBVR_ENTER: string = "ENTER VR";
+export const WEBVR_EXIT: string = "EXIT VR";
+
+export const WEBVR_SUPPORT = {
+  NOT_SUPPORTED: 0,
+  DEVICE_NOT_FOUND: 1,
+  DEVICE_FOUND: 2
+}

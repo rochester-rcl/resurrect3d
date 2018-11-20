@@ -146,7 +146,6 @@ export class ThreeEyeDropperColorPicker extends Component {
     );
     if (this.props.color !== undefined) {
       // just like the others above we expect a hex string - need to add PropTypes for everything
-      console.log(stringToRGB(this.props.color));
       this.setState({
         currentColor: { ...stringToRGB(this.props.color) }
       });

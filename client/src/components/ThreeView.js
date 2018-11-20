@@ -33,6 +33,7 @@ import { LinearGradientShader, RadialGradientCanvas } from "../utils/image";
 import ThreePointLights from "../utils/lights";
 import { convertUnits } from "../utils/math";
 import { serializeThreeTypes } from "../utils/serialization";
+
 // Constants
 import {
   DEFAULT_GRADIENT_COLORS,
@@ -59,6 +60,9 @@ import ThreeButton from "./ThreeButton";
 import ThreeTools from "./ThreeTools";
 import ThreeScreenshot from "./ThreeScreenshot";
 import ThreeMeshExporter from "./ThreeMeshExporter";
+
+// Components
+import ThreeWebVR, { checkVR } from "./webvr/ThreeWebVR";
 
 // Because of all of the THREE examples' global namespace pollu
 const THREE = _THREE;
@@ -215,7 +219,7 @@ export default class ThreeView extends Component {
         value: 1.325
       }
     },
-    colorPickerActive: false,
+    isRaycasting: false,
     units: CM
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
@@ -304,7 +308,7 @@ export default class ThreeView extends Component {
     (this: any).exportObj = this.exportObj.bind(this);
     (this: any).saveSettings = this.saveSettings.bind(this);
     (this: any).updateButtonLabel = this.updateButtonLabel.bind(this);
-    (this: any).toggleColorPicker = this.toggleColorPicker.bind(this);
+    (this: any).toggleRaycasting = this.toggleRaycasting.bind(this);
     // event handlers
 
     (this: any).handleMouseDown = this.handleMouseDown.bind(this);
@@ -320,6 +324,9 @@ export default class ThreeView extends Component {
     (this: any).handlePinch = this.handlePinch.bind(this);
     (this: any).handleTouch = this.handleTouch.bind(this);
     (this: any).handleTouchMove = this.handleTouchMove.bind(this);
+
+    // VR
+    this.vrSupported = checkVR();
   }
 
   /** COMPONENT LIFECYCYLE
@@ -356,6 +363,7 @@ export default class ThreeView extends Component {
     if (nextProps.loggedIn !== this.props.loggedIn) return true;
     if (nextProps.saveStatus !== this.props.saveStatus) return true;
     if (nextState.dragging !== this.state.dragging) return true;
+    if (nextState.isRaycasting !== this.state.isRaycasting) return true;
     return false;
   }
 
@@ -372,13 +380,13 @@ export default class ThreeView extends Component {
       detailMode,
       toolsActive,
       dragging,
-      colorPickerActive
+      isRaycasting
     } = this.state;
     const { info } = this.props;
     let threeViewClassName = "three-view";
     threeViewClassName += (toolsActive === true) ? " tools-active" : " tools-inactive";
     threeViewClassName += (dragging === true) ? " dragging" : ""
-    threeViewClassName += (colorPickerActive === true) ? " color-picker-active" : "";
+    threeViewClassName += (isRaycasting === true) ? " raycasting" : "";
     return (
       <div className="three-gui-container">
         {this.controls ? this.controls : null}
@@ -456,6 +464,7 @@ export default class ThreeView extends Component {
       new THREE.Vector3(0, 1, 0)
     );
     this.quatInverse = this.quat.clone().inverse();
+    this.rotationTarget = new THREE.Vector3();
 
     // Scenes
     this.scene = new THREE.Scene();
@@ -504,6 +513,7 @@ export default class ThreeView extends Component {
       gammaOutput: true,
       preserveDrawingBuffer: true,
     });
+
     // Renderer and DOM
     this.webGLRenderer.shadowMap.enabled = true;
     this.webGLRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -514,7 +524,6 @@ export default class ThreeView extends Component {
     this.camera.aspect = this.width / this.height;
     this.webGLRenderer.setSize(this.width, this.height, false);
     this.camera.updateProjectionMatrix();
-
     this.threeView.style.cursor = 'grab';
 
     this.setState((prevState, props) => {
@@ -617,6 +626,13 @@ export default class ThreeView extends Component {
       }
     }
 
+    controls.addComponent("webvr", ThreeWebVR, {
+      ...buttonProps,
+      renderer: this.webGLRenderer,
+      hideOnUnsupported: true,
+      className: 'three-controls-button'
+    });
+
     this.controls = (
       <layouts.THREE_GROUP_LAYOUT
         group={controls}
@@ -647,7 +663,11 @@ export default class ThreeView extends Component {
   }
 
   animate(): void {
-    window.requestAnimationFrame(this.animate);
+    if (this.vrSupported) {
+      this.webGLRenderer.setAnimationLoop(this.animate)
+    } else {
+      window.requestAnimationFrame(this.animate);
+    }
     this.update();
   }
 
@@ -669,8 +689,8 @@ export default class ThreeView extends Component {
       });
       let geometry = new THREE.Geometry();
       geometry.vertices.push(startVec, endVec);
-      geometry.computeLineDistances();
       let line = new THREE.Line(geometry, material);
+      line.computeLineDistances();
       line.visible = false;
       line.userData = {
         start: startVec.clone(),
@@ -763,8 +783,8 @@ export default class ThreeView extends Component {
           });
           let geometry = new THREE.Geometry();
           geometry.vertices.push(a, b);
-          geometry.computeLineDistances();
           let line = new THREE.Line(geometry, material);
+          line.computeLineDistances();
           this.measurement.add(line);
 
           // draw label sprite for distance
@@ -808,7 +828,7 @@ export default class ThreeView extends Component {
           if (child.material instanceof Array) {
             child.material.forEach(material => {
               if (material.map !== null) {
-                material.map.anisotropy = this.webGLRenderer.getMaxAnisotropy();
+                material.map.anisotropy = this.webGLRenderer.capabilities.getMaxAnisotropy();
               }
               setMicrosurface(material);
               if (this.props.renderDoubleSided) {
@@ -820,7 +840,7 @@ export default class ThreeView extends Component {
             child.castShadow = true;
             child.receiveShadow = true;
             if (child.material.map !== null) {
-              child.material.map.anisotropy = this.webGLRenderer.getMaxAnisotropy();
+              child.material.map.anisotropy = this.webGLRenderer.capabilities.getMaxAnisotropy();
             }
             if (this.props.renderDoubleSided) {
               child.material.side = THREE.DoubleSide;
@@ -838,7 +858,7 @@ export default class ThreeView extends Component {
       material.forEach(currentMaterial => {
         if (this.props.renderDoubleSided) {
           currentMaterial.side = THREE.DoubleSide;
-          currentMaterial.map.anisotropy = this.webGLRenderer.getMaxAnisotropy();
+          currentMaterial.map.anisotropy = this.webGLRenderer.capabilities.getMaxAnisotropy();
           setMicrosurface(currentMaterial);
         }
       });
@@ -875,7 +895,7 @@ export default class ThreeView extends Component {
       transparent: true
     });
     let labelSphereGeometry = new THREE.SphereGeometry(
-      this.meshHeight / 300,
+      this.environmentRadius / 200,
       16,
       16
     );
@@ -1524,11 +1544,13 @@ export default class ThreeView extends Component {
     const components = this.GUI.components;
     let panelGroup = new ThreeGUIGroup("tools");
 
+    /***************** MEASUREMENT *********************************************/
     if (this.props.options.enableMeasurement) {
       let measurementGroup = new ThreeGUIGroup("measurement");
 
       measurementGroup.addComponent("measure", components.THREE_MEASURE, {
         updateCallback: this.drawMeasurement,
+        onActiveCallback: (val) => this.toggleRaycasting(val),
         camera: this.camera,
         mesh: this.mesh,
         target: this.webGLRenderer.domElement
@@ -1544,21 +1566,25 @@ export default class ThreeView extends Component {
         {
           label: "mm",
           defaultVal: true,
+          toggle: false,
           callback: () => this.setState({ units: MM })
         },
         {
           label: "cm",
           defaultVal: true,
+          toggle: false,
           callback: () => this.setState({ units: CM })
         },
         {
           label: "in",
           defaultVal: false,
+          toggle: false,
           callback: () => this.setState({ units: IN })
         },
         {
           label: "ft",
           defaultVal: false,
+          toggle: false,
           callback: () => this.setState({ units: FT })
         }
       ];
@@ -1733,7 +1759,7 @@ export default class ThreeView extends Component {
           threeRef: this.threeView,
           title: "chroma",
           color: "#" + ChromaKey.uniforms.chroma.value.getHexString(),
-          onActiveCallback: (val) => this.toggleColorPicker(val),
+          onActiveCallback: (val) => this.toggleRaycasting(val),
           callback: color =>
             this.updateDynamicShaders(color, "ChromaKey", "chroma")
         }
@@ -2025,9 +2051,9 @@ export default class ThreeView extends Component {
     }
   }
 
-  toggleColorPicker(val): void {
+  toggleRaycasting(val): void {
     this.setState({
-      colorPickerActive: val,
+      isRaycasting: val,
     });
   }
 
@@ -2089,16 +2115,17 @@ export default class ThreeView extends Component {
   }
 
   handleKeyDown(event: SyntheticKeyboardEvent): void {
-    let currentRotation = this.mesh.getWorldRotation();
+    // TODO redo rotation 
+    // this.mesh.getWorldQuaternion(this.rotationTarget);
     switch (event.keyCode) {
-      case 39:
-        this.mesh.rotateY(currentRotation.y + this.ROTATION_STEP);
+      /*case 39:
+        this.mesh.rotateY(this.rotationTarget.y + this.ROTATION_STEP);
         break;
 
       case 37:
-        this.mesh.rotateY(currentRotation.y - this.ROTATION_STEP);
+        this.mesh.rotateY(this.rotationTarget.y - this.ROTATION_STEP);
         break;
-
+      */
       case 16:
         this.setState({ shiftDown: true });
         break;
