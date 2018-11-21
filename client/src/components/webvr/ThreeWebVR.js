@@ -34,6 +34,7 @@ export default class ThreeWebVR extends Component {
     this.handlePresentActivate = this.handlePresentActivate.bind(this);
     this.init = this.init.bind(this);
     this.setRendererSession = this.setRendererSession.bind(this);
+    this.setRendererFrameOfReference = this.setRendererFrameOfReference.bind(this);
     this.enterVR = this.enterVR.bind(this);
     this.enterXR = this.enterXR.bind(this);
     this.createButton = this.createButton.bind(this);
@@ -53,6 +54,10 @@ export default class ThreeWebVR extends Component {
       false
     );
     this.init();
+    const { frameOfReference } = this.props;
+    if (frameOfReference !== undefined) {
+      this.setRendererFrameOfReference(frameOfReference);
+    }
     // window.addEventListener('vrdisplaypresentchange', )
   }
 
@@ -102,8 +107,6 @@ export default class ThreeWebVR extends Component {
     this.setState({
       currentSession: session,
       vrActive: true,
-    }, () => {
-      this.props.renderer.vr.setSession(this.state.currentSession);
     }, this.setRendererSession);
   }
 
@@ -161,7 +164,7 @@ export default class ThreeWebVR extends Component {
     return (() => {
       const { currentSession } = this.state;
       if (currentSession === null) {
-        device.requestSession({ immersive: true })
+        device.requestSession({ immersive: true, exclusive: true })
               .then(this.handleSessionStarted);
       } else {
         currentSession.end();
@@ -170,7 +173,20 @@ export default class ThreeWebVR extends Component {
   }
 
   setRendererSession() {
-    this.props.renderer.vr.setSession(this.state.currentSession);
+    const { currentSession } = this.state;
+    const { onEnterCallback, onExitCallback, renderer } = this.props;
+    if (currentSession === null) {
+      renderer.vr.enabled = false;
+      if (onExitCallback !== undefined) onExitCallback();
+    } else {
+      renderer.vr.enabled = true;
+      if (onEnterCallback !== undefined) onEnterCallback();
+    }
+    this.props.renderer.vr.setSession(currentSession);
+  }
+
+  setRendererFrameOfReference(val) {
+    this.props.renderer.vr.setFrameOfReferenceType(val);
   }
 
   createButton() {

@@ -636,6 +636,7 @@ export default class ThreeView extends Component {
       hideOnUnsupported: true,
       onExitCallback: this.exitVR,
       onEnterCallback: this.enterVR,
+      frameOfReference: 'stage',
       className: 'three-controls-button'
     });
 
