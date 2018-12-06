@@ -866,7 +866,9 @@ export default class ThreeView extends Component {
       material.forEach(currentMaterial => {
         if (this.props.renderDoubleSided) {
           currentMaterial.side = THREE.DoubleSide;
-          currentMaterial.map.anisotropy = this.webGLRenderer.capabilities.getMaxAnisotropy();
+          if (currentMaterial.map !== null) {
+            currentMaterial.map.anisotropy = this.webGLRenderer.capabilities.getMaxAnisotropy();
+          }
           setMicrosurface(currentMaterial);
         }
       });

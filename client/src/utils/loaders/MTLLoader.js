@@ -477,8 +477,8 @@ export default function initMTLLoader(threeInstance: Object): Promise {
     					}
 
     					break;
-
-    				case 'tr':
+            // ignore TR from MeshLab / VTK output
+    				/*case 'tr':
     					n = parseFloat( value );
 
     					if ( this.options && this.options.invertTrProperty ) n = 1 - n;
@@ -490,7 +490,7 @@ export default function initMTLLoader(threeInstance: Object): Promise {
 
     					}
 
-    					break;
+    					break;*/
 
     				default:
     					break;

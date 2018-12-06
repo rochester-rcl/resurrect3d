@@ -23,10 +23,9 @@ export function getChildren(mesh: THREE.Group | THREE.Mesh): Array<THREE.Mesh> {
 export function centerGeometry(mesh: THREE.Group | THREE.Mesh): Promise {
   return new Promise((resolve, reject) => {
     const box = new THREE.Box3().setFromObject(mesh);
-    const offset = box
-      .getCenter()
-      .negate()
-      .toArray();
+    let offset = new THREE.Vector3();
+    box.getCenter(offset);
+    offset = offset.negate().toArray();
     const children = getChildren(mesh);
     children.forEach(child => {
       child.geometry.translate(...offset);
