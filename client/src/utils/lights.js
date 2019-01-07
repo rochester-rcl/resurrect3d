@@ -4,10 +4,11 @@ import * as THREE from 'three';
 import { labelSprite } from './image';
 
 export default class ThreePointLights {
+  DEFAULT_INTENSITY = 0.25;
   constructor() {
-    this.key = new THREE.SpotLight(0xffffff, 0.2, 0, Math.PI/2, 1.0, 2.0);
-    this.back = new THREE.SpotLight(0xffffff, 0.2, 0, Math.PI/2, 1.0, 2.0);
-    this.flood = new THREE.PointLight(0xffffff, 0.1, 0, 2);
+    this.key = new THREE.SpotLight(0xffffff, this.DEFAULT_INTENSITY, 0, Math.PI/2, 1.0, 2.0);
+    this.back = new THREE.SpotLight(0xffffff, this.DEFAULT_INTENSITY, 0, Math.PI/2, 1.0, 2.0);
+    this.flood = new THREE.PointLight(0xffffff, this.DEFAULT_INTENSITY, 0, 2);
     this._lights = [this.key, this.back, this.flood];
     this._helpers = this._initHelpers();
     this.key.castShadow = true;
@@ -71,13 +72,13 @@ export default class ThreePointLights {
   }
   // moves lights around Box3
   setLightPositions(pos: THREE.Box3): void {
-    let max = pos.max.clone();
-    let min = pos.min.clone();
-    this.key.position.set(max.x, max.y, min.z);
+    const max = pos.max.clone();
+    const min = pos.min.clone();
+    this.key.position.set(max.x, max.y / 2, min.z);
     this.key.position.multiplyScalar(100);
-    this.back.position. set(min.x / 2, max.y, max.z / 2);
+    this.back.position.set(min.x / 2, max.y / 2, max.z / 2);
     this.back.position.multiplyScalar(100);
-    this.flood.position.set(max.x, max.y, max.z);
+    this.flood.position.set(max.x, max.y / 2, max.z);
     this.flood.position.multiplyScalar(100);
   }
 

@@ -1999,7 +1999,7 @@ export default class ThreeView extends Component {
           this.ambientLight.intensity = 0.8;
           this.enableLightButton.updateLabel("lighting: on");
         } else {
-          this.pointLights.traverse(light => (light.intensity = 0.25));
+          this.pointLights.traverse(light => (light.intensity = this.pointLights.DEFAULT_INTENSITY));
           this.ambientLight.intensity = 1.0;
           this.enableLightButton.updateLabel("lighting: off");
         }

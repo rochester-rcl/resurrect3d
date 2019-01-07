@@ -46,11 +46,13 @@ An optional *config.js* file can be added to the server folder, allowing customi
 
 ```
 const config = {
-  mongoURL: 'mongodb://localhost:27017/mydb',
-  port: 3001
+  mongoURL: process.env.MONGO_URL || 'mongodb://localhost:27017/mydb',
+  port: process.env.PORT || 3001,
+  basename: process.env.basename || '',
 };
 
 module.exports = config;
+
 ```
 
 All of the above files have sample versions (i.e. sample-config.js) you can reference in the server folder.
