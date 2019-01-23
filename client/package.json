@@ -8,6 +8,8 @@
     "react-scripts": "^1.1.5"
   },
   "dependencies": {
+    "@material-ui/core": "^3.9.0",
+    "@material-ui/icons": "^3.0.2",
     "@tweenjs/tween.js": "^17.2.0",
     "babel-polyfill": "^6.26.0",
     "history": "^4.7.2",
