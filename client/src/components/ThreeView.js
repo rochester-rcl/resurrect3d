@@ -50,6 +50,7 @@ import {
 // Controls
 import ThreeControls from "./ThreeControls";
 import ThreeMeasure from "./ThreeMeasure";
+import ThreeAnnotationGroup from "./ThreeAnnotation";
 import ThreeRangeSlider from "./ThreeRangeSlider";
 import ThreeToggle, { ThreeToggleMulti } from "./ThreeToggle";
 import ThreeColorPicker, {
@@ -451,6 +452,7 @@ export default class ThreeView extends Component {
       ThreeMicroColorPicker
     );
     this.GUI.registerComponent("THREE_MEASURE", ThreeMeasure);
+    this.GUI.registerComponent("THREE_ANNOTATION_GROUP", ThreeAnnotationGroup);
     this.GUI.registerComponent("THREE_SCREENSHOT", ThreeScreenshot);
     this.GUI.registerComponent("THREE_MESH_EXPORTER", ThreeMeshExporter);
     this.GUI.registerLayout("THREE_GROUP_LAYOUT", ThreeGUILayout);
@@ -508,6 +510,9 @@ export default class ThreeView extends Component {
 
     this.measurement = new THREE.Group();
     this.guiScene.add(this.measurement);
+
+    this.annotation = new THREE.Group();
+    this.guiScene.add(this.annotation);
 
     // WebGL Renderer
     this.webGLRenderer = new THREE.WebGLRenderer({
@@ -816,6 +821,26 @@ export default class ThreeView extends Component {
     } else {
       this.measurement.remove(...this.measurement.children);
     }
+  }
+
+  drawAnnotation(info?: Object): void { //Annotation
+  	if (info) {
+      let { point, active, text } = info;
+      let sphere = this.labelSphere.clone();
+      sphere.position.copy(point);
+      this.annotation.add(sphere);
+      if (active)
+      {
+        let textLabel = new LabelSprite(
+          1000,
+          1000,
+          "#fff",
+          text
+        ).toSprite();
+        textLabel.position.copy(point);
+        textLabel.scale.multiplyScalar(this.spriteScaleFactor / 2);
+      }
+  	}
   }
 
   initMesh(): void {
@@ -1555,6 +1580,19 @@ export default class ThreeView extends Component {
     const components = this.GUI.components;
     let panelGroup = new ThreeGUIGroup("tools");
 
+    /***************** ANNOTATIONS *********************************************/
+    if (this.props.options.enableAnnotations) {
+    	let annotationsGroup = new ThreeGUIGroup("annotations");
+
+    	annotationsGroup.addComponent("annotation", components.THREE_ANNOTATION, {
+    		updateCallback: this.drawAnnotation,
+        onActiveCallback: (val) => this.toggleRaycasting(val),
+        camera: this.camera,
+        mesh: this.mesh,
+        target: this.webGLRenderer.domElement
+    	});
+    }
+
     /***************** MEASUREMENT *********************************************/
     if (this.props.options.enableMeasurement) {
       let measurementGroup = new ThreeGUIGroup("measurement");
@@ -1573,7 +1611,7 @@ export default class ThreeView extends Component {
         title: "show axes"
       });
 
-      const unitButtons = [
+      const unitButtons =[
         {
           label: "mm",
           defaultVal: true,
