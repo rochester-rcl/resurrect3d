@@ -13,11 +13,7 @@ import headerLinksStyles from '../../../assets/segments/HeaderLinksStyles';
 class HeaderLinks extends Component {
 
   render() {
-    const {
-      classes,
-      auth,
-      isAuthenticated
-    } = this.props;
+    const {classes} = this.props;
     return (
       <List className={classes.list}>
         <ListItem className={classes.listItem}>
@@ -27,9 +23,8 @@ class HeaderLinks extends Component {
             placement={window.innerWidth > 959 ? "top" : "left"}
             classes={{ tooltip: classes.tooltip }}>
             <Button
-              color='inherit'
-              onClick={auth}>
-              {isAuthenticated() ? 'Logout' : 'Login'}
+              color='inherit'>
+              {'Test'}
             </Button>
           </Tooltip>
         </ListItem>
