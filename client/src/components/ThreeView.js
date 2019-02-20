@@ -293,6 +293,7 @@ export default class ThreeView extends Component {
     (this: any).toggleTools = this.toggleTools.bind(this);
     (this: any).toggleQuality = this.toggleQuality.bind(this);
     (this: any).drawMeasurement = this.drawMeasurement.bind(this);
+    (this: any).drawAnnotations = this.drawAnnotations.bind(this);
     (this: any).drawSpriteTarget = this.drawSpriteTarget.bind(this);
     (this: any).computeSpriteScaleFactor = this.computeSpriteScaleFactor.bind(
       this
@@ -511,8 +512,8 @@ export default class ThreeView extends Component {
     this.measurement = new THREE.Group();
     this.guiScene.add(this.measurement);
 
-    this.annotation = new THREE.Group();
-    this.guiScene.add(this.annotation);
+    this.annotations = new THREE.Group();
+    this.guiScene.add(this.annotations);
 
     // WebGL Renderer
     this.webGLRenderer = new THREE.WebGLRenderer({
@@ -823,24 +824,52 @@ export default class ThreeView extends Component {
     }
   }
 
-  drawAnnotation(info?: Object): void { //Annotation
-  	if (info) {
-      let { point, active, text } = info;
-      let sphere = this.labelSphere.clone();
-      sphere.position.copy(point);
-      this.annotation.add(sphere);
-      if (active)
+  drawAnnotations(points ?: Object): void { //Annotation
+    console.log("Drawing annotations.");
+  	if (points) {
+      for (let i = 0; i < points.length; i++)
       {
-        let textLabel = new LabelSprite(
-          1000,
-          1000,
-          "#fff",
-          text
-        ).toSprite();
-        textLabel.position.copy(point);
-        textLabel.scale.multiplyScalar(this.spriteScaleFactor / 2);
+        console.log("Drawing annotation " + i);
+        let point = points[i];
+        console.log("Point is " + point);
+        let sphere = this.labelSphere.clone();
+        sphere.position.copy(point);
+        this.annotations.add(sphere);
+        /*if (active)
+        {
+          let textLabel = new LabelSprite(
+            1000,
+            1000,
+            "#fff",
+            text
+          ).toSprite();
+          textLabel.position.copy(point);
+          textLabel.scale.multiplyScalar(this.spriteScaleFactor / 2);
+        }*/
       }
   	}
+  }
+
+  drawNewAnnotation(point ?: Object): void
+  {
+    if (point) {
+      let sphere = this.labelSphere.clone();
+      sphere.position.copy(point);
+      let material = new THREE.LineBasicMaterial({
+            color: "#ccc",
+            linewidth: 3,
+            opacity: 0.3,
+            transparent: true,
+            depthWrite: false,
+            depthTest: false
+          });
+      let geometry = new THREE.Geometry();
+      let boxpos = new THREE.Vector3(point.x + 10, point.y. point.z);
+      geometry.vertices.push(point, boxpos);
+      let line = new THREE.Line(geometry, material);
+      this.annotations.add(sphere);
+      this.annotations.add(line);
+    }
   }
 
   initMesh(): void {
@@ -930,6 +959,7 @@ export default class ThreeView extends Component {
       opacity: 0.8,
       transparent: true
     });
+
     let labelSphereGeometry = new THREE.SphereGeometry(
       this.environmentRadius / 200,
       16,
@@ -1581,16 +1611,20 @@ export default class ThreeView extends Component {
     let panelGroup = new ThreeGUIGroup("tools");
 
     /***************** ANNOTATIONS *********************************************/
-    if (this.props.options.enableAnnotations) {
+    //if (this.props.options.enableAnnotations) {
+    if (1 == 1) {
+      console.log("Console log test.");
     	let annotationsGroup = new ThreeGUIGroup("annotations");
 
-    	annotationsGroup.addComponent("annotation", components.THREE_ANNOTATION, {
-    		updateCallback: this.drawAnnotation,
+    	annotationsGroup.addComponent("annotations", components.THREE_ANNOTATION_GROUP, {
+    		updateCallback: this.drawAnnotations,
         onActiveCallback: (val) => this.toggleRaycasting(val),
         camera: this.camera,
         mesh: this.mesh,
         target: this.webGLRenderer.domElement
     	});
+
+      panelGroup.addGroup("annotations", annotationsGroup);
     }
 
     /***************** MEASUREMENT *********************************************/

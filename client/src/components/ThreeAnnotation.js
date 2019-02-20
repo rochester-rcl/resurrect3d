@@ -6,8 +6,6 @@ import React, { Component } from "react";
 // THREEJS
 import * as THREE from "three";
 
-import { Text, TextInput } from "react-native";
-
 // Semantic UI
 import { Button, Icon, Input } from "semantic-ui-react";
 
@@ -23,17 +21,25 @@ export class ThreeAnnotation extends Component
   defaultState = {
     point: null,
     text: '',
-    open: false
+    open: true
   }
 
   state = {
     point: null,
     text: '',
-    open: false
+    open: true
   }
 
   constructor(props: Object) {
     super(props);
+  }
+
+  doCallback(): void {
+    this.props.callback(this.state);
+  }
+
+  render() {
+    return null;
   }
 }
 
@@ -46,18 +52,20 @@ export default class ThreeAnnotationGroup extends Component
   */
   defaultState = {
     active: false,
-    annotations: []
+    annotations: [],
+    points: []
   }
 
   state = {
     active: false,
-    annotations: []
+    annotations: [],
+    points: []
   }
 
   constructor(props : Object) {
     super(props);
     (this: any).activate = this.activate.bind(this);
-    (this: any).handleClick = this.measure.bind(this);
+    (this: any).handleClick = this.handleClick.bind(this);
     (this: any).handleIntersection = this.handleIntersection.bind(this);
     (this: any).reset = this.reset.bind(this);
     (this: any).doCallback = this.doCallback.bind(this);
@@ -65,11 +73,11 @@ export default class ThreeAnnotationGroup extends Component
   }
 
   componentDidMount(): void {
-    this.props.target.addEventListener("click", this.measure, true);
+    this.props.target.addEventListener("click", this.handleClick, true);
   }
 
   componentWillUnmount(): void {
-    this.props.target.removeEventListener("click", this.measure, true);
+    this.props.target.removeEventListener("click", this.handleClick, true);
   }
 
   activate(): void {
@@ -79,6 +87,20 @@ export default class ThreeAnnotationGroup extends Component
       },
       this.reset
     );
+  }
+
+  reset(): void {
+    if (!this.state.active) {
+      this.setState(
+        {
+          ...this.defaultState
+        },
+        this.doCallback
+      );
+    }
+    if (this.props.onActiveCallback) {
+      this.props.onActiveCallback(this.state.active);
+    }
   }
 
   handleClick(event: MouseEvent): void { //Copied directly from ThreeMeasure
@@ -105,21 +127,33 @@ export default class ThreeAnnotationGroup extends Component
 
   handleIntersection(intersection: Object): void 
   { 
-    boolean clickedExisting = false;
-    for (int i = 0; i < annotations.length; i++) //Checked if clicked on existing annotation
-      if (annotations[i].state.point == intersection)
+    var clickedExisting = false;
+    for (let i = 0; i < this.state.annotations.length; i++) //Checked if clicked on existing annotation
+    {
+      console.log("Checking annotation " + i);
+      if (this.state.points[i] == intersection)
       {
-        annotations[i].state.open = !annotations[i].state.open; //Toggles open-ness
+        this.state.annotations[i].state.open = !this.state.annotations[i].state.open; //Toggles open-ness
         clickedExisting = true;
       }
+    }
 
     if (!clickedExisting)
+    {
+      let annotation = React.createElement(ThreeAnnotation);
       this.state.annotations.push( //Adds new annotation otherwise
         <ThreeAnnotation 
-        point = intersection,
-        text = '',
-        open = true
+        point={intersection}
         />);
+      this.state.points.push(intersection.point);
+      console.log("Made new annotation");
+    }
+    this.doCallback();
+  }
+
+  doCallback(): void {
+    console.log("Doing callback.");
+    this.props.updateCallback(this.state.points);
   }
 
   render() {
