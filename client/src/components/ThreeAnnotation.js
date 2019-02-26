@@ -12,38 +12,7 @@ import { Button, Icon, Input } from "semantic-ui-react";
 // ThreeToggle
 import ThreeToggle from './ThreeToggle';
 
-export class ThreeAnnotation extends Component 
-{
-  /*
-  * Basic idea: Renders differently depending on if open or closed -- I still need to figure out how render method interacts with ThreeView and html better.
-  * Contains text using React TextField component (?)
-  */
-  defaultState = {
-    point: null,
-    text: '',
-    open: true
-  }
-
-  state = {
-    point: null,
-    text: '',
-    open: true
-  }
-
-  constructor(props: Object) {
-    super(props);
-  }
-
-  doCallback(): void {
-    this.props.callback(this.state);
-  }
-
-  render() {
-    return null;
-  }
-}
-
-export default class ThreeAnnotationGroup extends Component
+export default class ThreeAnnotation extends Component
 {
   /*
   * Basic idea: Contains a list of annotations, and functionality to add and delete. Handles clicks -- 
@@ -53,13 +22,13 @@ export default class ThreeAnnotationGroup extends Component
   defaultState = {
     active: false,
     annotations: [],
-    points: []
+    open: null
   }
 
   state = {
     active: false,
     annotations: [],
-    points: []
+    open: null
   }
 
   constructor(props : Object) {
@@ -128,32 +97,35 @@ export default class ThreeAnnotationGroup extends Component
   handleIntersection(intersection: Object): void 
   { 
     var clickedExisting = false;
-    for (let i = 0; i < this.state.annotations.length; i++) //Checked if clicked on existing annotation
+    var newAnnotations = this.state.annotations.slice();
+    for (let i = 0; i < newAnnotations.length; i++) //Checked if clicked on existing annotation
     {
-      console.log("Checking annotation " + i);
-      if (this.state.points[i] == intersection)
+      if (newAnnotations[i].point.distanceTo(intersection.point) <= 0.1)
       {
-        this.state.annotations[i].state.open = !this.state.annotations[i].state.open; //Toggles open-ness
         clickedExisting = true;
+        newAnnotations[i].open = !newAnnotations[i].open;
       }
     }
 
     if (!clickedExisting)
     {
-      let annotation = React.createElement(ThreeAnnotation);
-      this.state.annotations.push( //Adds new annotation otherwise
-        <ThreeAnnotation 
-        point={intersection}
-        />);
-      this.state.points.push(intersection.point);
-      console.log("Made new annotation");
+      newAnnotations.push( //Adds new annotation otherwise
+      {
+        point: intersection.point,
+        open: true,
+        text: ""
+      }
+      );
     }
+    this.setState(
+    {
+      annotations: newAnnotations
+    });
     this.doCallback();
   }
 
   doCallback(): void {
-    console.log("Doing callback.");
-    this.props.updateCallback(this.state.points);
+    this.props.updateCallback(this.state.active ? this.state.annotations : null);
   }
 
   render() {

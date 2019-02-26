@@ -824,38 +824,17 @@ export default class ThreeView extends Component {
     }
   }
 
-  drawAnnotations(points ?: Object): void { //Annotation
-    console.log("Drawing annotations.");
-  	if (points) {
-      for (let i = 0; i < points.length; i++)
+  drawAnnotations(annotations ?: Object): void { //Annotation
+  	if (annotations) {
+      for (let i = 0; i < annotations.length; i++)
       {
-        console.log("Drawing annotation " + i);
-        let point = points[i];
-        console.log("Point is " + point);
+        let point = annotations[i].point;
         let sphere = this.labelSphere.clone();
         sphere.position.copy(point);
         this.annotations.add(sphere);
-        /*if (active)
+        if (annotations[i].open == true)
         {
-          let textLabel = new LabelSprite(
-            1000,
-            1000,
-            "#fff",
-            text
-          ).toSprite();
-          textLabel.position.copy(point);
-          textLabel.scale.multiplyScalar(this.spriteScaleFactor / 2);
-        }*/
-      }
-  	}
-  }
-
-  drawNewAnnotation(point ?: Object): void
-  {
-    if (point) {
-      let sphere = this.labelSphere.clone();
-      sphere.position.copy(point);
-      let material = new THREE.LineBasicMaterial({
+          let material = new THREE.LineBasicMaterial({
             color: "#ccc",
             linewidth: 3,
             opacity: 0.3,
@@ -863,12 +842,24 @@ export default class ThreeView extends Component {
             depthWrite: false,
             depthTest: false
           });
-      let geometry = new THREE.Geometry();
-      let boxpos = new THREE.Vector3(point.x + 10, point.y. point.z);
-      geometry.vertices.push(point, boxpos);
-      let line = new THREE.Line(geometry, material);
-      this.annotations.add(sphere);
-      this.annotations.add(line);
+          let geometry = new THREE.Geometry();
+          let boxpos = new THREE.Vector3(point.x + 10, point.y, point.z);
+          geometry.vertices.push(point, boxpos);
+          let line = new THREE.Line(geometry, material);
+          this.annotations.add(line);
+        }
+        else
+        {
+          let children = this.annotations.children;
+          for (let j = 0; j < children.length - 1; j++)
+          {
+            if (children[j].position.distanceTo(point) == 0 && (children[j + 1] instanceof THREE.Line))
+              this.annotations.remove(this.annotations.children[j + 1]);
+          }
+        }
+      }
+  	} else {
+      this.annotations.remove(...this.annotations.children);
     }
   }
 
@@ -1613,7 +1604,6 @@ export default class ThreeView extends Component {
     /***************** ANNOTATIONS *********************************************/
     //if (this.props.options.enableAnnotations) {
     if (1 == 1) {
-      console.log("Console log test.");
     	let annotationsGroup = new ThreeGUIGroup("annotations");
 
     	annotationsGroup.addComponent("annotations", components.THREE_ANNOTATION_GROUP, {
