@@ -10,6 +10,7 @@ const  adminContainerStyles = {
   },
   container,
   profile: {
+    marginTop: "90px",
     textAlign: "center",
     "& img": {
       maxWidth: "160px",

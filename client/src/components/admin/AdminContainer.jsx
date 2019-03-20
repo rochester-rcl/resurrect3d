@@ -8,13 +8,13 @@ import {connect} from 'react-redux';
 //import Camera from "@material-ui/icons/Camera";
 import Palette from "@material-ui/icons/Palette";
 import Favorite from "@material-ui/icons/Favorite";
+import Description from "@material-ui/icons/Description";
 
 // Material componnts
 import {withStyles} from '@material-ui/core/styles';
 
-//Stylings
-import AdminContainerStyles from '../../assets/Admin/AdminContainerStyles'
-
+// Stylings
+import AdminContainerStyles from '../../assets/Admin/AdminContainerStyles';
 
 import Header from '../ui/segments/Header';
 import NavPills from '../ui/segments/NavPills';
@@ -23,6 +23,11 @@ import HeaderLinks from '../ui/segments/HeaderLinks';
 import Parallax from '../ui/segments/Parallax';
 import GridContainer from '../ui/segments/GridContainer';
 import GridItem from '../ui/segments/GridItem';
+
+//Pill components
+import AdminSignUp from './AdminSignUp';
+import AdminViewLog from './AdminViewLog';
+import AdminAddViews from './AdminAddViews';
 
 class AdminContainer extends Component {
 
@@ -43,7 +48,7 @@ class AdminContainer extends Component {
             color: "info"
           }}
           {...rest}/>
-        <Parallax image={require('../../assets/Images/bg4.jpg')}>
+        <Parallax image={require('../../assets/Images/manu.jpg')}>
           <div className={classes.container}>
             <div className={classes.brand}>
               <h1 className={classes.title}>Twit</h1>
@@ -57,7 +62,7 @@ class AdminContainer extends Component {
                 <div className={classes.profile}>
                   <div className={classes.name}>
                     <h2 className={classes.title}>Twit</h2>
-                    <h3><small className={classes.defaultFont} >CSC 210 Final App</small></h3>
+                    <h3><small className={classNames(classes.defaultFont, classes.name)} >CSC 210 Final App</small></h3>
                   </div>
                 </div>
               </GridItem>
@@ -77,17 +82,24 @@ class AdminContainer extends Component {
                   color="info"
                   tabs={[
                     {
-                      tabButton: "Home",
+                      tabButton: "Settings",
                       tabIcon: Favorite,
                       tabContent: (
-                        <div/>
+                        <AdminSignUp/>
                       )
                     },
                     {
-                      tabButton: "Work",
+                      tabButton: "View Log",
                       tabIcon: Palette,
                       tabContent: (
-                        <div />
+                        <AdminViewLog/>
+                      )
+                    },
+                    {
+                      tabButton: "Add Views",
+                      tabIcon: Description,
+                      tabContent: (
+                        <AdminAddViews/>
                       )
                     }
                   ]}
@@ -102,4 +114,4 @@ class AdminContainer extends Component {
   }
 }
 
-  export default (withStyles(AdminContainerStyles)(AdminContainer));
+export default (withStyles(AdminContainerStyles)(AdminContainer));
