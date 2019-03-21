@@ -55,7 +55,7 @@ const dangerColor = "#f44336";
 const successColor = "#4caf50";
 const infoColor = "#00acc1";
 const roseColor = "#e91e63";
-const grayColor = "#999999";
+const customColor = "rgba(255, 255, 255, 0.81)";
 
 const primaryBoxShadow = {
   boxShadow:
@@ -80,6 +80,10 @@ const dangerBoxShadow = {
 const roseBoxShadow = {
   boxShadow:
     "0 12px 20px -10px rgba(233, 30, 99, 0.28), 0 4px 20px 0px rgba(0, 0, 0, 0.14), 0 7px 8px -5px rgba(233, 30, 99, 0.2)"
+};
+const customBoxShadow = {
+  boxShadow:
+    "0 12px 20px -10px rgba(168, 168, 168, 0.28), 0 4px 20px 0px rgba(0, 0, 0, 0.14), 0 7px 8px -5px rgba(185, 185, 185, 0.2)"
 };
 
 const warningCardHeader = {
@@ -111,6 +115,11 @@ const roseCardHeader = {
   color: "#fff",
   background: "linear-gradient(60deg, #ec407a, #d81b60)",
   ...roseBoxShadow
+};
+const customCardHeader = {
+  color: "#000",
+  background: "linear-gradient(60deg, #ffffff, #a1a1a1)",
+  ...customBoxShadow
 };
 const cardActions = {
   margin: "0 20px 10px",
@@ -174,19 +183,21 @@ export {
   successColor,
   infoColor,
   roseColor,
-  grayColor,
+  customColor,
   primaryBoxShadow,
   infoBoxShadow,
   successBoxShadow,
   warningBoxShadow,
   dangerBoxShadow,
   roseBoxShadow,
+  customBoxShadow,
   warningCardHeader,
   successCardHeader,
   dangerCardHeader,
   infoCardHeader,
   primaryCardHeader,
   roseCardHeader,
+  customCardHeader,
   cardActions,
   cardHeader,
   defaultBoxShadow,

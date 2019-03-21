@@ -62,12 +62,13 @@ class Header extends Component {
       absolute,
       rightLinks
     } = this.props;
-    const appBarClasses = classNames(
-      {[classes.appBar]: true},
-      {[classes[color]]: color},
-      {[classes.absolute]: absolute},
-      {[classes.fixed]: fixed}
-    );
+    const appBarClasses = classNames({
+      [classes.appBar]: true,
+      [`classes.${color}`]: true,
+      [classes.absolute]: true,
+      [classes.fixed]: true
+    });
+    console.log(appBarClasses);
     return (
       <AppBar
         className={appBarClasses}>
@@ -107,7 +108,6 @@ class Header extends Component {
           <div
             className={classes.appResponsive}>
             {rightLinks}
-
           </div>
         </Drawer>
       </Hidden>

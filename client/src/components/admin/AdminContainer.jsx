@@ -36,7 +36,7 @@ class AdminContainer extends Component {
     return (
       <div>
         <Header
-          brand='Twit'
+          brand='Resurrect3D'
           rightLinks={
             <HeaderLinks
 
@@ -44,14 +44,14 @@ class AdminContainer extends Component {
           fixed
           color="transparent"
           changeColorOnScroll={{
-            height: 400,
-            color: "info"
+            height: 200,
+            color: "custom"
           }}
           {...rest}/>
         <Parallax image={require('../../assets/Images/manu.jpg')}>
           <div className={classes.container}>
             <div className={classes.brand}>
-              <h1 className={classes.title}>Twit</h1>
+              <h1 className={classes.title}>Resurrect3D</h1>
             </div>
           </div>
         </Parallax>
@@ -61,18 +61,21 @@ class AdminContainer extends Component {
               <GridItem xs={12} sm={12} md={8}>
                 <div className={classes.profile}>
                   <div className={classes.name}>
-                    <h2 className={classes.title}>Twit</h2>
-                    <h3><small className={classNames(classes.defaultFont, classes.name)} >CSC 210 Final App</small></h3>
+                    <h2 className={classes.title}>Admin widget</h2>
+                    {/*
+                    <h3>
+                      <small className={classNames(classes.defaultFont, classes.name)} >
+                        Admin widget
+                      </small>
+                    </h3>
+                    */}
                   </div>
                 </div>
               </GridItem>
             </GridContainer>
             <div className={classes.description}>
               <p className={classes.defaultFont}>
-                A really kool, (yes we spell it with a k...) application
-                that lets you read tweets using the twitter API and then see
-                tone analysis on comments using IBM watson Api! Well... we think it's kool anyway!
-                Play around abit and try it out!
+                Use the pills below to add, view, and edit files
               </p>
             </div>
             <GridContainer justify="center">
