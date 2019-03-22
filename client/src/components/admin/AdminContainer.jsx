@@ -29,6 +29,11 @@ import AdminSignUp from './AdminSignUp';
 import AdminViewLog from './AdminViewLog';
 import AdminAddViews from './AdminAddViews';
 
+//components
+import ThreeViews from './ThreeViews';
+import ThreeViewForm from './ThreeViewForm';
+import ThreeViewDetails from './ThreeViewDetails';
+
 class AdminContainer extends Component {
 
   render () {
@@ -84,25 +89,19 @@ class AdminContainer extends Component {
                   alignCenter
                   color="info"
                   tabs={[
+
                     {
-                      tabButton: "Settings",
-                      tabIcon: Favorite,
-                      tabContent: (
-                        <AdminSignUp/>
-                      )
-                    },
-                    {
-                      tabButton: "View Log",
+                      tabButton: "Add View",
                       tabIcon: Palette,
                       tabContent: (
-                        <AdminViewLog/>
+                        <ThreeViewForm/>
                       )
                     },
                     {
-                      tabButton: "Add Views",
+                      tabButton: "Change Views",
                       tabIcon: Description,
                       tabContent: (
-                        <AdminAddViews/>
+                        <ThreeViewDetails/>
                       )
                     }
                   ]}
