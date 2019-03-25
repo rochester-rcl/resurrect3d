@@ -25,6 +25,19 @@ module.exports = (app, upload, conn, Grid, router) => {
     );
 
   router
+    .route("/api/container")
+    .get(view.getViews)
+    .post(
+      user.authenticateServer,
+      upload.fields([
+        { name: "threeFile", maxcount: 1 },
+        { name: "threeThumbnail", maxcount: 1 },
+        { name: "skybox", maxcount: 1 }
+      ]),
+      view.addView
+    );
+
+  router
     .route("/api/views/:id")
     .get(view.getView)
     .put(user.authenticateServer, view.updateView)

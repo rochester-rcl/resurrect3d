@@ -70,6 +70,7 @@ exports.getViews = (req, res) => {
 };
 
 exports.addView = (req, res) => {
+  console.log(req.files);
   const { threeFile, threeThumbnail, skybox } = req.files;
   const newView = new View({
     threeFile: threeFile !== undefined ? threeFile[0].filename : null,

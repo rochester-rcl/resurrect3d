@@ -98,10 +98,10 @@ class AdminContainer extends Component {
                       )
                     },
                     {
-                      tabButton: "Change Views",
+                      tabButton: "Views",
                       tabIcon: Description,
                       tabContent: (
-                        <ThreeViewDetails/>
+                        <ThreeViews/>
                       )
                     }
                   ]}
