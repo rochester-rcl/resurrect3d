@@ -4,6 +4,7 @@ const multer = require('multer');
 const GridFsStorage = require('multer-gridfs-storage');
 const Grid = require('gridfs-stream');
 const bodyParser = require('body-parser');
+const bb = require('express-busboy');
 const cors = require('cors');
 const path = require('path');
 const crypto = require('crypto');
@@ -77,14 +78,19 @@ checkFileType = (file, cb) => {
   }
 }
 
+bb.extend(app, {
+  upload: true,
+  path: './temp',
+  allowedPath: /./
+});
 const router = express.Router();
 app.use(cors());
 app.use(session({ secret: constants.PRIVATE_KEY, resave: false, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(bodyParser.json({ limit: '20mb' }));
-app.use(bodyParser.urlencoded({ limit: '20mb', extended: false }));
-views(app, upload, conn, Grid, router);
+//app.use(bodyParser.json({ limit: '20mb' }));
+//app.use(bodyParser.urlencoded({ limit: '20mb', extended: false }));
+views(app, conn, Grid, router); //add upload to run multer
 app.use(serverConfig.basename, router);
 controller.get(app, upload, conn, Grid);
 

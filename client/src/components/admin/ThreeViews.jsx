@@ -4,7 +4,8 @@ import {connect} from 'react-redux';
 import PropTypes from 'prop-types';
 import {getViews, deleteView} from '../../actions/ThreeViewActions';
 
-
+import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
 
 class Views extends Component {
 
@@ -58,110 +59,49 @@ class Views extends Component {
     </Link>);
 
     if (this.readyToLoad) {
-      const viewItems = this.props.views.map(view => (<div key={view._id} className="ui card">
-        <div className="ui raised segment">
-          <div className="content">
-            <div className="header">
-              <div className="ui blue ribbon label">
-                <Link to={`/admin/view/${view._id}`}>
-                  <h2>{view.threeFile}</h2>
-                </Link>
-              </div>
-            </div>
-          </div>
+      const viewItems = this.props.views.map(view =>
+        (<div key={view._id} >
+          <Paper>
+            <Link to={`/admin/view/${view._id}`}>
+              <h2>{view.threeFile}</h2>
+            </Link>
 
-          <div className="content">
-            <div className="ui small feed">
+            <Typography>{view.threeThumbnail}</Typography>
 
-              <div className="event">
-                <div className="content">
-                  <div className="summary">
-                    <div>{view.threeThumbnail}</div>
-                  </div>
-                </div>
-              </div>
+            <Typography>{view.skybox.file}</Typography>
 
-              <div className="event">
-                <div className="content">
-                  <div className="summary">
-                    <div>{view.skybox.file}</div>
-                  </div>
-                </div>
-              </div>
+            <Typography>{view.enableLight.toString()}</Typography>
 
-              <div className="event">
-                <div className="content">
-                  <div className="summary">
-                    <div>{view.enableLight.toString()}</div>
-                  </div>
-                </div>
-              </div>
+            <Typography>{view.enableMaterials.toString()}</Typography>
 
-              <div className="event">
-                <div className="content">
-                  <div className="summary">
-                    <div>{view.enableMaterials.toString()}</div>
-                  </div>
-                </div>
-              </div>
+            <Typography>{view.enableShaders.toString()}</Typography>
 
-              <div className="event">
-                <div className="content">
-                  <div className="summary">
-                    <div>{view.enableShaders.toString()}</div>
-                  </div>
-                </div>
-              </div>
+            <Typography>{view.enableMeasurement.toString()}</Typography>
 
-              <div className="event">
-                <div className="content">
-                  <div className="summary">
-                    <div>{view.enableMeasurement.toString()}</div>
-                  </div>
-                </div>
-              </div>
+            <Typography>{view.modelUnits}</Typography>
 
-              <div className="event">
-                <div className="content">
-                  <div className="summary">
-                    <div>{view.modelUnits}</div>
-                  </div>
-                </div>
-              </div>
 
-            </div>
-          </div>
 
-          <div className="extra content">
-            <div className="ui buttons">
-              <button className='ui secondary button'>
-                <Link to={`/admin/view/${view._id}`}>
-                  <div>Update</div>
-                </Link>
-              </button>
-              <div className="or"></div>
-              <button
-                className='ui orange button'
-                type="button"
-                name={view._id}
-                onClick={this.onDelete}>
-                Delete
-              </button>
-            </div>
-          </div>
+            {/*<Link to={`/admin/view/${view._id}`}>
+              <div>Update</div>
+            </Link>
 
+            <button
+              className='ui orange button'
+              type="button"
+              name={view._id}
+              onClick={this.onDelete}>
+              Delete
+            </button>*/}
+          </Paper>
         </div>
-      </div>));
+        ));
 
-      return (<div>
-        <h1 className='ui header'>Views</h1>
-        <h2>{viewform}</h2>
-        <hr/>
-
-        <div className="ui link cards">
+      return (
+        <div>
+          <h2>{viewform}</h2>
           {viewItems}
-        </div>
-      </div>);
+        </div>);
     } else {
       return (<div>
         <h1 className='ui header'>Views</h1>

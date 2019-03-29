@@ -70,13 +70,19 @@ exports.getViews = (req, res) => {
 };
 
 exports.addView = (req, res) => {
-  console.log(req.files);
-  const { threeFile, threeThumbnail, skybox } = req.files;
+  console.log('req.files:' , req.files);
+  console.log('req.file:' , req.file);
+   if (!req.files) {
+       res.send('No files to upload.');
+       return;
+   }
+
+  const { threeFile, threeThumbnail, skybox__file } = req.files;
   const newView = new View({
-    threeFile: threeFile !== undefined ? threeFile[0].filename : null,
+    threeFile: threeFile !== undefined ? threeFile.filename : null,
     threeThumbnail:
-      threeThumbnail !== undefined ? threeThumbnail[0].filename : null,
-    skybox: { file: skybox !== undefined ? skybox[0].filename : null },
+      threeThumbnail !== undefined ? threeThumbnail.filename : null,
+    skybox: { file: skybox__file !== undefined ? skybox__file .filename : null },
     enableLight: req.body.enableLight,
     enableMaterials: req.body.enableMaterials,
     enableShaders: req.body.enableShaders,

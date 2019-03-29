@@ -127,7 +127,8 @@ class Viewform extends Component {
         {/*<h3>{viewform}</h3>*/}
         <form
           encType="multipart/form-data"
-          onSubmit={this.onSubmit}>
+          onSubmit={this.onSubmit}
+          method="post">
           {/*
             <div className="field">
               <div className="ui raised segment">
