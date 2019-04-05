@@ -5,6 +5,7 @@ import React, { Component } from "react";
 
 // THREEJS
 import * as _THREE from "three";
+import { CSS2DObject, CSS2DRenderer } from "./CSS2DRenderer"
 
 // Semantic UI
 import LoaderModal from "./LoaderModal";
@@ -50,7 +51,8 @@ import {
 // Controls
 import ThreeControls from "./ThreeControls";
 import ThreeMeasure from "./ThreeMeasure";
-import ThreeAnnotationGroup from "./ThreeAnnotation";
+import ThreeAnnotation from "./ThreeAnnotation";
+import AnnotationProxy from "./AnnotationProxy";
 import ThreeRangeSlider from "./ThreeRangeSlider";
 import ThreeToggle, { ThreeToggleMulti } from "./ThreeToggle";
 import ThreeColorPicker, {
@@ -128,6 +130,7 @@ export default class ThreeView extends Component {
 
   // Rendering
   webGLRenderer: THREE.WebGLRenderer;
+  css2DRenderer: CSS2DRenderer;
   envRenderPass: THREE.RenderPass;
   effectComposer: THREE.EffectComposer;
   bokehPass: THREE.BokehPass;
@@ -274,6 +277,7 @@ export default class ThreeView extends Component {
     (this: any).zoom = this.zoom.bind(this);
     (this: any).pan = this.pan.bind(this);
     (this: any).renderWebGL = this.renderWebGL.bind(this);
+    (this: any).renderCSS = this.renderCSS.bind(this);
     (this: any).getScale = this.getScale.bind(this);
     (this: any).fitPerspectiveCamera = this.fitPerspectiveCamera.bind(this);
     (this: any).panBounds = this.panBounds.bind(this);
@@ -452,8 +456,8 @@ export default class ThreeView extends Component {
       "THREE_MICRO_COLOR_PICKER",
       ThreeMicroColorPicker
     );
+    this.GUI.registerComponent("THREE_ANNOTATION", ThreeAnnotation);
     this.GUI.registerComponent("THREE_MEASURE", ThreeMeasure);
-    this.GUI.registerComponent("THREE_ANNOTATION_GROUP", ThreeAnnotationGroup);
     this.GUI.registerComponent("THREE_SCREENSHOT", ThreeScreenshot);
     this.GUI.registerComponent("THREE_MESH_EXPORTER", ThreeMeshExporter);
     this.GUI.registerLayout("THREE_GROUP_LAYOUT", ThreeGUILayout);
@@ -535,6 +539,12 @@ export default class ThreeView extends Component {
     this.camera.aspect = this.width / this.height;
     this.webGLRenderer.setSize(this.width, this.height, false);
     this.camera.updateProjectionMatrix();
+
+    this.css2DRenderer = new CSS2DRenderer();
+    this.css2DRenderer.setSize(this.width, this.height, false);
+    this.css2DRenderer.domElement.style.position = 'absolute';
+    this.css2DRenderer.domElement.style.top = 0;
+    this.threeView.appendChild(this.css2DRenderer.domElement);
 
     this.setState((prevState, props) => {
       return {
@@ -657,6 +667,7 @@ export default class ThreeView extends Component {
   update(): void {
     this.updateCamera();
     this.renderWebGL();
+    this.renderCSS();
   }
 
   renderWebGL(): void {
@@ -673,7 +684,13 @@ export default class ThreeView extends Component {
       this.effectComposer.render(0.01);
     } else {
       this.webGLRenderer.render(this.scene, (this.state.vrActive === true) ? this.vrCamera : this.camera);
+      this.renderCSS();
     }
+  }
+
+  renderCSS(): void //render css
+  {
+    this.css2DRenderer.render(this.guiScene, (this.state.vrActive === true) ? this.vrCamera : this.camera);
   }
 
   animate(): void {
@@ -824,42 +841,37 @@ export default class ThreeView extends Component {
     }
   }
 
-  drawAnnotations(annotations ?: Object): void { //Annotation
-  	if (annotations) {
+  drawAnnotations(annotations?: Object): void {
+    for (let i = 0; i < this.annotations.children.length; i++)
+    {
+      this.annotations.children[i].remove(...this.annotations.children[i].children);
+    }
+    this.annotations.remove(...this.annotations.children);
+    if (annotations)
+    {
       for (let i = 0; i < annotations.length; i++)
       {
-        let point = annotations[i].point;
-        let sphere = this.labelSphere.clone();
-        sphere.position.copy(point);
-        this.annotations.add(sphere);
-        if (annotations[i].open == true)
+        var sphereGeometry = new THREE.SphereBufferGeometry( 0.2, 32, 32 );
+        var moonMaterial = new THREE.MeshPhongMaterial( {
+          shininess: 5
+        } );
+        var annotation = new THREE.Mesh( sphereGeometry, moonMaterial );
+        annotation.position.copy(annotations[i].point);
+        if (annotations[i].open && annotation.children.length == 0)
         {
-          let material = new THREE.LineBasicMaterial({
-            color: "#ccc",
-            linewidth: 3,
-            opacity: 0.3,
-            transparent: true,
-            depthWrite: false,
-            depthTest: false
-          });
-          let geometry = new THREE.Geometry();
-          let boxpos = new THREE.Vector3(point.x + 10, point.y, point.z);
-          geometry.vertices.push(point, boxpos);
-          let line = new THREE.Line(geometry, material);
-          this.annotations.add(line);
+          console.log("Adding css since child count is " + annotation.children.length);
+          var div = document.createElement('div');
+          div.className = 'label';
+          div.textContent = annotations[i].title;
+          div.style.color = 'red';
+          div.style.marginTop = '-1em';
+          var cssObj = new CSS2DObject(div);
+          cssObj.position.set(-5, -5, 0);
+          annotation.add(cssObj);
+          console.log("Now child count is " + annotation.children.length);
         }
-        else
-        {
-          let children = this.annotations.children;
-          for (let j = 0; j < children.length - 1; j++)
-          {
-            if (children[j].position.distanceTo(point) == 0 && (children[j + 1] instanceof THREE.Line))
-              this.annotations.remove(this.annotations.children[j + 1]);
-          }
-        }
+        this.annotations.add(annotation);
       }
-  	} else {
-      this.annotations.remove(...this.annotations.children);
     }
   }
 
@@ -1031,6 +1043,7 @@ export default class ThreeView extends Component {
     });
   }
 
+//{
   /** WEBGL Postprocessing
    *****************************************************************************/
 
@@ -1230,10 +1243,11 @@ export default class ThreeView extends Component {
       }
     );
   }
+//}
 
   /** Rendering / Updates / Camera
    *****************************************************************************/
-
+//{
   getScale(dstScale: number): number {
     let { maxScale } = this.state;
     if (dstScale > maxScale) dstScale = maxScale;
@@ -1369,7 +1383,7 @@ export default class ThreeView extends Component {
       scale: scale,
     });
 
-}
+  }
 
   updateThreeMaterial(material: THREE.Material, prop: string, scale: Number) {
     if (material[prop] !== null || material[prop] !== undefined) {
@@ -1593,6 +1607,7 @@ export default class ThreeView extends Component {
       this.updateLights(updated);
     }
   }
+//}
 
   /** UI
    *****************************************************************************/
@@ -1602,19 +1617,20 @@ export default class ThreeView extends Component {
     let panelGroup = new ThreeGUIGroup("tools");
 
     /***************** ANNOTATIONS *********************************************/
-    //if (this.props.options.enableAnnotations) {
-    if (1 == 1) {
-    	let annotationsGroup = new ThreeGUIGroup("annotations");
 
-    	annotationsGroup.addComponent("annotations", components.THREE_ANNOTATION_GROUP, {
-    		updateCallback: this.drawAnnotations,
+    if (true) { //Set enableAnnotations in props
+      let annotationGroup = new ThreeGUIGroup("annotations");
+
+      annotationGroup.addComponent("annotations", components.THREE_ANNOTATION, {
+        updateCallback: this.drawAnnotations,
         onActiveCallback: (val) => this.toggleRaycasting(val),
         camera: this.camera,
         mesh: this.mesh,
-        target: this.webGLRenderer.domElement
-    	});
+        webGL: this.webGLRenderer.domElement,
+        css: this.css2DRenderer.domElement
+      });
 
-      panelGroup.addGroup("annotations", annotationsGroup);
+      panelGroup.addGroup("annotations", annotationGroup);
     }
 
     /***************** MEASUREMENT *********************************************/
@@ -1875,6 +1891,7 @@ export default class ThreeView extends Component {
       shaderGroup.addGroup("chroma key", chromaKeyGroup);
       panelGroup.addGroup("shaders", shaderGroup);
     }
+//{
     /****************** MATERIALS *********************************************/
     if (this.props.options.enableMaterials) {
       const { materialsInfo } = this.state;
@@ -2142,6 +2159,7 @@ export default class ThreeView extends Component {
     });
     this.centerCamera();
   }
+//}
 
   /** EVENT HANDLERS
    *****************************************************************************/

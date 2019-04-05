@@ -7,46 +7,53 @@ import React, { Component } from "react";
 import * as THREE from "three";
 
 // Semantic UI
-import { Button, Icon, Input } from "semantic-ui-react";
+import { Accordion, Button, Icon, Input } from "semantic-ui-react";
 
 // ThreeToggle
 import ThreeToggle from './ThreeToggle';
 
 export default class ThreeAnnotation extends Component
 {
-  /*
-  * Basic idea: Contains a list of annotations, and functionality to add and delete. Handles clicks -- 
-  * if left click on nothing, makes an annotation.
-  * if left click on annotation, open/close annotation.
-  */
+  raycaster: THREE.RayCaster;
+
   defaultState = {
     active: false,
-    annotations: [],
-    open: null
-  }
+    open: false,
+    annotations: []
+  };
 
   state = {
     active: false,
-    annotations: [],
-    open: null
-  }
+    open: false,
+    annotations: []
+  };
 
-  constructor(props : Object) {
+
+  constructor(props: Object)
+  {
     super(props);
-    (this: any).activate = this.activate.bind(this);
+
     (this: any).handleClick = this.handleClick.bind(this);
     (this: any).handleIntersection = this.handleIntersection.bind(this);
-    (this: any).reset = this.reset.bind(this);
-    (this: any).doCallback = this.doCallback.bind(this);
+    (this: any).activate = this.activate.bind(this);
     (this: any).raycaster = new THREE.Raycaster();
+
+    this.state = {
+      active: false,
+      annotations: []
+    }
+
+    console.log("This.state made as " + this.state);
   }
 
   componentDidMount(): void {
-    this.props.target.addEventListener("click", this.handleClick, true);
+    this.props.webGL.addEventListener("click", this.handleClick, true);
+    this.props.css.addEventListener("click", this.handleClick, true);
   }
 
   componentWillUnmount(): void {
-    this.props.target.removeEventListener("click", this.handleClick, true);
+    this.props.webGL.removeEventListener("click", this.handleClick, true);
+    this.props.css.removeEventListener("click", this.handleClick, true);
   }
 
   activate(): void {
@@ -72,11 +79,18 @@ export default class ThreeAnnotation extends Component
     }
   }
 
-  handleClick(event: MouseEvent): void { //Copied directly from ThreeMeasure
+  componentDidUpdate(prevProps): void {
+    if (this.props.open != prevProps.open)
+      this.setState({ open: this.props.open });
+  }
+
+  handleClick(event: MouseEvent): void 
+  {
+    console.log("Handling click.");
     if (this.state.active) {
       let { camera, mesh } = this.props;
 
-      let res = this.props.target.getBoundingClientRect();
+      let res = this.props.webGL.getBoundingClientRect();
 
       let mouseVector = new THREE.Vector2();
       mouseVector.x = ((event.clientX - res.x) / res.width) * 2 - 1;
@@ -95,43 +109,37 @@ export default class ThreeAnnotation extends Component
   }
 
   handleIntersection(intersection: Object): void 
-  { 
+  {
+    console.log("Handling intersection.");
     var clickedExisting = false;
-    var newAnnotations = this.state.annotations.slice();
-    for (let i = 0; i < newAnnotations.length; i++) //Checked if clicked on existing annotation
-    {
-      if (newAnnotations[i].point.distanceTo(intersection.point) <= 0.1)
+    for (let i = 0; i < this.state.annotations.length && !clickedExisting; i++) //Checked if clicked on existing annotation
+      if (this.state.annotations[i].point.distanceTo(intersection.point) <= 0.1)
       {
         clickedExisting = true;
-        newAnnotations[i].open = !newAnnotations[i].open;
+        this.state.annotations[i].open = !this.state.annotations[i].open;
       }
-    }
 
     if (!clickedExisting)
     {
-      newAnnotations.push( //Adds new annotation otherwise
-      {
+      this.state.annotations.push({
         point: intersection.point,
         open: true,
-        text: ""
-      }
-      );
+        title: 'Untitled',
+        text: '',
+      });
     }
-    this.setState(
-    {
-      annotations: newAnnotations
-    });
     this.doCallback();
   }
 
-  doCallback(): void {
-    this.props.updateCallback(this.state.active ? this.state.annotations : null);
+  doCallback(): void
+  {
+    this.props.updateCallback(this.state.annotations);
   }
 
   render() {
     return (
-      <div className="three-annotations-tool-container">
-        <ThreeToggle title='annotations' callback={this.activate} />
+      <div className="three-annotation-tool-container">
+        <ThreeToggle title='annotation' callback={this.activate} />
       </div>
     );
   }
