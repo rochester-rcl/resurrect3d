@@ -40,10 +40,11 @@ class Viewform extends Component {
 
   constructor(props){
     super(props);
-    this.onChange = this.onChange.bind(this);
-    this.onSubmit = this.onSubmit.bind(this);
-    this.onDiscard = this.onDiscard.bind(this);
-    this.handleChange = this.handleChange.bind(this);
+
+    (this: any).addView = this.addView.bind(this);
+    (this: any).onChange = this.onChange.bind(this);
+    (this: any).onDiscard = this.onDiscard.bind(this);
+    (this: any).handleChange = this.handleChange.bind(this);
   }
 
   handleChange = name => event => {
@@ -72,7 +73,8 @@ class Viewform extends Component {
     //history.push('/');
   }
 
-  onSubmit(e){
+  addView(e){
+    const { handleAddView } = this.props;
     e.preventDefault();
 
     if(this.state.enableLight==='false'){
@@ -112,7 +114,7 @@ class Viewform extends Component {
 
     //const { history } = this.props;
     console.log(view);
-    this.props.addView(view);
+    handleAddView(view);
   }
 
 
@@ -127,7 +129,7 @@ class Viewform extends Component {
         {/*<h3>{viewform}</h3>*/}
         <form
           encType="multipart/form-data"
-          onSubmit={this.onSubmit}
+          onSubmit={(e) => {this.addView(e)}}
           method="post">
           {/*
             <div className="field">
@@ -395,11 +397,11 @@ const mapStateToProps = state => {
     views: state.views.views
   }
 }
-
+/*
 function mapActionCreatorsToProps(dispatch: Object) {
 
   return bindActionCreators(AdminActionCreators, dispatch);
 
 }
-
-export default connect(mapStateToProps, mapActionCreatorsToProps)(Viewform);
+*/
+export default connect(mapStateToProps)(Viewform);
