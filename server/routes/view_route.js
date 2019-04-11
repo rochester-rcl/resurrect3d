@@ -1,5 +1,5 @@
 
-module.exports = (app, conn, Grid, router) => { //add upload to run multer
+module.exports = (app, upload, conn, Grid, router) => { //add upload to run multer
   const view = require("../controllers/view_controller");
   const mongoose = require("mongoose");
   const user = require("../controllers/user_controller");
@@ -16,13 +16,11 @@ module.exports = (app, conn, Grid, router) => { //add upload to run multer
     .get(view.getViews)
     .post(
       user.authenticateServer,
-      /*
       upload.fields([
         { name: "threeFile", maxcount: 1 },
         { name: "threeThumbnail", maxcount: 1 },
-        { name: "skybox", maxcount: 1 }
+        { name: "skybox__file", maxcount: 1 }
       ]),
-      */
       view.addView
     );
 
@@ -34,7 +32,7 @@ module.exports = (app, conn, Grid, router) => { //add upload to run multer
       upload.fields([
         { name: "threeFile", maxcount: 1 },
         { name: "threeThumbnail", maxcount: 1 },
-        { name: "skybox", maxcount: 1 }
+        { name: "skybox__file", maxcount: 1 }
       ]),
       */
       view.addView

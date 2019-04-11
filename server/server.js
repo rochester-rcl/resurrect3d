@@ -32,7 +32,9 @@ const conn = mongoose.connect(
 
     //dummyViewData();
   });
-
+const connection = mongoose.connection;
+Grid.mongo = mongoose.mongo;
+//const gfs = Grid(connection.db)
 // Create storage engine
 const storage = new GridFsStorage({
   url: serverConfig.mongoURL,
@@ -63,6 +65,8 @@ const upload = multer({
   }
 });
 
+const router = express.Router();
+
 checkFileType = (file, cb) => {
 
   const filetypes = /jpeg|jpg|png|gz|json/;
@@ -77,20 +81,20 @@ checkFileType = (file, cb) => {
     cb('Error: wrong file type');
   }
 }
-
+/*
 bb.extend(app, {
   upload: true,
-  path: './temp',
+  path: "./temp",
   allowedPath: /./
 });
-const router = express.Router();
+*/
 app.use(cors());
 app.use(session({ secret: constants.PRIVATE_KEY, resave: false, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
-//app.use(bodyParser.json({ limit: '20mb' }));
-//app.use(bodyParser.urlencoded({ limit: '20mb', extended: false }));
-views(app, conn, Grid, router); //add upload to run multer
+app.use(bodyParser.json({ limit: '20mb' }));
+app.use(bodyParser.urlencoded({ limit: '20mb', extended: false }));
+views(app, upload, conn, Grid, router); //add upload to run multer
 app.use(serverConfig.basename, router);
 controller.get(app, upload, conn, Grid);
 

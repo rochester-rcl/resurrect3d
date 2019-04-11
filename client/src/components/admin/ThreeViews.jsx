@@ -7,28 +7,42 @@ import {getViews, deleteView} from '../../actions/ThreeViewActions';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 
+import Fab from '@material-ui/core/Fab';
+import Grid from '@material-ui/core/Grid';
+import DeleteIcon from '@material-ui/icons/Delete';
+
+import Card from '@material-ui/core/Card';
+import CardContent from '@material-ui/core/CardContent';
+import CardMedia from '@material-ui/core/CardMedia';
+import IconButton from '@material-ui/core/IconButton';
+import gImg from '../static/grass.jpg';
 class Views extends Component {
 
   readyToLoad = false;
 
-  loadAsyhcData = () =>  new Promise( (resolve, reject) => {
-    getViews();
-    resolve(this.props.views);
-  });
-
   constructor(props) {
     super(props);
 
-    (this : any).onDelete = this.onDelete.bind(this);
-    (this : any).handleLoadAsynch = this.handleLoadAsynch.bind(this);
+    (this : any).handleDelete = this.handleDelete.bind(this);
+    (this : any).handleLoadAsync = this.handleLoadAsync.bind(this);
+    (this : any).handleRemoveAsync = this.handleRemoveAsync.bind(this);
     (this : any).state = {
       views: []
     }
   }
 
-  componentWillMount() {
-    //console.log(this.props);
-  }
+  loadAsyncData = () =>  new Promise( (resolve, reject) => {
+    getViews();
+    resolve(this.props.views);
+  });
+
+  removeAsyncData = (view) =>  new Promise( (resolve, reject) => {
+    setTimeout( () => {
+      deleteView(view);
+      resolve();
+    }, 5000);
+  });
+
 
 /*
   componentDidMount() {
@@ -60,7 +74,7 @@ class Views extends Component {
   }
   */
 
-  handleLoadAsynch = async () => {
+  handleLoadAsync = async () => {
     this._asyncRequest = this.loadAsyhcData().then(
       views => {
         this.setState({views});
@@ -68,11 +82,23 @@ class Views extends Component {
     );
   }
 
-  onDelete(e) {
-    e.preventDefault();
-    this.props.deleteView(e.target.name);
-    this.readyToLoad = false;
-    this.props.getViews();
+  handleRemoveAsync = async (view) => {
+    this._asyncRequest = this.removeAsyncData(view)
+    .then( () => this.removeAsyncData())
+    .then( views => this.loadAsyncData())
+    .then( views => {
+        console.log(this.props.views);
+        console.log(views);
+        this.setState({views});
+    });
+  }
+
+  handleDelete(id: number) {
+    //e.preventDefault();
+    console.log(id);
+    this.handleRemoveAsync(id);
+    console.log(this.props.views);
+    console.log(this.state.views);
   }
 
   render() {
@@ -90,49 +116,48 @@ class Views extends Component {
         Add views
       </Link>);
 
-      //if (!this.readyToLoad) {
-        const viewItems = this.props.views.map(view =>
-          (<div key={view._id} >
-            <Paper>
-              <Link to={`/admin/view/${view._id}`}>
-                <h2>{view.threeFile}</h2>
-              </Link>
 
-              <Typography>{view.threeThumbnail}</Typography>
+      var viewItems = this.props.views.map(view =>
+        (<Card style={{display: 'flex'}} key={view._id} >
+          <div style={{display: 'flex', flexDirection: 'column'}}>
+            <CardContent style={{flex: '1 0 auto'}}>
+                <Typography component="h5" variant="h5">{view.threeFile}</Typography>
 
-              <Typography>{view.skybox.file}</Typography>
+                <Typography>{view.threeThumbnail}</Typography>
 
-              <Typography>{view.enableLight.toString()}</Typography>
+                <Typography>{view.skybox.file}</Typography>
 
-              <Typography>{view.enableMaterials.toString()}</Typography>
+                <Typography>{view.enableLight.toString()}</Typography>
 
-              <Typography>{view.enableShaders.toString()}</Typography>
+                <Typography>{view.enableMaterials.toString()}</Typography>
 
-              <Typography>{view.enableMeasurement.toString()}</Typography>
+                <Typography>{view.enableShaders.toString()}</Typography>
 
-              <Typography>{view.modelUnits}</Typography>
+                <Typography>{view.enableMeasurement.toString()}</Typography>
 
-
-
-              {/*<Link to={`/admin/view/${view._id}`}>
-                <div>Update</div>
-              </Link>
-
-              <button
-                className='ui orange button'
-                type="button"
-                name={view._id}
-                onClick={this.onDelete}>
-                Delete
-              </button>*/}
-            </Paper>
+                <Typography>{view.modelUnits}</Typography>
+            </CardContent>
+            <div style={{
+                display: 'flex',
+                alignItems: 'center'}}>
+              <Fab
+                color="secondary"
+                aria-label="Delete"
+                >
+                <DeleteIcon />
+              </Fab>
+            </div>
+            <CardMedia
+              style={{ width: 151}}
+              image="../static/grass.jpg"
+              />
           </div>
-          ));
+        </Card>
+        ));
 
         return (
           <div>
-            {/*<h2>{viewform}</h2>*/}
-            {viewItems}
+           {viewItems}
           </div>);
     }
 

@@ -73,7 +73,7 @@ exports.addView = (req, res) => {
   console.log('req.files:' , req.files);
   console.log('req.file:' , req.file);
    if (!req.files) {
-       res.send('No files to upload.');
+       console.log('No files to upload.');
        return;
    }
 

@@ -27,16 +27,6 @@ import SaveIcon from '@material-ui/icons/Save';
 import {addView} from '../../actions/ThreeViewActions';
 
 class Viewform extends Component {
-  state = {
-    threeFile: '',
-    threeThumbnail: '',
-    skybox: '',
-    enableLight: false,
-    enableMaterials: false,
-    enableShaders: false,
-    enableMeasurement: false,
-    modelUnits: UNITS[0],
-  }
 
   constructor(props){
     super(props);
@@ -45,6 +35,19 @@ class Viewform extends Component {
     (this: any).onChange = this.onChange.bind(this);
     (this: any).onDiscard = this.onDiscard.bind(this);
     (this: any).handleChange = this.handleChange.bind(this);
+    (this: any).state = {
+      threeFile: '',
+      threeThumbnail: '',
+      skybox: '',
+      threeFileName: '',
+      threeThumbnailName: '',
+      skyboxName: '',
+      enableLight: false,
+      enableMaterials: false,
+      enableShaders: false,
+      enableMeasurement: false,
+      modelUnits: UNITS[0],
+    };
   }
 
   handleChange = name => event => {
@@ -54,23 +57,56 @@ class Viewform extends Component {
 
   onChange(e){
     if(e.target.name === 'threeFile' ){
-      this.setState({[e.target.name] : e.target.files[0]});
+      if (typeof e.target.files[0] === "undefined") {
+        this.setState({threeFileName : ""});
+        this.setState({[e.target.name] : ""});
+      }else{
+        console.log(e.target.files[0]);
+        console.log(e.target.files[0].name);
+        this.setState({threeFileName : e.target.files[0].name});
+        this.setState({[e.target.name] : e.target.files[0]});
+      }
     }
     else if(e.target.name === 'threeThumbnail' ){
-      console.log(e.target.files[0]);
-      this.setState({[e.target.name] : e.target.files[0]});
+      if (typeof e.target.files[0] === "undefined") {
+        this.setState({threeThumbnailName : ""});
+        this.setState({[e.target.name] : ""});
+      }else{
+        console.log(e.target.files[0]);
+        console.log(e.target.files[0].name);
+        this.setState({threeThumbnailName : e.target.files[0].name});
+        this.setState({[e.target.name] : e.target.files[0]});
+      }
     }
     else if(e.target.name === 'skybox' ){
-      console.log(e.target.files[0]);
-      this.setState({[e.target.name] : e.target.files[0]});
+      if (typeof e.target.files[0] === "undefined") {
+        this.setState({skyboxName : ""});
+        this.setState({[e.target.name] : ""});
+      }else{
+        console.log(e.target.files[0]);
+        console.log(e.target.files[0].name);
+        this.setState({skyboxName : e.target.files[0].name});
+        this.setState({[e.target.name] : e.target.files[0]});
+      }
     }
     console.log(this.state);
   }
 
   onDiscard(e){
     e.preventDefault();
-    //const { history } = this.props;
-    //history.push('/');
+    this.setState({
+      threeFile: '',
+      threeThumbnail: '',
+      skybox: '',
+      threeFileName: '',
+      threeThumbnailName: '',
+      skyboxName: '',
+      enableLight: false,
+      enableMaterials: false,
+      enableShaders: false,
+      enableMeasurement: false,
+      modelUnits: UNITS[0],
+    });
   }
 
   addView(e){
@@ -125,22 +161,11 @@ class Viewform extends Component {
     );
     return (
       <div>
-        <h2>Add View</h2>
-        {/*<h3>{viewform}</h3>*/}
         <form
           encType="multipart/form-data"
           onSubmit={(e) => {this.addView(e)}}
           method="post">
-          {/*
-            <div className="field">
-              <div className="ui raised segment">
-                <div className="ui blue ribbon label">
-                  <label>ThreeFile: </label>
-                </div>
 
-              </div>
-            </div>
-            */}
             <Grid container spacing={8}>
               <Grid item xs={6}>
                 <FormLabel component="legend">File uploads</FormLabel>
@@ -163,7 +188,7 @@ class Viewform extends Component {
                           accept=".json,.gz"/>
                       </Button>
                     }
-                    label="no file"
+                    label={(this.state.threeFileName === "") ? "no file" : this.state.threeFileName}
                     labelPlacement="bottom"/>
                   <FormControlLabel
                     style={{marginLeft: "0px"}}
@@ -184,7 +209,7 @@ class Viewform extends Component {
                           accept="image/*"/>
                       </Button>
                     }
-                    label="no three thumbnail"
+                    label={(this.state.threeThumbnailName === "") ? "no threeThumbnail" : this.state.threeThumbnailName}
                     labelPlacement="bottom"/>
                   <FormControlLabel
                     style={{marginLeft: "0px"}}
@@ -205,7 +230,7 @@ class Viewform extends Component {
                           accept="image/*"/>
                       </Button>
                     }
-                    label="no skybox"
+                    label={(this.state.skyboxName === "") ? "no skybox" : this.state.skyboxName}
                     labelPlacement="bottom"/>
                 </FormGroup>
               </Grid>
@@ -256,104 +281,6 @@ class Viewform extends Component {
                 </FormGroup>
               </Grid>
 
-            {/*
-               <div className="field">
-                <div className="ui raised segment">
-                  <div className="ui blue ribbon label">
-                    <label>ThreeThumbnail: </label>
-                  </div>
-                  <input
-                    type="file"
-                    name="threeThumbnail"
-                    onChange={this.onChange}
-                    accept="image/*"/>
-                </div>
-              </div>
-
-              <div className="field">
-                <div className="ui raised segment">
-                  <div className="ui blue ribbon label">
-                    <label>Skybox: </label>
-                  </div>
-                  <input
-                    type="file"
-                    name="skybox"
-                    accept="image/*"
-                    onChange={this.onChange}
-                    />
-                </div>
-              </div>
-
-              <div className="ui inverted segment">
-                <div className="field">
-                  <label>
-                    <div className="ui horizontal inverted divider">
-                      Enable Light: {this.state.enableLight.toString()}
-                    </div>
-                  </label>
-                  <select name="enableLight" onChange={this.onChange}>
-                    <option value="false">false</option>
-                    <option value="true">true</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="ui inverted segment">
-                <div className="field">
-                  <label>
-                    <div className="ui horizontal inverted divider">
-                      Enable Materials: {this.state.enableMaterials.toString()}
-                    </div>
-                  </label>
-                  <select name="enableMaterials" onChange={this.onChange}>
-                    <option value="false">false</option>
-                    <option value="true">true</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="ui inverted segment">
-                <div className="field">
-                  <label>
-                    <div className="ui horizontal inverted divider">
-                      Enable Shaders: {this.state.enableShaders.toString()}
-                    </div>
-                  </label>
-                  <select name="enableShaders" onChange={this.onChange}>
-                    <option value="false">false</option>
-                    <option value="true">true</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="ui inverted segment">
-                <div className="field">
-                  <label>
-                    <div className="ui horizontal inverted divider">
-                      Enable Measurement: {this.state.enableMeasurement.toString()}
-                    </div>
-                  </label>
-                  <select name="enableMeasurement" onChange={this.onChange}>
-                    <option value="false">false</option>
-                    <option value="true">true</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="field">
-                <div className="ui raised segment">
-                  <div className="ui blue ribbon label">
-                    <label>Model Units: </label>
-                  </div>
-                  <select name="modelUnits" value={this.state.modelUnits} onChange={this.onChange}>
-                    {UNITS.map((unit, index) =>
-                      <option key={index} value={unit}>{unit}</option>
-                    )}
-                  </select>
-                </div>
-              </div>
-
-              */}
               <Grid item xs={9}>
               </Grid>
               <Grid item xs={3}>
@@ -366,7 +293,7 @@ class Viewform extends Component {
                     <SaveIcon />
                   </Fab>
                   <Fab
-                    color="secondary"
+                    color="teal"
                     aria-label="Delete"
                     onClick={this.onDiscard}>
                     <DeleteIcon />
@@ -374,14 +301,7 @@ class Viewform extends Component {
                 </FormGroup>
               </Grid>
             </Grid>
-            {/*<div className="ui buttons">
-              <button className='ui fluid primary button' type="submit">
-                <i className="signup icon"></i>
-                Save
-              </button>
-              <div className="or"></div>
-              <button className='ui fluid secondary button' onClick={this.onDiscard}>Discard</button>
-            </div>*/}
+
         </form>
       </div>
     );
