@@ -108,6 +108,7 @@ export default class ThreeView extends Component {
 
   // environments
   scene: THREE.Scene;
+  overlayScene: THREE.Scene;
   envScene: THREE.Scene;
   guiScene: THREE.Scene;
   ambientLight: THREE.AmbientLight;
@@ -122,6 +123,7 @@ export default class ThreeView extends Component {
   lastCameraPosition: THREE.Vector3;
   lastCameraTarget: THREE.Vector3;
   camera: THREE.PerspectiveCamera;
+  overlayCamera = THREE.OrthographicCamera;
 
   // Controls
   rotateSpeed: Number = 0.4;
@@ -467,6 +469,7 @@ export default class ThreeView extends Component {
 
     // init camera
     this.camera = new THREE.PerspectiveCamera(50, this.width / this.height); // use defaults for fov and near and far frustum;
+    this.overlayCamera = new THREE.OrthographicCamera(50, this.width / this.height);
     this.vrCamera = new THREE.PerspectiveCamera();
     this.camera.add(this.vrCamera);
     this.spherical = new THREE.Spherical();
@@ -480,6 +483,7 @@ export default class ThreeView extends Component {
 
     // Scenes
     this.scene = new THREE.Scene();
+    this.overlayScene = new THREE.Scene();
     this.envScene = new THREE.Scene();
     this.guiScene = new THREE.Scene();
     this.camera.target = new THREE.Vector3();
@@ -538,13 +542,16 @@ export default class ThreeView extends Component {
     this.height = this.webGLRenderer.domElement.clientHeight;
     this.camera.aspect = this.width / this.height;
     this.webGLRenderer.setSize(this.width, this.height, false);
+    this.webGLRenderer.domElement.style.marginTop = "10px";
+
     this.camera.updateProjectionMatrix();
 
     this.css2DRenderer = new CSS2DRenderer();
     this.css2DRenderer.setSize(this.width, this.height, false);
-    this.css2DRenderer.domElement.style.position = 'absolute';
-    this.css2DRenderer.domElement.style.top = 0;
+    console.log("Height: " + this.webGLRenderer.domElement.offsetHeight);
+    this.css2DRenderer.domElement.style.marginTop = "-710px";
     this.threeView.appendChild(this.css2DRenderer.domElement);
+
 
     this.setState((prevState, props) => {
       return {
@@ -684,7 +691,6 @@ export default class ThreeView extends Component {
       this.effectComposer.render(0.01);
     } else {
       this.webGLRenderer.render(this.scene, (this.state.vrActive === true) ? this.vrCamera : this.camera);
-      this.renderCSS();
     }
   }
 
@@ -842,33 +848,41 @@ export default class ThreeView extends Component {
   }
 
   drawAnnotations(annotations?: Object): void {
+    console.log("Drawing annotations.\n");
     for (let i = 0; i < this.annotations.children.length; i++)
-    {
       this.annotations.children[i].remove(...this.annotations.children[i].children);
-    }
     this.annotations.remove(...this.annotations.children);
+
     if (annotations)
     {
       for (let i = 0; i < annotations.length; i++)
       {
         var sphereGeometry = new THREE.SphereBufferGeometry( 0.2, 32, 32 );
-        var moonMaterial = new THREE.MeshPhongMaterial( {
+        var sphereMaterial = new THREE.MeshPhongMaterial( {
           shininess: 5
         } );
-        var annotation = new THREE.Mesh( sphereGeometry, moonMaterial );
+        var annotation = new THREE.Mesh( sphereGeometry, sphereMaterial );
         annotation.position.copy(annotations[i].point);
         if (annotations[i].open && annotation.children.length == 0)
         {
-          console.log("Adding css since child count is " + annotation.children.length);
           var div = document.createElement('div');
           div.className = 'label';
           div.textContent = annotations[i].title;
-          div.style.color = 'red';
-          div.style.marginTop = '-1em';
-          var cssObj = new CSS2DObject(div);
-          cssObj.position.set(-5, -5, 0);
-          annotation.add(cssObj);
-          console.log("Now child count is " + annotation.children.length);
+          div.style.color = 'white';
+          div.style.width = '200px';
+          div.style.height = '50px';
+          div.style.textAlign = 'center';
+          div.style.background = 'black';
+          div.style.padding = '10px';
+
+          var cssDiv = new CSS2DObject(div);
+
+          if (annotations[i].point.x < 0)
+            cssDiv.position.set(-8, 0, 0);
+          else
+            cssDiv.position.set(8, 0, 0);
+
+          annotation.add(cssDiv);
         }
         this.annotations.add(annotation);
       }

@@ -42,8 +42,6 @@ export default class ThreeAnnotation extends Component
       active: false,
       annotations: []
     }
-
-    console.log("This.state made as " + this.state);
   }
 
   componentDidMount(): void {
@@ -86,7 +84,6 @@ export default class ThreeAnnotation extends Component
 
   handleClick(event: MouseEvent): void 
   {
-    console.log("Handling click.");
     if (this.state.active) {
       let { camera, mesh } = this.props;
 
@@ -110,10 +107,9 @@ export default class ThreeAnnotation extends Component
 
   handleIntersection(intersection: Object): void 
   {
-    console.log("Handling intersection.");
     var clickedExisting = false;
     for (let i = 0; i < this.state.annotations.length && !clickedExisting; i++) //Checked if clicked on existing annotation
-      if (this.state.annotations[i].point.distanceTo(intersection.point) <= 0.1)
+      if (this.state.annotations[i].point.distanceTo(intersection.point) <= 0.2)
       {
         clickedExisting = true;
         this.state.annotations[i].open = !this.state.annotations[i].open;
@@ -121,6 +117,9 @@ export default class ThreeAnnotation extends Component
 
     if (!clickedExisting)
     {
+      for (let i = 0; i < this.state.annotations.length; i++)
+        this.state.annotations[i].open = false;
+
       this.state.annotations.push({
         point: intersection.point,
         open: true,
