@@ -23,6 +23,7 @@ import LoginContainer from "./LoginContainer";
 import LogoutContainer from "./LogoutContainer";
 import AccountContainer from "./AccountContainer";
 import VerifyUserContainer from "./VerifyUserContainer";
+import AdminContainer from "../components/admin/AdminContainer"
 
 // actions
 import { authenticate, logout } from "../actions/UserActions";
@@ -109,13 +110,14 @@ class RouterContainer extends Component {
           <Router basename={BASENAME}>
             <div className="three-router">
               <Route path="/models/:id" render={(props) => this.authenticateRouteWithoutRedirect(props, App)} />
-              <AdminMenu active={user.loggedIn} />
+              {/*<AdminMenu active={user.loggedIn} />*/}
               <Route path="/admin/login" component={LoginContainer} />
               <Route path="/admin/logout" component={LogoutContainer} />
               <Route path="/admin/verify/:token" component={VerifyUserContainer} />
               <Route path="/admin/account" render={(props) => this.authenticateRoute(props, AccountContainer)} />
               <Route path="/admin/add" render={(props) => this.authenticateRoute(props, ViewForm)} />
               <Route path="/admin/views" render={(props) => this.authenticateRoute(props, ThreeViews)} />
+              <Route path="/admin/container" render={(props) => this.authenticateRoute(props, AdminContainer)} />
               <Route path="/admin/view/:id" render={(props) => this.authenticateRoute(props, ThreeViewDetails)} />
               <Route
                 path="/converter"
