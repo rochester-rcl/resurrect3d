@@ -1,6 +1,0 @@
-{
-  "verificationRoute": "http://localhost:3000/admin/verify/",
-  "service": "gmail",
-  "email": "resurrect.three.d@gmail.com",
-  "password": "jagiellonian18"
-}
