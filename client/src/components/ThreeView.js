@@ -49,10 +49,8 @@ import {
 } from "../constants/application";
 
 // Controls
-import ThreeControls from "./ThreeControls";
 import ThreeMeasure from "./ThreeMeasure";
 import ThreeAnnotation from "./ThreeAnnotation";
-import AnnotationProxy from "./AnnotationProxy";
 import ThreeRangeSlider from "./ThreeRangeSlider";
 import ThreeToggle, { ThreeToggleMulti } from "./ThreeToggle";
 import ThreeColorPicker, {
