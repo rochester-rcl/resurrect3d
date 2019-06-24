@@ -109,6 +109,7 @@ class RouterContainer extends Component {
           <Router basename={BASENAME}>
             <div className="three-router">
               <Route path="/models/:id" render={(props) => this.authenticateRouteWithoutRedirect(props, App)} />
+              <Route path="/embed/:id" component={App} />
               <AdminMenu active={user.loggedIn} />
               <Route path="/admin/login" component={LoginContainer} />
               <Route path="/admin/logout" component={LogoutContainer} />
