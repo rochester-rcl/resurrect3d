@@ -1,28 +1,29 @@
 /* @flow */
 
 // Constants
-import * as ActionConstants from '../constants/actions';
+import * as ActionConstants from "../constants/actions";
 
-export function getThreeAssetAction(assetId: Number, url: string): Object {
+export function getThreeAssetAction(assetId: Number, url: string, embedded = false): Object {
   return {
     type: ActionConstants.GET_THREE_ASSET,
     id: assetId,
     url: url,
-  }
+    embedded: embedded,
+  };
 }
 
 export function loadMeshAction(url: string): Object {
   return {
     type: ActionConstants.LOAD_MESH,
-    url: url,
-  }
+    url: url
+  };
 }
 
 export function loadTextureAction(url: string): Object {
   return {
     type: ActionConstants.LOAD_TEXTURE,
-    url: url,
-  }
+    url: url
+  };
 }
 
 // Load a null texture to short-circuit progress loader
@@ -30,33 +31,33 @@ export function noSkyboxTexture(): Object {
   return {
     type: ActionConstants.TEXTURE_LOADED,
     payload: { val: null }
-  }
+  };
 }
 
 export function saveViewerSettings(id: Number, settings: Object): Object {
   return {
     type: ActionConstants.SAVE_VIEWER_SETTINGS,
     settings: settings,
-    id: id,
-  }
+    id: id
+  };
 }
 
 export function loadViewerSettings(id: Number): Object {
   return {
     type: ActionConstants.LOAD_VIEWER_SETTINGS,
-    id: id,
-  }
+    id: id
+  };
 }
 
 export function startConversion(inputData: Object): Object {
   return {
     type: ActionConstants.START_CONVERSION,
-    inputData: inputData,
-  }
+    inputData: inputData
+  };
 }
 
 export function restartConverter(): Object {
   return {
-    type: ActionConstants.RESTART_CONVERTER,
-  }
+    type: ActionConstants.RESTART_CONVERTER
+  };
 }

@@ -23,7 +23,14 @@ import { WEBGL_SUPPORT, PROGRESS_COMPLETE } from '../constants/application';
 class ThreeContainer extends Component {
 
   componentDidMount(): void {
-    this.props.getThreeAssetAction(this.props.viewerId, this.props.url);
+    const { embedded, viewerId, url, getThreeAssetAction } = this.props;
+    if (!embedded)
+    {
+      getThreeAssetAction(viewerId, url);
+    } else {
+      getThreeAssetAction(viewerId, url, embedded);
+    }
+    
   }
 
   componentDidUpdate(prevProps: Object): void {

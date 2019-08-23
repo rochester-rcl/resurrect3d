@@ -75,7 +75,8 @@ function* getThreeAssetSaga(
       payload: threeFile,
       ext: ext,
       fileId: asset.threeFile,
-      id: id
+      id: id,
+      embedded: getThreeAssetAction.embedded,
     });
     yield put({ type: ActionConstants.THREE_ASSET_LOADED, threeAsset: asset });
   } catch (error) {
@@ -239,9 +240,9 @@ function* loadJSONMesh(loadMeshAction) {
 // TODO set up caching for JSON Asset
 
 function* loadGzippedMesh(loadMeshAction) {
-  const { payload, id, fileId } = loadMeshAction;
+  const { payload, id, fileId, embedded } = loadMeshAction;
   let progressChannel;
-  const result = yield ThreeViewerAbstractBackend.checkCache(id, fileId);
+  const result = embedded ? false : yield ThreeViewerAbstractBackend.checkCache(id, fileId);
   if (result) {
     yield put({
       type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,

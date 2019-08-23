@@ -1,31 +1,35 @@
 /* @flow */
 
 // React
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
 // Redux
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
 
 // Actions
-import * as AppActionCreators from '../actions/actions';
+import * as AppActionCreators from "../actions/actions";
 
 // Semantic UI
-import { Icon } from 'semantic-ui-react';
+import { Icon } from "semantic-ui-react";
 
 // CSS
-import 'semantic-ui-css/semantic.css';
+import "semantic-ui-css/semantic.css";
 
 // Containers
-import ThreeContainer from './ThreeContainer';
+import ThreeContainer from "./ThreeContainer";
 
 class App extends Component {
   render() {
-    const { children, data, match } = this.props;
-    let path = window.rootUrl ? window.rootUrl : '/';
+    const { children, data, match, embedded } = this.props;
+    let path = window.rootUrl ? window.rootUrl : "/";
     return (
       <div className="app-root-container">
-        <ThreeContainer viewerId={match.params.id} url={path} />
+        <ThreeContainer
+          viewerId={match.params.id}
+          url={path}
+          embedded={embedded}
+        />
       </div>
     );
   }
@@ -33,12 +37,15 @@ class App extends Component {
 
 function mapStateToProps(state) {
   return {
-    data: state.data,
-  }
+    data: state.data
+  };
 }
 
 function mapActionCreatorsToProps(dispatch: Object) {
   return bindActionCreators(AppActionCreators, dispatch);
 }
 
-export default connect(mapStateToProps, mapActionCreatorsToProps)(App);
+export default connect(
+  mapStateToProps,
+  mapActionCreatorsToProps
+)(App);

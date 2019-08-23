@@ -469,6 +469,7 @@ body {
   height: auto;
   align-self: center;
   flex:1;
+  touch-action: none;
 }
 
 @media screen and (max-width: 520px) {
@@ -491,6 +492,8 @@ body {
     overflow: hidden;
     width: 100%;
     height: auto;
+    align-self: center;
+    flex:1;
   }
 
   .three-tool-menu.collapsed {

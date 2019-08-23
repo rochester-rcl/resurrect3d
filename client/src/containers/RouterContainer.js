@@ -30,14 +30,16 @@ import { authenticate, logout } from "../actions/UserActions";
 // constants
 import {
   CONVERSION_TYPE_RTI,
-  CONVERSION_TYPE_MESH,
+  CONVERSION_TYPE_MESH
 } from "../constants/application";
 
 import { BASENAME } from "../constants/api-endpoints";
 
 import { BUILD_ENV, BUILD_ENV_OMEKA } from "../constants/application";
 
-const AuthenticatingLoader = () => <LoaderModal active={true} text="Authenticating ..." />;
+const AuthenticatingLoader = () => (
+  <LoaderModal active={true} text="Authenticating ..." />
+);
 
 class RouterContainer extends Component {
   _element = React.createElement;
@@ -45,7 +47,9 @@ class RouterContainer extends Component {
   constructor(props: Object) {
     super(props);
     (this: any).authenticateRoute = this.authenticateRoute.bind(this);
-    (this: any).authenticateRouteWithoutRedirect = this.authenticateRouteWithoutRedirect.bind(this);
+    (this: any).authenticateRouteWithoutRedirect = this.authenticateRouteWithoutRedirect.bind(
+      this
+    );
   }
 
   authenticateRoute(props: Object, component: Component) {
@@ -59,10 +63,16 @@ class RouterContainer extends Component {
         return <AuthenticatingLoader />;
       } else {
         // Need to use process.env
-        return <Redirect to={BASENAME + '/admin/login'}/>;
+        return <Redirect to={BASENAME + "/admin/login"} />;
       }
     }
   }
+  // TODO for now we have to disable caching via iframes
+  embedRoute(props, component) {
+    const newProps = { ...props, ...{ embedded: true } };
+    return this._element(component, newProps, null);
+  }
+
   // i.e. for the routes that you could optionally be signed in for
   authenticateRouteWithoutRedirect(props: Object, component: Component) {
     const { user } = this.props;
@@ -85,10 +95,19 @@ class RouterContainer extends Component {
     // need this for Omeka or embedding in any other system that has its own routing
     let path = window.publicUrl ? window.publicUrl : "/";
     if (BUILD_ENV === BUILD_ENV_OMEKA) {
-      return(
+      return (
         <Router basename={BASENAME}>
           <div className="three-router">
-            <Route path="/models/:id" render={(props) => this.authenticateRouteWithoutRedirect(props, App)} />
+            <Route
+              path="/models/:id"
+              render={props =>
+                this.authenticateRouteWithoutRedirect(props, App)
+              }
+            />
+            <Route
+              path="/embed/:id"
+              render={props => this.embedRoute(props, App)}
+            />
             <Route
               path="/converter"
               render={props => (
@@ -106,41 +125,67 @@ class RouterContainer extends Component {
       );
     } else {
       return (
-          <Router basename={BASENAME}>
-            <div className="three-router">
-              <Route path="/models/:id" render={(props) => this.authenticateRouteWithoutRedirect(props, App)} />
-              <Route path="/embed/:id" component={App} />
-              <AdminMenu active={user.loggedIn} />
-              <Route path="/admin/login" component={LoginContainer} />
-              <Route path="/admin/logout" component={LogoutContainer} />
-              <Route path="/admin/verify/:token" component={VerifyUserContainer} />
-              <Route path="/admin/account" render={(props) => this.authenticateRoute(props, AccountContainer)} />
-              <Route path="/admin/add" render={(props) => this.authenticateRoute(props, ViewForm)} />
-              <Route path="/admin/views" render={(props) => this.authenticateRoute(props, ThreeViews)} />
-              <Route path="/admin/view/:id" render={(props) => this.authenticateRoute(props, ThreeViewDetails)} />
-              <Route
-                path="/converter"
-                render={props => (
-                  <ConverterContainer conversionType={CONVERSION_TYPE_MESH} />
-                )}
-              />
-              <Route
-                path="/ptm-converter"
-                render={props => (
-                  <ConverterContainer conversionType={CONVERSION_TYPE_RTI} />
-                )}
-              />
-            </div>
-          </Router>
-        );
+        <Router basename={BASENAME}>
+          <div className="three-router">
+            <Route
+              path="/models/:id"
+              render={props =>
+                this.authenticateRouteWithoutRedirect(props, App)
+              }
+            />
+            <Route
+              path="/embed/:id"
+              render={props => this.embedRoute(props, App)}
+            />
+            <AdminMenu active={user.loggedIn} />
+            <Route path="/admin/login" component={LoginContainer} />
+            <Route path="/admin/logout" component={LogoutContainer} />
+            <Route
+              path="/admin/verify/:token"
+              component={VerifyUserContainer}
+            />
+            <Route
+              path="/admin/account"
+              render={props => this.authenticateRoute(props, AccountContainer)}
+            />
+            <Route
+              path="/admin/add"
+              render={props => this.authenticateRoute(props, ViewForm)}
+            />
+            <Route
+              path="/admin/views"
+              render={props => this.authenticateRoute(props, ThreeViews)}
+            />
+            <Route
+              path="/admin/view/:id"
+              render={props => this.authenticateRoute(props, ThreeViewDetails)}
+            />
+            <Route
+              path="/converter"
+              render={props => (
+                <ConverterContainer conversionType={CONVERSION_TYPE_MESH} />
+              )}
+            />
+            <Route
+              path="/ptm-converter"
+              render={props => (
+                <ConverterContainer conversionType={CONVERSION_TYPE_RTI} />
+              )}
+            />
+          </div>
+        </Router>
+      );
     }
   }
 }
 
 function mapStateToProps(state, ownProps) {
   return {
-    user: state.user,
-  }
+    user: state.user
+  };
 }
 
-export default connect(mapStateToProps, { authenticate })(RouterContainer);
+export default connect(
+  mapStateToProps,
+  { authenticate }
+)(RouterContainer);

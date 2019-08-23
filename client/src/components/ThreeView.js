@@ -44,7 +44,8 @@ import {
   MM,
   FT,
   THREE_VECTOR3,
-  THREE_MESH_STANDARD_MATERIAL
+  THREE_MESH_STANDARD_MATERIAL,
+  DISPLAY_DEVICE
 } from "../constants/application";
 
 // Controls
@@ -63,6 +64,7 @@ import ThreeMeshExporter from "./ThreeMeshExporter";
 
 // Components
 import ThreeWebVR, { checkVR } from "./webvr/ThreeWebVR";
+import { timingSafeEqual } from "crypto";
 
 // Because of all of the THREE examples' global namespace pollu
 const THREE = _THREE;
@@ -338,6 +340,8 @@ export default class ThreeView extends Component {
   componentDidMount(): void {
     this.initThree();
     window.addEventListener("resize", this.handleWindowResize);
+    // TODO will remove this after when FB fixes onWheel events (https://github.com/facebook/react/issues/14856)
+    this.threeView.addEventListener("wheel", this.handleMouseWheel);
   }
 
   componentDidUpdate(prevProps: Object, prevState: Object): void {
@@ -372,6 +376,7 @@ export default class ThreeView extends Component {
 
   componentWillUnmount(): void {
     window.removeEventListener("resize", this.handleWindowResize);
+    this.threeRef.removeEventListener("wheel", this.handleMouseWheel);
   }
 
   render(): Object {
@@ -421,7 +426,6 @@ export default class ThreeView extends Component {
               onMouseDown={this.handleMouseDown}
               onMouseMove={this.handleMouseMove}
               onMouseUp={this.handleMouseUp}
-              onWheel={this.handleMouseWheel}
               onKeyDown={this.handleKeyDown}
               onKeyUp={this.handleKeyUp}
               onContextMenu={event => event.preventDefault()}
@@ -529,6 +533,9 @@ export default class ThreeView extends Component {
     this.camera.aspect = this.width / this.height;
     this.webGLRenderer.setSize(this.width, this.height, false);
     this.camera.updateProjectionMatrix();
+
+    // Check if we're not on a touch device
+    this.isMobile = !DISPLAY_DEVICE.DESKTOP();
 
     this.setState((prevState, props) => {
       return {
@@ -972,8 +979,6 @@ export default class ThreeView extends Component {
     );
     this.envScene.add(this.skyboxMesh);
     this.bboxSkybox = new THREE.Box3().setFromObject(this.skyboxMesh);
-    // Don't seem to need this anymore
-    //this.fitPerspectiveCamera();
     this.setEnvMap();
     loadPostProcessor(THREE).then(values => {
       this.setState((prevState, props) => {
@@ -1172,6 +1177,7 @@ export default class ThreeView extends Component {
     this.effectComposer.addPass(copyPass);
 
     this.updateCamera();
+    this.centerCamera();
     this.setState(
       (prevState, props) => {
         return {
