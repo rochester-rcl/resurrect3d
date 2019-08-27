@@ -70,6 +70,7 @@ exports.getViews = (req, res) => {
 };
 
 exports.addView = (req, res) => {
+  console.log('req.body: ', req.body);
   console.log('req.files:' , req.files);
   console.log('req.file:' , req.file);
    if (!req.files) {
@@ -78,18 +79,19 @@ exports.addView = (req, res) => {
    }
 
   const { threeFile, threeThumbnail, skybox__file } = req.files;
+
   const newView = new View({
-    threeFile: threeFile !== undefined ? threeFile.filename : null,
+    threeFile: threeFile !== undefined ? threeFile[0].filename : null,
     threeThumbnail:
-      threeThumbnail !== undefined ? threeThumbnail.filename : null,
-    skybox: { file: skybox__file !== undefined ? skybox__file .filename : null },
+      threeThumbnail !== undefined ? threeThumbnail[0].filename : null,
+    skybox: { file: skybox__file !== undefined ? skybox__file[0].filename : null },
     enableLight: req.body.enableLight,
     enableMaterials: req.body.enableMaterials,
     enableShaders: req.body.enableShaders,
     enableMeasurement: req.body.enableMeasurement,
     modelUnits: req.body.modelUnits
   });
-
+  console.log(newView);
   newView.save((err, view) => {
     if (err) res.send(err);
     res.json(view);
