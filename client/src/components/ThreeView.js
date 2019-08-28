@@ -2,6 +2,7 @@
 // TODO Why is loadText not showing? And why is there a huge bottleneck at loadPostProcessor ?????????
 // React
 import React, { Component } from "react";
+import ReactDOM from "react-dom";
 
 // THREEJS
 import * as _THREE from "three";
@@ -50,7 +51,7 @@ import {
 
 // Controls
 import ThreeMeasure from "./ThreeMeasure";
-import ThreeAnnotation from "./ThreeAnnotation";
+import ThreeAnnotationController from "./annotations/ThreeAnnotationController";
 import ThreeRangeSlider from "./ThreeRangeSlider";
 import ThreeToggle, { ThreeToggleMulti } from "./ThreeToggle";
 import ThreeColorPicker, {
@@ -456,7 +457,7 @@ export default class ThreeView extends Component {
       "THREE_MICRO_COLOR_PICKER",
       ThreeMicroColorPicker
     );
-    this.GUI.registerComponent("THREE_ANNOTATION", ThreeAnnotation);
+    this.GUI.registerComponent("THREE_ANNOTATION_CONTROLLER", ThreeAnnotationController);
     this.GUI.registerComponent("THREE_MEASURE", ThreeMeasure);
     this.GUI.registerComponent("THREE_SCREENSHOT", ThreeScreenshot);
     this.GUI.registerComponent("THREE_MESH_EXPORTER", ThreeMeshExporter);
@@ -846,7 +847,6 @@ export default class ThreeView extends Component {
   }
 
   drawAnnotations(annotations?: Object): void {
-    console.log("Drawing annotations.\n");
     for (let i = 0; i < this.annotations.children.length; i++)
       this.annotations.children[i].remove(...this.annotations.children[i].children);
     this.annotations.remove(...this.annotations.children);
@@ -859,21 +859,16 @@ export default class ThreeView extends Component {
         var sphereMaterial = new THREE.MeshPhongMaterial( {
           shininess: 5
         } );
+
         var annotation = new THREE.Mesh( sphereGeometry, sphereMaterial );
         annotation.position.copy(annotations[i].point);
+
         if (annotations[i].open && annotation.children.length == 0)
         {
-          var div = document.createElement('div');
-          div.className = 'label';
-          div.textContent = annotations[i].title;
-          div.style.color = 'white';
-          div.style.width = '200px';
-          div.style.height = '50px';
-          div.style.textAlign = 'center';
-          div.style.background = 'black';
-          div.style.padding = '10px';
+          let annotationCSS = annotations[i].annotation;
+          console.log(annotationCSS);
 
-          var cssDiv = new CSS2DObject(div);
+          var cssDiv = new CSS2DObject(ReactDOM.render(annotationCSS));
 
           if (annotations[i].point.x < 0)
             cssDiv.position.set(-8, 0, 0);
@@ -1633,7 +1628,7 @@ export default class ThreeView extends Component {
     if (true) { //Set enableAnnotations in props
       let annotationGroup = new ThreeGUIGroup("annotations");
 
-      annotationGroup.addComponent("annotations", components.THREE_ANNOTATION, {
+      annotationGroup.addComponent("controller", components.THREE_ANNOTATION_CONTROLLER, {
         updateCallback: this.drawAnnotations,
         onActiveCallback: (val) => this.toggleRaycasting(val),
         camera: this.camera,
