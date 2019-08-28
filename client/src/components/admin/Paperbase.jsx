@@ -156,6 +156,10 @@ class Paperbase extends React.Component {
     mobileOpen: false,
   };
 
+  componentDidMount = () => {
+    this.props.getViews();
+  }
+
   handleDrawerToggle = () => {
     this.setState(state => ({ mobileOpen: !state.mobileOpen }));
   };
@@ -198,7 +202,7 @@ Paperbase.propTypes = {
 
 function mapStateToProps(state, ownProps): Object {
   return {
-    //views: state.views.views,
+    views: state.views.views,
     //newView: state.views.view
   };
 }
@@ -207,4 +211,4 @@ function mapActionCreatorsToProps(dispatch) {
   return bindActionCreators(AdminActionCreators, dispatch);
 }
 
-export default connect(mapActionCreatorsToProps, mapStateToProps)(withStyles(styles)(Paperbase));
+export default connect(mapStateToProps, mapActionCreatorsToProps)(withStyles(styles)(Paperbase));
