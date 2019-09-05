@@ -25,7 +25,7 @@ export default class ThreeAnnotation extends React.Component
 		this.state = {
 			title: props.title,
 			text: props.text
-		}
+		};
 
 		(this: any).updateTitle = this.updateTitle.bind(this)
 		(this: any).updateText = this.updateText.bind(this);
@@ -33,6 +33,7 @@ export default class ThreeAnnotation extends React.Component
 
 	updateTitle(event): void
 	{
+		console.log('updating title');
 		this.setState({
 			title: event.target.value
 		}, this.props.callback(this.state));
@@ -57,12 +58,5 @@ export default class ThreeAnnotation extends React.Component
 				</div>
 			</div>
 		);
-
-		/*return (
-		<div style = {annotationStyle}>
-			<ThreeAnnotationHeader text = {this.state.title}/>
-			<ThreeAnnotationBody text = {this.state.text}/>
-		</div>
-		);*/
 	}
 }

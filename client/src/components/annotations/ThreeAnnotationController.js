@@ -11,7 +11,8 @@ import * as THREE from "three";
 import ThreeToggle from "./../ThreeToggle";
 
 //ThreeAnnotation
-import ThreeAnnotation from "./ThreeAnnotation";
+import ThreeAnnotation from './ThreeAnnotation';
+import PortalElement from "./PortalElement";
 
 export default class ThreeAnnotationController extends Component
 {
@@ -35,6 +36,7 @@ export default class ThreeAnnotationController extends Component
 
 	    (this: any).handleClick = this.handleClick.bind(this);
 	    (this: any).handleIntersection = this.handleIntersection.bind(this);
+	    (this: any).makeAnnotation = this.makeAnnotation.bind(this);
 	    (this: any).toggle = this.toggle.bind(this);
 	    (this: any).raycaster = new THREE.Raycaster();
 
@@ -117,25 +119,41 @@ export default class ThreeAnnotationController extends Component
 			for (let i = 0; i < this.state.annotations.length; i++)
 				this.state.annotations[i].open = false;
 
-			this.state.annotations.push({
-				point: intersection.point,
-				open: true,
-				annotation: <ThreeAnnotation title = "Untitled" text = ""/>,
-			});
+			this.makeAnnotation(intersection.point);
 		}
 
-		this.doCallback();
+		this.props.updateCallback(this.state.annotations);
 	}
 
-	doCallback() {
-		this.props.updateCallback(this.state.annotations);
+	makeAnnotation(point)
+	{
+		let annotation = {
+			div: document.createElement("div"),
+			title: "Untitled",
+			text: "",
+			point: point,
+			open: true
+		};
+
+		let annotations = this.state.annotations;
+		annotations.push(annotation);
+		this.setState({
+			annotations: annotations
+		});
 	}
 
 	render() 
 	{
+		let annotations = this.state.annotations.map(annotation => {
+			console.log(annotation.div);
+			let component = <ThreeAnnotation title = {annotation.title} text = {annotation.text}/>;
+			return <PortalElement component = {component} domElement = {annotation.div}/>
+		});
+
     	return (
       		<div className="three-annotation-tool-container">
         		<ThreeToggle title="annotation" callback={this.toggle} />
+        		{annotations}
       		</div>
     	);
     }

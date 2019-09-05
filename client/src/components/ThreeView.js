@@ -865,15 +865,15 @@ export default class ThreeView extends Component {
 
         if (annotations[i].open && annotation.children.length == 0)
         {
-          let annotationCSS = annotations[i].annotation;
+          let annotationCSS = annotations[i].div;
           console.log(annotationCSS);
 
-          var cssDiv = new CSS2DObject(ReactDOM.render(annotationCSS));
+          var cssDiv = new CSS2DObject(annotationCSS);
 
           if (annotations[i].point.x < 0)
-            cssDiv.position.set(-8, 0, 0);
+            cssDiv.position.set(-1, 0, 0);
           else
-            cssDiv.position.set(8, 0, 0);
+            cssDiv.position.set(1, 0, 0);
 
           annotation.add(cssDiv);
         }
