@@ -857,6 +857,7 @@ export default class ThreeView extends Component {
       {
         var sphereGeometry = new THREE.SphereBufferGeometry( 0.2, 32, 32 );
         var sphereMaterial = new THREE.MeshPhongMaterial( {
+          color: annotations[i].open ? 0x1b1b1b : 'black',
           shininess: 5
         } );
 
@@ -866,14 +867,13 @@ export default class ThreeView extends Component {
         if (annotations[i].open && annotation.children.length == 0)
         {
           let annotationCSS = annotations[i].div;
-          console.log(annotationCSS);
 
           var cssDiv = new CSS2DObject(annotationCSS);
 
           if (annotations[i].point.x < 0)
-            cssDiv.position.set(-1, 0, 0);
+            cssDiv.position.set(-6, 0, 0);
           else
-            cssDiv.position.set(1, 0, 0);
+            cssDiv.position.set(6, 0, 0);
 
           annotation.add(cssDiv);
         }
@@ -1633,6 +1633,7 @@ export default class ThreeView extends Component {
         onActiveCallback: (val) => this.toggleRaycasting(val),
         camera: this.camera,
         mesh: this.mesh,
+        annotations: this.annotations,
         webGL: this.webGLRenderer.domElement,
         css: this.css2DRenderer.domElement
       });

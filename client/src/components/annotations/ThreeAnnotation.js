@@ -2,18 +2,24 @@ import React from 'react';
 import ThreeAnnotationHeader from './ThreeAnnotationHeader';
 import ThreeAnnotationBody from './ThreeAnnotationBody';
 
+const style = {
+	width: '175px',
+	height: '250px',
+	resize: 'both',
+	textAlign: 'center',
+	backgroundColor: '#1b1b1b'
+}
+
 const headerStyle = {
-	width: '50px',
+	width: '100%',
+	height: '25%',
 	color: 'white',
-	backgroundColor: 'black',
-	textAlign: 'center'
 }
 
 const bodyStyle = {
-	width: '50px',
+	width: '100%',
+	height: '75%',
 	color: 'white',
-	backgroundColor: 'black',
-	textAlign: 'center'
 }
 
 export default class ThreeAnnotation extends React.Component
@@ -27,35 +33,30 @@ export default class ThreeAnnotation extends React.Component
 			text: props.text
 		};
 
-		(this: any).updateTitle = this.updateTitle.bind(this)
+		(this: any).updateTitle = this.updateTitle.bind(this);
 		(this: any).updateText = this.updateText.bind(this);
 	}
 
-	updateTitle(event): void
+	updateTitle(title): void
 	{
-		console.log('updating title');
 		this.setState({
-			title: event.target.value
-		}, this.props.callback(this.state));
+			title: title
+		}, this.props.callback(this.props.index, this.state));
 	}
 
-	updateText(event): void
+	updateText(text): void
 	{
 		this.setState({
-			text: event.target.value
-		}, this.props.callback(this.state));
+			text: text
+		}, this.props.callback(this.props.index, this.state));
 	}
 
 	render()
 	{
 		return (
-			<div>
-				<div style = {headerStyle}>
-					<input type = 'text' value = {this.state.title} onChange = {this.updateTitle}/>
-				</div>
-				<div style = {bodyStyle}>
-					<input type = 'text' value = {this.state.text} onChange = {this.updateText}/>
-				</div>
+			<div style = {style}>
+				<ThreeAnnotationHeader callback = {this.updateTitle} style = {headerStyle} text = {this.props.title}/>
+				<ThreeAnnotationBody callback = {this.updateText} style = {bodyStyle} text = {this.props.text}/>
 			</div>
 		);
 	}

@@ -9,14 +9,7 @@ const style = {
 
 const PortalElement = (props) =>
 {
-	return ReactDom.createPortal(<TempElement/>, props.domElement);
-}
-
-const TempElement = (props) =>
-{
-	return (
-		<div style = {style}/>
-		);
+	return ReactDom.createPortal(props.component, props.domElement);
 }
 
 export default PortalElement;

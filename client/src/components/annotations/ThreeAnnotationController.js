@@ -37,6 +37,7 @@ export default class ThreeAnnotationController extends Component
 	    (this: any).handleClick = this.handleClick.bind(this);
 	    (this: any).handleIntersection = this.handleIntersection.bind(this);
 	    (this: any).makeAnnotation = this.makeAnnotation.bind(this);
+	    (this: any).updateAnnotation = this.updateAnnotation.bind(this);
 	    (this: any).toggle = this.toggle.bind(this);
 	    (this: any).raycaster = new THREE.Raycaster();
 
@@ -49,18 +50,17 @@ export default class ThreeAnnotationController extends Component
 	componentDidMount(): void 
 	{
 		this.props.webGL.addEventListener("click", this.handleClick, true);
-		this.props.css.addEventListener("click", this.handleClick, true);
+		//this.props.css.addEventListener("click", this.handleClick, true);
 	}
 
 	componentWillUnmount(): void 
 	{
 		this.props.webGL.removeEventListener("click", this.handleClick, true);
-		this.props.css.removeEventListener("click", this.handleClick, true);
+		//this.props.css.removeEventListener("click", this.handleClick, true);
 	}
 
 	toggle(): void
 	{
-		console.log("toggle");
 		this.setState({
 			active: !this.state.active
 		}, this.reset);
@@ -98,8 +98,9 @@ export default class ThreeAnnotationController extends Component
 			  meshArray.push(mesh);
 
 			let intersections = this.raycaster.intersectObjects(meshArray, true);
+
 			// Only take the best result
-			if (intersections.length > 0) 
+			if (intersections.length > 0 )
 				this.handleIntersection(intersections[0]);
 		}
 	}
@@ -129,11 +130,13 @@ export default class ThreeAnnotationController extends Component
 	{
 		let annotation = {
 			div: document.createElement("div"),
-			title: "Untitled",
-			text: "",
+			title: "Enter Title:",
+			text: "Enter Text:",
 			point: point,
 			open: true
 		};
+
+		annotation.div.contentEditable = 'false';
 
 		let annotations = this.state.annotations;
 		annotations.push(annotation);
@@ -142,11 +145,21 @@ export default class ThreeAnnotationController extends Component
 		});
 	}
 
+	updateAnnotation(index, data)
+	{
+		let annotations = this.state.annotations;
+
+		annotations[index] = {...data, ...annotations[index]};
+
+		this.setState({
+			annotations: annotations
+		});
+	}
+
 	render() 
 	{
-		let annotations = this.state.annotations.map(annotation => {
-			console.log(annotation.div);
-			let component = <ThreeAnnotation title = {annotation.title} text = {annotation.text}/>;
+		let annotations = this.state.annotations.map((annotation, index) => {
+			let component = <ThreeAnnotation title = {annotation.title} text = {annotation.text} callback = {this.updateAnnotation} index = {index}/>;
 			return <PortalElement component = {component} domElement = {annotation.div}/>
 		});
 
