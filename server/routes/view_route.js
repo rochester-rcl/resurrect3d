@@ -13,7 +13,7 @@ module.exports = (app, upload, conn, Grid, router) => { //add upload to run mult
 
   router
     .route("/api/views")
-    .get(view.getViews)
+    .get(view.findAllViews)
     .post(
       user.authenticateServer,
       upload.fields([
@@ -23,21 +23,21 @@ module.exports = (app, upload, conn, Grid, router) => { //add upload to run mult
       ]),
       view.addView
     );
-
+    /*
   router
     .route("/api/container")
     .get(view.getViews)
     .post(
-      /*
+
       upload.fields([
         { name: "threeFile", maxcount: 1 },
         { name: "threeThumbnail", maxcount: 1 },
         { name: "skybox__file", maxcount: 1 }
       ]),
-      */
+
       view.addView
     );
-
+    */
   router
     .route("/api/views/:id")
     .get(view.getView)

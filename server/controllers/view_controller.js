@@ -61,11 +61,16 @@ exports.getFile = (req, res) => {
   });
 };
 
-exports.getViews = (req, res) => {
-  View.find({}, (err, view) => {
-    if (err) res.send(err);
-    res.json(view);
-    console.log("View(s) successfully read");
+exports.findAllViews = (req, res) => {
+  View.find({})
+    .exec( (err, views) => {
+      if (err){
+        return res.status(500).json({
+          message: "Could not find views: Error[ " +err +" ]"
+        });
+      }
+    return res.status(200).json({views: views});
+    //console.log("View(s) successfully read");
   });
 };
 

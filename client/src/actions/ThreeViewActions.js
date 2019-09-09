@@ -1,45 +1,45 @@
-import {GET_VIEWS, GET_VIEW, GET_THREEFILE, UPDATE_VIEW, ADD_VIEW, DELETE_VIEW, AUTHENTICATE, LOGIN_USER} from '../constants/actions';
+/* @flow */
 
-import endpoint from '../constants/api-endpoints';
+// Constants
+import * as ActionConstants from '../constants/actions';
 
-
-export const getViews = (): Object => {
+export function getViews(): Object  {
   return {
-    type: GET_VIEWS,
+    type: ActionConstants.GET_VIEWS,
   }
 }
 
-export const getView = (id: number): Object => {
+export function getView(id: Number): Object {
   return {
-    type: GET_VIEW,
+    type: ActionConstants.GET_VIEW,
     id: id
   }
 }
 
-export const getThreeFile = (id: number): Object => {
+export function getThreeFile(id: Number): Object {
   return {
-    type: GET_THREEFILE,
+    type: ActionConstants.GET_THREEFILE,
     id: id
   }
 }
 
-export const updateView = (viewData: Object): Object => {
+export function updateView(viewData: Object): Object {
   return {
-    type: UPDATE_VIEW,
+    type: ActionConstants.UPDATE_VIEW,
     viewData: viewData
   }
 }
 
-export const addView = (viewData: Object): Object => {
+export function addView(viewData: Object): Object {
   return {
-    type: ADD_VIEW,
+    type: ActionConstants.ADD_VIEW,
     viewData: viewData
   }
 }
 
-export const deleteView = (id: number): Object => {
+export function deleteView(id: number): Object {
   return {
-    type: DELETE_VIEW,
+    type: ActionConstants.DELETE_VIEW,
     id: id
   }
 }

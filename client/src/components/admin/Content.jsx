@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 
-import * as ActionCreators from '../../actions/actions';
+import * as ActionCreators from '../../actions/ThreeViewActions';
 
 import Snackbar from '@material-ui/core/Snackbar';
 import CloseIcon from '@material-ui/icons/Close';
@@ -18,6 +18,7 @@ import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
+import MenuItem from '@material-ui/core/MenuItem';
 import Tooltip from '@material-ui/core/Tooltip';
 import IconButton from '@material-ui/core/IconButton';
 import { makeStyles } from '@material-ui/core/styles';
@@ -25,6 +26,10 @@ import { withStyles } from '@material-ui/core/styles';
 import SearchIcon from '@material-ui/icons/Search';
 import RefreshIcon from '@material-ui/icons/Refresh';
 
+import Container from '@material-ui/core/Container';
+
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -67,6 +72,11 @@ const useStyles = theme => ({
   infoSnack: {
     backgroundColor: theme.palette.primary.main
   },
+  textField: {
+    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1),
+    width: 200,
+  },
   close: {
     padding: theme.spacing(0.5),
   }
@@ -77,21 +87,37 @@ class Content extends React.Component {
   constructor(props : Object) {
     super(props);
     (this : any).handleSnackBarClose = this.handleSnackBarClose.bind(this);
-    (this : any).handleOnChangeSortable = this.handleOnChangeSortable.bind(this);
+    (this : any).handleChange = this.handleChange.bind(this);
     (this : any).state = {
       sortables: [
         "test test test test test test tets test tets test tets tte tst stts sttst",
         'test',
         'test'
       ],
-      allBuckets: {},
-      toAutoSave: [],
+      measurements: [
+        {value: 'MM', label: 'mm'},
+        {value: 'FT', label: 'ft'},
+        {value: 'CM', label: 'cm'}
+      ],
+      booleans: [
+        {value: false, label: 'false'},
+        {value: true, label: 'true'}
+      ],
+
+      enableLight: '',
+      enableMaterials: '',
+      enableShaders: '',
+      enableMeasurement: '',
+      modelUnits: '',
+
       open: false,
       setOpen: false
     };
   }
 
   componentDidMount = () => {
+    console.log(this.props);
+    this.props.getViews();
     //console.log(this.props);
     //const allBucketsProps = this.props.allBucketsInfo;
     //const snack = this.props.userInfo.authToExpire;
@@ -114,38 +140,33 @@ class Content extends React.Component {
     this.props.reauthorize();
   }
 
-  handleOnChangeSortable = (sortableItem, sortableCatagory) => {
-    this.props.addAnnotationByCatagory({sortables : sortableItem, catagory : sortableCatagory});
-    /*
-    let currentState = this.state.toAutoSave;
-
-    for (var catagory of currentState) {
-      if (catagory._id === catagoryID) {
-        catagory.sortables.push(sortableItem);
-        this.setState({toAutoSave: currentState});
-        return;
-      }
-    }
-
-    let newCatagoryToAutoSave = {"_id": catagoryID, "catagory": catagoryName, "sortables": sortableItem};
-    currentState.push(newCatagoryToAutoSave);
-    console.log(currentState);
-    this.setState({toAutoSave: currentState}, () => console.log(this.state));
-    */
-  }
+  handleChange = name => event => {
+    this.setState({ [name]: event.target.value });
+  };
 
   render() {
-
-    const entries = Object.entries(this.state.allBuckets);
+    //console.log(this.props.views);
+    const entries = Object.entries(this.props.views);
     //console.log(entries);
     const sortables = this.state.sortables.map(val => (<ListItem key={uniqueId()} data-id={val}>{val}</ListItem>));
 
     const {classes} = this.props
     const indexs = ['groupOne', 'groupTwo', 'groupThree', 'groupFour', 'groupFive', 'groupSix', 'groupSeven', 'groupEight', 'groupNine'];
-    /*
+
     const list = entries.map(obj =>
-      <Paper key={obj[1].catagory} className={classes.sortableMargin}>
-        <ListSubheader>{obj[1].catagory}</ListSubheader>
+      <Paper key={obj[1]._id} className={classes.sortableMargin}>
+        <ListSubheader>{obj[1]._id}</ListSubheader>
+        <List>
+          <ListItem>{obj[1].threeFile}</ListItem>
+          <ListItem>{obj[1].threeThumbnail}</ListItem>
+          <ListItem>{(obj[1].enableLight).toString()}</ListItem>
+          <ListItem>{(obj[1].enableMaterials).toString()}</ListItem>
+          <ListItem>{(obj[1].enableShaders).toString()}</ListItem>
+          <ListItem>{(obj[1].enableMeasurement).toString()}</ListItem>
+          <ListItem>{obj[1].modelUnits}</ListItem>
+          <ListItem>{obj[1].skybox.file}</ListItem>
+        </List>
+        {/*
         <Sortable
           component={List}
           options={{
@@ -173,20 +194,148 @@ class Content extends React.Component {
 
           {obj[1].sortables.map(val => (<ListItem key={uniqueId()} data-id={val}>{val}</ListItem>))}
         </Sortable>
+        */}
       </Paper>
     );
-    */
 
     return (
       <Grid container spacing={3} alignItems="center">
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid item xs={12} md={5} lg={4}>
           <Paper className={classes.listRoot}>
-            <ListSubheader>Sortables</ListSubheader>
-            <div>hello</div>
+            <ListSubheader>Add new view</ListSubheader>
+            <form noValidate autoComplete="off">
+              <Container>
+              {/*
+              <FormControlLabel
+                control={
+                  <Button
+                    variant="contained"
+                    color="default"
+                    component="label">
+                    Upload
+                    <CloudUploadIcon
+                      style={{ marginLeft: "5px"}} />
+                    <input
+                      type="file"
+                      name="threeFile"
+                      style={{ display: "none" }}
+                      onChange={this.onChange}
+                      accept=".json,.gz"/>
+                  </Button>
+                }
+                label={(this.state.threeFileName === "") ? "no file" : this.state.threeFileName}
+                labelPlacement="bottom"/>
+                */}
+              <TextField
+                id="standard-select-currency"
+                select
+                label="Select"
+                className={classes.textField}
+                value={this.state.enableLight}
+                onChange={this.handleChange('enableLight')}
+                SelectProps={{
+                  MenuProps: {
+                    className: classes.menu,
+                  },
+                }}
+                helperText="Please en/disable lights"
+                margin="normal">
+                {this.state.booleans.map(option => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              <TextField
+                id="standard-select-currency"
+                select
+                label="Select"
+                className={classes.textField}
+                value={this.state.enableShaders}
+                onChange={this.handleChange('enableShaders')}
+                SelectProps={{
+                  MenuProps: {
+                    className: classes.menu,
+                  },
+                }}
+                helperText="Please select your measurement"
+                margin="normal">
+                {this.state.booleans.map(option => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              <TextField
+                id="standard-select-currency"
+                select
+                label="Select"
+                className={classes.textField}
+                value={this.state.enableMaterials}
+                onChange={this.handleChange('enableMaterials')}
+                SelectProps={{
+                  MenuProps: {
+                    className: classes.menu,
+                  },
+                }}
+                helperText="Please en/disable lights"
+                margin="normal">
+                {this.state.booleans.map(option => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              <TextField
+                id="standard-select-currency"
+                select
+                label="Select"
+                className={classes.textField}
+                value={this.state.enableMeasurement}
+                onChange={this.handleChange('enableMeasurement')}
+                SelectProps={{
+                  MenuProps: {
+                    className: classes.menu,
+                  },
+                }}
+                helperText="Please select your measurement"
+                margin="normal">
+                {this.state.booleans.map(option => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              <TextField
+                id="standard-select-currency"
+                select
+                label="Select"
+                className={classes.textField}
+                value={this.state.modelUnits}
+                onChange={this.handleChange('modelUnits')}
+                SelectProps={{
+                  MenuProps: {
+                    className: classes.menu,
+                  },
+                }}
+                helperText="Please select your measurement"
+                margin="normal">
+                {this.state.measurements.map(option => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+              </Container>
+            </form>
           </Paper>
         </Grid>
-        <Grid className={classes.listRoot} item xs={12} md={8} lg={9}>
-          <div>hello</div>
+        <Grid className={classes.listRoot} item xs={12} md={7} lg={8}>
+          {list}
         </Grid>
 
         <Snackbar
@@ -225,7 +374,7 @@ class Content extends React.Component {
 
 function mapStateToProps(state, ownProps): Object {
   return {
-    //userInfo: state.app.userInfo,
+    views: state.views.views,
     //userProfile: state.app.userProfile,
     //allBucketsInfo: state.app.allBucketsInfo
   };
