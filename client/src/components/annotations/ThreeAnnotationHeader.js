@@ -23,12 +23,15 @@ const inputStyle = {
 
 const ThreeAnnotationHeader = (props) =>
 {
+	let style = props.style ? {...headerStyle, ...props.style} : headerStyle;
+
 	const handleChange = (event) =>
 	{
 		props.callback(event.target.data);
+		style = {...style, ...{height: 'auto'}};
+		style = {...style, ...{height: event.target.scrollHeight + 'px'}};
+		console.log(style);
 	}
-
-	let style = props.style ? {...headerStyle, ...props.style} : headerStyle;
 
 	return (
 		<div style = {style}>

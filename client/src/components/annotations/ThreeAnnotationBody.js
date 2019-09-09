@@ -1,3 +1,4 @@
+//material ui
 import React from 'react';
 
 const bodyStyle = {
@@ -6,7 +7,9 @@ const bodyStyle = {
 	textAlign: 'center',
 	display: 'flex',
 	flex: '1',
-	alignItems: 'center'
+	alignItems: 'center',
+	resize: 'both',
+	overflow: 'auto'
 }
 
 const inputStyle = {
@@ -18,20 +21,27 @@ const inputStyle = {
 	border: 'none',
 	outline: 'none',
 	resize: 'none',
+	height: '100%'
 }
 
 const ThreeAnnotationBody = (props) =>
 {
+	let style = props.style ? {...bodyStyle, ...props.style} : bodyStyle;
+	let textStyle = inputStyle;
+
 	const handleChange = (event) =>
 	{
 		props.callback(event.target.data);
+		textStyle = {...textStyle, ...{height: 'auto'}};
+		textStyle = {...textStyle, ...{height: event.target.scrollHeight + 'px'}};
+		style = {...style, ...{height: 'auto'}};
+		style = {...style, ...{height: event.target.scrollHeight + 'px'}};
+		console.log(textStyle);
 	}
-
-	let style = props.style ? {...bodyStyle, ...props.style} : bodyStyle;
 
 	return (
 		<div style = {style}>
-			<textarea type = 'text' defaultValue = {props.text} onChange = {handleChange} style = {inputStyle}/>
+			<textarea type = 'text' defaultValue = {props.text} onChange = {handleChange} style = {textStyle}/>
 		</div>
 	);
 }

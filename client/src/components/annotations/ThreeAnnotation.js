@@ -1,4 +1,5 @@
 import React from 'react';
+import { Form } from 'semantic-ui-react';
 import ThreeAnnotationHeader from './ThreeAnnotationHeader';
 import ThreeAnnotationBody from './ThreeAnnotationBody';
 
@@ -6,6 +7,7 @@ const style = {
 	width: '175px',
 	height: '250px',
 	resize: 'both',
+	overflow: 'auto',
 	textAlign: 'center',
 	backgroundColor: '#1b1b1b'
 }

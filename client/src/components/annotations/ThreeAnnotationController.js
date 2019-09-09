@@ -19,12 +19,16 @@ export default class ThreeAnnotationController extends Component
 	raycaster: THREE.RayCaster;
 
 	defaultState = {
+		mousedown: false,
+		dragging: false,
 	    active: false,
 	    open: false,
 	    annotations: []
   	};
 
   	state = {
+  		mousedown: false,
+  		dragging: false,
     	active: false,
     	open: false,
     	annotations: []
@@ -34,7 +38,9 @@ export default class ThreeAnnotationController extends Component
   	{
 	    super(props);
 
-	    (this: any).handleClick = this.handleClick.bind(this);
+	    (this: any).handleDown = this.handleDown.bind(this);
+	    (this: any).handleMove = this.handleMove.bind(this);
+	    (this: any).handleUp = this.handleUp.bind(this);
 	    (this: any).handleIntersection = this.handleIntersection.bind(this);
 	    (this: any).makeAnnotation = this.makeAnnotation.bind(this);
 	    (this: any).updateAnnotation = this.updateAnnotation.bind(this);
@@ -42,6 +48,7 @@ export default class ThreeAnnotationController extends Component
 	    (this: any).raycaster = new THREE.Raycaster();
 
 	    this.state = {
+	    	dragging: false,
 	    	active: false,
 	    	annotations: []
 	    }
@@ -49,14 +56,16 @@ export default class ThreeAnnotationController extends Component
 
 	componentDidMount(): void 
 	{
-		this.props.webGL.addEventListener("click", this.handleClick, true);
-		//this.props.css.addEventListener("click", this.handleClick, true);
+		this.props.webGL.addEventListener("mousedown", this.handleDown, true);
+		this.props.webGL.addEventListener("mousemove", this.handleMove, true);
+		this.props.webGL.addEventListener("mouseup", this.handleUp, true);
 	}
 
 	componentWillUnmount(): void 
 	{
-		this.props.webGL.removeEventListener("click", this.handleClick, true);
-		//this.props.css.removeEventListener("click", this.handleClick, true);
+		this.props.webGL.removeEventListener("mousedown", this.handleDown, true);
+		this.props.webGL.removeEventListener("mousemove", this.handleMove, true);
+		this.props.webGL.removeEventListener("mouseup", this.handleUp, true);
 	}
 
 	toggle(): void
@@ -77,9 +86,24 @@ export default class ThreeAnnotationController extends Component
     		this.setState({ open: this.props.open });
 	}
 
-	handleClick(event: MouseEvent): void 		//Hard to check if mousedown and mouseup on same object
+	handleDown(event: MouseEvent): void
 	{
-		if (this.state.active) 
+		this.setState({
+			mousedown: true
+		});
+	}
+
+	handleMove(event: MouseEvent): void
+	{
+		if (this.state.mousedown)
+			this.setState({
+				dragging: true
+			});
+	}
+
+	handleUp(event: MouseEvent): void 		//Hard to check if mousedown and mouseup on same object
+	{
+		if (this.state.active && !this.state.dragging) 
 		{
 			let { camera, mesh } = this.props;
 
@@ -103,6 +127,10 @@ export default class ThreeAnnotationController extends Component
 			if (intersections.length > 0 )
 				this.handleIntersection(intersections[0]);
 		}
+		this.setState({
+			mousedown: false,
+			dragging: false
+		});
 	}
 
 	handleIntersection(intersection: Object): void 
@@ -130,8 +158,8 @@ export default class ThreeAnnotationController extends Component
 	{
 		let annotation = {
 			div: document.createElement("div"),
-			title: "Enter Title:",
-			text: "Enter Text:",
+			title: "Untitled",
+			text: "",
 			point: point,
 			open: true
 		};
