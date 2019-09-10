@@ -1,16 +1,8 @@
 import React from 'react';
-import { Form } from 'semantic-ui-react';
+import { Form, Divider } from 'semantic-ui-react';
 import ThreeAnnotationHeader from './ThreeAnnotationHeader';
 import ThreeAnnotationBody from './ThreeAnnotationBody';
-
-const style = {
-	width: '175px',
-	height: '250px',
-	resize: 'both',
-	overflow: 'auto',
-	textAlign: 'center',
-	backgroundColor: '#1b1b1b'
-}
+import './annotation.css';
 
 const headerStyle = {
 	width: '100%',
@@ -56,9 +48,13 @@ export default class ThreeAnnotation extends React.Component
 	render()
 	{
 		return (
-			<div style = {style}>
-				<ThreeAnnotationHeader callback = {this.updateTitle} style = {headerStyle} text = {this.props.title}/>
-				<ThreeAnnotationBody callback = {this.updateText} style = {bodyStyle} text = {this.props.text}/>
+			<div className="annotation">
+				<div className="annotation-head">
+					<textarea type = 'text' defaultValue = {this.state.title} onChange = {this.updateTitle} className="text-area"/>
+				</div>
+				<div className="annotation-body">
+					<textarea type = 'text' defaultValue = {this.state.text} onChange = {this.updateText} className="text-area"/>
+				</div>
 			</div>
 		);
 	}

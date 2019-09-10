@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css?family=Source+Code+Pro');
+
+.annotation
+{
+	width: 175px;
+	height: 250px;
+	overflow: auto;
+	text-align: center;
+}
+
+.annotation-head
+{
+	height: 30%;
+	color: white;
+	background-color: #1b1b1b;
+	text-align: center;
+	display: flex;
+	flex: 1;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.annotation-body
+{
+	height: 70%;
+	color: white;
+	background-color: #0d0d0d;
+	text-align: center;
+	display: flex;
+	flex: 1;
+	align-items: center;
+	overflow: auto;
+}
+
+.text-area
+{
+	background: none;
+	font-family: "Source Code Pro", monospace;
+	color: white;
+	text-align: center;
+	border: none;
+	outline: none;
+	resize: none;
+	padding: 10px;
+}
