@@ -4,25 +4,21 @@
 {
 	width: 175px;
 	height: 250px;
-	overflow: auto;
 	text-align: center;
+	resize: both;
 }
 
 .annotation-head
 {
-	height: 30%;
 	color: white;
 	background-color: #1b1b1b;
 	text-align: center;
-	display: flex;
-	flex: 1;
-	flex-wrap: wrap;
 	align-items: center;
 }
 
 .annotation-body
 {
-	height: 70%;
+	height: 80%;
 	color: white;
 	background-color: #0d0d0d;
 	text-align: center;
@@ -37,9 +33,13 @@
 	background: none;
 	font-family: "Source Code Pro", monospace;
 	color: white;
+	height: auto;
 	text-align: center;
 	border: none;
 	outline: none;
 	resize: none;
+	line-height: 20px;
+	top: 0%;
 	padding: 10px;
+	width: 100%;
 }
