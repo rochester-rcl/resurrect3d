@@ -43,7 +43,7 @@ export default class GrowingTextArea extends React.Component
 	render()
 	{
 		return (
-			<textarea type = 'text' rows = {this.state.rows} onChange = {this.handleInput} className="text-area">
+			<textarea type = 'text' rows = {this.state.rows} maxlength = {this.props.maxlength ? this.props.maxlength : "100"} onChange = {this.handleInput} className="text-area">
 				{this.props.children}
 			</textarea>
 		);

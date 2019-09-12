@@ -25,7 +25,7 @@ export default class ThreeAnnotation extends React.Component
 
 		this.state = {
 			title: props.title,
-			titleHeight: 40,
+			titleHeight: 80,
 			text: props.text,
 			textHeight: 80
 		};
@@ -38,7 +38,7 @@ export default class ThreeAnnotation extends React.Component
 	{
 		this.setState({
 			title: event.target.value,
-			titleHeight: event.target.scrollHeight
+			titleHeight: event.target.scrollHeight - 20
 		}, this.props.callback(this.props.index, this.state));
 	}
 
@@ -46,7 +46,7 @@ export default class ThreeAnnotation extends React.Component
 	{
 		this.setState({
 			text: event.target.value,
-			textHeight: event.target.scrollHeight
+			textHeight: event.target.scrollHeight - 20
 		}, this.props.callback(this.props.index, this.state));
 	}
 
@@ -55,12 +55,12 @@ export default class ThreeAnnotation extends React.Component
 		return (
 			<div className="annotation">
 				<div className="annotation-head" style={{height: this.state.titleHeight}}>
-					<GrowingTextArea onChange = {this.updateTitle}>
+					<GrowingTextArea onChange = {this.updateTitle} maxlength = "100">
 						{this.state.title}
 					</GrowingTextArea>
 				</div>
 				<div className="annotation-body" style={{height: this.state.textHeight}}>
-					<GrowingTextArea onChange = {this.updateText}>
+					<GrowingTextArea onChange = {this.updateText} maxlength = "200">
 						{this.state.text}
 					</GrowingTextArea>
 				</div>

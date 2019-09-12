@@ -695,6 +695,7 @@ export default class ThreeView extends Component {
 
   renderCSS(): void //render css
   {
+    this.updateAnnotations();
     this.css2DRenderer.render(this.guiScene, (this.state.vrActive === true) ? this.vrCamera : this.camera);
   }
 
@@ -876,9 +877,29 @@ export default class ThreeView extends Component {
             cssDiv.position.set(6, 0, 0);
 
           annotation.add(cssDiv);
+
+          var lineGeometry = new THREE.Geometry();
+          console.log(annotations[i].point);
+          lineGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
+          lineGeometry.vertices.push(cssDiv.position);
+
+          var lineMaterial = new THREE.LineBasicMaterial( { color: 0x1b1b1b });
+
+          var line = new THREE.Line(lineGeometry, lineMaterial);
+
+          annotation.add(line);
         }
+        console.log(annotation);
         this.annotations.add(annotation);
       }
+    }
+  }
+
+  updateAnnotations(): void {
+    for (let i = 0; i < this.annotations.length; i++)
+    {
+      let annotation = this.annotations[i];
+      let cssDiv = annotation.children[1];
     }
   }
 

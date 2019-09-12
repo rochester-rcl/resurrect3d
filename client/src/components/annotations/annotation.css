@@ -4,6 +4,7 @@
 {
 	width: 175px;
 	height: 250px;
+	background-color: #0d0d0d;
 	text-align: center;
 	resize: both;
 }
@@ -18,14 +19,10 @@
 
 .annotation-body
 {
-	height: 80%;
 	color: white;
 	background-color: #0d0d0d;
 	text-align: center;
-	display: flex;
-	flex: 1;
 	align-items: center;
-	overflow: auto;
 }
 
 .text-area
