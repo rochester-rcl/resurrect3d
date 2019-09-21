@@ -151,7 +151,7 @@ export default class ThreeAnnotationController extends Component
 			this.makeAnnotation(intersection.point);
 		}
 
-		this.props.updateCallback(this.state.annotations);
+		this.props.drawCallback(this.state.annotations);
 	}
 
 	makeAnnotation(point)
@@ -177,11 +177,11 @@ export default class ThreeAnnotationController extends Component
 	{
 		let annotations = this.state.annotations;
 
-		annotations[index] = {...data, ...annotations[index]};
+		annotations[index] = {...annotations[index], ...data};
 
 		this.setState({
 			annotations: annotations
-		});
+		}, this.props.updateCallback(this.state.annotations));
 	}
 
 	render() 
