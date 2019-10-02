@@ -7,8 +7,9 @@ import ReactDom from "react-dom";
 // THREEJS
 import * as THREE from "three";
 
-// ThreeToggle
+// UI
 import ThreeToggle from "./../ThreeToggle";
+import ThreeGUI from "./../ThreeGUI";
 
 //ThreeAnnotation
 import ThreeAnnotation from './ThreeAnnotation';

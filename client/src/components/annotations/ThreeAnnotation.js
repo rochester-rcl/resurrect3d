@@ -39,7 +39,7 @@ export default class ThreeAnnotation extends React.Component
 		this.setState({
 			title: event.target.value,
 			titleHeight: event.target.scrollHeight - 20
-		}, this.props.callback(this.props.index, this.state));
+		}, () => { this.props.callback(this.props.index, this.state); });
 	}
 
 	updateText(event): void

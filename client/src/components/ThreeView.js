@@ -157,6 +157,9 @@ export default class ThreeView extends Component {
     shiftDown: false,
     rmbDown: false,
     pinching: false,
+    // auto camera movement
+    controllable: true,
+    target: undefined,
     // rotation
     rotateStart: new THREE.Vector2(),
     rotateEnd: new THREE.Vector2(),
@@ -226,7 +229,7 @@ export default class ThreeView extends Component {
       }
     },
     isRaycasting: false,
-    //updatingUI: false,
+    //newContentToggle: false,
     vrActive: false,
     units: CM
   };
@@ -276,6 +279,7 @@ export default class ThreeView extends Component {
     (this: any).animate = this.animate.bind(this);
     (this: any).update = this.update.bind(this);
     (this: any).updateCamera = this.updateCamera.bind(this);
+    (this: any).controlCamera = this.controlCamera.bind(this);
     (this: any).orbit = this.orbit.bind(this);
     (this: any).zoom = this.zoom.bind(this);
     (this: any).pan = this.pan.bind(this);
@@ -302,7 +306,6 @@ export default class ThreeView extends Component {
     (this: any).toggleQuality = this.toggleQuality.bind(this);
     (this: any).drawMeasurement = this.drawMeasurement.bind(this);
     (this: any).drawAnnotations = this.drawAnnotations.bind(this);
-    (this: any).updateAnnotations = this.updateAnnotations.bind(this);
     (this: any).updateAnnotationShortcuts = this.updateAnnotationShortcuts.bind(this);
     (this: any).viewAnnotation = this.viewAnnotation.bind(this);
     (this: any).drawSpriteTarget = this.drawSpriteTarget.bind(this);
@@ -384,6 +387,7 @@ export default class ThreeView extends Component {
     if (nextProps.saveStatus !== this.props.saveStatus) return true;
     if (nextState.dragging !== this.state.dragging) return true;
     if (nextState.isRaycasting !== this.state.isRaycasting) return true;
+    //if (nextState.newContentToggle !== this.state.newContentToggle) return true;
     return false;
   }
 
@@ -906,10 +910,6 @@ export default class ThreeView extends Component {
     }
   }
 
-  updateAnnotations(annotations): void {
-    this.updateAnnotationShortcuts(annotations);
-  }
-
   positionAnnotations(): void {                             //Make annotations position smartly to stay in camera -- use raycaster prob
     for (let i = 0; i < this.annotations.length; i++)
     {
@@ -1326,12 +1326,24 @@ export default class ThreeView extends Component {
     this.setState({ panOffset: this.state.panOffset.add(left.add(up)) });
   }
 
-  zoomTo(pos: THREE.Vector3): void {
-    var distance = 25;
-    pos = pos.clone().normalize();
-    pos.multiplyScalar(distance);
-    this.camera.position.set(pos.x, pos.y, pos.z);
-    this.camera.lookAt(pos);
+  zoomTo(pos: THREE.Vector3, alpha: float): void {
+
+    let distance = 25;
+    let dest = pos.clone().normalize();
+    dest.multiplyScalar(distance);
+
+    if (this.camera.position.equals(dest))
+      this.setState({ 
+        controllable: true,
+        target: undefined
+      });
+    else
+    {
+      let move = (dest.clone().sub(this.camera.position));
+      move = move.length() < alpha ? move : move.normalize().multiplyScalar(alpha);
+      this.camera.position.add(move);
+      this.camera.lookAt(pos);
+    }
   }
 
   rotate(deltaX: number, deltaY: number): void {
@@ -1385,6 +1397,13 @@ export default class ThreeView extends Component {
   }
 
   updateCamera(): void {
+    if (this.state.controllable)
+      this.controlCamera();
+    else
+      this.zoomTo(this.state.target, 2);
+  }
+
+  controlCamera(): void {
     // Borrowed from THREEJS OrbitControls
     const { sphericalDelta, panOffset, zoomScale, vrActive } = this.state;
     const { spherical } = this;
@@ -1433,7 +1452,6 @@ export default class ThreeView extends Component {
     this.setState({
       scale: scale,
     });
-
   }
 
   updateThreeMaterial(material: THREE.Material, prop: string, scale: Number) {
@@ -1673,7 +1691,8 @@ export default class ThreeView extends Component {
 
       annotationGroup.addComponent("controller", components.THREE_ANNOTATION_CONTROLLER, {
         drawCallback: this.drawAnnotations,
-        updateCallback: this.updateAnnotations,
+        updateCallback: this.updateAnnotationShortcuts,
+        cameraCallback: this.zoomTo,
         onActiveCallback: (val) => this.toggleRaycasting(val),
         camera: this.camera,
         mesh: this.mesh,
@@ -2053,7 +2072,8 @@ export default class ThreeView extends Component {
 
       for (let i = 0; i < annotations.length; i++)
         shortcuts.addComponent("annotation " + i, this.GUI.components.THREE_ANNOTATION_SHORTCUT, {
-          annotation: annotations[i],
+          annotations: annotations,
+          index: i,
           callback: this.viewAnnotation
         });
 
@@ -2070,12 +2090,20 @@ export default class ThreeView extends Component {
       />
       );
 
-      //this.setState({updatingUI: !this.state.updatingUI});
+      //this.setState({newContentToggle: !this.state.newContentToggle});
     }
   }
 
-  viewAnnotation(annotation: Object): void {
-    this.zoomTo(annotation.point);
+  viewAnnotation(annotations: Object, index: number): void {
+    annotations.forEach((annotation) => annotation.open = false);
+    annotations[index].open = true;
+
+    this.drawAnnotations(annotations);
+
+    this.setState({
+      controllable: false,
+      target: annotations[index].point
+    });
   }
 
   // TODO make this thing resize properly
@@ -2278,7 +2306,8 @@ export default class ThreeView extends Component {
   }
 
   handleMouseMove(event: SyntheticMouseEvent): void {
-    this.orbit(event.clientX, event.clientY);
+    if (this.state.controllable)
+      this.orbit(event.clientX, event.clientY);
   }
 
   handleMouseWheel(event: SyntheticWheelEvent): void {

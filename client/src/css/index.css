@@ -462,6 +462,39 @@ body {
   cursor: pointer;
 }
 
+/*** Annotations ***/
+.three-annotation-shortcut-container {
+  position: relative;
+  width: 100%;
+  height: auto;
+  background-color: rgba(0,0,0,0.7) !important;
+  border: 2px solid #ccc !important;
+  padding: 0px !important;
+  margin-top: 10px !important;
+  display: flex;
+  font-family: 'Source Code Pro', monospace;
+  overflow: hidden;
+}
+
+.three-annotation-shortcut-title {
+  margin-right: auto;
+  background: none !important;
+  color: #ccc !important;
+  overflow: hidden;
+}
+
+.three-annotation-shortcut-button {
+  background-color: #1b1b1b;
+  border: none;
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+}
+
+.three-annotation-shortcut-icon {
+  color: #ccc !important;
+}
+
 /*** MOBILE Styles ***/
 
 .three-touch-listener {
@@ -504,7 +537,5 @@ body {
     max-height: 300px;
     transition: all ease-in-out 0.5s;
   }
-
-
 
 }
