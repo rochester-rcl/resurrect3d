@@ -432,9 +432,20 @@ export function* authenticateSaga(): Generator<any, any, any> {
 }
 
 export function* addThreeViewSaga(addThreeViewAction: Object): Generator<any, any, any> {
+  console.log(addThreeViewAction);
+
   try {
     if (backend.hasAdminBackend) {
       const result = yield call(backend.adminBackend.addView, addThreeViewAction.viewData);
+      yield put({
+        type: ActionConstants.VIEW_ADDED,
+      });
+      const results = yield call(backend.adminBackend.getViews);
+      const objConvertedResults = yield call(arrayToObject, results.views);
+      yield put({
+        type: ActionConstants.VIEWS_LOADED,
+        views: objConvertedResults
+      });
       // TODO add this to "views"
     } else {
       console.warn(genericAPIRouteMessage);
@@ -442,6 +453,7 @@ export function* addThreeViewSaga(addThreeViewAction: Object): Generator<any, an
   } catch (error) {
     console.log(error);
   }
+  
 }
 
 export function* getThreeViewsSaga(getThreeViewsAction: Object): Generator<any, any, any> {

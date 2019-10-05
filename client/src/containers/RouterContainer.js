@@ -25,6 +25,7 @@ import AccountContainer from "./AccountContainer";
 import VerifyUserContainer from "./VerifyUserContainer";
 import AdminContainer from "../components/admin/AdminContainer";
 import Paperbase from "../components/admin/Paperbase";
+import SemanticBase from "../components/admin/SemanticBase";
 
 // actions
 import { authenticate, logout } from "../actions/UserActions";
@@ -120,6 +121,7 @@ class RouterContainer extends Component {
               <Route path="/admin/views" render={(props) => this.authenticateRoute(props, ThreeViews)} />
               <Route path="/admin/container" render={(props) => this.authenticateRoute(props, AdminContainer)} />
               <Route path="/admin/paperbase" render={(props) => this.authenticateRoute(props, Paperbase)} />
+              <Route path="/admin/semanticBase" render={(props) => this.authenticateRoute(props, SemanticBase)} />
               <Route path="/admin/view/:id" render={(props) => this.authenticateRoute(props, ThreeViewDetails)} />
               <Route
                 path="/converter"
