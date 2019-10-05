@@ -55,12 +55,12 @@ export default class ThreeAnnotation extends React.Component
 		return (
 			<div className="annotation">
 				<div className="annotation-head" style={{height: this.state.titleHeight}}>
-					<GrowingTextArea onChange = {this.updateTitle} maxlength = "100">
+					<GrowingTextArea onChange = {this.updateTitle} maxlength = "100" readOnly = {!this.props.editable}>
 						{this.state.title}
 					</GrowingTextArea>
 				</div>
 				<div className="annotation-body" style={{height: this.state.textHeight}}>
-					<GrowingTextArea onChange = {this.updateText} maxlength = "200">
+					<GrowingTextArea onChange = {this.updateText} maxlength = "200" readOnly = {!this.props.editable}>
 						{this.state.text}
 					</GrowingTextArea>
 				</div>

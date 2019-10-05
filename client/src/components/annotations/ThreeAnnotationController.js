@@ -19,22 +19,6 @@ export default class ThreeAnnotationController extends Component
 {
 	raycaster: THREE.RayCaster;
 
-	defaultState = {
-		mousedown: false,
-		dragging: false,
-	    active: false,
-	    open: false,
-	    annotations: []
-  	};
-
-  	state = {
-  		mousedown: false,
-  		dragging: false,
-    	active: false,
-    	open: false,
-    	annotations: []
-  	};
-
 	constructor(props: Object)
   	{
 	    super(props);
@@ -46,11 +30,15 @@ export default class ThreeAnnotationController extends Component
 	    (this: any).makeAnnotation = this.makeAnnotation.bind(this);
 	    (this: any).updateAnnotation = this.updateAnnotation.bind(this);
 	    (this: any).toggle = this.toggle.bind(this);
+	    (this: any).toggleEdit = this.toggleEdit.bind(this);
 	    (this: any).raycaster = new THREE.Raycaster();
 
 	    this.state = {
-	    	dragging: false,
+	    	mousedown: false,
+	  		dragging: false,
 	    	active: false,
+	    	open: false,
+	    	editable: true,
 	    	annotations: []
 	    }
   	}
@@ -76,10 +64,20 @@ export default class ThreeAnnotationController extends Component
 		}, this.reset);
 	}
 
+	toggleEdit(): void
+	{
+		this.setState({
+			editable: !this.state.editable
+		});
+	}
+
 	reset(): void
 	{
-		if (!this.state.active)
-			this.setState({...this.defaultState});
+		this.props.drawCallback();
+		this.setState({ annotations: [] });
+
+		if (this.props.onActiveCallback)
+			this.props.onActiveCallback(this.state.active);
 	}
 
 	componentDidUpdate(prevProps): void {
@@ -137,26 +135,37 @@ export default class ThreeAnnotationController extends Component
 	handleIntersection(intersection: Object): void 
 	{
 		var clickedExisting = false;
+
 		for (let i = 0; i < this.state.annotations.length && !clickedExisting; i++) //Checked if clicked on existing annotation
 			if (this.state.annotations[i].point.distanceTo(intersection.point) <= 0.2)
-		  	{
-		    	clickedExisting = true;
-		    	this.state.annotations[i].open = !this.state.annotations[i].open;
-		  	}
+			{
+				clickedExisting = true;
+		    	let annotations = this.state.annotations;
 
-		if (!clickedExisting)
-		{
-			for (let i = 0; i < this.state.annotations.length; i++)
-				this.state.annotations[i].open = false;
+		    	for (let j = 0; j < annotations.length; j++)
+		    		if (j == i)
+		    			annotations[j].open = !annotations[j].open;
+		    		else
+		    			annotations[j].open = false;
 
+    			this.setState({
+    				annotations: annotations
+    			});
+			}
+
+		if (!clickedExisting && this.state.editable)
 			this.makeAnnotation(intersection.point);
-		}
 
 		this.props.drawCallback(this.state.annotations);
 	}
 
 	makeAnnotation(point)
 	{
+		let annotations = this.state.annotations;
+
+		for (let i = 0; i < annotations.length; i++)
+			annotations[i].open = false;
+
 		let annotation = {
 			div: document.createElement("div"),
 			title: "Untitled",
@@ -166,9 +175,8 @@ export default class ThreeAnnotationController extends Component
 		};
 
 		annotation.div.contentEditable = 'false';
-
-		let annotations = this.state.annotations;
 		annotations.push(annotation);
+
 		this.setState({
 			annotations: annotations
 		});
@@ -188,13 +196,18 @@ export default class ThreeAnnotationController extends Component
 	render() 
 	{
 		let annotations = this.state.annotations.map((annotation, index) => {
-			let component = <ThreeAnnotation title = {annotation.title} text = {annotation.text} callback = {this.updateAnnotation} index = {index}/>;
+			let component = <ThreeAnnotation title = {annotation.title} text = {annotation.text} callback = {this.updateAnnotation} index = {index} editable = {this.state.editable}/>;
 			return <PortalElement component = {component} domElement = {annotation.div}/>
 		});
 
+		let editToggle;
+		if (this.state.active)
+			editToggle = <ThreeToggle title="edit mode" callback={this.toggleEdit} defaultVal={true}/>;
+
     	return (
       		<div className="three-annotation-tool-container">
-        		<ThreeToggle title="annotation" callback={this.toggle} />
+        		<ThreeToggle title="annotations" callback={this.toggle} />
+        		{editToggle}
         		{annotations}
       		</div>
     	);

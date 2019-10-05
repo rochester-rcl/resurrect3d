@@ -710,7 +710,6 @@ export default class ThreeView extends Component {
 
   renderCSS(): void //render css
   {
-    this.positionAnnotations();
     this.css2DRenderer.render(this.guiScene, (this.state.vrActive === true) ? this.vrCamera : this.camera);
   }
 
@@ -867,10 +866,10 @@ export default class ThreeView extends Component {
       this.annotations.children[i].remove(...this.annotations.children[i].children);
     this.annotations.remove(...this.annotations.children);
 
+    this.updateAnnotationShortcuts(annotations);
+
     if (annotations)
     {
-      this.updateAnnotationShortcuts(annotations);
-
       for (let i = 0; i < annotations.length; i++)
       {
         var sphereGeometry = new THREE.SphereBufferGeometry( 0.2, 32, 32 );
@@ -911,10 +910,23 @@ export default class ThreeView extends Component {
   }
 
   positionAnnotations(): void {                             //Make annotations position smartly to stay in camera -- use raycaster prob
-    for (let i = 0; i < this.annotations.length; i++)
+    var distance = 0.5;
+    for (let i = 0; i < this.annotations.children.length; i++)
     {
-      let annotation = this.annotations[i];
-      let cssDiv = annotation.children[1];
+      let annotation = this.annotations.children[i];
+
+      if (annotation.children[0])
+      {
+        //this.camera.getWorldPosition(this.camera.position);
+        let cssDiv = annotation.children[0];
+
+        //console.log(annotation.position);
+        let annotationPos = annotation.position.clone().project(this.camera);
+        annotationPos.add(new THREE.Vector3(distance, 0, 0));
+        annotationPos.unproject(this.camera);
+
+        cssDiv.position.set(annotationPos.x, annotationPos.y, annotationPos.z);
+      }
     }
   }
 
@@ -1452,6 +1464,8 @@ export default class ThreeView extends Component {
     this.setState({
       scale: scale,
     });
+
+    //this.positionAnnotations();
   }
 
   updateThreeMaterial(material: THREE.Material, prop: string, scale: Number) {
@@ -2070,12 +2084,13 @@ export default class ThreeView extends Component {
 
       let shortcuts = new ThreeGUIGroup("shortcuts");
 
-      for (let i = 0; i < annotations.length; i++)
-        shortcuts.addComponent("annotation " + i, this.GUI.components.THREE_ANNOTATION_SHORTCUT, {
-          annotations: annotations,
-          index: i,
-          callback: this.viewAnnotation
-        });
+      if (annotations)
+        for (let i = 0; i < annotations.length; i++)
+          shortcuts.addComponent("annotation " + i, this.GUI.components.THREE_ANNOTATION_SHORTCUT, {
+            annotations: annotations,
+            index: i,
+            callback: this.viewAnnotation
+          });
 
       annotationGroup.addGroup("shortcuts", shortcuts);
 
