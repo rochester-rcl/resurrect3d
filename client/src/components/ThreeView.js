@@ -483,7 +483,7 @@ export default class ThreeView extends Component {
 
     // init camera
     this.camera = new THREE.PerspectiveCamera(50, this.width / this.height); // use defaults for fov and near and far frustum;
-    this.overlayCamera = new THREE.OrthographicCamera(50, this.width / this.height);
+    this.overlayCamera = new THREE.PerspectiveCamera(50, this.width / this.height);
     this.vrCamera = new THREE.PerspectiveCamera();
     this.camera.add(this.vrCamera);
     this.spherical = new THREE.Spherical();
@@ -528,14 +528,21 @@ export default class ThreeView extends Component {
     this.scene.add(this.ambientLight);
     this.scene.add(this.camera);
 
+    this.overlayScene.add(this.overlayCamera);
+
     // Label Sprite that we can just copy for all the measurement
     this.labelSprite = new LabelSprite(128, 128, "#fff", "+").toSprite();
 
     this.measurement = new THREE.Group();
     this.guiScene.add(this.measurement);
 
-    this.annotations = new THREE.Group();
-    this.guiScene.add(this.annotations);
+    this.annotationMarkers = new THREE.Group();
+    this.annotationLines = new THREE.Group();
+    this.annotationCSS = new THREE.Group();
+
+    this.guiScene.add(this.annotationMarkers);
+    this.overlayScene.add(this.annotationCSS);
+    this.overlayScene.add(this.annotationLines);
 
     // WebGL Renderer
     this.webGLRenderer = new THREE.WebGLRenderer({
@@ -710,7 +717,7 @@ export default class ThreeView extends Component {
 
   renderCSS(): void //render css
   {
-    this.css2DRenderer.render(this.guiScene, (this.state.vrActive === true) ? this.vrCamera : this.camera);
+    this.css2DRenderer.render(this.overlayScene, (this.state.vrActive === true) ? this.vrCamera : this.overlayCamera);
   }
 
   animate(): void {
@@ -861,10 +868,11 @@ export default class ThreeView extends Component {
     }
   }
 
-  drawAnnotations(annotations?: Object): void {
-    for (let i = 0; i < this.annotations.children.length; i++)
-      this.annotations.children[i].remove(...this.annotations.children[i].children);
-    this.annotations.remove(...this.annotations.children);
+  drawAnnotations(annotations?: Object): void { 
+    for (let i = 0; i < this.annotationMarkers.children.length; i++)
+      this.annotationMarkers.children[i].remove(...this.annotationMarkers.children[i].children);
+    this.annotationMarkers.remove(...this.annotationMarkers.children);
+    this.annotationCSS.remove(...this.annotationCSS.children);
 
     this.updateAnnotationShortcuts(annotations);
 
@@ -873,60 +881,79 @@ export default class ThreeView extends Component {
       for (let i = 0; i < annotations.length; i++)
       {
         var sphereGeometry = new THREE.SphereBufferGeometry( 0.2, 32, 32 );
-        var sphereMaterial = new THREE.MeshPhongMaterial( {
-          color: annotations[i].open ? 0x1b1b1b : 'black',
-          shininess: 5
-        } );
+        var sphereMaterial = new THREE.MeshBasicMaterial( {
+          shininess: 5,
+          color: annotations[i].open ? 0xe7e7e7 : 0x1b1b1b
+        });
 
-        var annotation = new THREE.Mesh( sphereGeometry, sphereMaterial );
-        annotation.position.copy(annotations[i].point);
+        var annotationMarker = new THREE.Mesh( sphereGeometry, sphereMaterial );
+        annotationMarker.position.copy(annotations[i].point);
 
-        if (annotations[i].open && annotation.children.length == 0)
+        //annotationMarker.material.color.set(annotations[i].open ? "0xe7e7e7" : "0x1b1b1b");
+
+        if (annotations[i].open)
         {
-          let annotationCSS = annotations[i].div;
-
-          var cssDiv = new CSS2DObject(annotationCSS);
-
-          if (annotations[i].point.x < 0)
-            cssDiv.position.set(-6, 0, 0);
-          else
-            cssDiv.position.set(6, 0, 0);
-
-          annotation.add(cssDiv);
+          var cssObj = new CSS2DObject(annotations[i].div);
 
           var lineGeometry = new THREE.Geometry();
           lineGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
-          lineGeometry.vertices.push(cssDiv.position);
+          lineGeometry.vertices.push(cssObj.position);
 
           var lineMaterial = new THREE.LineBasicMaterial({ color: 0x1b1b1b });
 
           var line = new THREE.Line(lineGeometry, lineMaterial);
 
-          annotation.add(line);
+          this.annotationLines.add(line);
         }
-        this.annotations.add(annotation);
+        else
+          var cssObj = new CSS2DObject(document.createElement("div"));
+
+        this.annotationCSS.add(cssObj);
+        this.annotationMarkers.add(annotationMarker);
       }
     }
   }
 
   positionAnnotations(): void {                             //Make annotations position smartly to stay in camera -- use raycaster prob
-    var distance = 0.5;
-    for (let i = 0; i < this.annotations.children.length; i++)
+    var distance = 0.3;
+    for (let i = 0; i < this.annotationMarkers.children.length; i++)
     {
-      let annotation = this.annotations.children[i];
+      let annotation = this.annotationMarkers.children[i];
+      let line = annotation.children[0];
+      let cssDiv = this.annotationCSS.children[i];
 
-      if (annotation.children[0])
+      let annotationPos = annotation.position.clone().project(this.camera);
+      let offset = annotationPos.x > 0 ? distance : -distance;
+      annotationPos.add(new THREE.Vector3(offset, 0, 0));
+      annotationPos.unproject(this.overlayCamera);
+
+      cssDiv.position.set(annotationPos.x, annotationPos.y, annotationPos.z);
+
+      /*if (line)
       {
-        //this.camera.getWorldPosition(this.camera.position);
-        let cssDiv = annotation.children[0];
+        //console.log(line.geometry.vertices[1]);
 
-        //console.log(annotation.position);
-        let annotationPos = annotation.position.clone().project(this.camera);
-        annotationPos.add(new THREE.Vector3(distance, 0, 0));
-        annotationPos.unproject(this.camera);
+        annotation.remove(annotation.children[0]);
 
-        cssDiv.position.set(annotationPos.x, annotationPos.y, annotationPos.z);
-      }
+        line.geometry.vertices.pop();
+        line.geometry.vertices.push(cssDiv.position.clone().project(this.overlayCamera).unproject(this.camera));
+
+        annotation.add(line);
+
+        //console.log(line.geometry.vertices[1]);
+        annotation.remove(annotation.children[0])
+        var lineGeometry = new THREE.Geometry();
+        lineGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
+        lineGeometry.vertices.push(cssDiv.position.clone().project(this.overlayCamera).unproject(this.camera));
+
+        var lineMaterial = new THREE.LineBasicMaterial({ color: 0x1b1b1b });
+
+        var line = new THREE.Line(lineGeometry, lineMaterial);
+
+        annotation.add(line);
+
+        //console.log(this.annotationMarkers.children[i].children[0].geometry.vertices);
+      }*/
     }
   }
 
@@ -1465,7 +1492,7 @@ export default class ThreeView extends Component {
       scale: scale,
     });
 
-    //this.positionAnnotations();
+    this.positionAnnotations();
   }
 
   updateThreeMaterial(material: THREE.Material, prop: string, scale: Number) {
