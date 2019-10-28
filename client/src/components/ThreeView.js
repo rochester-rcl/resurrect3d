@@ -308,6 +308,7 @@ export default class ThreeView extends Component {
     (this: any).drawAnnotations = this.drawAnnotations.bind(this);
     (this: any).updateAnnotationShortcuts = this.updateAnnotationShortcuts.bind(this);
     (this: any).viewAnnotation = this.viewAnnotation.bind(this);
+    (this: any).deleteAnnotation = this.deleteAnnotation.bind(this);
     (this: any).drawSpriteTarget = this.drawSpriteTarget.bind(this);
     (this: any).computeSpriteScaleFactor = this.computeSpriteScaleFactor.bind(
       this
@@ -874,7 +875,7 @@ export default class ThreeView extends Component {
     this.annotationMarkers.remove(...this.annotationMarkers.children);
     this.annotationCSS.remove(...this.annotationCSS.children);
 
-    this.updateAnnotationShortcuts(annotations);
+    //this.updateAnnotationShortcuts(annotations);
 
     if (annotations)
     {
@@ -1733,7 +1734,7 @@ export default class ThreeView extends Component {
       annotationGroup.addComponent("controller", components.THREE_ANNOTATION_CONTROLLER, {
         drawCallback: this.drawAnnotations,
         updateCallback: this.updateAnnotationShortcuts,
-        cameraCallback: this.zoomTo,
+        cameraCallback: this.viewAnnotation,
         onActiveCallback: (val) => this.toggleRaycasting(val),
         camera: this.camera,
         mesh: this.mesh,
@@ -2116,7 +2117,8 @@ export default class ThreeView extends Component {
           shortcuts.addComponent("annotation " + i, this.GUI.components.THREE_ANNOTATION_SHORTCUT, {
             annotations: annotations,
             index: i,
-            callback: this.viewAnnotation
+            focus: this.viewAnnotation,
+            delete: this.deleteAnnotation
           });
 
       annotationGroup.addGroup("shortcuts", shortcuts);
@@ -2146,6 +2148,11 @@ export default class ThreeView extends Component {
       controllable: false,
       target: annotations[index].point
     });
+  }
+
+  deleteAnnotation(annotations: Object, index: number): void {
+    annotations.splice(index, 1);
+    this.drawAnnotations(annotations);
   }
 
   // TODO make this thing resize properly

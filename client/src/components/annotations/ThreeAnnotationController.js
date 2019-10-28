@@ -190,7 +190,7 @@ export default class ThreeAnnotationController extends Component
 
 		this.setState({
 			annotations: annotations
-		}, this.props.updateCallback(this.state.annotations));
+		});//, this.props.updateCallback(this.state.annotations));
 	}
 
 	render() 
@@ -204,10 +204,21 @@ export default class ThreeAnnotationController extends Component
 		if (this.state.active)
 			editToggle = <ThreeToggle title="edit mode" callback={this.toggleEdit} defaultVal={true}/>;
 
+		let shortcuts = this.state.annotations.map(annotation => <ThreeAnnotationShortcut );
+		let shortcutContainer;
+		if (this.state.active)
+		{
+			shortcutContainer = (<div className={"three-gui-group"}>
+			              			<h4 className="three-gui-group-title">shortcuts</h4>
+			              			{shortcuts}
+			            		 </div>)
+		}
+
     	return (
       		<div className="three-annotation-tool-container">
         		<ThreeToggle title="annotations" callback={this.toggle} />
         		{editToggle}
+        		{shortcutContainer}
         		{annotations}
       		</div>
     	);

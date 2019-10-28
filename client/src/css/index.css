@@ -483,12 +483,19 @@ body {
   overflow: hidden;
 }
 
+.three-annotation-shortcut-button-container {
+  margin-left: auto;
+}
+
 .three-annotation-shortcut-button {
   background-color: #1b1b1b;
   border: none;
-  margin-left: auto;
   width: 30px;
   height: 30px;
+}
+
+.three-annotation-shortcut-button:hover {
+  background-color: rgba(255, 255, 255, 0.8);
 }
 
 .three-annotation-shortcut-icon {
