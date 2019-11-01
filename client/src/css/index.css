@@ -463,7 +463,71 @@ body {
 }
 
 /*** Annotations ***/
-.three-annotation-shortcut-container {
+.annotation
+{
+  width: 175px;
+  height: 250px;
+  background-color: #0d0d0d;
+  border: 2px solid #1b1b1b;
+  border-radius: 7px;
+  text-align: center;
+  overflow: auto;
+  resize: both;
+  max-height: 400px;
+  min-height: 150px;
+  max-width: 250px;
+  min-width: 100px;
+}
+
+.annotation-head
+{
+  color: white;
+  background-color: #1b1b1b;
+  border-radius: 5px 5px 0px 0px;
+  width: 100%;
+  text-align: center;
+  align-items: center;
+  overflow: auto;
+  resize: vertical;
+  max-height: 60%;
+  min-height: 20%;
+}
+
+.annotation-body
+{
+  color: white;
+  background-color: none;
+  text-align: center;
+  align-items: center;
+  height: auto;
+  resize: both;
+}
+
+.annotation-body-text
+{
+  top: auto;
+  bottom: auto;
+  height: 90%;
+}
+
+.text-area
+{
+  background: none;
+  font-family: "Source Code Pro", monospace;
+  font-size: 1rem;
+  color: white;
+  height: auto;
+  text-align: center;
+  border: none;
+  outline: none;
+  resize: none;
+  line-height: 20px;
+  top: 0%;
+  padding: 10px;
+  width: 100%;
+}
+
+.annotation-shortcut-container {
   position: relative;
   width: 100%;
   height: auto;
@@ -476,29 +540,31 @@ body {
   overflow: hidden;
 }
 
-.three-annotation-shortcut-title {
+.annotation-shortcut-title {
   margin-right: auto;
+  height: 100%;
+  width: 60%;
   background: none !important;
   color: #ccc !important;
   overflow: hidden;
 }
 
-.three-annotation-shortcut-button-container {
+.annotation-shortcut-button-container {
   margin-left: auto;
 }
 
-.three-annotation-shortcut-button {
+.annotation-shortcut-button {
   background-color: #1b1b1b;
   border: none;
   width: 30px;
   height: 30px;
 }
 
-.three-annotation-shortcut-button:hover {
+.annotation-shortcut-button:hover {
   background-color: rgba(255, 255, 255, 0.8);
 }
 
-.three-annotation-shortcut-icon {
+.annotation-shortcut-icon {
   color: #ccc !important;
 }
 

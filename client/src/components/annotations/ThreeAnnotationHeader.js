@@ -1,5 +1,4 @@
 import React from 'react';
-import './annotation.css';
 
 const ThreeAnnotationHeader = (props) =>
 {

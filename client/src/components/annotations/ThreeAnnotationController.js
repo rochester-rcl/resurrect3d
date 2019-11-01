@@ -13,6 +13,7 @@ import ThreeGUI from "./../ThreeGUI";
 
 //ThreeAnnotation
 import ThreeAnnotation from './ThreeAnnotation';
+import ThreeAnnotationShortcut from './ThreeAnnotationShortcut';
 import PortalElement from "./PortalElement";
 
 export default class ThreeAnnotationController extends Component
@@ -29,6 +30,8 @@ export default class ThreeAnnotationController extends Component
 	    (this: any).handleIntersection = this.handleIntersection.bind(this);
 	    (this: any).makeAnnotation = this.makeAnnotation.bind(this);
 	    (this: any).updateAnnotation = this.updateAnnotation.bind(this);
+	    (this: any).viewAnnotation = this.viewAnnotation.bind(this);
+	    (this: any).deleteAnnotation = this.deleteAnnotation.bind(this);
 	    (this: any).toggle = this.toggle.bind(this);
 	    (this: any).toggleEdit = this.toggleEdit.bind(this);
 	    (this: any).raycaster = new THREE.Raycaster();
@@ -155,8 +158,6 @@ export default class ThreeAnnotationController extends Component
 
 		if (!clickedExisting && this.state.editable)
 			this.makeAnnotation(intersection.point);
-
-		this.props.drawCallback(this.state.annotations);
 	}
 
 	makeAnnotation(point)
@@ -179,7 +180,7 @@ export default class ThreeAnnotationController extends Component
 
 		this.setState({
 			annotations: annotations
-		});
+		}, this.props.drawCallback(this.state.annotations));
 	}
 
 	updateAnnotation(index, data)
@@ -190,13 +191,36 @@ export default class ThreeAnnotationController extends Component
 
 		this.setState({
 			annotations: annotations
-		});//, this.props.updateCallback(this.state.annotations));
+		});
+	}
+
+	deleteAnnotation(index)
+	{
+		this.setState({
+			annotations: this.state.annotations.splice(index, 1)
+		}, this.props.drawCallback(this.state.annotations));
+	}
+
+	viewAnnotation(index)
+	{
+		let annotations = this.state.annotations;
+		annotations.forEach((annotation) => annotation.open = false);
+		annotations[index].open = true;
+
+		this.props.cameraCallback(this.state.annotations[index].point);
 	}
 
 	render() 
 	{
 		let annotations = this.state.annotations.map((annotation, index) => {
-			let component = <ThreeAnnotation title = {annotation.title} text = {annotation.text} callback = {this.updateAnnotation} index = {index} editable = {this.state.editable}/>;
+			let component = <ThreeAnnotation 
+								title = {annotation.title} 
+								text = {annotation.text} 
+								callback = {this.updateAnnotation} 
+								index = {index} 
+								div = {annotation.div}
+								editable = {this.state.editable}
+							/>;
 			return <PortalElement component = {component} domElement = {annotation.div}/>
 		});
 
@@ -204,15 +228,20 @@ export default class ThreeAnnotationController extends Component
 		if (this.state.active)
 			editToggle = <ThreeToggle title="edit mode" callback={this.toggleEdit} defaultVal={true}/>;
 
-		let shortcuts = this.state.annotations.map(annotation => <ThreeAnnotationShortcut );
+		let shortcuts = this.state.annotations.map((annotation, index) => 
+			<ThreeAnnotationShortcut 
+				title={annotation.title} 
+				index={index}
+				focus={this.viewAnnotation}
+				delete={this.deleteAnnotation}
+			/>);
+
 		let shortcutContainer;
 		if (this.state.active)
-		{
-			shortcutContainer = (<div className={"three-gui-group"}>
+			shortcutContainer = <div className={"three-gui-group"}>
 			              			<h4 className="three-gui-group-title">shortcuts</h4>
 			              			{shortcuts}
-			            		 </div>)
-		}
+			            		</div>;
 
     	return (
       		<div className="three-annotation-tool-container">

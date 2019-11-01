@@ -53,7 +53,6 @@ import {
 import ThreeMeasure from "./ThreeMeasure";
 import ThreeAnnotationController from "./annotations/ThreeAnnotationController";
 import ThreeRangeSlider from "./ThreeRangeSlider";
-import ThreeAnnotationShortcut from "./ThreeAnnotationShortcut";
 import ThreeToggle, { ThreeToggleMulti } from "./ThreeToggle";
 import ThreeColorPicker, {
   ThreeMicroColorPicker,
@@ -306,9 +305,7 @@ export default class ThreeView extends Component {
     (this: any).toggleQuality = this.toggleQuality.bind(this);
     (this: any).drawMeasurement = this.drawMeasurement.bind(this);
     (this: any).drawAnnotations = this.drawAnnotations.bind(this);
-    (this: any).updateAnnotationShortcuts = this.updateAnnotationShortcuts.bind(this);
     (this: any).viewAnnotation = this.viewAnnotation.bind(this);
-    (this: any).deleteAnnotation = this.deleteAnnotation.bind(this);
     (this: any).drawSpriteTarget = this.drawSpriteTarget.bind(this);
     (this: any).computeSpriteScaleFactor = this.computeSpriteScaleFactor.bind(
       this
@@ -460,7 +457,6 @@ export default class ThreeView extends Component {
   initThree(): void {
     this.GUI = new ThreeGUI();
     this.GUI.registerComponent("THREE_RANGE_SLIDER", ThreeRangeSlider);
-    this.GUI.registerComponent("THREE_ANNOTATION_SHORTCUT", ThreeAnnotationShortcut);
     this.GUI.registerComponent("THREE_BUTTON", ThreeButton);
     this.GUI.registerComponent("THREE_TOGGLE", ThreeToggle);
     this.GUI.registerComponent("THREE_TOGGLE_MULTI", ThreeToggleMulti);
@@ -875,8 +871,6 @@ export default class ThreeView extends Component {
     this.annotationMarkers.remove(...this.annotationMarkers.children);
     this.annotationCSS.remove(...this.annotationCSS.children);
 
-    //this.updateAnnotationShortcuts(annotations);
-
     if (annotations)
     {
       for (let i = 0; i < annotations.length; i++)
@@ -889,8 +883,6 @@ export default class ThreeView extends Component {
 
         var annotationMarker = new THREE.Mesh( sphereGeometry, sphereMaterial );
         annotationMarker.position.copy(annotations[i].point);
-
-        //annotationMarker.material.color.set(annotations[i].open ? "0xe7e7e7" : "0x1b1b1b");
 
         if (annotations[i].open)
         {
@@ -929,32 +921,6 @@ export default class ThreeView extends Component {
       annotationPos.unproject(this.overlayCamera);
 
       cssDiv.position.set(annotationPos.x, annotationPos.y, annotationPos.z);
-
-      /*if (line)
-      {
-        //console.log(line.geometry.vertices[1]);
-
-        annotation.remove(annotation.children[0]);
-
-        line.geometry.vertices.pop();
-        line.geometry.vertices.push(cssDiv.position.clone().project(this.overlayCamera).unproject(this.camera));
-
-        annotation.add(line);
-
-        //console.log(line.geometry.vertices[1]);
-        annotation.remove(annotation.children[0])
-        var lineGeometry = new THREE.Geometry();
-        lineGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
-        lineGeometry.vertices.push(cssDiv.position.clone().project(this.overlayCamera).unproject(this.camera));
-
-        var lineMaterial = new THREE.LineBasicMaterial({ color: 0x1b1b1b });
-
-        var line = new THREE.Line(lineGeometry, lineMaterial);
-
-        annotation.add(line);
-
-        //console.log(this.annotationMarkers.children[i].children[0].geometry.vertices);
-      }*/
     }
   }
 
@@ -2103,56 +2069,11 @@ export default class ThreeView extends Component {
     );
   }
 
-  updateAnnotationShortcuts(annotations: Object): void {
-    let panelGroup = this.panelGroup;
-    if (this.props.enableAnnotations || true)
-    {
-      let annotationGroup = panelGroup.find("annotations").component;
-      annotationGroup.remove("shortcuts");
-
-      let shortcuts = new ThreeGUIGroup("shortcuts");
-
-      if (annotations)
-        for (let i = 0; i < annotations.length; i++)
-          shortcuts.addComponent("annotation " + i, this.GUI.components.THREE_ANNOTATION_SHORTCUT, {
-            annotations: annotations,
-            index: i,
-            focus: this.viewAnnotation,
-            delete: this.deleteAnnotation
-          });
-
-      annotationGroup.addGroup("shortcuts", shortcuts);
-
-      this.panelLayout = (
-      <this.GUI.layouts.THREE_PANEL_LAYOUT
-        group={this.panelGroup}
-        elementClass="three-tool"
-        groupClass="three-tool-container"
-        menuClass="three-tool-menu"
-        dropdownClass="three-tool-menu-dropdown"
-        ref={ref => (this.toolsMenu = ref)}
-      />
-      );
-
-      //this.setState({newContentToggle: !this.state.newContentToggle});
-    }
-  }
-
-  viewAnnotation(annotations: Object, index: number): void {
-    annotations.forEach((annotation) => annotation.open = false);
-    annotations[index].open = true;
-
-    this.drawAnnotations(annotations);
-
+  viewAnnotation(point: THREE.Vector3): void {
     this.setState({
       controllable: false,
-      target: annotations[index].point
+      target: point
     });
-  }
-
-  deleteAnnotation(annotations: Object, index: number): void {
-    annotations.splice(index, 1);
-    this.drawAnnotations(annotations);
   }
 
   // TODO make this thing resize properly
