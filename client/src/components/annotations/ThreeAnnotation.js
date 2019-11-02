@@ -31,7 +31,7 @@ export default class ThreeAnnotation extends React.Component
 	{
 		this.setState({
 			text: event.target.value
-		}, this.props.callback(this.props.index, this.state));
+		}, () => { this.props.callback(this.props.index, this.state); });
 	}
 
 	render()
@@ -39,7 +39,7 @@ export default class ThreeAnnotation extends React.Component
 		return (
 			<div className="annotation">
 				<div className="annotation-head" style={this.state.titleStyle}>
-					<textarea defaultValue = {this.state.title} type = 'text' onChange = {this.updaetTitle} className="text-area" readOnly = {!this.props.editable}/>
+					<textarea defaultValue = {this.state.title} type = 'text' onChange = {this.updateTitle} className="text-area" readOnly = {!this.props.editable}/>
 				</div>
 				<div className="annotation-body" style={this.state.textStyle}>
 					<textarea defaultValue = {this.state.text} type = 'text' onChange = {this.updateText} className="text-area" readOnly = {!this.props.editable}/>

@@ -477,6 +477,8 @@ body {
   min-height: 150px;
   max-width: 250px;
   min-width: 100px;
+  display: flex;
+  flex-direction: column;
 }
 
 .annotation-head
@@ -495,42 +497,38 @@ body {
 
 .annotation-body
 {
+  flex-grow: 1;
   color: white;
   background-color: none;
   text-align: center;
   align-items: center;
-  height: auto;
   resize: both;
-}
-
-.annotation-body-text
-{
-  top: auto;
-  bottom: auto;
-  height: 90%;
 }
 
 .text-area
 {
-  background: none;
-  font-family: "Source Code Pro", monospace;
-  font-size: 1rem;
-  color: white;
-  height: auto;
-  text-align: center;
+  height: 90%;
+  width: 90%;
+  padding-top: 5%;
+  padding-bottom: 5%;
   border: none;
   outline: none;
   resize: none;
+  background: none;
+  color: white;
+  text-align: center;
+  font-family: "Source Code Pro", monospace;
+  font-size: 1rem;
   line-height: 20px;
-  top: 0%;
-  padding: 10px;
-  width: 100%;
+  text-overflow: ellipsis;
 }
 
 .annotation-shortcut-container {
   position: relative;
   width: 100%;
   height: auto;
+  min-height: 35px;
+  max-height: 55px;
   background-color: rgba(0,0,0,0.7) !important;
   border: 2px solid #ccc !important;
   padding: 0px !important;
@@ -544,9 +542,13 @@ body {
   margin-right: auto;
   height: 100%;
   width: 60%;
+  padding-top: 2px;
+  padding-bottom: 2px;
   background: none !important;
   color: #ccc !important;
   overflow: hidden;
+  max-height: 55px;
+  text-overflow: ellipsis;
 }
 
 .annotation-shortcut-button-container {
@@ -557,7 +559,7 @@ body {
   background-color: #1b1b1b;
   border: none;
   width: 30px;
-  height: 30px;
+  height: 100%;
 }
 
 .annotation-shortcut-button:hover {

@@ -197,8 +197,8 @@ export default class ThreeAnnotationController extends Component
 	deleteAnnotation(index)
 	{
 		this.setState({
-			annotations: this.state.annotations.splice(index, 1)
-		}, this.props.drawCallback(this.state.annotations));
+			annotations: this.state.annotations.length == 1 ? [] : this.state.annotations.splice(index, 1)
+		}, () => { this.props.drawCallback(this.state.annotations); });
 	}
 
 	viewAnnotation(index)
@@ -207,11 +207,17 @@ export default class ThreeAnnotationController extends Component
 		annotations.forEach((annotation) => annotation.open = false);
 		annotations[index].open = true;
 
-		this.props.cameraCallback(this.state.annotations[index].point);
+		this.props.cameraCallback(annotations[index].point);
+
+		this.setState({
+			annotations: annotations
+		}, this.props.drawCallback(this.state.annotations));
 	}
 
 	render() 
 	{
+		console.log("Rerendering");
+
 		let annotations = this.state.annotations.map((annotation, index) => {
 			let component = <ThreeAnnotation 
 								title = {annotation.title} 
@@ -235,6 +241,8 @@ export default class ThreeAnnotationController extends Component
 				focus={this.viewAnnotation}
 				delete={this.deleteAnnotation}
 			/>);
+
+		console.log('shortcuts has length' + shortcuts.length + ' and annotations has length ' + annotations.length);
 
 		let shortcutContainer;
 		if (this.state.active)

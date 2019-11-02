@@ -1533,6 +1533,7 @@ export default class ThreeView extends Component {
       Math.floor(val / this.state.quality.current.value)
     );
     this.webGLRenderer.setSize(width, height, false);
+    this.css2DRenderer.setSize(width, height, false);
     this.sceneComposer.setSize(width, height, false);
     this.modelComposer.setSize(width, height, false);
     this.guiComposer.setSize(width, height, false);
@@ -2297,6 +2298,7 @@ export default class ThreeView extends Component {
     let { clientWidth, clientHeight } = this.webGLRenderer.domElement;
     // we're concerned with client height + client width of our canvas
     this.camera.aspect = clientWidth / clientHeight;
+    this.overlayCamera.aspect = clientWidth / clientHeight;
     this.camera.updateProjectionMatrix();
     if (!this.state.toolsActive) {
       this.width = clientWidth;
