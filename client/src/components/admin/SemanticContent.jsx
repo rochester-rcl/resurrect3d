@@ -197,7 +197,18 @@ class SemanticContent extends React.Component {
     const list = entries.map(obj =>
 
         <Segment key={obj[1]._id}>
-          <Header>{obj[1]._id}</Header>
+          <Button.Group>
+
+            <Label as='span' basic >
+              {obj[1]._id}
+            </Label>
+            <Button
+              onClick={() => this.props.deleteView(obj[1]._id)}
+              icon
+              color="red">
+              <Icon size='large' name='remove circle'/>
+            </Button>
+          </Button.Group>
           <List>
             <List.Item>{obj[1].threeFile}</List.Item>
             <List.Item>{obj[1].threeThumbnail}</List.Item>

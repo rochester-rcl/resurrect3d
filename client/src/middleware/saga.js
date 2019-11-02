@@ -453,7 +453,7 @@ export function* addThreeViewSaga(addThreeViewAction: Object): Generator<any, an
   } catch (error) {
     console.log(error);
   }
-  
+
 }
 
 export function* getThreeViewsSaga(getThreeViewsAction: Object): Generator<any, any, any> {
@@ -506,6 +506,14 @@ export function* deleteThreeViewSaga(deleteThreeViewAction: Object): Generator<a
   try {
     if (backend.hasAdminBackend) {
       const result = yield call(backend.adminBackend.deleteView, deleteThreeViewAction.id);
+      
+      const results = yield call(backend.adminBackend.getViews);
+      const objConvertedResults = yield call(arrayToObject, results.views);
+
+      yield put({
+        type: ActionConstants.VIEWS_LOADED,
+        views: objConvertedResults
+      });
     } else {
       console.warn(genericAPIRouteMessage);
     }
