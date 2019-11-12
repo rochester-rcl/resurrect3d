@@ -94,7 +94,7 @@ export class ThreeGUIGroup {
 
   remove(name: string): bool {
     let index = this.components.findIndex((component) => {
-      return component.title === name;
+      return component.name === name;
     });
     if (index > -1) {
       this.components.splice(index, 1);

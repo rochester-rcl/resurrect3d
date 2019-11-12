@@ -462,6 +462,114 @@ body {
   cursor: pointer;
 }
 
+/*** Annotations ***/
+.annotation
+{
+  width: 175px;
+  height: 250px;
+  background-color: #0d0d0d;
+  border: 2px solid #1b1b1b;
+  border-radius: 7px;
+  text-align: center;
+  overflow: auto;
+  resize: both;
+  max-height: 400px;
+  min-height: 150px;
+  max-width: 250px;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+}
+
+.annotation-head
+{
+  color: white;
+  background-color: #1b1b1b;
+  border-radius: 5px 5px 0px 0px;
+  width: 100%;
+  text-align: center;
+  align-items: center;
+  overflow: auto;
+  resize: vertical;
+  max-height: 60%;
+  min-height: 20%;
+}
+
+.annotation-body
+{
+  flex-grow: 1;
+  color: white;
+  background-color: none;
+  text-align: center;
+  align-items: center;
+  resize: both;
+}
+
+.text-area
+{
+  height: 90%;
+  width: 90%;
+  padding-top: 5%;
+  padding-bottom: 5%;
+  border: none;
+  outline: none;
+  resize: none;
+  background: none;
+  color: white;
+  text-align: center;
+  font-family: "Source Code Pro", monospace;
+  font-size: 1rem;
+  line-height: 20px;
+  text-overflow: ellipsis;
+}
+
+.annotation-shortcut-container {
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-height: 35px;
+  max-height: 55px;
+  background-color: rgba(0,0,0,0.7) !important;
+  border: 2px solid #ccc !important;
+  padding: 0px !important;
+  margin-top: 10px !important;
+  display: flex;
+  font-family: 'Source Code Pro', monospace;
+  overflow: hidden;
+}
+
+.annotation-shortcut-title {
+  margin-right: auto;
+  height: 100%;
+  width: 60%;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  background: none !important;
+  color: #ccc !important;
+  overflow: hidden;
+  max-height: 55px;
+  text-overflow: ellipsis;
+}
+
+.annotation-shortcut-button-container {
+  margin-left: auto;
+}
+
+.annotation-shortcut-button {
+  background-color: #1b1b1b;
+  border: none;
+  width: 30px;
+  height: 100%;
+}
+
+.annotation-shortcut-button:hover {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.annotation-shortcut-icon {
+  color: #ccc !important;
+}
+
 /*** MOBILE Styles ***/
 
 .three-touch-listener {
@@ -507,7 +615,5 @@ body {
     max-height: 300px;
     transition: all ease-in-out 0.5s;
   }
-
-
 
 }

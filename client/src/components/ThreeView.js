@@ -2,9 +2,11 @@
 // TODO Why is loadText not showing? And why is there a huge bottleneck at loadPostProcessor ?????????
 // React
 import React, { Component } from "react";
+import ReactDOM from "react-dom";
 
 // THREEJS
 import * as _THREE from "three";
+import { CSS2DObject, CSS2DRenderer } from "./CSS2DRenderer"
 
 // Semantic UI
 import LoaderModal from "./LoaderModal";
@@ -49,8 +51,8 @@ import {
 } from "../constants/application";
 
 // Controls
-import ThreeControls from "./ThreeControls";
 import ThreeMeasure from "./ThreeMeasure";
+import ThreeAnnotationController from "./annotations/ThreeAnnotationController";
 import ThreeRangeSlider from "./ThreeRangeSlider";
 import ThreeToggle, { ThreeToggleMulti } from "./ThreeToggle";
 import ThreeColorPicker, {
@@ -107,6 +109,7 @@ export default class ThreeView extends Component {
 
   // environments
   scene: THREE.Scene;
+  overlayScene: THREE.Scene;
   envScene: THREE.Scene;
   guiScene: THREE.Scene;
   ambientLight: THREE.AmbientLight;
@@ -121,6 +124,7 @@ export default class ThreeView extends Component {
   lastCameraPosition: THREE.Vector3;
   lastCameraTarget: THREE.Vector3;
   camera: THREE.PerspectiveCamera;
+  overlayCamera = THREE.OrthographicCamera;
 
   // Controls
   rotateSpeed: Number = 0.4;
@@ -129,6 +133,7 @@ export default class ThreeView extends Component {
 
   // Rendering
   webGLRenderer: THREE.WebGLRenderer;
+  css2DRenderer: CSS2DRenderer;
   envRenderPass: THREE.RenderPass;
   effectComposer: THREE.EffectComposer;
   bokehPass: THREE.BokehPass;
@@ -153,6 +158,9 @@ export default class ThreeView extends Component {
     shiftDown: false,
     rmbDown: false,
     pinching: false,
+    // auto camera movement
+    controllable: true,
+    target: undefined,
     // rotation
     rotateStart: new THREE.Vector2(),
     rotateEnd: new THREE.Vector2(),
@@ -222,6 +230,7 @@ export default class ThreeView extends Component {
       }
     },
     isRaycasting: false,
+    //newContentToggle: false,
     vrActive: false,
     units: CM
   };
@@ -271,10 +280,13 @@ export default class ThreeView extends Component {
     (this: any).animate = this.animate.bind(this);
     (this: any).update = this.update.bind(this);
     (this: any).updateCamera = this.updateCamera.bind(this);
+    (this: any).controlCamera = this.controlCamera.bind(this);
     (this: any).orbit = this.orbit.bind(this);
     (this: any).zoom = this.zoom.bind(this);
     (this: any).pan = this.pan.bind(this);
+    (this: any).zoomTo = this.zoomTo.bind(this);
     (this: any).renderWebGL = this.renderWebGL.bind(this);
+    (this: any).renderCSS = this.renderCSS.bind(this);
     (this: any).getScale = this.getScale.bind(this);
     (this: any).fitPerspectiveCamera = this.fitPerspectiveCamera.bind(this);
     (this: any).panBounds = this.panBounds.bind(this);
@@ -294,6 +306,8 @@ export default class ThreeView extends Component {
     (this: any).toggleTools = this.toggleTools.bind(this);
     (this: any).toggleQuality = this.toggleQuality.bind(this);
     (this: any).drawMeasurement = this.drawMeasurement.bind(this);
+    (this: any).drawAnnotations = this.drawAnnotations.bind(this);
+    (this: any).viewAnnotation = this.viewAnnotation.bind(this);
     (this: any).drawSpriteTarget = this.drawSpriteTarget.bind(this);
     (this: any).computeSpriteScaleFactor = this.computeSpriteScaleFactor.bind(
       this
@@ -332,6 +346,9 @@ export default class ThreeView extends Component {
 
     // VR
     this.vrSupported = checkVR();
+
+    //Updatable UI
+    this.panelGroup = new ThreeGUIGroup("tools");
   }
 
   /** COMPONENT LIFECYCYLE
@@ -366,11 +383,13 @@ export default class ThreeView extends Component {
     if (nextState.dynamicLighting !== this.state.dynamicLighting) return true;
     if (nextState.detailMode !== this.state.detailMode) return true;
     if (nextState.toolsActive !== this.state.toolsActive) return true;
+    //if (nextState.updatingUI !== this.state.updatingUI) return true;
     if (nextState.units !== this.state.units) return true;
     if (nextProps.loggedIn !== this.props.loggedIn) return true;
     if (nextProps.saveStatus !== this.props.saveStatus) return true;
     if (nextState.dragging !== this.state.dragging) return true;
     if (nextState.isRaycasting !== this.state.isRaycasting) return true;
+    //if (nextState.newContentToggle !== this.state.newContentToggle) return true;
     return false;
   }
 
@@ -454,6 +473,7 @@ export default class ThreeView extends Component {
       "THREE_MICRO_COLOR_PICKER",
       ThreeMicroColorPicker
     );
+    this.GUI.registerComponent("THREE_ANNOTATION_CONTROLLER", ThreeAnnotationController);
     this.GUI.registerComponent("THREE_MEASURE", ThreeMeasure);
     this.GUI.registerComponent("THREE_SCREENSHOT", ThreeScreenshot);
     this.GUI.registerComponent("THREE_MESH_EXPORTER", ThreeMeshExporter);
@@ -464,6 +484,7 @@ export default class ThreeView extends Component {
 
     // init camera
     this.camera = new THREE.PerspectiveCamera(50, this.width / this.height); // use defaults for fov and near and far frustum;
+    this.overlayCamera = new THREE.PerspectiveCamera(50, this.width / this.height);
     this.vrCamera = new THREE.PerspectiveCamera();
     this.camera.add(this.vrCamera);
     this.spherical = new THREE.Spherical();
@@ -477,6 +498,7 @@ export default class ThreeView extends Component {
 
     // Scenes
     this.scene = new THREE.Scene();
+    this.overlayScene = new THREE.Scene();
     this.envScene = new THREE.Scene();
     this.guiScene = new THREE.Scene();
     this.camera.target = new THREE.Vector3();
@@ -507,11 +529,21 @@ export default class ThreeView extends Component {
     this.scene.add(this.ambientLight);
     this.scene.add(this.camera);
 
+    this.overlayScene.add(this.overlayCamera);
+
     // Label Sprite that we can just copy for all the measurement
     this.labelSprite = new LabelSprite(128, 128, "#fff", "+").toSprite();
 
     this.measurement = new THREE.Group();
     this.guiScene.add(this.measurement);
+
+    this.annotationMarkers = new THREE.Group();
+    this.annotationLines = new THREE.Group();
+    this.annotationCSS = new THREE.Group();
+
+    this.guiScene.add(this.annotationMarkers);
+    this.overlayScene.add(this.annotationCSS);
+    this.overlayScene.add(this.annotationLines);
 
     // WebGL Renderer
     this.webGLRenderer = new THREE.WebGLRenderer({
@@ -532,10 +564,18 @@ export default class ThreeView extends Component {
     this.height = this.webGLRenderer.domElement.clientHeight;
     this.camera.aspect = this.width / this.height;
     this.webGLRenderer.setSize(this.width, this.height, false);
+    this.webGLRenderer.domElement.style.marginTop = "10px";
+
     this.camera.updateProjectionMatrix();
 
     // Check if we're not on a touch device
     this.isMobile = !DISPLAY_DEVICE.DESKTOP();
+    this.css2DRenderer = new CSS2DRenderer();
+    this.css2DRenderer.setSize(this.width, this.height, false);
+    console.log("Height: " + this.webGLRenderer.domElement.offsetHeight);
+    this.css2DRenderer.domElement.style.marginTop = "-710px";
+    this.threeView.appendChild(this.css2DRenderer.domElement);
+
 
     this.setState((prevState, props) => {
       return {
@@ -658,6 +698,7 @@ export default class ThreeView extends Component {
   update(): void {
     this.updateCamera();
     this.renderWebGL();
+    this.renderCSS();
   }
 
   renderWebGL(): void {
@@ -675,6 +716,11 @@ export default class ThreeView extends Component {
     } else {
       this.webGLRenderer.render(this.scene, (this.state.vrActive === true) ? this.vrCamera : this.camera);
     }
+  }
+
+  renderCSS(): void //render css
+  {
+    this.css2DRenderer.render(this.overlayScene, (this.state.vrActive === true) ? this.vrCamera : this.overlayCamera);
   }
 
   animate(): void {
@@ -825,6 +871,65 @@ export default class ThreeView extends Component {
     }
   }
 
+  drawAnnotations(annotations?: Object): void { 
+    for (let i = 0; i < this.annotationMarkers.children.length; i++)
+      this.annotationMarkers.children[i].remove(...this.annotationMarkers.children[i].children);
+    this.annotationMarkers.remove(...this.annotationMarkers.children);
+    this.annotationCSS.remove(...this.annotationCSS.children);
+
+    if (annotations)
+    {
+      for (let i = 0; i < annotations.length; i++)
+      {
+        var sphereGeometry = new THREE.SphereBufferGeometry( 0.2, 32, 32 );
+        var sphereMaterial = new THREE.MeshBasicMaterial( {
+          shininess: 5,
+          color: annotations[i].open ? 0xe7e7e7 : 0x1b1b1b
+        });
+
+        var annotationMarker = new THREE.Mesh( sphereGeometry, sphereMaterial );
+        annotationMarker.position.copy(annotations[i].point);
+
+        if (annotations[i].open)
+        {
+          var cssObj = new CSS2DObject(annotations[i].div);
+
+          var lineGeometry = new THREE.Geometry();
+          lineGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
+          lineGeometry.vertices.push(cssObj.position);
+
+          var lineMaterial = new THREE.LineBasicMaterial({ color: 0x1b1b1b });
+
+          var line = new THREE.Line(lineGeometry, lineMaterial);
+
+          this.annotationLines.add(line);
+        }
+        else
+          var cssObj = new CSS2DObject(document.createElement("div"));
+
+        this.annotationCSS.add(cssObj);
+        this.annotationMarkers.add(annotationMarker);
+      }
+    }
+  }
+
+  positionAnnotations(): void {                             //Make annotations position smartly to stay in camera -- use raycaster prob
+    var distance = 0.3;
+    for (let i = 0; i < this.annotationMarkers.children.length; i++)
+    {
+      let annotation = this.annotationMarkers.children[i];
+      let line = annotation.children[0];
+      let cssDiv = this.annotationCSS.children[i];
+
+      let annotationPos = annotation.position.clone().project(this.camera);
+      let offset = annotationPos.x > 0 ? distance : -distance;
+      annotationPos.add(new THREE.Vector3(offset, 0, 0));
+      annotationPos.unproject(this.overlayCamera);
+
+      cssDiv.position.set(annotationPos.x, annotationPos.y, annotationPos.z);
+    }
+  }
+
   initMesh(): void {
     this.mesh = this.props.mesh.object3D;
     const setMicrosurface = material => {
@@ -912,6 +1017,7 @@ export default class ThreeView extends Component {
       opacity: 0.8,
       transparent: true
     });
+
     let labelSphereGeometry = new THREE.SphereGeometry(
       this.environmentRadius / 200,
       16,
@@ -990,6 +1096,7 @@ export default class ThreeView extends Component {
     });
   }
 
+//{
   /** WEBGL Postprocessing
    *****************************************************************************/
 
@@ -1190,10 +1297,11 @@ export default class ThreeView extends Component {
       }
     );
   }
+//}
 
   /** Rendering / Updates / Camera
    *****************************************************************************/
-
+//{
   getScale(dstScale: number): number {
     let { maxScale } = this.state;
     if (dstScale > maxScale) dstScale = maxScale;
@@ -1227,6 +1335,26 @@ export default class ThreeView extends Component {
     let up = panUp(dstY, this.camera.matrix, 0.5);
 
     this.setState({ panOffset: this.state.panOffset.add(left.add(up)) });
+  }
+
+  zoomTo(pos: THREE.Vector3, alpha: float): void {
+
+    let distance = 25;
+    let dest = pos.clone().normalize();
+    dest.multiplyScalar(distance);
+
+    if (this.camera.position.equals(dest))
+      this.setState({ 
+        controllable: true,
+        target: undefined
+      });
+    else
+    {
+      let move = (dest.clone().sub(this.camera.position));
+      move = move.length() < alpha ? move : move.normalize().multiplyScalar(alpha);
+      this.camera.position.add(move);
+      this.camera.lookAt(pos);
+    }
   }
 
   rotate(deltaX: number, deltaY: number): void {
@@ -1280,6 +1408,13 @@ export default class ThreeView extends Component {
   }
 
   updateCamera(): void {
+    if (this.state.controllable)
+      this.controlCamera();
+    else
+      this.zoomTo(this.state.target, 2);
+  }
+
+  controlCamera(): void {
     // Borrowed from THREEJS OrbitControls
     const { sphericalDelta, panOffset, zoomScale, vrActive } = this.state;
     const { spherical } = this;
@@ -1329,7 +1464,8 @@ export default class ThreeView extends Component {
       scale: scale,
     });
 
-}
+    this.positionAnnotations();
+  }
 
   updateThreeMaterial(material: THREE.Material, prop: string, scale: Number) {
     if (material[prop] !== null || material[prop] !== undefined) {
@@ -1402,6 +1538,7 @@ export default class ThreeView extends Component {
       Math.floor(val / this.state.quality.current.value)
     );
     this.webGLRenderer.setSize(width, height, false);
+    this.css2DRenderer.setSize(width, height, false);
     this.sceneComposer.setSize(width, height, false);
     this.modelComposer.setSize(width, height, false);
     this.guiComposer.setSize(width, height, false);
@@ -1559,7 +1696,27 @@ export default class ThreeView extends Component {
   initTools(): void {
     const layouts = this.GUI.layouts;
     const components = this.GUI.components;
-    let panelGroup = new ThreeGUIGroup("tools");
+    //let panelGroup = new ThreeGUIGroup("tools");
+
+    /***************** ANNOTATIONS *********************************************/
+
+    if (this.props.enableAnnotations || true) { //Set enableAnnotations in props
+      let annotationGroup = new ThreeGUIGroup("annotations");
+
+      annotationGroup.addComponent("controller", components.THREE_ANNOTATION_CONTROLLER, {
+        drawCallback: this.drawAnnotations,
+        updateCallback: this.updateAnnotationShortcuts,
+        cameraCallback: this.viewAnnotation,
+        onActiveCallback: (val) => this.toggleRaycasting(val),
+        camera: this.camera,
+        mesh: this.mesh,
+        annotations: this.annotations,
+        webGL: this.webGLRenderer.domElement,
+        css: this.css2DRenderer.domElement
+      });
+
+      this.panelGroup.addGroup("annotations", annotationGroup);
+    }
 
     /***************** MEASUREMENT *********************************************/
     if (this.props.options.enableMeasurement) {
@@ -1579,7 +1736,7 @@ export default class ThreeView extends Component {
         title: "show axes"
       });
 
-      const unitButtons = [
+      const unitButtons =[
         {
           label: "mm",
           defaultVal: true,
@@ -1610,7 +1767,7 @@ export default class ThreeView extends Component {
         title: "units"
       });
 
-      panelGroup.addGroup("measurement", measurementGroup);
+      this.panelGroup.addGroup("measurement", measurementGroup);
     }
     // ***************************** LIGHTS ************************************
     if (this.props.options.enableLight) {
@@ -1670,7 +1827,7 @@ export default class ThreeView extends Component {
         callback: value => this.updateDynamicLighting(value, "offsetZ")
       });
       lightGroup.addGroup("offset", offsetGroup);
-      panelGroup.addGroup("lights", lightGroup);
+      this.panelGroup.addGroup("lights", lightGroup);
     }
 
     /****************************** SHADERS ***********************************/
@@ -1817,8 +1974,9 @@ export default class ThreeView extends Component {
       this.settingsMask.shaders.add("threshold");
       shaderGroup.addGroup("eye dome lighting", edlGroup);
       shaderGroup.addGroup("chroma key", chromaKeyGroup);
-      panelGroup.addGroup("shaders", shaderGroup);
+      this.panelGroup.addGroup("shaders", shaderGroup);
     }
+
     /****************** MATERIALS *********************************************/
     if (this.props.options.enableMaterials) {
       const { materialsInfo } = this.state;
@@ -1891,12 +2049,12 @@ export default class ThreeView extends Component {
           }
         }
       }
-      panelGroup.addGroup("materials", materialsGroup);
+      this.panelGroup.addGroup("materials", materialsGroup);
     }
 
     this.panelLayout = (
       <layouts.THREE_PANEL_LAYOUT
-        group={panelGroup}
+        group={this.panelGroup}
         elementClass="three-tool"
         groupClass="three-tool-container"
         menuClass="three-tool-menu"
@@ -1915,6 +2073,13 @@ export default class ThreeView extends Component {
         this.animate();
       }
     );
+  }
+
+  viewAnnotation(point: THREE.Vector3): void {
+    this.setState({
+      controllable: false,
+      target: point
+    });
   }
 
   // TODO make this thing resize properly
@@ -2086,6 +2251,7 @@ export default class ThreeView extends Component {
     });
     this.centerCamera();
   }
+//}
 
   /** EVENT HANDLERS
    *****************************************************************************/
@@ -2116,7 +2282,8 @@ export default class ThreeView extends Component {
   }
 
   handleMouseMove(event: SyntheticMouseEvent): void {
-    this.orbit(event.clientX, event.clientY);
+    if (this.state.controllable)
+      this.orbit(event.clientX, event.clientY);
   }
 
   handleMouseWheel(event: SyntheticWheelEvent): void {
@@ -2136,6 +2303,7 @@ export default class ThreeView extends Component {
     let { clientWidth, clientHeight } = this.webGLRenderer.domElement;
     // we're concerned with client height + client width of our canvas
     this.camera.aspect = clientWidth / clientHeight;
+    this.overlayCamera.aspect = clientWidth / clientHeight;
     this.camera.updateProjectionMatrix();
     if (!this.state.toolsActive) {
       this.width = clientWidth;
@@ -2161,7 +2329,7 @@ export default class ThreeView extends Component {
         break;
 
       default:
-        return;
+        break;
     }
   }
 
@@ -2171,7 +2339,7 @@ export default class ThreeView extends Component {
         this.setState({ shiftDown: false });
 
       default:
-        return;
+        break;
     }
   }
 
