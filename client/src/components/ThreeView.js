@@ -251,8 +251,8 @@ export default class ThreeView extends Component {
     (this: any).minDistance = 0;
     (this: any).maxDistance = Infinity;
     (this: any).environmentRadius = 0;
-    (this: any).maxPan;
-    (this: any).minPan;
+    (this: any).maxPan = 0;
+    (this: any).minPan = 0;
     (this: any).bboxMesh = null;
     (this: any).axisGuides = [];
     (this: any).bboxSkybox = null;

@@ -21,7 +21,7 @@ module.exports = function override(config, env) {
     };
   }
 
-  const babelLoader = config.module.rules[1].oneOf.find(
+  const babelLoader = config.module.rules[2].oneOf.find(
     loader => loader.loader.includes("babel-loader") !== false
   );
   const workerExtension = /\.worker\.js$/;
