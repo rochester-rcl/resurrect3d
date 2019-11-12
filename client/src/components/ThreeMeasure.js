@@ -10,7 +10,7 @@ import * as THREE from "three";
 import { Button, Icon } from "semantic-ui-react";
 
 // ThreeToggle
-import ThreeToggle from './ThreeToggle';
+import ThreeToggle from "./ThreeToggle";
 
 export default class ThreeMeasure extends Component {
   raycaster: THREE.RayCaster;
@@ -105,8 +105,8 @@ export default class ThreeMeasure extends Component {
     let { points } = this.state;
     if (!this.state.secondClick) {
       points.a = intersection.point;
-      (points.b = null),
-        (points.distance = null),
+      points.b = null;
+      points.distance = null;
         this.setState(
           {
             points: points,
@@ -131,7 +131,7 @@ export default class ThreeMeasure extends Component {
   render() {
     return (
       <div className="three-measure-tool-container">
-        <ThreeToggle title='measure' callback={this.activate} />
+        <ThreeToggle title="measure" callback={this.activate} />
       </div>
     );
   }
