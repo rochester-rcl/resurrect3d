@@ -107,6 +107,7 @@ export default class ThreeMeasure extends Component {
       points.a = intersection.point;
       points.b = null;
       points.distance = null;
+<<<<<<< HEAD
       this.setState(
         {
           points: points,
@@ -114,6 +115,15 @@ export default class ThreeMeasure extends Component {
         },
         this.doCallback
       );
+=======
+        this.setState(
+          {
+            points: points,
+            secondClick: true
+          },
+          this.doCallback
+        );
+>>>>>>> bf544054dfdee562af543eea9f2f02faa67896d8
     } else {
       points.b = intersection.point;
       points.distance =

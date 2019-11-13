@@ -20,7 +20,6 @@ module.exports = function override(config, env) {
       except: Object.keys(three)
     };
   }
-
   const babelLoader = config.module.rules[2].oneOf.find(
     loader => loader.loader.includes("babel-loader") !== false
   );

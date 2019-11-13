@@ -14,7 +14,15 @@ import * as THREE from "three";
 
 // constants
 import { WORKER_PROGRESS, GZIP_EXT } from "../constants/application";
-import { USER_LOGGED_IN, LOGIN_ERROR, USER_AUTHENTICATED, AUTHENTICATE_ATTEMPTED, LOGOUT_USER, USER_LOGGED_OUT, USER_DELETED } from "../constants/actions";
+import {
+  USER_LOGGED_IN,
+  LOGIN_ERROR,
+  USER_AUTHENTICATED,
+  AUTHENTICATE_ATTEMPTED,
+  LOGOUT_USER,
+  USER_LOGGED_OUT,
+  USER_DELETED
+} from "../constants/actions";
 
 import threeViewerBackendFactory from "./backends/threeViewerBackendFactory";
 
@@ -36,17 +44,19 @@ import { getExtension } from "../utils/mesh";
 
 const backend = threeViewerBackendFactory();
 
-const genericAPIRouteMessage = 'Attempting to access an API route that has not been registered in ' + backend.constructor.name;
+const genericAPIRouteMessage =
+  "Attempting to access an API route that has not been registered in " +
+  backend.constructor.name;
 
 const computeProgress = (request: ProgressEvent): string => {
   return parseFloat(request.loaded / 1000000).toFixed(2) + " MB";
-}
+};
 
 const sleep = (duration: Number): Promise => {
   return new Promise((resolve, reject) => {
     setTimeout(() => resolve(), duration);
   });
-}
+};
 
 function* getThreeAssetSaga(
   getThreeAssetAction: Object
@@ -64,7 +74,10 @@ function* getThreeAssetSaga(
       id = getThreeAssetAction.id;
       const metadata = yield backend.getMetadata(asset.itemUrl);
       if (metadata) {
-        yield put({ type: ActionConstants.THREE_METADATA_LOADED, metadata: metadata });
+        yield put({
+          type: ActionConstants.THREE_METADATA_LOADED,
+          metadata: metadata
+        });
       }
     } else {
       // node backend
@@ -76,7 +89,7 @@ function* getThreeAssetSaga(
       ext: ext,
       fileId: asset.threeFile,
       id: id,
-      embedded: getThreeAssetAction.embedded,
+      embedded: getThreeAssetAction.embedded
     });
     yield put({ type: ActionConstants.THREE_ASSET_LOADED, threeAsset: asset });
   } catch (error) {
@@ -214,8 +227,8 @@ function* parseJSONMesh(meshData: Object) {
 }
 
 function* loadJSONMesh(loadMeshAction) {
-  const { payload, id, fileId } = loadMeshAction;
-  let result = yield ThreeViewerAbstractBackend.checkCache(id, fileId);
+  const { payload, id, fileId, embedded } = loadMeshAction;
+  let result = embedded ? false : yield ThreeViewerAbstractBackend.checkCache(id, fileId);
   let data;
   if (result) {
     yield put({
@@ -228,7 +241,12 @@ function* loadJSONMesh(loadMeshAction) {
       type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
       payload: { val: "Fetching Mesh From Server", percent: null }
     });
-    data = yield ThreeViewerAbstractBackend.fetchJSONAssetSaga(id, payload, fileId);
+    data = yield ThreeViewerAbstractBackend.fetchJSONAssetSaga(
+      id,
+      payload,
+      fileId,
+      !embedded
+    );
   }
   yield put({
     type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
@@ -242,7 +260,9 @@ function* loadJSONMesh(loadMeshAction) {
 function* loadGzippedMesh(loadMeshAction) {
   const { payload, id, fileId, embedded } = loadMeshAction;
   let progressChannel;
-  const result = embedded ? false : yield ThreeViewerAbstractBackend.checkCache(id, fileId);
+  const result = embedded
+    ? false
+    : yield ThreeViewerAbstractBackend.checkCache(id, fileId);
   if (result) {
     yield put({
       type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
@@ -261,7 +281,8 @@ function* loadGzippedMesh(loadMeshAction) {
       id,
       payload,
       fileId,
-      createWorkerProgressChannel
+      createWorkerProgressChannel,
+      !embedded
     );
   }
   while (true) {
@@ -343,7 +364,7 @@ function* addUserSaga(userAction: Object): Generator<any, any, any> {
     } else {
       console.warn(genericAPIRouteMessage);
     }
-  } catch(error) {
+  } catch (error) {
     console.log(error);
   }
 }
@@ -358,7 +379,7 @@ function* deleteUserSaga(userAction: Object): Generator<any, any, any> {
     } else {
       console.warn(genericAPIRouteMessage);
     }
-  } catch(error) {
+  } catch (error) {
     console.log(error);
   }
 }
@@ -366,12 +387,14 @@ function* deleteUserSaga(userAction: Object): Generator<any, any, any> {
 function* verifyUserSaga(verifyAction: Object): Generator<any, any, any> {
   try {
     if (backend.hasAdminBackend) {
-      const verified = yield backend.adminBackend.verifyUser(verifyAction.token);
+      const verified = yield backend.adminBackend.verifyUser(
+        verifyAction.token
+      );
       yield put({ type: ActionConstants.USER_VERIFIED, info: verified });
     } else {
       console.warn(genericAPIRouteMessage);
     }
-  } catch(error) {
+  } catch (error) {
     console.log(error);
   }
 }
@@ -393,7 +416,7 @@ function* loginSaga(loginAction: Object): Generator<any, any, any> {
     } else {
       console.warn(genericAPIRouteMessage);
     }
-  } catch(error) {
+  } catch (error) {
     console.log(error);
   }
 }
@@ -408,7 +431,7 @@ function* logoutSaga(): Generator<any, any, any> {
     } else {
       console.warn(genericAPIRouteMessage);
     }
-  } catch(error) {
+  } catch (error) {
     console.log(error);
   }
 }
@@ -418,7 +441,7 @@ export function* authenticateSaga(): Generator<any, any, any> {
     const status = yield backend.authenticate();
     yield put({ type: USER_AUTHENTICATED, loggedIn: status.authenticated });
     yield put({ type: AUTHENTICATE_ATTEMPTED, value: true });
-  } catch(error) {
+  } catch (error) {
     console.log(error);
   }
 }
@@ -428,7 +451,9 @@ export function* addThreeViewSaga(
 ): Generator<any, any, any> {
   try {
     if (backend.hasAdminBackend) {
-      const result = yield backend.adminBackend.addView(addThreeViewAction.viewData);
+      const result = yield backend.adminBackend.addView(
+        addThreeViewAction.viewData
+      );
       // TODO add this to "views"
     } else {
       console.warn(genericAPIRouteMessage);
@@ -449,7 +474,7 @@ export function* getThreeViewsSaga(
         views: results
       });
     } else {
-      console.warn(genericAPIRouteMessage)
+      console.warn(genericAPIRouteMessage);
     }
   } catch (error) {
     console.log(error);
@@ -495,7 +520,9 @@ export function* deleteThreeViewSaga(
 ): Generator<any, any, any> {
   try {
     if (backend.hasAdminBackend) {
-      const result = yield backend.adminBackend.deleteView(deleteThreeViewAction.id);
+      const result = yield backend.adminBackend.deleteView(
+        deleteThreeViewAction.id
+      );
     } else {
       console.warn(genericAPIRouteMessage);
     }
