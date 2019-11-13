@@ -57,9 +57,10 @@ export default class ThreeAnnotationController extends Component {
   }
 
   toggle(): void {
+	const { active } = this.state;  
     this.setState(
       {
-        active: !this.state.active
+		active: !active,
       },
       this.reset
     );
@@ -97,9 +98,8 @@ export default class ThreeAnnotationController extends Component {
       });
   }
 
-  handleUp(
-    event: MouseEvent
-  ): void { //Hard to check if mousedown and mouseup on same object
+  handleUp(event: MouseEvent): void {
+    //Hard to check if mousedown and mouseup on same object
     if (this.state.active && !this.state.dragging) {
       let { camera, mesh } = this.props;
 
@@ -127,6 +127,7 @@ export default class ThreeAnnotationController extends Component {
   }
 
   handleIntersection(intersection: Object): void {
+	  console.log(this.state.editable);
     var clickedExisting = false;
 
     for (
@@ -188,9 +189,9 @@ export default class ThreeAnnotationController extends Component {
   }
 
   deleteAnnotation(index) {
-	const { annotations } = this.state;
-	const updated = annotations.length === 1 ? [] : [...annotations];
-	if (updated.length > 0) updated.splice(index, 1);
+    const { annotations } = this.state;
+    const updated = annotations.length === 1 ? [] : [...annotations];
+    if (updated.length > 0) updated.splice(index, 1);
     this.setState(
       {
         annotations: updated
@@ -239,7 +240,7 @@ export default class ThreeAnnotationController extends Component {
         <ThreeToggle
           title="edit mode"
           callback={this.toggleEdit}
-          defaultVal={true}
+          defaultVal={this.state.editable}
         />
       );
 
