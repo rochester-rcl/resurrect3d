@@ -33,7 +33,7 @@ import { fitBoxes, mapMaterials } from "../utils/mesh";
 import { LabelSprite } from "../utils/image";
 import { LinearGradientShader, RadialGradientCanvas } from "../utils/image";
 import ThreePointLights from "../utils/lights";
-import { convertUnits } from "../utils/math";
+import { convertUnits, lerpArrays } from "../utils/math";
 import { serializeThreeTypes } from "../utils/serialization";
 
 // Constants
@@ -66,14 +66,9 @@ import ThreeMeshExporter from "./ThreeMeshExporter";
 
 // Components
 import ThreeWebVR, { checkVR } from "./webvr/ThreeWebVR";
-import { timingSafeEqual } from "crypto";
 
 // Because of all of the THREE examples' global namespace pollu
 const THREE = _THREE;
-
-const sleep = duration => {
-  return new Promise(resolve => setTimeout(duration, () => resolve()));
-};
 
 export default class ThreeView extends Component {
   /* Flow - declare all instance property types here */
@@ -161,6 +156,8 @@ export default class ThreeView extends Component {
     // auto camera movement
     controllable: true,
     target: undefined,
+    animator: null,
+    deltaTime: 0,
     // rotation
     rotateStart: new THREE.Vector2(),
     rotateEnd: new THREE.Vector2(),
@@ -235,6 +232,7 @@ export default class ThreeView extends Component {
     units: CM
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
+  clock: THREE.Clock;
   constructor(props: Object) {
     super(props);
 
@@ -260,6 +258,7 @@ export default class ThreeView extends Component {
     (this: any).lastCameraTarget = new THREE.Vector3();
     (this: any).EDL_TEXTURE_RADIUS = 1.0;
     (this: any).EDL_TEXTURE_STEP = 0.01;
+    (this: any).clock = new THREE.Clock();
     // TODO needs serious refactoring for VR to work
     /** Methods
      ***************************************************************************/
@@ -727,7 +726,8 @@ export default class ThreeView extends Component {
     }
   }
 
-  renderCSS(): void { //render css
+  renderCSS(): void {
+    //render css
     this.css2DRenderer.render(
       this.overlayScene,
       this.state.vrActive === true ? this.vrCamera : this.overlayCamera
@@ -894,8 +894,7 @@ export default class ThreeView extends Component {
       for (let i = 0; i < annotations.length; i++) {
         var sphereGeometry = new THREE.SphereBufferGeometry(0.2, 32, 32);
         var sphereMaterial = new THREE.MeshBasicMaterial({
-          shininess: 5,
-          color: annotations[i].open ? 0xe7e7e7 : 0x1b1b1b
+          color: annotations[i].open ? 0xe7e7e7 : 0x1b1b1b,
         });
 
         var annotationMarker = new THREE.Mesh(sphereGeometry, sphereMaterial);
@@ -1345,23 +1344,80 @@ export default class ThreeView extends Component {
     this.setState({ panOffset: this.state.panOffset.add(left.add(up)) });
   }
 
-  zoomTo(pos: THREE.Vector3, alpha: float): void {
-    let distance = 25;
+  *animateZoom(pos, duration) {
+    // TODO should clean this up and abstract a lot of this away into another method that can also be used in controlCamera
+    const { deltaTime } = this.state;
+    const { spherical } = this;
+    const distance = 1;
     let dest = pos.clone().normalize();
     dest.multiplyScalar(distance);
+    this.offset.copy(this.camera.position).sub(this.camera.target);
+    this.offset.applyQuaternion(this.quat);
+    const start = new THREE.Vector3(
+      spherical.radius,
+      spherical.phi,
+      spherical.theta
+    ).toArray();
+    const sphericalDest = new THREE.Spherical().setFromVector3(dest);
+    const end = new THREE.Vector3(
+      sphericalDest.radius,
+      sphericalDest.phi,
+      sphericalDest.theta
+    ).toArray();
+    // should yield every frame
+    let tempSpherical = new THREE.Spherical();
+    for (let i = 0; i < duration; i += deltaTime) {
+      tempSpherical.set(...lerpArrays(start, end, i / duration));
+      spherical.setFromVector3(this.offset);
+      spherical.theta = tempSpherical.theta;
+      spherical.phi = tempSpherical.phi;
+      spherical.theta = Math.max(
+        this.minAzimuthAngle,
+        Math.min(this.maxAzimuthAngle, spherical.theta)
+      );
+      spherical.phi = Math.max(
+        this.minPolarAngle,
+        Math.min(this.maxPolarAngle, spherical.phi)
+      );
+      spherical.makeSafe();
+      spherical.radius = tempSpherical.radius;
+      spherical.radius = Math.max(
+        this.minDistance,
+        Math.min(this.maxDistance, spherical.radius)
+      );
+      this.offset.setFromSpherical(spherical);
+      this.offset.applyQuaternion(this.quatInverse);
+      this.camera.position.copy(this.camera.target).add(this.offset);
+      this.camera.lookAt(this.camera.target);
+      yield null;
+    }
+  }
 
-    if (this.camera.position.equals(dest))
+  zoomTo() {
+    const { controllable, animator } = this.state;
+    if (!controllable) {
+      if (animator != null) {
+        if (animator.next().done) {
+          this.setState({
+            controllable: true,
+            target: undefined,
+            animator: null,
+          });
+        }
+      }
+    }
+
+    /*if (this.camera.position.equals(dest))
       this.setState({
         controllable: true,
         target: undefined
       });
     else {
       let move = dest.clone().sub(this.camera.position);
-      move =
-        move.length() < alpha ? move : move.normalize().multiplyScalar(alpha);
+      move = move.length() < alpha ? move : move.normalize().multiplyScalar(alpha);
       this.camera.position.add(move);
       this.camera.lookAt(pos);
-    }
+    }*/
   }
 
   rotate(deltaX: number, deltaY: number): void {
@@ -1416,7 +1472,8 @@ export default class ThreeView extends Component {
 
   updateCamera(): void {
     if (this.state.controllable) this.controlCamera();
-    else this.zoomTo(this.state.target, 2);
+    else this.zoomTo();
+    this.setState({ deltaTime: this.clock.getDelta() });
   }
 
   controlCamera(): void {
@@ -1469,7 +1526,6 @@ export default class ThreeView extends Component {
     this.setState({
       scale: scale
     });
-
     this.positionAnnotations();
   }
 
@@ -2089,7 +2145,8 @@ export default class ThreeView extends Component {
   viewAnnotation(point: THREE.Vector3): void {
     this.setState({
       controllable: false,
-      target: point
+      target: point,
+      animator: this.animateZoom(point, 3)
     });
   }
 

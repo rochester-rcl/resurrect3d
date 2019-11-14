@@ -39,3 +39,8 @@ export function animateLerp(from: THREE.Vector3, to: THREE.Vector3, duration: Nu
   }
   return Promise.all(tasks);
 }
+
+export function lerpArrays(start, end, alpha)
+{
+  return start.map((val, index) => THREE.Math.lerp(val, end[index], alpha));
+}

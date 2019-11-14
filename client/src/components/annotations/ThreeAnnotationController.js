@@ -206,7 +206,6 @@ export default class ThreeAnnotationController extends Component {
     let annotations = this.state.annotations;
     annotations.forEach(annotation => (annotation.open = false));
     annotations[index].open = true;
-
     this.props.cameraCallback(annotations[index].point);
 
     this.setState(
