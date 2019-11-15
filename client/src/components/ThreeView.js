@@ -406,8 +406,10 @@ export default class ThreeView extends Component {
       detailMode,
       toolsActive,
       dragging,
-      isRaycasting
+      isRaycasting,
+      annotations
     } = this.state;
+    console.log(annotations);
     const { info } = this.props;
     let threeViewClassName = "three-view";
     threeViewClassName +=
@@ -894,14 +896,14 @@ export default class ThreeView extends Component {
       for (let i = 0; i < annotations.length; i++) {
         var sphereGeometry = new THREE.SphereBufferGeometry(0.2, 32, 32);
         var sphereMaterial = new THREE.MeshBasicMaterial({
-          color: annotations[i].open ? 0xe7e7e7 : 0x1b1b1b,
+          color: annotations[i].open ? 0xe7e7e7 : 0x1b1b1b
         });
 
         var annotationMarker = new THREE.Mesh(sphereGeometry, sphereMaterial);
         annotationMarker.position.copy(annotations[i].point);
 
         if (annotations[i].open) {
-          var cssObj = new CSS2DObject(annotations[i].div);
+          var cssObj = new CSS2DObject(annotations[i].node);
 
           var lineGeometry = new THREE.Geometry();
           lineGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
@@ -912,8 +914,10 @@ export default class ThreeView extends Component {
           var line = new THREE.Line(lineGeometry, lineMaterial);
 
           this.annotationLines.add(line);
-        } else var cssObj = new CSS2DObject(document.createElement("div"));
-
+        } else {
+          // TODO not sure if there's more of a "react" way of doing this using refs ... 
+          var cssObj = new CSS2DObject(document.createElement("div"));
+        }
         this.annotationCSS.add(cssObj);
         this.annotationMarkers.add(annotationMarker);
       }
@@ -929,10 +933,9 @@ export default class ThreeView extends Component {
       let cssDiv = this.annotationCSS.children[i];
 
       let annotationPos = annotation.position.clone().project(this.camera);
-      let offset = annotationPos.x > 0 ? distance : -distance;
-      annotationPos.add(new THREE.Vector3(offset, 0, 0));
+      /*let offset = annotationPos.x > 0 ? distance : -distance;
+      annotationPos.add(new THREE.Vector3(offset, 0, 0));*/
       annotationPos.unproject(this.overlayCamera);
-
       cssDiv.position.set(annotationPos.x, annotationPos.y, annotationPos.z);
     }
   }
@@ -1348,7 +1351,7 @@ export default class ThreeView extends Component {
     // TODO should clean this up and abstract a lot of this away into another method that can also be used in controlCamera
     const { deltaTime } = this.state;
     const { spherical } = this;
-    const distance = 1;
+    const distance = 10;
     let dest = pos.clone().normalize();
     dest.multiplyScalar(distance);
     this.offset.copy(this.camera.position).sub(this.camera.target);
@@ -1364,7 +1367,7 @@ export default class ThreeView extends Component {
       sphericalDest.phi,
       sphericalDest.theta
     ).toArray();
-    // should yield every frame
+    // should yield at every frame
     let tempSpherical = new THREE.Spherical();
     for (let i = 0; i < duration; i += deltaTime) {
       tempSpherical.set(...lerpArrays(start, end, i / duration));
@@ -1401,7 +1404,7 @@ export default class ThreeView extends Component {
           this.setState({
             controllable: true,
             target: undefined,
-            animator: null,
+            animator: null
           });
         }
       }

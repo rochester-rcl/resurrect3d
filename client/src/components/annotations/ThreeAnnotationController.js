@@ -1,7 +1,7 @@
 /* @flow */
 
 // React
-import React, { Component } from "react";
+import React, { Component, forwardRef } from "react";
 import ReactDom from "react-dom";
 
 // THREEJS
@@ -57,10 +57,10 @@ export default class ThreeAnnotationController extends Component {
   }
 
   toggle(): void {
-	const { active } = this.state;  
+    const { active } = this.state;
     this.setState(
       {
-		active: !active,
+        active: !active
       },
       this.reset
     );
@@ -80,9 +80,11 @@ export default class ThreeAnnotationController extends Component {
       this.props.onActiveCallback(this.state.active);
   }
 
-  componentDidUpdate(prevProps): void {
-    if (this.props.open != prevProps.open)
+  componentDidUpdate(prevProps, prevState): void {
+    const { annotations } = this.state;
+    if (this.props.open != prevProps.open) {
       this.setState({ open: this.props.open });
+    }
   }
 
   handleDown(event: MouseEvent): void {
@@ -127,7 +129,6 @@ export default class ThreeAnnotationController extends Component {
   }
 
   handleIntersection(intersection: Object): void {
-	  console.log(this.state.editable);
     var clickedExisting = false;
 
     for (
@@ -158,23 +159,29 @@ export default class ThreeAnnotationController extends Component {
     let annotations = this.state.annotations;
 
     for (let i = 0; i < annotations.length; i++) annotations[i].open = false;
-
+    const ref = React.createRef();
+    const component = (
+      <ThreeAnnotation
+        innerRef={ref}
+        title={"Untitled"}
+        text={""}
+        callback={this.updateAnnotation}
+        index={annotations.length}
+        editable={this.state.editable}
+      />
+    );
     let annotation = {
-      div: document.createElement("div"),
-      title: "Untitled",
-      text: "",
+      component: component,
+      get node() { return this.component.props.innerRef.current },
       point: point,
       open: true
     };
-
-    annotation.div.contentEditable = "false";
     annotations.push(annotation);
-
     this.setState(
       {
         annotations: annotations
       },
-      this.props.drawCallback(this.state.annotations)
+      () => this.props.drawCallback(this.state.annotations)
     );
   }
 
@@ -217,22 +224,9 @@ export default class ThreeAnnotationController extends Component {
   }
 
   render() {
-    let annotations = this.state.annotations.map((annotation, index) => {
-      let component = (
-        <ThreeAnnotation
-          title={annotation.title}
-          text={annotation.text}
-          callback={this.updateAnnotation}
-          index={index}
-          div={annotation.div}
-          editable={this.state.editable}
-        />
-      );
-      return (
-        <PortalElement component={component} domElement={annotation.div} />
-      );
+    let annotations = this.state.annotations.map(annotation => {
+      return <div>{annotation.component}</div>
     });
-
     let editToggle;
     if (this.state.active)
       editToggle = (

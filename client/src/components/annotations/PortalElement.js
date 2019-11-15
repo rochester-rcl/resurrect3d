@@ -9,7 +9,8 @@ const style = {
 
 const PortalElement = (props) =>
 {
-	return ReactDom.createPortal(props.component, props.domElement);
+	const { domElement } = props;
+	return domElement ? ReactDom.createPortal(props.component, props.domElement) : null;
 }
 
 export default PortalElement;
