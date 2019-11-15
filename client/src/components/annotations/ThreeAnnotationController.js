@@ -45,15 +45,19 @@ export default class ThreeAnnotationController extends Component {
   }
 
   componentDidMount(): void {
-    this.props.webGL.addEventListener("mousedown", this.handleDown, true);
-    this.props.webGL.addEventListener("mousemove", this.handleMove, true);
-    this.props.webGL.addEventListener("mouseup", this.handleUp, true);
+    const { css } = this.props;
+    css.addEventListener("mousedown", this.handleDown, true);
+    css.addEventListener("mousemove", this.handleMove, true);
+    css.addEventListener("mouseup", this.handleUp, true);
+    css.style.pointerEvents = "auto";
   }
 
   componentWillUnmount(): void {
-    this.props.webGL.removeEventListener("mousedown", this.handleDown, true);
-    this.props.webGL.removeEventListener("mousemove", this.handleMove, true);
-    this.props.webGL.removeEventListener("mouseup", this.handleUp, true);
+    const { css } = this.props;
+    css.removeEventListener("mousedown", this.handleDown, true);
+    css.removeEventListener("mousemove", this.handleMove, true);
+    css.removeEventListener("mouseup", this.handleUp, true);
+    css.style.pointerEvents = "none";
   }
 
   toggle(): void {
@@ -81,9 +85,16 @@ export default class ThreeAnnotationController extends Component {
   }
 
   componentDidUpdate(prevProps, prevState): void {
-    const { annotations } = this.state;
+    const { editable } = this.state;
+    const { css } = this.props;
     if (this.props.open != prevProps.open) {
       this.setState({ open: this.props.open });
+    }
+    if (prevState.editable && !editable) {
+      css.style.pointerEvents = "none";
+    }
+    if (!prevState.editable && editable) {
+      css.style.pointerEvents = "all";
     }
   }
 
@@ -102,22 +113,20 @@ export default class ThreeAnnotationController extends Component {
 
   handleUp(event: MouseEvent): void {
     //Hard to check if mousedown and mouseup on same object
-    if (this.state.active && !this.state.dragging) {
-      let { camera, mesh } = this.props;
-
-      let res = this.props.webGL.getBoundingClientRect();
-
-      let mouseVector = new THREE.Vector2();
+    const { camera, mesh, css } = this.props;
+    if (this.state.active && !this.state.dragging && event.target === css) {
+      const res = css.getBoundingClientRect();
+      const mouseVector = new THREE.Vector2();
       mouseVector.x = ((event.clientX - res.x) / res.width) * 2 - 1;
       mouseVector.y = -((event.clientY - res.top) / res.height) * 2 + 1;
 
       this.raycaster.setFromCamera(mouseVector, camera);
 
-      let meshArray = [];
+      const meshArray = [];
       if (mesh.type === THREE.Group) meshArray = mesh.children;
       else meshArray.push(mesh);
 
-      let intersections = this.raycaster.intersectObjects(meshArray, true);
+      const intersections = this.raycaster.intersectObjects(meshArray, true);
 
       // Only take the best result
       if (intersections.length > 0) this.handleIntersection(intersections[0]);
@@ -130,7 +139,6 @@ export default class ThreeAnnotationController extends Component {
 
   handleIntersection(intersection: Object): void {
     var clickedExisting = false;
-
     for (
       let i = 0;
       i < this.state.annotations.length && !clickedExisting;
@@ -172,7 +180,9 @@ export default class ThreeAnnotationController extends Component {
     );
     let annotation = {
       component: component,
-      get node() { return this.component.props.innerRef.current },
+      get node() {
+        return this.component.props.innerRef.current;
+      },
       point: point,
       open: true
     };
@@ -224,8 +234,10 @@ export default class ThreeAnnotationController extends Component {
   }
 
   render() {
-    let annotations = this.state.annotations.map(annotation => {
-      return <div>{annotation.component}</div>
+    const { css } = this.props;
+    const { editable, annotations } = this.state;
+    const renderedAnnotations = annotations.map(annotation => {
+      return <div>{annotation.component}</div>;
     });
     let editToggle;
     if (this.state.active)
@@ -237,7 +249,7 @@ export default class ThreeAnnotationController extends Component {
         />
       );
 
-    let shortcuts = this.state.annotations.map((annotation, index) => (
+    let shortcuts = annotations.map((annotation, index) => (
       <ThreeAnnotationShortcut
         title={annotation.title}
         index={index}
@@ -260,7 +272,7 @@ export default class ThreeAnnotationController extends Component {
         <ThreeToggle title="annotations" callback={this.toggle} />
         {editToggle}
         {shortcutContainer}
-        {annotations}
+        {renderedAnnotations}
       </div>
     );
   }

@@ -409,7 +409,6 @@ export default class ThreeView extends Component {
       isRaycasting,
       annotations
     } = this.state;
-    console.log(annotations);
     const { info } = this.props;
     let threeViewClassName = "three-view";
     threeViewClassName +=
@@ -572,18 +571,14 @@ export default class ThreeView extends Component {
     this.height = this.webGLRenderer.domElement.clientHeight;
     this.camera.aspect = this.width / this.height;
     this.webGLRenderer.setSize(this.width, this.height, false);
-    this.webGLRenderer.domElement.style.marginTop = "10px";
-
     this.camera.updateProjectionMatrix();
 
     // Check if we're not on a touch device
     this.isMobile = !DISPLAY_DEVICE.DESKTOP();
     this.css2DRenderer = new CSS2DRenderer();
+    this.css2DRenderer.domElement.className = "three-view-2d-renderer";
     this.css2DRenderer.setSize(this.width, this.height, false);
-    console.log("Height: " + this.webGLRenderer.domElement.offsetHeight);
-    this.css2DRenderer.domElement.style.marginTop = "-710px";
     this.threeView.appendChild(this.css2DRenderer.domElement);
-
     this.setState((prevState, props) => {
       return {
         loadProgress: prevState.loadProgress + 25,
@@ -933,10 +928,12 @@ export default class ThreeView extends Component {
       let cssDiv = this.annotationCSS.children[i];
 
       let annotationPos = annotation.position.clone().project(this.camera);
-      /*let offset = annotationPos.x > 0 ? distance : -distance;
-      annotationPos.add(new THREE.Vector3(offset, 0, 0));*/
+      // let offset = annotationPos.x > 0 ? distance : -distance;
+      annotationPos.add(new THREE.Vector3(distance, 0, 0));
       annotationPos.unproject(this.overlayCamera);
       cssDiv.position.set(annotationPos.x, annotationPos.y, annotationPos.z);
+      // cssDiv.scale.set()
+      const dist = cssDiv.position.distanceTo(this.camera.position);
     }
   }
 

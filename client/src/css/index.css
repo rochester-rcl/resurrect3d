@@ -73,6 +73,7 @@ body {
   height: auto;
   width: 100%;
   cursor: grab;
+  position: relative;
 }
 
 .three-view.dragging {
@@ -92,6 +93,16 @@ body {
   width: 100% !important;
   height: 100% !important;
   touch-action: none;
+  margin-top: 0px !important;
+}
+
+.three-view-2d-renderer {
+  position: absolute;
+  top: 0;
+  width: 100% !important;
+  height: 100% !important;
+  touch-action: none;
+  margin-top: 0px !important;
 }
 
 .three-progress-loader {
@@ -467,7 +478,7 @@ body {
 {
   width: 175px;
   height: 250px;
-  background-color: #0d0d0d;
+  background-color: rgba(13, 13, 13, 0.9);
   border: 2px solid #1b1b1b;
   border-radius: 7px;
   text-align: center;
@@ -484,7 +495,7 @@ body {
 .annotation-head
 {
   color: white;
-  background-color: #1b1b1b;
+  background-color: rgba(27, 27, 27, 0.9);
   border-radius: 5px 5px 0px 0px;
   width: 100%;
   text-align: center;
