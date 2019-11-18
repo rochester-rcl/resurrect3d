@@ -2385,6 +2385,8 @@ export default class ThreeView extends Component {
       this.height = clientHeight;
       this.updateRenderSize([this.width, this.height]);
     } else {
+      this.overlayCamera.aspect = clientWidth / clientHeight;
+      this.overlayCamera.updateProjectionMatrix();
       this.css2DRenderer.setSize(clientWidth, clientHeight, false);
     }
   }
