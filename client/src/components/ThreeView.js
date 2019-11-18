@@ -910,7 +910,7 @@ export default class ThreeView extends Component {
 
           this.annotationLines.add(line);
         } else {
-          // TODO not sure if there's more of a "react" way of doing this using refs ... 
+          // TODO not sure if there's more of a "react" way of doing this using refs ...
           var cssObj = new CSS2DObject(document.createElement("div"));
         }
         this.annotationCSS.add(cssObj);
@@ -919,21 +919,30 @@ export default class ThreeView extends Component {
     }
   }
 
-  positionAnnotations(): void {
+  positionAnnotations(alpha = 0): void {
     //Make annotations position smartly to stay in camera -- use raycaster prob
-    var distance = 0.3;
-    for (let i = 0; i < this.annotationMarkers.children.length; i++) {
-      let annotation = this.annotationMarkers.children[i];
-      let line = annotation.children[0];
-      let cssDiv = this.annotationCSS.children[i];
-
-      let annotationPos = annotation.position.clone().project(this.camera);
-      // let offset = annotationPos.x > 0 ? distance : -distance;
-      annotationPos.add(new THREE.Vector3(distance, 0, 0));
-      annotationPos.unproject(this.overlayCamera);
-      cssDiv.position.set(annotationPos.x, annotationPos.y, annotationPos.z);
-      // cssDiv.scale.set()
-      const dist = cssDiv.position.distanceTo(this.camera.position);
+    if (this.state.dragging || !this.state.controllable) {
+      var distance = 0.3;
+      for (let i = 0; i < this.annotationMarkers.children.length; i++) {
+        let annotation = this.annotationMarkers.children[i];
+        let line = annotation.children[0];
+        let cssDiv = this.annotationCSS.children[i];
+        let annotationPos = annotation.position.clone().project(this.camera);
+        let offset = annotationPos.x > 0 ? distance : -distance;
+        if (annotationPos.x < distance && annotationPos.x > -distance) {
+          offset = THREE.Math.lerp(
+            annotationPos.x,
+            annotationPos.x + distance,
+            this.state.deltaTime * this.dampingFactor
+          );
+        }
+        if (alpha > 0) {
+          cssDiv.element.style.opacity = THREE.Math.lerp(0, 1, alpha)
+        }
+        annotationPos.add(new THREE.Vector3(offset, 0, 0));
+        annotationPos.unproject(this.overlayCamera);
+        cssDiv.position.set(annotationPos.x, annotationPos.y, annotationPos.z);
+      }
     }
   }
 
@@ -1389,6 +1398,7 @@ export default class ThreeView extends Component {
       this.offset.applyQuaternion(this.quatInverse);
       this.camera.position.copy(this.camera.target).add(this.offset);
       this.camera.lookAt(this.camera.target);
+      this.positionAnnotations(i / duration);
       yield null;
     }
   }
@@ -1764,7 +1774,7 @@ export default class ThreeView extends Component {
 
     if (this.props.enableAnnotations || true) {
       //Set enableAnnotations in props
-      let annotationGroup = new ThreeGUIGroup("annotations");
+      const annotationGroup = new ThreeGUIGroup("annotations");
 
       annotationGroup.addComponent(
         "controller",
