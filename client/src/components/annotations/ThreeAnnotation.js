@@ -16,7 +16,6 @@ export default class ThreeAnnotation extends React.Component {
 
     (this: any).updateTitle = this.updateTitle.bind(this);
     (this: any).updateText = this.updateText.bind(this);
-    this.domRef = React.createRef();
   }
 
   updateTitle(event): void {

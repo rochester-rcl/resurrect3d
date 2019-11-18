@@ -40,7 +40,7 @@ export default class ThreeAnnotationController extends Component {
       active: false,
       open: false,
       editable: true,
-      annotations: [],
+      annotations: []
     };
   }
 
@@ -165,7 +165,6 @@ export default class ThreeAnnotationController extends Component {
 
   makeAnnotation(point) {
     let annotations = this.state.annotations;
-
     for (let i = 0; i < annotations.length; i++) annotations[i].open = false;
     const ref = React.createRef();
     const component = (
@@ -184,6 +183,8 @@ export default class ThreeAnnotationController extends Component {
         return this.component.props.innerRef.current;
       },
       point: point,
+      title: component.props.title,
+      cameraPosition: this.props.camera.position.clone(),
       open: true
     };
     annotations.push(annotation);
@@ -223,8 +224,8 @@ export default class ThreeAnnotationController extends Component {
     let annotations = this.state.annotations;
     annotations.forEach(annotation => (annotation.open = false));
     annotations[index].open = true;
-    this.props.cameraCallback(annotations[index].point);
-
+    const { cameraPosition, point } = annotations[index];
+    this.props.cameraCallback(point, cameraPosition);
     this.setState(
       {
         annotations: annotations

@@ -896,7 +896,6 @@ export default class ThreeView extends Component {
 
         var annotationMarker = new THREE.Mesh(sphereGeometry, sphereMaterial);
         annotationMarker.position.copy(annotations[i].point);
-
         if (annotations[i].open) {
           var cssObj = new CSS2DObject(annotations[i].node);
 
@@ -921,28 +920,19 @@ export default class ThreeView extends Component {
 
   positionAnnotations(alpha = 0): void {
     //Make annotations position smartly to stay in camera -- use raycaster prob
-    if (this.state.dragging || !this.state.controllable) {
-      var distance = 0.3;
-      for (let i = 0; i < this.annotationMarkers.children.length; i++) {
-        let annotation = this.annotationMarkers.children[i];
-        let line = annotation.children[0];
-        let cssDiv = this.annotationCSS.children[i];
-        let annotationPos = annotation.position.clone().project(this.camera);
-        let offset = annotationPos.x > 0 ? distance : -distance;
-        if (annotationPos.x < distance && annotationPos.x > -distance) {
-          offset = THREE.Math.lerp(
-            annotationPos.x,
-            annotationPos.x + distance,
-            this.state.deltaTime * this.dampingFactor
-          );
-        }
-        if (alpha > 0) {
-          cssDiv.element.style.opacity = THREE.Math.lerp(0, 1, alpha)
-        }
-        annotationPos.add(new THREE.Vector3(offset, 0, 0));
-        annotationPos.unproject(this.overlayCamera);
-        cssDiv.position.set(annotationPos.x, annotationPos.y, annotationPos.z);
+    var distance = 0.3;
+    for (let i = 0; i < this.annotationMarkers.children.length; i++) {
+      let annotation = this.annotationMarkers.children[i];
+      let line = annotation.children[0];
+      let cssDiv = this.annotationCSS.children[i];
+      let annotationPos = annotation.position.clone().project(this.camera);
+      let offset = annotationPos.x > 0 ? distance : -distance;
+      if (alpha > 0) {
+        cssDiv.element.style.opacity = THREE.Math.lerp(0, 1, alpha);
       }
+      annotationPos.add(new THREE.Vector3(offset, 0, 0));
+      annotationPos.unproject(this.overlayCamera);
+      cssDiv.position.set(annotationPos.x, annotationPos.y, annotationPos.z);
     }
   }
 
@@ -1353,13 +1343,18 @@ export default class ThreeView extends Component {
     this.setState({ panOffset: this.state.panOffset.add(left.add(up)) });
   }
 
-  *animateZoom(pos, duration) {
+  *animateZoom(pos, duration, cameraPos) {
     // TODO should clean this up and abstract a lot of this away into another method that can also be used in controlCamera
     const { deltaTime } = this.state;
     const { spherical } = this;
     const distance = 10;
-    let dest = pos.clone().normalize();
-    dest.multiplyScalar(distance);
+    let dest;
+    if (!cameraPos) {
+      dest = pos.clone().normalize();
+      dest.multiplyScalar(distance);
+    } else {
+      dest = cameraPos.clone();
+    }
     this.offset.copy(this.camera.position).sub(this.camera.target);
     this.offset.applyQuaternion(this.quat);
     const start = new THREE.Vector3(
@@ -1610,7 +1605,8 @@ export default class ThreeView extends Component {
       Math.floor(val / this.state.quality.current.value)
     );
     this.webGLRenderer.setSize(width, height, false);
-    this.css2DRenderer.setSize(width, height, false);
+    const { clientWidth, clientHeight } = this.webGLRenderer.domElement;
+    this.css2DRenderer.setSize(clientWidth, clientHeight, false);
     this.sceneComposer.setSize(width, height, false);
     this.modelComposer.setSize(width, height, false);
     this.guiComposer.setSize(width, height, false);
@@ -1627,8 +1623,11 @@ export default class ThreeView extends Component {
       "vignette",
       "resolution"
     );
-    this.camera.aspect = width / height;
+    this.camera.aspect = clientWidth / clientHeight;
+    this.overlayCamera.aspect = clientWidth / clientHeight;
     this.camera.updateProjectionMatrix();
+    this.overlayCamera.updateProjectionMatrix();
+    this.positionAnnotations();
   }
 
   updateShaders(obj: Object, cb) {
@@ -2152,11 +2151,11 @@ export default class ThreeView extends Component {
     );
   }
 
-  viewAnnotation(point: THREE.Vector3): void {
+  viewAnnotation(point: THREE.Vector3, cameraPos: THREE.Vector3): void {
     this.setState({
       controllable: false,
       target: point,
-      animator: this.animateZoom(point, 3)
+      animator: this.animateZoom(point, 3, cameraPos)
     });
   }
 
@@ -2381,13 +2380,12 @@ export default class ThreeView extends Component {
   handleWindowResize(event: Event): void {
     let { clientWidth, clientHeight } = this.webGLRenderer.domElement;
     // we're concerned with client height + client width of our canvas
-    this.camera.aspect = clientWidth / clientHeight;
-    this.overlayCamera.aspect = clientWidth / clientHeight;
-    this.camera.updateProjectionMatrix();
     if (!this.state.toolsActive) {
       this.width = clientWidth;
       this.height = clientHeight;
       this.updateRenderSize([this.width, this.height]);
+    } else {
+      this.css2DRenderer.setSize(clientWidth, clientHeight, false);
     }
   }
 
