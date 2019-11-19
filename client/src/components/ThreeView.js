@@ -283,7 +283,7 @@ export default class ThreeView extends Component {
     (this: any).orbit = this.orbit.bind(this);
     (this: any).zoom = this.zoom.bind(this);
     (this: any).pan = this.pan.bind(this);
-    (this: any).zoomTo = this.zoomTo.bind(this);
+    (this: any).controlAnimation = this.controlAnimation.bind(this);
     (this: any).renderWebGL = this.renderWebGL.bind(this);
     (this: any).renderCSS = this.renderCSS.bind(this);
     (this: any).getScale = this.getScale.bind(this);
@@ -303,6 +303,8 @@ export default class ThreeView extends Component {
     (this: any).updateLights = this.updateLights.bind(this);
     (this: any).toggleInfo = this.toggleInfo.bind(this);
     (this: any).toggleTools = this.toggleTools.bind(this);
+    this.handleToolMenuExpanded = this.handleToolMenuExpanded.bind(this);
+    this.handleToolMenuTransition = this.handleToolMenuTransition.bind(this);
     (this: any).toggleQuality = this.toggleQuality.bind(this);
     (this: any).drawMeasurement = this.drawMeasurement.bind(this);
     (this: any).drawAnnotations = this.drawAnnotations.bind(this);
@@ -327,6 +329,12 @@ export default class ThreeView extends Component {
     (this: any).toggleRaycasting = this.toggleRaycasting.bind(this);
     (this: any).enterVR = this.enterVR.bind(this);
     (this: any).exitVR = this.exitVR.bind(this);
+    this.animateZoom = this.animateZoom.bind(this);
+    this.animateAnnotationTransition = this.animateAnnotationTransition.bind(
+      this
+    );
+    this.annotationThrottleTime = 0;
+    this.annotationOffsetPlaceholder = 0;
     // event handlers
 
     (this: any).handleMouseDown = this.handleMouseDown.bind(this);
@@ -927,6 +935,8 @@ export default class ThreeView extends Component {
       let cssDiv = this.annotationCSS.children[i];
       let annotationPos = annotation.position.clone().project(this.camera);
       let offset = annotationPos.x > 0 ? distance : -distance;
+      this.annotationOffsetPlaceholder = THREE.Math.lerp(this.annotationOffsetPlaceholder, offset, this.state.deltaTime / this.dampingFactor);
+      offset = this.annotationOffsetPlaceholder;
       if (alpha > 0) {
         cssDiv.element.style.opacity = THREE.Math.lerp(0, 1, alpha);
       }
@@ -1398,7 +1408,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  zoomTo() {
+  controlAnimation() {
     const { controllable, animator } = this.state;
     if (!controllable) {
       if (animator != null) {
@@ -1477,7 +1487,7 @@ export default class ThreeView extends Component {
 
   updateCamera(): void {
     if (this.state.controllable) this.controlCamera();
-    else this.zoomTo();
+    else this.controlAnimation();
     this.setState({ deltaTime: this.clock.getDelta() });
   }
 
@@ -1600,13 +1610,15 @@ export default class ThreeView extends Component {
     this.updateMaterials(updated);
   }
 
-  updateRenderSize(resolution: Array<number>): void {
+  updateRenderSize(resolution: Array<number>, updateCSSRenderer = true): void {
     const [width, height] = resolution.map(val =>
       Math.floor(val / this.state.quality.current.value)
     );
     this.webGLRenderer.setSize(width, height, false);
     const { clientWidth, clientHeight } = this.webGLRenderer.domElement;
-    this.css2DRenderer.setSize(clientWidth, clientHeight, false);
+    if (updateCSSRenderer) {
+      this.css2DRenderer.setSize(clientWidth, clientHeight, false);
+    }
     this.sceneComposer.setSize(width, height, false);
     this.modelComposer.setSize(width, height, false);
     this.guiComposer.setSize(width, height, false);
@@ -2127,7 +2139,7 @@ export default class ThreeView extends Component {
       }
       this.panelGroup.addGroup("materials", materialsGroup);
     }
-
+    const toolsRef = React.createRef();
     this.panelLayout = (
       <layouts.THREE_PANEL_LAYOUT
         group={this.panelGroup}
@@ -2136,6 +2148,7 @@ export default class ThreeView extends Component {
         menuClass="three-tool-menu"
         dropdownClass="three-tool-menu-dropdown"
         ref={ref => (this.toolsMenu = ref)}
+        innerRef={toolsRef}
       />
     );
     this.setState(
@@ -2162,17 +2175,36 @@ export default class ThreeView extends Component {
   // TODO make this thing resize properly
   toggleTools(): void {
     if (this.toolsMenu) {
-      this.toolsMenu.expandMenu(status => {
-        this.setState({ toolsActive: status }, () => {
-          if (this.state.toolsActive) {
-            let { clientWidth, clientHeight } = this.webGLRenderer.domElement;
-            this.updateRenderSize([clientWidth, clientHeight]);
-          } else {
-            this.updateRenderSize([this.width, this.height]);
-          }
-        });
-      });
+      this.toolsMenu.expandMenu(this.handleToolMenuExpanded);
     }
+  }
+
+  *animateAnnotationTransition(duration) {
+    const { deltaTime } = this.state;
+    for (let i = 0; i < duration; i += deltaTime) {
+      const { clientWidth, clientHeight } = this.webGLRenderer.domElement;
+      this.css2DRenderer.setSize(clientWidth, clientHeight, false);
+      this.positionAnnotations();
+      yield null;
+    }
+  }
+
+  handleToolMenuTransition(duration) {
+    this.setState({
+      controllable: false,
+      animator: this.animateAnnotationTransition(duration)
+    });
+  }
+
+  handleToolMenuExpanded(status) {
+    this.setState({ toolsActive: status }, () => {
+      let { clientWidth, clientHeight } = this.webGLRenderer.domElement;
+      if (!status) {
+        this.updateRenderSize([clientWidth, clientHeight]);
+      } else {
+        this.updateRenderSize([this.width, this.height]);
+      }
+    });
   }
 
   toggleQuality(): void {
@@ -2385,9 +2417,7 @@ export default class ThreeView extends Component {
       this.height = clientHeight;
       this.updateRenderSize([this.width, this.height]);
     } else {
-      this.overlayCamera.aspect = clientWidth / clientHeight;
-      this.overlayCamera.updateProjectionMatrix();
-      this.css2DRenderer.setSize(clientWidth, clientHeight, false);
+      this.updateRenderSize([clientWidth, clientHeight]);
     }
   }
 

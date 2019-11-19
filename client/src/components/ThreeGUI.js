@@ -158,11 +158,41 @@ export class ThreeGUILayout extends Component {
 // Meant for a group of groups!
 export class ThreeGUIPanelLayout extends ThreeGUILayout {
 
-  state: Object = { activeIndex: -1, menuExpanded: false }
+  state: Object = { activeIndex: -1, menuExpanded: false, transitionRunCallback: null, transitionEndCallback: null }
   constructor(props: Object) {
     super(props);
     (this: any).selectTool = this.selectTool.bind(this);
     (this: any).expandMenu = this.expandMenu.bind(this);
+    this.handleMenuTransitionEnd = this.handleMenuTransitionEnd.bind(this);
+    this.handleMenuTransitionRun = this.handleMenuTransitionRun.bind(this);
+    this.transitionDuration = 0;
+  }
+
+  componentDidMount() {
+    const { innerRef } = this.props;
+    if (innerRef && innerRef.current) {
+      innerRef.current.addEventListener("transitionend", this.handleMenuTransitionEnd);
+      this.transitionDuration = parseFloat(getComputedStyle(innerRef.current).transitionDuration.split("s")[0]);
+    }
+  }
+
+  componentWillUnmount() {
+    const { innerRef } = this.props;
+    innerRef.current.removeEventListener("transitionend", this.handleMenuTransitionEnd);
+  }
+
+  handleMenuTransitionEnd() {
+    const { menuExpanded, transitionEndCallback } = this.state;
+    if (transitionEndCallback) {
+      transitionEndCallback(menuExpanded);
+    }
+  }
+
+  handleMenuTransitionRun(event) {
+    const { transitionRunCallback } = this.state;
+    if (transitionRunCallback) {
+      transitionRunCallback(this.transitionDuration);
+    }
   }
 
   selectTool(index: Number): void {
@@ -173,19 +203,19 @@ export class ThreeGUIPanelLayout extends ThreeGUILayout {
     }
   }
 
-  expandMenu(callback: any): void {
+  expandMenu(callback: any, transitionRunCallback): void {
     this.setState({
+      transitionEndCallback: callback,
+      transitionRunCallback: transitionRunCallback,
       menuExpanded: !this.state.menuExpanded,
-    }, () => {
-      if (callback) callback(this.state.menuExpanded);
     });
   }
 
   render() {
     const { activeIndex, menuExpanded } = this.state;
-    let { menuClass, dropdownClass, elementClass, groupClass, group } = this.props;
+    let { menuClass, dropdownClass, elementClass, groupClass, group, innerRef } = this.props;
     return(
-      <div className={menuClass += menuExpanded ? " expanded" : " collapsed"}>
+      <div ref={innerRef} className={menuClass += menuExpanded ? " expanded" : " collapsed"}>
         <Accordion className={dropdownClass += menuExpanded ? " expanded" : " collapsed"} inverted>
           {group.components.map((group, index) =>
             <div key={index} className={groupClass}>
