@@ -16,7 +16,13 @@ import ThreeAnnotation from "./ThreeAnnotation";
 import ThreeAnnotationShortcut from "./ThreeAnnotationShortcut";
 import PortalElement from "./PortalElement";
 
-export default class ThreeAnnotationController extends Component {
+// Redux
+import { connect } from "react-redux";
+
+// Action Creators
+import { loadAnnotations, saveAnnotation } from "../../actions/AnnotationActions";
+
+class ThreeAnnotationController extends Component {
   raycaster: THREE.RayCaster;
 
   constructor(props: Object) {
@@ -49,6 +55,7 @@ export default class ThreeAnnotationController extends Component {
 
   componentDidMount(): void {
     const { css } = this.props;
+    this.props.loadAnnotations();
     css.addEventListener("mousedown", this.handleDown, true);
     css.addEventListener("mousemove", this.handleMove, true);
     css.addEventListener("mouseup", this.handleUp, true);
@@ -267,7 +274,6 @@ export default class ThreeAnnotationController extends Component {
   verifyAnnotationComponentRendered() {
     const { annotations } = this.state;
     const { drawCallback } = this.props;
-    console.log(annotations);
   }
 
   render() {
@@ -314,3 +320,11 @@ export default class ThreeAnnotationController extends Component {
     );
   }
 }
+
+function mapStateToProps(state) {
+  return {
+    annotationData: state.annotationData
+  } 
+}
+
+export default connect(mapStateToProps, { saveAnnotation, loadAnnotations })(ThreeAnnotationController);

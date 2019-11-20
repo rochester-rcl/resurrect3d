@@ -539,7 +539,6 @@ body {
   width: 100%;
   height: auto;
   min-height: 35px;
-  max-height: 55px;
   background-color: rgba(0,0,0,0.7) !important;
   border: 2px solid #ccc !important;
   padding: 0px !important;
@@ -547,38 +546,55 @@ body {
   display: flex;
   font-family: 'Source Code Pro', monospace;
   overflow: hidden;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .annotation-shortcut-title {
-  margin-right: auto;
   height: 100%;
-  width: 60%;
+  width: 100%;
   padding-top: 2px;
   padding-bottom: 2px;
   background: none !important;
   color: #ccc !important;
   overflow: hidden;
-  max-height: 55px;
   text-overflow: ellipsis;
+  font-size: 14px !important;
+  text-align: center;
+  padding: 0px 10px 0px 10px;
 }
 
 .annotation-shortcut-button-container {
-  margin-left: auto;
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: center;
+  background: #1b1b1b;
 }
 
 .annotation-shortcut-button {
-  background-color: #1b1b1b;
+  background-color: #1b1b1b !important;
   border: none;
-  width: 30px;
+  width: auto;
   height: 100%;
+  cursor: pointer;
 }
 
 .annotation-shortcut-button:hover {
   background-color: rgba(255, 255, 255, 0.8);
+  color: #000 !important;
 }
 
 .annotation-shortcut-icon {
-  color: #ccc !important;
+  /*color: #ccc !important;*/
+}
+
+.annotation-shortcut-settings-container {
+  padding: 5px;
+}
+.annotation-shortcut-settings-container > .three-tool-component-container {
+  padding: 10px !important;
 }
 
 /*** MOBILE Styles ***/

@@ -45,7 +45,4 @@ function mapActionCreatorsToProps(dispatch: Object) {
   return bindActionCreators(AppActionCreators, dispatch);
 }
 
-export default connect(
-  mapStateToProps,
-  mapActionCreatorsToProps
-)(App);
+export default connect(mapStateToProps, mapActionCreatorsToProps)(App);

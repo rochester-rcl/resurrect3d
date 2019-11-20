@@ -31,7 +31,6 @@ export default function ConverterReducer(state: Object = defaultState, action: O
       }
 
     case ActionConstants.CONVERSION_ERROR:
-      console.log('ere')
       return {
         ...state,
         error: true,

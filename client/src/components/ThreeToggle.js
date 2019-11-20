@@ -98,9 +98,10 @@ export default class ThreeToggle extends Component {
   }
 
   render() {
-    const { title, toggle } = this.props;
+    const { title, toggle, size } = this.props;
     const { checked } = this.state;
     const toggleVal = (toggle !== true || toggle !== false) ? true : toggle;
+    const buttonSize = size ? size : "medium"
     return (
       <Segment className="three-tool-component-container">
         <Label className="three-tool-component-label" attached="top left">
@@ -110,6 +111,7 @@ export default class ThreeToggle extends Component {
           <Button
             toggle
             active={checked}
+            size={buttonSize}
             onClick={this.updateChecked}
           >
             {checked ? "on" : "off"}

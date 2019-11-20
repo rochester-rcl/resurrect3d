@@ -16,7 +16,7 @@ import { LinearGradientShader } from '../utils/image';
 import ViewReducer from './ViewReducer';
 import ConverterReducer from './ConverterReducer';
 import UserReducer from './UserReducer';
-
+import AnnotationReducer from "./AnnotationReducer";
 const defaultState = {
 
   mesh: {
@@ -123,6 +123,7 @@ const appReducer = combineReducers({
     ui: uiReducer,
     user: UserReducer,
     converter: ConverterReducer,
+    annotationData: AnnotationReducer
   });
 
 export default appReducer;

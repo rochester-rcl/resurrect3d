@@ -1,6 +1,6 @@
 /* @flow */
 // Redux Saga
-import { put, takeEvery, take, call } from "redux-saga/effects";
+import { put, takeEvery, take, call, fork } from "redux-saga/effects";
 
 import { eventChannel, END } from "redux-saga";
 
@@ -41,6 +41,9 @@ import convertPtmToThree from "../utils/converter/ptmToThree";
 
 // other utils
 import { getExtension } from "../utils/mesh";
+
+// other sagas
+import AnnotationSaga from "./AnnotationSaga";
 
 const backend = threeViewerBackendFactory();
 
@@ -671,6 +674,7 @@ export default function* rootSaga(): Generator<any, any, any> {
     watchForGetThreeView(),
     watchForUpdateThreeView(),
     watchForDeleteThreeView(),
-    watchForConversion()
+    watchForConversion(),
+    fork(AnnotationSaga)
   ];
 }
