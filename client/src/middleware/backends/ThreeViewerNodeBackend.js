@@ -1,15 +1,20 @@
 /* @flow */
 // Abstract Base class
-import ThreeViewerAbstractBackend from './ThreeViewerAbstractBackend';
+import ThreeViewerAbstractBackend from "./ThreeViewerAbstractBackend";
 
 // React
-import React from 'react';
+import React from "react";
 
 // API constants
-import { VIEWS_ENDPOINT, FILE_ENDPOINT, AUTHENTICATE_ENDPOINT } from '../../constants/api-endpoints';
+import {
+  VIEWS_ENDPOINT,
+  FILE_ENDPOINT,
+  AUTHENTICATE_ENDPOINT,
+  ANNOTATIONS_ENDPOINT
+} from "../../constants/api-endpoints";
 
 // Admin backend
-import ThreeViewerAdminBackend from './ThreeViewerAdminBackend';
+import ThreeViewerAdminBackend from "./ThreeViewerAdminBackend";
 
 // serialization
 import { serializeThreeTypes } from "../../utils/serialization";
@@ -29,8 +34,10 @@ export default class ThreeViewerNodeBackend extends ThreeViewerAbstractBackend {
 
   getThreeAsset(id: string): Promise {
     return new Promise((resolve, reject) => {
-      this._get(VIEWS_ENDPOINT + id, {}).then((result) => result).catch((error) => console.log(error))
-        .then((asset) => {
+      this._get(VIEWS_ENDPOINT + id, {})
+        .then(result => result)
+        .catch(error => console.log(error))
+        .then(asset => {
           const formatted = this.formatAsset(asset);
           resolve(formatted);
         });
@@ -38,7 +45,9 @@ export default class ThreeViewerNodeBackend extends ThreeViewerAbstractBackend {
   }
 
   getThreeFile(id: string): Promise {
-    return this._getBinary(FILE_ENDPOINT + id, {}).then((result) => result).catch((error) => console.log(error));
+    return this._getBinary(FILE_ENDPOINT + id, {})
+      .then(result => result)
+      .catch(error => console.log(error));
   }
 
   getThreeFileURL(id: string): Promise {
@@ -47,7 +56,7 @@ export default class ThreeViewerNodeBackend extends ThreeViewerAbstractBackend {
 
   formatAsset(asset: Object): Object {
     // replace 'null' with null
-    const format = (_asset) => {
+    const format = _asset => {
       const formatted = {};
       for (let key in _asset) {
         if (_asset[key] !== null && _asset[key].constructor === Object) {
@@ -60,7 +69,7 @@ export default class ThreeViewerNodeBackend extends ThreeViewerAbstractBackend {
         }
       }
       return formatted;
-    }
+    };
     return format(asset);
   }
 
@@ -76,4 +85,29 @@ export default class ThreeViewerNodeBackend extends ThreeViewerAbstractBackend {
       .catch(error => console.error(error));
   }
 
+  // annotations
+  getAnnotations(threeViewerId) {
+    return this._get(ANNOTATIONS_ENDPOINT + threeViewerId, {})
+      .then(result => result)
+      .catch(error => console.error(error));
+  }
+
+  saveAnnotation(annotation, threeViewId) {
+    annotation.threeViewId = threeViewId;
+    const body = JSON.stringify(serializeThreeTypes(annotation));
+    return this._post(ANNOTATIONS_ENDPOINT, body, {
+      headers: { "Content-Type": "application/json" }
+    })
+      .then(result => result)
+      .catch(error => console.error(error));
+  }
+
+  deleteAnnotation(id, threeViewerId) {
+    const body = JSON.stringify({ id: id });
+    return this._post(ANNOTATIONS_ENDPOINT + threeViewerId, body, {
+      headers: { "Content-Type": "application/json" }
+    })
+      .then(result => result)
+      .catch(error => console.error(error));
+  }
 }

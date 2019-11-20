@@ -19,3 +19,11 @@ export function saveAnnotation(annotation, threeViewId) {
     threeViewId: threeViewId
   };
 }
+
+export function deleteAnnotation(id, threeViewId) {
+  return {
+    type: DELETE_ANNOTATION,
+    id: id,
+    threeViewId: threeViewId
+  }
+}

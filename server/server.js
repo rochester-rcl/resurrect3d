@@ -15,6 +15,7 @@ const constants = require('./constants');
 const view = require('./models/view');
 const controller = require('./controllers/view_controller');
 const views = require('./routes/view_route');
+const annotationRoute = require('./routes/annotationRoute');
 const dummyViewData = require('./dummyViewData');
 const serverConfig = require('./config');
 
@@ -85,6 +86,7 @@ app.use(passport.session());
 app.use(bodyParser.json({ limit: '20mb' }));
 app.use(bodyParser.urlencoded({ limit: '20mb', extended: false }));
 views(app, upload, conn, Grid, router);
+annotationRoute(router)
 app.use(serverConfig.basename, router);
 controller.get(app, upload, conn, Grid);
 

@@ -23,12 +23,20 @@ export default class ThreeAnnotationShortcut extends Component {
     this.props.delete(this.props.index);
   }
 
-  save() {}
+  save() {
+    this.props.save(this.props.index);
+  }
+
   render() {
-    const { title } = this.props;
+    const { title, savedToDB } = this.props;
     return (
       <Segment className="annotation-shortcut-container">
-        <Label className="annotation-shortcut-title">{title}</Label>
+        <span className="annotation-shortcut-label-container">
+          <Label className="annotation-shortcut-title">{title}</Label>
+          <Label size="mini" color={savedToDB ? "green" : "red"}>
+            {savedToDB ? "saved" : "unsaved"}
+          </Label>
+        </span>
         <div className="annotation-shortcut-button-container">
           <Button
             icon

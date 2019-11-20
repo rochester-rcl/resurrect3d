@@ -9,13 +9,14 @@ const defaultState = {
 export default function AnnotationReducer(state = defaultState, action) {
   switch(action.type) {
 
-    case ActionConstants.LOAD_ANNOTATIONS:
+    case ActionConstants.ANNOTATIONS_LOADED:
       return {
         ...state,
         ...{ annotations: action.annotations }
       }
 
     case ActionConstants.ANNOTATION_SAVED:
+      console.log(action.annotation);
       return {
         ...state,
       }

@@ -45,7 +45,7 @@ class ThreeContainer extends Component {
   }
 
   render(): Object {
-    const { mesh, texture, metadata, threeAsset, saveViewerSettings, user, saveStatus } = this.props;
+    const { mesh, texture, metadata, threeAsset, saveViewerSettings, user, saveStatus, viewerId } = this.props;
     // TODO Need to put some logic in here -- if the user is logged in AND they own the mesh
     // TODO Complete needs to be a constant
     if (mesh.progress === PROGRESS_COMPLETE && texture.progress === PROGRESS_COMPLETE && WEBGL_SUPPORT) {
@@ -59,6 +59,7 @@ class ThreeContainer extends Component {
           onSave={saveViewerSettings}
           saveStatus={saveStatus}
           loggedIn={user.loggedIn}
+          threeViewId={viewerId}
         />
       );
     } else {

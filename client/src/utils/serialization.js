@@ -42,10 +42,10 @@ function deserializeThreeType(_value: string): Object {
       return new THREE.Color(parseInt('0x' + value, 16));
 
     case THREE_VECTOR2:
-      return new THREE.Vector2(...value.split(',').map((val) => parseInt(val, 10)));
+      return new THREE.Vector2(...value.split(',').map((val) => parseFloat(val)));
 
     case THREE_VECTOR3:
-      return new THREE.Vector3(...value.split(',').map((val) => parseInt(val, 10)));
+      return new THREE.Vector3(...value.split(',').map((val) => parseFloat(val)));
   }
 }
 

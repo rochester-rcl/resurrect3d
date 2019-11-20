@@ -364,6 +364,7 @@ export default class ThreeView extends Component {
    *****************************************************************************/
 
   componentDidMount(): void {
+    console.log(this.props);
     this.initThree();
     window.addEventListener("resize", this.handleWindowResize);
     // TODO will remove this after when FB fixes onWheel events (https://github.com/facebook/react/issues/14856)
@@ -1785,7 +1786,6 @@ export default class ThreeView extends Component {
     if (this.props.enableAnnotations || true) {
       //Set enableAnnotations in props
       const annotationGroup = new ThreeGUIGroup("annotations");
-
       annotationGroup.addComponent(
         "controller",
         components.THREE_ANNOTATION_CONTROLLER,
@@ -1798,7 +1798,8 @@ export default class ThreeView extends Component {
           mesh: this.mesh,
           annotations: this.annotations,
           webGL: this.webGLRenderer.domElement,
-          css: this.css2DRenderer.domElement
+          css: this.css2DRenderer.domElement,
+          threeViewId: this.props.threeViewId
         }
       );
 

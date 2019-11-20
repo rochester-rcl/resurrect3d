@@ -545,7 +545,8 @@ body {
   margin-top: 10px !important;
   display: flex;
   font-family: 'Source Code Pro', monospace;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   flex-direction: column;
   justify-content: center;
 }
@@ -558,9 +559,16 @@ body {
   background: none !important;
   color: #ccc !important;
   overflow: hidden;
+  white-space: nowrap;
   text-overflow: ellipsis;
   font-size: 14px !important;
-  text-align: center;
+}
+
+.annotation-shortcut-label-container {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  align-items: center;
   padding: 0px 10px 0px 10px;
 }
 

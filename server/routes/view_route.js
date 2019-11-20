@@ -1,4 +1,3 @@
-
 module.exports = (app, upload, conn, Grid, router) => {
   const view = require("../controllers/view_controller");
   const mongoose = require("mongoose");
