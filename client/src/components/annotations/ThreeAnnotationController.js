@@ -33,6 +33,9 @@ export default class ThreeAnnotationController extends Component {
     (this: any).toggle = this.toggle.bind(this);
     (this: any).toggleEdit = this.toggleEdit.bind(this);
     (this: any).raycaster = new THREE.Raycaster();
+    this.verifyAnnotationComponentRendered = this.verifyAnnotationComponentRendered.bind(
+      this
+    );
 
     this.state = {
       mousedown: false,
@@ -150,10 +153,13 @@ export default class ThreeAnnotationController extends Component {
         clickedExisting = true;
         let annotations = this.state.annotations;
 
-        for (let j = 0; j < annotations.length; j++)
-          if (j == i) annotations[j].open = !annotations[j].open;
-          else annotations[j].open = false;
-
+        for (let j = 0; j < annotations.length; j++) {
+          if (j === i) {
+            annotations[j].open = !annotations[j].open;
+          } else {
+            annotations[j].open = false;
+          }
+        }
         this.setState({
           annotations: annotations
         });
@@ -165,7 +171,14 @@ export default class ThreeAnnotationController extends Component {
 
   makeAnnotation(point) {
     let annotations = this.state.annotations;
-    for (let i = 0; i < annotations.length; i++) annotations[i].open = false;
+    for (let i = 0; i < annotations.length; i++) {
+      annotations[i].open = false;
+      const component = annotations[i].component;
+      annotations[i].component = React.cloneElement(component, {
+        ...component.props,
+        ...{ visible: false }
+      });
+    }
     const ref = React.createRef();
     const component = (
       <ThreeAnnotation
@@ -175,6 +188,7 @@ export default class ThreeAnnotationController extends Component {
         callback={this.updateAnnotation}
         index={annotations.length}
         editable={this.state.editable}
+        visible={true}
       />
     );
     let annotation = {
@@ -214,24 +228,46 @@ export default class ThreeAnnotationController extends Component {
       {
         annotations: updated
       },
-      () => {
-        this.props.drawCallback(this.state.annotations);
-      }
+      () => this.props.drawCallback(this.state.annotations)
     );
   }
 
   viewAnnotation(index) {
     let annotations = this.state.annotations;
-    annotations.forEach(annotation => (annotation.open = false));
-    annotations[index].open = true;
+    annotations.forEach((annotation, idx) => {
+      const { component } = annotation;
+      if (idx === index) {
+        annotation.open = true;
+        if (!component.props.visible) {
+          annotation.component = React.cloneElement(component, {
+            ...component.props,
+            ...{ visible: true }
+          });
+        }
+      } else {
+        annotation.open = false;
+        if (component.props.visible) {
+          annotation.component = React.cloneElement(component, {
+            ...component.props,
+            ...{ visible: false }
+          });
+        }
+      }
+    });
     const { cameraPosition, point } = annotations[index];
     this.props.cameraCallback(point, cameraPosition);
     this.setState(
       {
         annotations: annotations
       },
-      this.props.drawCallback(this.state.annotations)
+      () => this.props.drawCallback(this.state.annotations)
     );
+  }
+
+  verifyAnnotationComponentRendered() {
+    const { annotations } = this.state;
+    const { drawCallback } = this.props;
+    console.log(annotations);
   }
 
   render() {

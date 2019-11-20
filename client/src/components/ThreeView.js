@@ -158,6 +158,8 @@ export default class ThreeView extends Component {
     target: undefined,
     animator: null,
     deltaTime: 0,
+    currentAnnotationIndex: 0,
+    currentAnnotationCSSObj: null,
     // rotation
     rotateStart: new THREE.Vector2(),
     rotateEnd: new THREE.Vector2(),
@@ -554,10 +556,8 @@ export default class ThreeView extends Component {
 
     this.annotationMarkers = new THREE.Group();
     this.annotationLines = new THREE.Group();
-    this.annotationCSS = new THREE.Group();
 
     this.guiScene.add(this.annotationMarkers);
-    this.overlayScene.add(this.annotationCSS);
     this.overlayScene.add(this.annotationLines);
 
     // WebGL Renderer
@@ -888,39 +888,32 @@ export default class ThreeView extends Component {
   }
 
   drawAnnotations(annotations?: Object): void {
+    const { currentAnnotationCSSObj } = this.state;
     for (let i = 0; i < this.annotationMarkers.children.length; i++) {
       this.annotationMarkers.children[i].remove(
         ...this.annotationMarkers.children[i].children
       );
       this.annotationMarkers.remove(...this.annotationMarkers.children);
-      this.annotationCSS.remove(...this.annotationCSS.children);
+    }
+    if (currentAnnotationCSSObj) {
+      this.overlayScene.remove(currentAnnotationCSSObj);
     }
     if (annotations) {
       for (let i = 0; i < annotations.length; i++) {
-        var sphereGeometry = new THREE.SphereBufferGeometry(0.2, 32, 32);
-        var sphereMaterial = new THREE.MeshBasicMaterial({
+        const sphereGeometry = new THREE.SphereBufferGeometry(0.2, 32, 32);
+        const sphereMaterial = new THREE.MeshBasicMaterial({
           color: annotations[i].open ? 0xe7e7e7 : 0x1b1b1b
         });
-
-        var annotationMarker = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        const annotationMarker = new THREE.Mesh(sphereGeometry, sphereMaterial);
         annotationMarker.position.copy(annotations[i].point);
         if (annotations[i].open) {
-          var cssObj = new CSS2DObject(annotations[i].node);
-
-          var lineGeometry = new THREE.Geometry();
-          lineGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
-          lineGeometry.vertices.push(cssObj.position);
-
-          var lineMaterial = new THREE.LineBasicMaterial({ color: 0x1b1b1b });
-
-          var line = new THREE.Line(lineGeometry, lineMaterial);
-
-          this.annotationLines.add(line);
-        } else {
-          // TODO not sure if there's more of a "react" way of doing this using refs ...
-          var cssObj = new CSS2DObject(document.createElement("div"));
+          const cssObj = new CSS2DObject(annotations[i].node);
+          this.overlayScene.add(cssObj);
+          this.setState({
+            currentAnnotationIndex: i,
+            currentAnnotationCSSObj: cssObj
+          });
         }
-        this.annotationCSS.add(cssObj);
         this.annotationMarkers.add(annotationMarker);
       }
     }
@@ -928,21 +921,27 @@ export default class ThreeView extends Component {
 
   positionAnnotations(alpha = 0): void {
     //Make annotations position smartly to stay in camera -- use raycaster prob
-    var distance = 0.3;
-    for (let i = 0; i < this.annotationMarkers.children.length; i++) {
-      let annotation = this.annotationMarkers.children[i];
-      let line = annotation.children[0];
-      let cssDiv = this.annotationCSS.children[i];
-      let annotationPos = annotation.position.clone().project(this.camera);
-      let offset = annotationPos.x > 0 ? distance : -distance;
-      this.annotationOffsetPlaceholder = THREE.Math.lerp(this.annotationOffsetPlaceholder, offset, this.state.deltaTime / this.dampingFactor);
-      offset = this.annotationOffsetPlaceholder;
-      if (alpha > 0) {
-        cssDiv.element.style.opacity = THREE.Math.lerp(0, 1, alpha);
+    const distance = 0.05 * this.spriteScaleFactor;
+    const { currentAnnotationIndex, currentAnnotationCSSObj } = this.state;
+    const annotation = this.annotationMarkers.children[currentAnnotationIndex];
+    if (annotation) {
+      const cssDiv = currentAnnotationCSSObj;
+      if (cssDiv) {
+        const annotationPos = annotation.position.clone().project(this.camera);
+        let offset = annotationPos.x > 0 ? distance : -distance;
+        this.annotationOffsetPlaceholder = THREE.Math.lerp(
+          this.annotationOffsetPlaceholder,
+          offset,
+          this.state.deltaTime / this.dampingFactor
+        );
+        offset = this.annotationOffsetPlaceholder;
+        if (alpha > 0) {
+          cssDiv.element.style.opacity = THREE.Math.lerp(0, 1, alpha);
+        }
+        annotationPos.add(new THREE.Vector3(offset, 0, 0));
+        annotationPos.unproject(this.overlayCamera);
+        cssDiv.position.set(annotationPos.x, annotationPos.y, annotationPos.z);
       }
-      annotationPos.add(new THREE.Vector3(offset, 0, 0));
-      annotationPos.unproject(this.overlayCamera);
-      cssDiv.position.set(annotationPos.x, annotationPos.y, annotationPos.z);
     }
   }
 
