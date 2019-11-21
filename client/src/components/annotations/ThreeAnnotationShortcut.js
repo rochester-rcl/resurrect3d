@@ -7,6 +7,8 @@ import React, { Component } from "react";
 import { Label, Segment, Icon, Button } from "semantic-ui-react";
 import ThreeToggle from "../ThreeToggle";
 
+import { ANNOTATION_SAVE_STATUS } from "../../constants/application";
+
 export default class ThreeAnnotationShortcut extends Component {
   state = { settings: { useCamera: false, useLights: false } };
   constructor(props) {
@@ -14,6 +16,7 @@ export default class ThreeAnnotationShortcut extends Component {
     this.focus = this.focus.bind(this);
     this.del = this.del.bind(this);
     this.save = this.save.bind(this);
+    this.saveStatusLabel = this.saveStatusLabel.bind(this);
   }
   focus() {
     this.props.focus(this.props.index);
@@ -27,15 +30,37 @@ export default class ThreeAnnotationShortcut extends Component {
     this.props.save(this.props.index);
   }
 
+  saveStatusLabel() {
+    const { saveStatus } = this.props;
+    switch (saveStatus) {
+      case ANNOTATION_SAVE_STATUS.SAVED:
+        return (
+          <Label size="mini" color="green">
+            saved
+          </Label>
+        );
+      case ANNOTATION_SAVE_STATUS.NEEDS_UPDATE:
+        return (
+          <Label size="mini" color="yellow">
+            needs update
+          </Label>
+        );
+      default:
+        return (
+          <Label size="mini" color="red">
+            unsaved
+          </Label>
+        );
+    }
+  }
+
   render() {
     const { title, savedToDB } = this.props;
     return (
       <Segment className="annotation-shortcut-container">
         <span className="annotation-shortcut-label-container">
           <Label className="annotation-shortcut-title">{title}</Label>
-          <Label size="mini" color={savedToDB ? "green" : "red"}>
-            {savedToDB ? "saved" : "unsaved"}
-          </Label>
+          {this.saveStatusLabel()}
         </span>
         <div className="annotation-shortcut-button-container">
           <Button

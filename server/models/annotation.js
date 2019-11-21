@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-
+const saveStatus = { SAVED: "SAVED", UPDATED: "UPDATED", UNSAVED: "UNSAVED" };
 const annotationSchema = new Schema({
   threeViewId: {
     type: String,
@@ -21,7 +21,27 @@ const annotationSchema = new Schema({
   settings: {
     type: Object,
     required: true
+  },
+  saveStatus: {
+    type: String,
+    enum: Object.values(saveStatus),
+    default: "UNSAVED",
+    required: true
   }
 });
 
-module.exports = mongoose.model("annotation", annotationSchema);
+annotationSchema.methods.refresh = function(callback) {
+  this.model("annotation").findOne({ _id: this.id }, callback);
+}
+
+annotationSchema.methods.updateSaveStatus = function(status, callback) {
+  this.update({ saveStatus: status }, (error, updated) => {
+    if (error) throw error;
+    this.refresh(callback);
+  });
+};
+
+module.exports = {
+  model: mongoose.model("annotation", annotationSchema),
+  SAVE_STATUS: saveStatus
+}

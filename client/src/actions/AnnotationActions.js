@@ -2,7 +2,8 @@ import {
   LOAD_ANNOTATIONS,
   SAVE_ANNOTATION,
   UPDATE_ANNOTATION,
-  DELETE_ANNOTATION
+  DELETE_ANNOTATION,
+  RESET_ANNOTATIONS_UPDATE_STATUS
 } from "../constants/actions";
 
 export function loadAnnotations(threeViewId) {
@@ -25,5 +26,11 @@ export function deleteAnnotation(id, threeViewId) {
     type: DELETE_ANNOTATION,
     id: id,
     threeViewId: threeViewId
+  }
+}
+
+export function resetLocalStateUpdateStatus() {
+  return {
+    type: RESET_ANNOTATIONS_UPDATE_STATUS
   }
 }

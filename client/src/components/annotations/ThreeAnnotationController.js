@@ -23,8 +23,11 @@ import { connect } from "react-redux";
 import {
   loadAnnotations,
   saveAnnotation,
-  deleteAnnotation
+  deleteAnnotation,
+  resetLocalStateUpdateStatus
 } from "../../actions/AnnotationActions";
+
+import { ANNOTATION_SAVE_STATUS } from "../../constants/application";
 
 class ThreeAnnotationController extends Component {
   raycaster: THREE.RayCaster;
@@ -34,7 +37,8 @@ class ThreeAnnotationController extends Component {
     active: false,
     open: false,
     editable: true,
-    annotations: []
+    annotations: [],
+    updatingAnnotations: false
   };
   constructor(props: Object) {
     super(props);
@@ -51,7 +55,12 @@ class ThreeAnnotationController extends Component {
     (this: any).toggleEdit = this.toggleEdit.bind(this);
     (this: any).raycaster = new THREE.Raycaster();
     this.saveAnnotation = this.saveAnnotation.bind(this);
+    this.requestAnnotationsUpdate = this.requestAnnotationsUpdate.bind(this);
     this.updateAnnotations = this.updateAnnotations.bind(this);
+    this.mergeAnnotations = this.mergeAnnotations.bind(this);
+    this.onAnnotationContentUpdated = this.onAnnotationContentUpdated.bind(
+      this
+    );
   }
 
   componentDidMount(): void {
@@ -93,9 +102,9 @@ class ThreeAnnotationController extends Component {
   }
 
   componentDidUpdate(prevProps, prevState): void {
-    const { editable } = this.state;
+    const { editable, updatingAnnotations } = this.state;
     const { css, annotationData } = this.props;
-    const { annotations } = annotationData;
+    const { annotations, localStateNeedsUpdate } = annotationData;
     if (this.props.open != prevProps.open) {
       this.setState({ open: this.props.open });
     }
@@ -105,10 +114,8 @@ class ThreeAnnotationController extends Component {
     if (!prevState.editable && editable) {
       css.style.pointerEvents = "all";
     }
-    if (annotations.length > 0) {
-      if (prevProps.annotationData.annotations.length !== annotations.length) {
-        this.updateAnnotations();
-      }
+    if (localStateNeedsUpdate && !updatingAnnotations) {
+      this.requestAnnotationsUpdate();
     }
   }
 
@@ -200,6 +207,7 @@ class ThreeAnnotationController extends Component {
         index={annotations.length}
         editable={this.state.editable}
         visible={true}
+        onUpdate={this.onAnnotationContentUpdated}
       />
     );
     let annotation = {
@@ -210,6 +218,7 @@ class ThreeAnnotationController extends Component {
       point: point,
       title: component.props.title,
       settings: { cameraPosition: this.props.camera.position.clone() },
+      saveStatus: ANNOTATION_SAVE_STATUS.UNSAVED,
       open: true
     };
     annotations.push(annotation);
@@ -221,19 +230,57 @@ class ThreeAnnotationController extends Component {
     );
   }
 
+  requestAnnotationsUpdate() {
+    this.setState(
+      {
+        updatingAnnotations: true
+      },
+      this.updateAnnotations
+    );
+  }
+  // sets annotation's save status to "needs update"
+  onAnnotationContentUpdated(index) {
+    const { annotations } = this.state;
+    const cloned = annotations.slice(0);
+    const annotation = cloned[index];
+    if (annotation) {
+      annotation.saveStatus = ANNOTATION_SAVE_STATUS.NEEDS_UPDATE;
+      this.setState({
+        annotations: cloned
+      });
+    }
+  }
+
   updateAnnotations() {
     const { annotations } = this.props.annotationData;
     const updatedAnnotations = annotations.map((annotation, index) =>
       this.hydrateAnnotation(annotation, index)
     );
-    this.setState(
-      { annotations: updatedAnnotations },
-      () => this.props.drawCallback(this.state.annotations)
-    );
+    const merged = this.mergeAnnotations(updatedAnnotations);
+    this.setState({ annotations: merged, updatingAnnotations: false }, () => {
+      this.props.resetLocalStateUpdateStatus();
+      this.props.drawCallback(this.state.annotations);
+    });
+  }
+
+  mergeAnnotations(newAnnotations) {
+    const { annotations } = this.state;
+    if (annotations.length === 0) return newAnnotations;
+    const merged = annotations.slice(0);
+    for (let i = 0; i < newAnnotations.length; i++) {
+      const annotation = newAnnotations[i];
+      const index = annotations.findIndex(a =>
+        a.point.equals(annotation.point)
+      );
+      if (index > -1) {
+        merged[index] = annotation;
+      }
+    }
+    return merged;
   }
 
   hydrateAnnotation(annotation, index) {
-    const { title, text, point, settings } = annotation;
+    const { title, text, point, settings, saveStatus, _id } = annotation;
     const ref = React.createRef();
     const component = (
       <ThreeAnnotation
@@ -244,6 +291,7 @@ class ThreeAnnotationController extends Component {
         index={index}
         editable={this.state.editable}
         visible={false}
+        onUpdate={this.onAnnotationContentUpdated}
       />
     );
     const a = {
@@ -254,8 +302,9 @@ class ThreeAnnotationController extends Component {
       point: point,
       title: title,
       settings: settings,
-      id: annotation._id,
-      open: false
+      id: _id,
+      open: false,
+      saveStatus: saveStatus
     };
     return a;
   }
@@ -290,7 +339,7 @@ class ThreeAnnotationController extends Component {
     const { saveAnnotation, threeViewId } = this.props;
     const annotation = this.state.annotations[index];
     if (annotation) {
-      const { component, node, titleStyle, textStyle, ...rest } = annotation;
+      const { component, node, titleStyle, textStyle, saveStatus, ...rest } = annotation;
       saveAnnotation(rest, threeViewId);
     }
   }
@@ -351,7 +400,8 @@ class ThreeAnnotationController extends Component {
         focus={this.viewAnnotation}
         delete={this.deleteAnnotation}
         save={this.saveAnnotation}
-        savedToDB={annotation.id ? true : false}
+        saveStatus={annotation.saveStatus}
+        onUpdate={this.onAnnotationContentUpdated}
       />
     ));
     let shortcutContainer;
@@ -383,5 +433,6 @@ function mapStateToProps(state) {
 export default connect(mapStateToProps, {
   saveAnnotation,
   loadAnnotations,
-  deleteAnnotation
+  deleteAnnotation,
+  resetLocalStateUpdateStatus
 })(ThreeAnnotationController);

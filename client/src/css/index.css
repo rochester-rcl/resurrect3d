@@ -474,6 +474,11 @@ body {
 }
 
 /*** Annotations ***/
+.three-annotation-tool-container > .three-gui-group {
+  max-height: 340px;
+  overflow-y: scroll;
+}
+
 .annotation
 {
   width: 175px;

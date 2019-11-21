@@ -11,7 +11,8 @@ export default class ThreeAnnotation extends React.Component {
       title: props.title,
       titleStyle: {},
       text: props.text,
-      textStyle: {}
+      textStyle: {},
+      needsUpdate: false
     };
 
     (this: any).updateTitle = this.updateTitle.bind(this);
@@ -19,23 +20,33 @@ export default class ThreeAnnotation extends React.Component {
   }
 
   updateTitle(event): void {
+    const { index, onUpdate } = this.props;
+    const { needsUpdate } = this.state;
     this.setState(
       {
         title: event.target.value
       },
       () => {
-        this.props.callback(this.props.index, this.state);
+        this.props.callback(index, this.state);
+        if (!needsUpdate) {
+          onUpdate(index);
+        }
       }
     );
   }
 
   updateText(event): void {
+    const { index, onUpdate } = this.props;
+    const { needsUpdate } = this.state;
     this.setState(
       {
         text: event.target.value
       },
       () => {
         this.props.callback(this.props.index, this.state);
+        if (!needsUpdate) {
+          onUpdate(index);
+        }
       }
     );
   }

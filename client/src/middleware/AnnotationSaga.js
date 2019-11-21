@@ -37,7 +37,7 @@ function* saveAnnotationSaga(action) {
       action.threeViewId
     );
     if (result._id) {
-        yield put({ type: ANNOTATION_SAVED, annotation: result });
+        yield put({ type: ANNOTATION_SAVED, annotation: deserializeThreeTypes(result) });
     }
   } catch (error) {
     console.error(error);
@@ -50,7 +50,6 @@ function* deleteAnnotationSaga(action) {
       action.id,
       action.threeViewId
     );
-    console.log(result);
   } catch (error) {
     console.error(error);
   }
