@@ -13,6 +13,7 @@ import threeViewerBackendFactory from "./backends/threeViewerBackendFactory";
 
 // serialization
 import { deserializeThreeTypes } from "../utils/serialization";
+import { ANNOTATION_SAVE_STATUS } from "../constants/application";
 
 const backend = threeViewerBackendFactory();
 
@@ -32,12 +33,20 @@ function* loadAnnotationsSaga(action) {
 
 function* saveAnnotationSaga(action) {
   try {
-    const result = yield backend.saveAnnotation(
-      action.annotation,
-      action.threeViewId
-    );
-    if (result._id) {
-        yield put({ type: ANNOTATION_SAVED, annotation: deserializeThreeTypes(result) });
+    const { annotation, threeViewId } = action;
+    let result;
+    if (annotation.saveStatus === ANNOTATION_SAVE_STATUS.NEEDS_UPDATE) {
+      const { saveStatus, ...rest } = annotation;
+      result = yield backend.updateAnnotation(rest, threeViewId);
+    } else {
+      result = yield backend.saveAnnotation(annotation, threeViewId);
+    }
+
+    if (result && result.saveStatus === ANNOTATION_SAVE_STATUS.SAVED) {
+      yield put({
+        type: ANNOTATION_SAVED,
+        annotation: deserializeThreeTypes(result)
+      });
     }
   } catch (error) {
     console.error(error);

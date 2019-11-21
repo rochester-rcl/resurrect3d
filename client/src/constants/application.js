@@ -166,3 +166,8 @@ export const ANNOTATION_SAVE_STATUS = {
   NEEDS_UPDATE: "NEEDS_UPDATE",
   UNSAVED: "UNSAVED"
 };
+
+export const ANNOTATION_SETTINGS_OPTIONS = {
+  CAMERA_POSITION: "cameraPosition",
+  LIGHT_SETTINGS: "lightSettings"
+}

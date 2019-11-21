@@ -15,6 +15,25 @@ const saveAnnotation = (req, res) => {
   });
 };
 
+const updateAnnotation = (req, res) => {
+  const { id, ...rest } = req.body;
+  rest._id = id;
+  const annotation = new Annotation({ ...rest });
+  Annotation.findOneAndUpdate(
+    { _id: id },
+    annotation,
+    { new: true },
+    (error, result) => {
+      if (result) {
+        result.updateSaveStatus(SAVE_STATUS.SAVED, (err, updated) => {
+          if (err) res.send(err);
+          res.json(updated);
+        });
+      }
+    }
+  );
+};
+
 const deleteAnnotation = (req, res) => {
   const { id } = req.body;
   const { threeViewId } = req.params;
@@ -22,10 +41,12 @@ const deleteAnnotation = (req, res) => {
     { _id: id, threeViewId: threeViewId },
     (err, annotation) => {
       if (err) res.send(err);
-      annotation.remove(err => {
-        if (err) res.send(err);
-        res.json({ status: true });
-      });
+      if (annotation) {
+        annotation.remove(err => {
+          if (err) res.send(err);
+          res.json({ status: true });
+        });
+      }
     }
   );
 };
@@ -41,5 +62,6 @@ const loadAnnotations = (req, res) => {
 module.exports = {
   save: saveAnnotation,
   get: loadAnnotations,
-  delete: deleteAnnotation
+  delete: deleteAnnotation,
+  update: updateAnnotation
 };

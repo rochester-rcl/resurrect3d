@@ -102,9 +102,18 @@ export default class ThreeViewerNodeBackend extends ThreeViewerAbstractBackend {
       .catch(error => console.error(error));
   }
 
-  deleteAnnotation(id, threeViewerId) {
+  updateAnnotation(annotation, threeViewId) {
+    const body = JSON.stringify(serializeThreeTypes(annotation));
+    return this._put(ANNOTATIONS_ENDPOINT, body, {
+      headers: { "Content-Type": "application/json" }
+    })
+      .then(result => result)
+      .catch(error => console.error(error));
+  }
+
+  deleteAnnotation(id, threeViewId) {
     const body = JSON.stringify({ id: id });
-    return this._post(ANNOTATIONS_ENDPOINT + threeViewerId, body, {
+    return this._post(ANNOTATIONS_ENDPOINT + threeViewId, body, {
       headers: { "Content-Type": "application/json" }
     })
       .then(result => result)

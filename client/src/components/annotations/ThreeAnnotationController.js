@@ -27,7 +27,7 @@ import {
   resetLocalStateUpdateStatus
 } from "../../actions/AnnotationActions";
 
-import { ANNOTATION_SAVE_STATUS } from "../../constants/application";
+import { ANNOTATION_SAVE_STATUS, ANNOTATION_SETTINGS_OPTIONS } from "../../constants/application";
 
 class ThreeAnnotationController extends Component {
   raycaster: THREE.RayCaster;
@@ -61,6 +61,9 @@ class ThreeAnnotationController extends Component {
     this.onAnnotationContentUpdated = this.onAnnotationContentUpdated.bind(
       this
     );
+    this.updateAnnotationSettings = this.updateAnnotationSettings.bind(this);
+    this.setAnnotationSettingsValues = this.setAnnotationSettingsValues.bind(this);
+    this.shortcutContainerRef = React.createRef();
   }
 
   componentDidMount(): void {
@@ -217,7 +220,7 @@ class ThreeAnnotationController extends Component {
       },
       point: point,
       title: component.props.title,
-      settings: { cameraPosition: this.props.camera.position.clone() },
+      settings: { cameraPosition: false },
       saveStatus: ANNOTATION_SAVE_STATUS.UNSAVED,
       open: true
     };
@@ -226,7 +229,14 @@ class ThreeAnnotationController extends Component {
       {
         annotations: annotations
       },
-      () => this.props.drawCallback(this.state.annotations)
+      () => {
+        this.props.drawCallback(this.state.annotations);
+        const shortcutContainerElement = this.shortcutContainerRef.current;
+        if (shortcutContainerElement) {
+          shortcutContainerElement.scrollTop =
+            shortcutContainerElement.scrollHeight;
+        }
+      }
     );
   }
 
@@ -238,12 +248,16 @@ class ThreeAnnotationController extends Component {
       this.updateAnnotations
     );
   }
+
   // sets annotation's save status to "needs update"
   onAnnotationContentUpdated(index) {
     const { annotations } = this.state;
     const cloned = annotations.slice(0);
     const annotation = cloned[index];
-    if (annotation) {
+    if (
+      annotation &&
+      annotation.saveStatus !== ANNOTATION_SAVE_STATUS.UNSAVED
+    ) {
       annotation.saveStatus = ANNOTATION_SAVE_STATUS.NEEDS_UPDATE;
       this.setState({
         annotations: cloned
@@ -339,9 +353,18 @@ class ThreeAnnotationController extends Component {
     const { saveAnnotation, threeViewId } = this.props;
     const annotation = this.state.annotations[index];
     if (annotation) {
-      const { component, node, titleStyle, textStyle, saveStatus, ...rest } = annotation;
-      saveAnnotation(rest, threeViewId);
+      const { component, node, titleStyle, textStyle, ...rest } = annotation;
+      const a = this.setAnnotationSettingsValues(annotation);
+      saveAnnotation(a, threeViewId);
     }
+  }
+
+  setAnnotationSettingsValues(annotation) {
+    const { settings } = annotation;
+    if (settings.cameraPosition) {
+      settings.cameraPosition = this.props.camera.position.clone()
+    }
+    return annotation;
   }
 
   viewAnnotation(index) {
@@ -377,6 +400,18 @@ class ThreeAnnotationController extends Component {
     );
   }
 
+  updateAnnotationSettings(index, settingsKey, value) {
+    const { annotations } = this.state;
+    const cloned = annotations.slice(0);
+    const annotation = cloned[index];
+    if (annotation) {
+      annotation.settings[settingsKey] = value;
+    }
+    this.setState({
+      annotations: cloned
+    });
+  }
+
   render() {
     const { css } = this.props;
     const { editable, annotations } = this.state;
@@ -401,13 +436,13 @@ class ThreeAnnotationController extends Component {
         delete={this.deleteAnnotation}
         save={this.saveAnnotation}
         saveStatus={annotation.saveStatus}
-        onUpdate={this.onAnnotationContentUpdated}
+        onSettingsUpdate={this.updateAnnotationSettings}
       />
     ));
     let shortcutContainer;
     if (this.state.active)
       shortcutContainer = (
-        <div className={"three-gui-group"}>
+        <div ref={this.shortcutContainerRef} className={"three-gui-group"}>
           <h4 className="three-gui-group-title">shortcuts</h4>
           {shortcuts}
         </div>

@@ -569,6 +569,12 @@ body {
   font-size: 14px !important;
 }
 
+.annotation-status-label {
+  display: flex;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
 .annotation-shortcut-label-container {
   display: flex;
   justify-content: space-between;
