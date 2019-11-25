@@ -7,6 +7,17 @@ const defaultState = {
   localStateNeedsUpdate: false
 };
 
+const addOrUpdate = (annotations, annotation) => {
+  const { _id } = annotation;
+  const index = annotations.findIndex((a) => a._id === _id);
+  if (index > -1) {
+    annotations[index] = annotation;
+  } else {
+    annotations.push(annotation);
+  }
+  return annotations;
+}
+
 const AnnotationReducer = (state = defaultState, action) => {
   switch (action.type) {
     case ActionConstants.ANNOTATIONS_LOADED:
@@ -18,8 +29,7 @@ const AnnotationReducer = (state = defaultState, action) => {
 
     case ActionConstants.ANNOTATION_SAVED:
       const { annotations } = state;
-      const cloned = annotations.slice(0);
-      cloned.push(action.annotation);
+      const cloned = addOrUpdate(annotations.slice(0), action.annotation);
       return {
         ...state,
         annotations: cloned,

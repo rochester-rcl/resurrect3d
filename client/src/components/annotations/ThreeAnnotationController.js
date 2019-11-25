@@ -27,7 +27,10 @@ import {
   resetLocalStateUpdateStatus
 } from "../../actions/AnnotationActions";
 
-import { ANNOTATION_SAVE_STATUS, ANNOTATION_SETTINGS_OPTIONS } from "../../constants/application";
+import {
+  ANNOTATION_SAVE_STATUS,
+  ANNOTATION_SETTINGS_OPTIONS
+} from "../../constants/application";
 
 class ThreeAnnotationController extends Component {
   raycaster: THREE.RayCaster;
@@ -62,7 +65,9 @@ class ThreeAnnotationController extends Component {
       this
     );
     this.updateAnnotationSettings = this.updateAnnotationSettings.bind(this);
-    this.setAnnotationSettingsValues = this.setAnnotationSettingsValues.bind(this);
+    this.setAnnotationSettingsValues = this.setAnnotationSettingsValues.bind(
+      this
+    );
     this.shortcutContainerRef = React.createRef();
   }
 
@@ -354,7 +359,7 @@ class ThreeAnnotationController extends Component {
     const annotation = this.state.annotations[index];
     if (annotation) {
       const { component, node, titleStyle, textStyle, ...rest } = annotation;
-      const a = this.setAnnotationSettingsValues(annotation);
+      const a = this.setAnnotationSettingsValues({ ...rest });
       saveAnnotation(a, threeViewId);
     }
   }
@@ -362,7 +367,7 @@ class ThreeAnnotationController extends Component {
   setAnnotationSettingsValues(annotation) {
     const { settings } = annotation;
     if (settings.cameraPosition) {
-      settings.cameraPosition = this.props.camera.position.clone()
+      settings.cameraPosition = this.props.camera.position.clone();
     }
     return annotation;
   }

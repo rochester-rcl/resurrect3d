@@ -11,6 +11,7 @@ export function isValidThreeType(value: Object) {
 }
 
 export function isThreeType(value: Object) {
+  if (!value) return false;
   return THREE[value.constructor.name] !== undefined;
 }
 
@@ -64,7 +65,7 @@ function walkThreeObject(values: Object, _mask: Set, func: any): Object {
           }
         } else {
           const val = obj[key];
-          if (val.constructor === Object) {
+          if (val && val.constructor === Object) {
             serialized[key] = update(obj[key]);
           } else {
             func(val, key, serialized);
