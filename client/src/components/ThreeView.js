@@ -257,10 +257,11 @@ export default class ThreeView extends Component {
     (this: any).axisGuides = [];
     (this: any).bboxSkybox = null;
     (this: any).lastCameraPosition = new THREE.Vector3();
-    (this: any).lastCameraTarget = new THREE.Vector3();
     (this: any).EDL_TEXTURE_RADIUS = 1.0;
     (this: any).EDL_TEXTURE_STEP = 0.01;
     (this: any).clock = new THREE.Clock();
+    this.lastTarget = new THREE.Vector3();
+    this.cameraTargetAlpha = 0;
     // TODO needs serious refactoring for VR to work
     /** Methods
      ***************************************************************************/
@@ -939,6 +940,7 @@ export default class ThreeView extends Component {
         if (alpha > 0) {
           cssDiv.element.style.opacity = THREE.Math.lerp(0, 1, alpha);
         }
+        // If we run into any performance issues we can change this
         annotationPos.add(new THREE.Vector3(offset, 0, 0));
         annotationPos.unproject(this.overlayCamera);
         cssDiv.position.set(annotationPos.x, annotationPos.y, annotationPos.z);
@@ -1355,7 +1357,7 @@ export default class ThreeView extends Component {
 
   *animateZoom(pos, duration, cameraPos) {
     // TODO should clean this up and abstract a lot of this away into another method that can also be used in controlCamera
-    const { deltaTime, panOffset } = this.state;
+    const { deltaTime } = this.state;
     const { spherical } = this;
     const distance = 10;
     let dest;
@@ -1365,6 +1367,7 @@ export default class ThreeView extends Component {
     } else {
       dest = cameraPos.clone();
     }
+    const animationTarget = pos.clone();
     this.offset.copy(this.camera.position).sub(this.camera.target);
     this.offset.applyQuaternion(this.quat);
     const start = new THREE.Vector3(
@@ -1380,6 +1383,7 @@ export default class ThreeView extends Component {
     ).toArray();
     // should yield at every frame
     let tempSpherical = new THREE.Spherical();
+    // animate look first
     for (let i = 0; i < duration; i += deltaTime) {
       tempSpherical.set(...lerpArrays(start, end, i / duration));
       spherical.setFromVector3(this.offset);
@@ -1399,11 +1403,10 @@ export default class ThreeView extends Component {
         this.minDistance,
         Math.min(this.maxDistance, spherical.radius)
       );
-      this.camera.target.add(panOffset);
       this.offset.setFromSpherical(spherical);
       this.offset.applyQuaternion(this.quatInverse);
       this.camera.position.copy(this.camera.target).add(this.offset);
-      this.camera.lookAt(this.camera.target);
+      this.camera.lookAt(this.lastTarget.lerp(animationTarget, i / duration));
       this.positionAnnotations(i / duration);
       yield null;
     }
@@ -1481,7 +1484,8 @@ export default class ThreeView extends Component {
     const { spherical, sphericalDelta, panOffset } = this.state;
     const resetVector = new THREE.Vector3(0, 0, this.maxDistance);
     this.camera.position.copy(resetVector);
-    this.camera.target.copy(new THREE.Vector3());
+    this.lastTarget.copy(new THREE.Vector3());
+    this.camera.target.copy(this.lastTarget);
     this.camera.updateProjectionMatrix();
     this.spherical = new THREE.Spherical();
   }
@@ -1494,9 +1498,16 @@ export default class ThreeView extends Component {
 
   controlCamera(): void {
     // Borrowed from THREEJS OrbitControls
-    const { sphericalDelta, panOffset, zoomScale, vrActive } = this.state;
+    const {
+      sphericalDelta,
+      panOffset,
+      zoomScale,
+      vrActive,
+      deltaTime
+    } = this.state;
     const { spherical } = this;
     let { scale } = this.state;
+    // this.lastTarget.lerp(this.camera.target, this.cameraTargetAlpha);
     this.offset.copy(this.camera.position).sub(this.camera.target);
     this.offset.applyQuaternion(this.quat);
     spherical.setFromVector3(this.offset);
@@ -1520,7 +1531,6 @@ export default class ThreeView extends Component {
     this.offset.setFromSpherical(spherical);
     this.offset.applyQuaternion(this.quatInverse);
     this.camera.position.copy(this.camera.target).add(this.offset);
-    this.camera.lookAt(this.camera.target);
     if (this.origCameraPos === undefined)
       this.origCameraPos = this.camera.position;
     if (this.state.dragging) {
@@ -1531,6 +1541,7 @@ export default class ThreeView extends Component {
       sphericalDelta.set(0, 0, 0);
       panOffset.set(0, 0, 0);
     }
+    this.camera.lookAt(this.camera.target);
     if (!this.state.dynamicLightProps.lock) {
       const distance = this.camera.position.distanceTo(this.bboxMesh.max);
       this.dynamicLight.position

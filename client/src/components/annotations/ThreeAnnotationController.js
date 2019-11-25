@@ -225,7 +225,7 @@ class ThreeAnnotationController extends Component {
       },
       point: point,
       title: component.props.title,
-      settings: { cameraPosition: false },
+      settings: { cameraPosition: { val: null, enabled: false } },
       saveStatus: ANNOTATION_SAVE_STATUS.UNSAVED,
       open: true
     };
@@ -366,9 +366,10 @@ class ThreeAnnotationController extends Component {
 
   setAnnotationSettingsValues(annotation) {
     const { settings } = annotation;
-    if (settings.cameraPosition) {
-      settings.cameraPosition = this.props.camera.position.clone();
+    if (settings.cameraPosition.enabled) {
+      settings.cameraPosition.val = this.props.camera.position.clone();
     }
+    console.log(settings.cameraPosition.val);
     return annotation;
   }
 
@@ -396,7 +397,7 @@ class ThreeAnnotationController extends Component {
     });
     const { settings, point } = annotations[index];
     const { cameraPosition } = settings;
-    this.props.cameraCallback(point, cameraPosition);
+    this.props.cameraCallback(point, cameraPosition.val);
     this.setState(
       {
         annotations: annotations
@@ -410,7 +411,8 @@ class ThreeAnnotationController extends Component {
     const cloned = annotations.slice(0);
     const annotation = cloned[index];
     if (annotation) {
-      annotation.settings[settingsKey] = value;
+      annotation.settings[settingsKey].enabled = value;
+      annotation.saveStatus = ANNOTATION_SAVE_STATUS.NEEDS_UPDATE;
     }
     this.setState({
       annotations: cloned

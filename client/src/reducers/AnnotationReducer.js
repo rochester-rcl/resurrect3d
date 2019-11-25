@@ -8,7 +8,6 @@ const defaultState = {
 };
 
 const addOrUpdate = (annotations, annotation) => {
-  console.log(annotations, annotation);
   const { _id } = annotation;
   const index = annotations.findIndex((a) => a._id === _id);
   if (index > -1) {

@@ -94,7 +94,7 @@ export function serializeThreeTypes(threeValues: Object, _mask: Set): Object {
 
 export function deserializeThreeTypes(threeValues: Object): Object {
   const deserialize = (val, key, serializedObj) => {
-    if (val.constructor === String && val.startsWith('__')) {
+    if ((val && val.constructor === String) && val.startsWith('__')) {
       serializedObj[key] = deserializeThreeType(val);
     } else {
       serializedObj[key] = val;

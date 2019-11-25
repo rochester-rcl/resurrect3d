@@ -58,7 +58,6 @@ function* deleteAnnotationSaga(action) {
       action.id,
       action.threeViewId
     );
-    console.log(action.id);
   } catch (error) {
     console.error(error);
   }
