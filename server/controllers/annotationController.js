@@ -16,11 +16,10 @@ const saveAnnotation = (req, res) => {
 };
 
 const updateAnnotation = (req, res) => {
-  const { id, ...rest } = req.body;
-  rest._id = id;
-  const annotation = new Annotation({ ...rest });
+  const a = {...req.body};
+  const annotation = new Annotation(a);
   Annotation.findOneAndUpdate(
-    { _id: id },
+    { _id: a._id },
     annotation,
     { new: true },
     (error, result) => {

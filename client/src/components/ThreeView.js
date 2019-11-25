@@ -1355,7 +1355,7 @@ export default class ThreeView extends Component {
 
   *animateZoom(pos, duration, cameraPos) {
     // TODO should clean this up and abstract a lot of this away into another method that can also be used in controlCamera
-    const { deltaTime } = this.state;
+    const { deltaTime, panOffset } = this.state;
     const { spherical } = this;
     const distance = 10;
     let dest;
@@ -1399,6 +1399,7 @@ export default class ThreeView extends Component {
         this.minDistance,
         Math.min(this.maxDistance, spherical.radius)
       );
+      this.camera.target.add(panOffset);
       this.offset.setFromSpherical(spherical);
       this.offset.applyQuaternion(this.quatInverse);
       this.camera.position.copy(this.camera.target).add(this.offset);

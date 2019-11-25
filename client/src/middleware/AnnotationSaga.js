@@ -41,7 +41,6 @@ function* saveAnnotationSaga(action) {
     } else {
       result = yield backend.saveAnnotation(annotation, threeViewId);
     }
-
     if (result && result.saveStatus === ANNOTATION_SAVE_STATUS.SAVED) {
       yield put({
         type: ANNOTATION_SAVED,
@@ -59,6 +58,7 @@ function* deleteAnnotationSaga(action) {
       action.id,
       action.threeViewId
     );
+    console.log(action.id);
   } catch (error) {
     console.error(error);
   }

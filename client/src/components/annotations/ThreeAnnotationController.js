@@ -321,7 +321,7 @@ class ThreeAnnotationController extends Component {
       point: point,
       title: title,
       settings: settings,
-      id: _id,
+      _id: _id,
       open: false,
       saveStatus: saveStatus
     };
@@ -341,8 +341,8 @@ class ThreeAnnotationController extends Component {
   deleteAnnotation(index) {
     const { annotations } = this.state;
     const annotation = annotations[index];
-    if (annotation.id) {
-      this.props.deleteAnnotation(annotation.id, this.props.threeViewId);
+    if (annotation._id) {
+      this.props.deleteAnnotation(annotation._id, this.props.threeViewId);
     }
     const updated = annotations.length === 1 ? [] : [...annotations];
     if (updated.length > 0) updated.splice(index, 1);
