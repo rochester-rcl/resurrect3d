@@ -66,6 +66,7 @@ export default class ThreeAnnotationShortcut extends Component {
 
   render() {
     const { title, savedToDB } = this.props;
+
     return (
       <Segment className="annotation-shortcut-container">
         <span className="annotation-shortcut-label-container">

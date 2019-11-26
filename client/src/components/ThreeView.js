@@ -171,6 +171,7 @@ export default class ThreeView extends Component {
     panOffset: new THREE.Vector3(),
     // dolly
     scale: 1.75,
+    lastScale: 1,
     zoomScale: Math.pow(0.95, 1.0),
     maxScale: 2.5,
     // spherical coords
@@ -231,7 +232,9 @@ export default class ThreeView extends Component {
     isRaycasting: false,
     //newContentToggle: false,
     vrActive: false,
-    units: CM
+    units: CM,
+    cameraTargetTransitionRequired: false,
+    cameraControlPaused: false
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
   clock: THREE.Clock;
@@ -293,6 +296,7 @@ export default class ThreeView extends Component {
     (this: any).fitPerspectiveCamera = this.fitPerspectiveCamera.bind(this);
     (this: any).panBounds = this.panBounds.bind(this);
     (this: any).centerCamera = this.centerCamera.bind(this);
+    this.center = this.center.bind(this);
     (this: any).computeAxisGuides = this.computeAxisGuides.bind(this);
     (this: any).drawAxisGuides = this.drawAxisGuides.bind(this);
     (this: any).addAxisLabels = this.addAxisLabels.bind(this);
@@ -336,6 +340,10 @@ export default class ThreeView extends Component {
     this.animateAnnotationTransition = this.animateAnnotationTransition.bind(
       this
     );
+    this.animateCameraTargetTransition = this.animateCameraTargetTransition.bind(
+      this
+    );
+    this.cameraTargetTransition = this.cameraTargetTransition.bind(this);
     this.annotationThrottleTime = 0;
     this.annotationOffsetPlaceholder = 0;
     // event handlers
@@ -1357,7 +1365,6 @@ export default class ThreeView extends Component {
 
   *animateZoom(pos, duration, cameraPos) {
     // TODO should clean this up and abstract a lot of this away into another method that can also be used in controlCamera
-    const { deltaTime } = this.state;
     const { spherical } = this;
     const distance = 10;
     let dest;
@@ -1368,8 +1375,8 @@ export default class ThreeView extends Component {
       dest = cameraPos.clone();
     }
     const animationTarget = pos.clone();
-    this.offset.copy(this.camera.position).sub(this.camera.target);
-    this.offset.applyQuaternion(this.quat);
+    const startTarget = this.camera.target.toArray();
+    const endTarget = [0, 0, 0];
     const start = new THREE.Vector3(
       spherical.radius,
       spherical.phi,
@@ -1383,8 +1390,12 @@ export default class ThreeView extends Component {
     ).toArray();
     // should yield at every frame
     let tempSpherical = new THREE.Spherical();
-    // animate look first
-    for (let i = 0; i < duration; i += deltaTime) {
+    for (let i = 0; i < duration; i += this.state.deltaTime) {
+      this.camera.target.set(
+        ...lerpArrays(startTarget, endTarget, i / duration)
+      );
+      this.offset.copy(this.camera.position).sub(this.camera.target);
+      this.offset.applyQuaternion(this.quat);
       tempSpherical.set(...lerpArrays(start, end, i / duration));
       spherical.setFromVector3(this.offset);
       spherical.theta = tempSpherical.theta;
@@ -1407,13 +1418,44 @@ export default class ThreeView extends Component {
       this.offset.applyQuaternion(this.quatInverse);
       this.camera.position.copy(this.camera.target).add(this.offset);
       this.camera.lookAt(this.lastTarget.lerp(animationTarget, i / duration));
-      this.positionAnnotations(i / duration);
       yield null;
+    }
+    for (let i = 0; i < duration / 2; i += this.state.deltaTime) {
+      this.positionAnnotations(i / (duration / 2));
+      yield null;
+    }
+    this.setState({
+      cameraTargetTransitionRequired: true,
+      cameraControlPaused: true
+    });
+    yield null;
+  }
+
+  *cameraTargetTransition(duration) {
+    const end = this.camera.target.toArray();
+    const start = this.lastTarget.toArray();
+    for (let i = 0; i < duration; i += this.state.deltaTime) {
+      this.lastTarget.set(...lerpArrays(start, end, i / duration));
+      this.camera.lookAt(this.lastTarget);
+      yield null;
+    }
+    this.camera.target.copy(this.lastTarget);
+  }
+
+  animateCameraTargetTransition() {
+    const { animator } = this.state;
+    if (animator != null) {
+      if (animator.next().done) {
+        this.setState({
+          cameraTargetTransitionRequired: false,
+          animator: null
+        });
+      }
     }
   }
 
   controlAnimation() {
-    const { controllable, animator } = this.state;
+    const { controllable, animator, deltaTime } = this.state;
     if (!controllable) {
       if (animator != null) {
         if (animator.next().done) {
@@ -1448,10 +1490,13 @@ export default class ThreeView extends Component {
   }
 
   zoom(zoomDelta: number): void {
-    let { scale, zoomScale } = this.state;
+    let { scale, cameraControlPaused } = this.state;
     const sign = zoomDelta < 0 ? -1 : zoomDelta > 0 ? 1 : 0;
     scale = (1 - Math.pow(0.95, this.zoomSpeed)) * sign;
-    this.setState({ scale: scale });
+    this.setState({
+      scale: scale,
+      cameraControlPaused: false,
+    });
   }
 
   orbit(x: number, y: number): void {
@@ -1481,13 +1526,34 @@ export default class ThreeView extends Component {
   }
 
   centerCamera(): void {
-    const { spherical, sphericalDelta, panOffset } = this.state;
+    this.setState({
+      controllable: false,
+      animator: this.center(2),
+      cameraControlPaused: true
+    });
+  }
+
+  *center(duration) {
     const resetVector = new THREE.Vector3(0, 0, this.maxDistance);
+    const zero = new THREE.Vector3(0, 0, 0);
+    const start = this.camera.position.clone().toArray();
+    const end = resetVector.toArray();
+    const startTarget = this.lastTarget.toArray();
+    const endTarget = [0, 0, 0];
+    for (let i = 0; i < duration; i += this.state.deltaTime) {
+      this.camera.position.set(...lerpArrays(start, end, i / duration));
+      this.camera.target.set(
+        ...lerpArrays(startTarget, endTarget, i / duration)
+      );
+      this.camera.lookAt(this.camera.target);
+      yield null;
+    }
     this.camera.position.copy(resetVector);
-    this.lastTarget.copy(new THREE.Vector3());
-    this.camera.target.copy(this.lastTarget);
-    this.camera.updateProjectionMatrix();
+    this.lastTarget.copy(zero);
+    this.offset.copy(zero);
     this.spherical = new THREE.Spherical();
+    this.camera.updateProjectionMatrix();
+    yield null;
   }
 
   updateCamera(): void {
@@ -1498,16 +1564,9 @@ export default class ThreeView extends Component {
 
   controlCamera(): void {
     // Borrowed from THREEJS OrbitControls
-    const {
-      sphericalDelta,
-      panOffset,
-      zoomScale,
-      vrActive,
-      deltaTime
-    } = this.state;
+    const { sphericalDelta, panOffset, cameraControlPaused } = this.state;
     const { spherical } = this;
-    let { scale } = this.state;
-    // this.lastTarget.lerp(this.camera.target, this.cameraTargetAlpha);
+    let { scale, cameraTargetTransitionRequired, animator, lastScale } = this.state;
     this.offset.copy(this.camera.position).sub(this.camera.target);
     this.offset.applyQuaternion(this.quat);
     spherical.setFromVector3(this.offset);
@@ -1541,7 +1600,19 @@ export default class ThreeView extends Component {
       sphericalDelta.set(0, 0, 0);
       panOffset.set(0, 0, 0);
     }
-    this.camera.lookAt(this.camera.target);
+    if (!cameraTargetTransitionRequired) {
+      this.camera.lookAt(this.camera.target);
+    } else {
+      if (!cameraControlPaused) {
+        if (!animator) {
+          this.setState({
+            animator: this.cameraTargetTransition(1)
+          });
+        } else {
+          this.animateCameraTargetTransition();
+        }
+      }
+    }
     if (!this.state.dynamicLightProps.lock) {
       const distance = this.camera.position.distanceTo(this.bboxMesh.max);
       this.dynamicLight.position
@@ -2392,13 +2463,15 @@ export default class ThreeView extends Component {
         this.setState({
           dragging: true,
           rmbDown: true,
-          panStart: this.state.panStart.set(event.clientX, event.clientY)
+          panStart: this.state.panStart.set(event.clientX, event.clientY),
+          cameraControlPaused: false
         });
       } else {
         this.setState({
           dragging: true,
           rmbDown: false,
-          rotateStart: this.state.rotateStart.set(event.clientX, event.clientY)
+          rotateStart: this.state.rotateStart.set(event.clientX, event.clientY),
+          cameraControlPaused: false
         });
       }
     }
