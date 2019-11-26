@@ -39,7 +39,7 @@ class ThreeAnnotationController extends Component {
     dragging: false,
     active: false,
     open: false,
-    editable: true,
+    editable: false,
     annotations: [],
     updatingAnnotations: false
   };
@@ -92,6 +92,10 @@ class ThreeAnnotationController extends Component {
     const { active } = this.state;
     this.setState({
       active: !active
+    }, () => {
+      if (!this.state.active) {
+        this.props.drawCallback([])
+      }
     });
   }
 
@@ -110,7 +114,7 @@ class ThreeAnnotationController extends Component {
   }
 
   componentDidUpdate(prevProps, prevState): void {
-    const { editable, updatingAnnotations } = this.state;
+    const { editable, updatingAnnotations, active } = this.state;
     const { css, annotationData } = this.props;
     const { annotations, localStateNeedsUpdate } = annotationData;
     if (this.props.open != prevProps.open) {
@@ -118,9 +122,11 @@ class ThreeAnnotationController extends Component {
     }
     if (prevState.editable && !editable) {
       css.style.pointerEvents = "none";
+      css.style.cursor = "pointer";
     }
     if (!prevState.editable && editable) {
       css.style.pointerEvents = "all";
+      css.style.cursor = "crosshair";
     }
     if (localStateNeedsUpdate && !updatingAnnotations) {
       this.requestAnnotationsUpdate();
@@ -272,13 +278,16 @@ class ThreeAnnotationController extends Component {
 
   updateAnnotations() {
     const { annotations } = this.props.annotationData;
+    const { active } = this.state;
     const updatedAnnotations = annotations.map((annotation, index) =>
       this.hydrateAnnotation(annotation, index)
     );
     const merged = this.mergeAnnotations(updatedAnnotations);
     this.setState({ annotations: merged, updatingAnnotations: false }, () => {
       this.props.resetLocalStateUpdateStatus();
-      this.props.drawCallback(this.state.annotations);
+      if (active) {
+        this.props.drawCallback(this.state.annotations);
+      }
     });
   }
 
@@ -369,7 +378,6 @@ class ThreeAnnotationController extends Component {
     if (settings.cameraPosition.enabled) {
       settings.cameraPosition.val = this.props.camera.position.clone();
     }
-    console.log(settings.cameraPosition.val);
     return annotation;
   }
 

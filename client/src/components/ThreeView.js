@@ -347,6 +347,8 @@ export default class ThreeView extends Component {
     this.cameraTargetTransition = this.cameraTargetTransition.bind(this);
     this.annotationThrottleTime = 0;
     this.annotationOffsetPlaceholder = 0;
+    this.positionAnnotations = this.positionAnnotations.bind(this);
+    this.hideAnnotations = this.hideAnnotations.bind(this);
     // event handlers
 
     (this: any).handleMouseDown = this.handleMouseDown.bind(this);
@@ -930,6 +932,17 @@ export default class ThreeView extends Component {
     }
   }
 
+  hideAnnotations() {
+    const { currentAnnotationIndex, currentAnnotationCSSObj } = this.state;
+    const annotation = this.annotationMarkers.children[currentAnnotationIndex];
+    if (annotation) {
+      const cssDiv = currentAnnotationCSSObj;
+      if (cssDiv) {
+        cssDiv.element.style.opacity = 0;
+      }
+    }
+  }
+
   positionAnnotations(alpha = 0): void {
     //Make annotations position smartly to stay in camera -- use raycaster prob
     const distance = 0.05 * this.spriteScaleFactor;
@@ -1368,6 +1381,7 @@ export default class ThreeView extends Component {
     // TODO should clean this up and abstract a lot of this away into another method that can also be used in controlCamera
     const { spherical } = this;
     this.setState({ lastCameraPosition: this.camera.position.clone() });
+    this.hideAnnotations();
     const distance = 10;
     let dest;
     if (!cameraPos) {
