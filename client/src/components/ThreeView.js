@@ -35,6 +35,7 @@ import { LinearGradientShader, RadialGradientCanvas } from "../utils/image";
 import ThreePointLights from "../utils/lights";
 import { convertUnits, lerpArrays } from "../utils/math";
 import { serializeThreeTypes } from "../utils/serialization";
+import screenfull from "screenfull";
 
 // Constants
 import {
@@ -235,7 +236,8 @@ export default class ThreeView extends Component {
     units: CM,
     cameraTargetTransitionRequired: false,
     cameraControlPaused: false,
-    lastCameraPosition: new THREE.Vector3()
+    lastCameraPosition: new THREE.Vector3(),
+    presentationMode: false
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
   clock: THREE.Clock;
@@ -317,6 +319,9 @@ export default class ThreeView extends Component {
     (this: any).drawMeasurement = this.drawMeasurement.bind(this);
     (this: any).drawAnnotations = this.drawAnnotations.bind(this);
     (this: any).viewAnnotation = this.viewAnnotation.bind(this);
+    this.onAnnotationPresentationToggle = this.onAnnotationPresentationToggle.bind(
+      this
+    );
     (this: any).drawSpriteTarget = this.drawSpriteTarget.bind(this);
     (this: any).computeSpriteScaleFactor = this.computeSpriteScaleFactor.bind(
       this
@@ -339,9 +344,6 @@ export default class ThreeView extends Component {
     (this: any).exitVR = this.exitVR.bind(this);
     this.animateZoom = this.animateZoom.bind(this);
     this.animateAnnotationTransition = this.animateAnnotationTransition.bind(
-      this
-    );
-    this.animateCameraTargetTransition = this.animateCameraTargetTransition.bind(
       this
     );
     this.cameraTargetTransition = this.cameraTargetTransition.bind(this);
@@ -417,7 +419,7 @@ export default class ThreeView extends Component {
 
   componentWillUnmount(): void {
     window.removeEventListener("resize", this.handleWindowResize);
-    this.threeRef.removeEventListener("wheel", this.handleMouseWheel);
+    this.threeView.removeEventListener("wheel", this.handleMouseWheel);
   }
 
   render(): Object {
@@ -570,7 +572,7 @@ export default class ThreeView extends Component {
     this.annotationMarkers = new THREE.Group();
     this.annotationLines = new THREE.Group();
 
-    this.guiScene.add(this.annotationMarkers);
+    this.scene.add(this.annotationMarkers);
     this.overlayScene.add(this.annotationLines);
 
     // WebGL Renderer
@@ -915,7 +917,8 @@ export default class ThreeView extends Component {
       for (let i = 0; i < annotations.length; i++) {
         const sphereGeometry = new THREE.SphereBufferGeometry(0.2, 32, 32);
         const sphereMaterial = new THREE.MeshBasicMaterial({
-          color: annotations[i].open ? 0xe7e7e7 : 0x1b1b1b
+          color: annotations[i].open ? 0xe7e7e7 : 0x1b1b1b,
+          transparent: true
         });
         const annotationMarker = new THREE.Mesh(sphereGeometry, sphereMaterial);
         annotationMarker.position.copy(annotations[i].point);
@@ -930,6 +933,12 @@ export default class ThreeView extends Component {
         this.annotationMarkers.add(annotationMarker);
       }
     }
+  }
+
+  onAnnotationPresentationToggle(val) {
+    this.setState({ controllable: !val }, () =>
+      screenfull.toggle(this.threeView)
+    );
   }
 
   hideAnnotations() {
@@ -958,6 +967,11 @@ export default class ThreeView extends Component {
           offset,
           this.state.deltaTime / this.dampingFactor
         );
+        // max = max distance, min = 0
+        // o = x - min / max - min
+        annotation.material.opacity =
+          annotation.position.distanceTo(this.camera.position) /
+          this.maxDistance;
         offset = this.annotationOffsetPlaceholder;
         if (alpha > 0) {
           cssDiv.element.style.opacity = THREE.Math.lerp(0, 1, alpha);
@@ -1434,6 +1448,12 @@ export default class ThreeView extends Component {
       this.offset.applyQuaternion(this.quatInverse);
       this.camera.position.copy(this.camera.target).add(this.offset);
       this.camera.lookAt(this.lastTarget.lerp(animationTarget, i / duration));
+      if (!this.state.dynamicLightProps.lock) {
+        this.dynamicLight.position
+          .copy(this.camera.position)
+          .add(this.state.dynamicLightProps.offset);
+        this.dynamicLight.needsUpdate = true;
+      }
       yield null;
     }
     for (let i = 0; i < duration / 2; i += this.state.deltaTime) {
@@ -1448,32 +1468,27 @@ export default class ThreeView extends Component {
   }
 
   *cameraTargetTransition(duration) {
+    this.hideAnnotations();
     const { lastCameraPosition } = this.state;
     const end = this.camera.target.toArray();
     const start = this.lastTarget.toArray();
-    const startPos = this.camera.position.toArray();
-    const endPos = lastCameraPosition.toArray();
+    const posAnimation = this.animateZoom(
+      this.camera.target,
+      duration,
+      lastCameraPosition.clone()
+    );
     for (let i = 0; i < duration; i += this.state.deltaTime) {
       this.lastTarget.set(...lerpArrays(start, end, i / duration));
       this.camera.lookAt(this.lastTarget);
-      this.camera.position.set(...lerpArrays(startPos, endPos, i / duration));
+      posAnimation.next();
+      yield null;
+    }
+    // wait for the animation to finish if things go out of sync
+    while (!posAnimation.next().done) {
       yield null;
     }
     this.camera.target.copy(this.lastTarget);
-    this.camera.position.copy(lastCameraPosition);
     this.setState({ cameraTargetTransitionRequired: false });
-  }
-
-  animateCameraTargetTransition() {
-    const { animator } = this.state;
-    if (animator != null) {
-      if (animator.next().done) {
-        this.setState({
-          cameraTargetTransitionRequired: false,
-          animator: null
-        });
-      }
-    }
   }
 
   controlAnimation() {
@@ -1912,7 +1927,8 @@ export default class ThreeView extends Component {
           annotations: this.annotations,
           webGL: this.webGLRenderer.domElement,
           css: this.css2DRenderer.domElement,
-          threeViewId: this.props.threeViewId
+          threeViewId: this.props.threeViewId,
+          onTogglePresentationMode: this.onAnnotationPresentationToggle
         }
       );
 

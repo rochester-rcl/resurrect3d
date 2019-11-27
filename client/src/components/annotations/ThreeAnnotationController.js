@@ -8,8 +8,8 @@ import ReactDom from "react-dom";
 import * as THREE from "three";
 
 // UI
-import ThreeToggle from "./../ThreeToggle";
-import ThreeGUI from "./../ThreeGUI";
+import ThreeToggle from "../ThreeToggle";
+import ThreeButton from "../ThreeButton";
 
 //ThreeAnnotation
 import ThreeAnnotation from "./ThreeAnnotation";
@@ -27,10 +27,7 @@ import {
   resetLocalStateUpdateStatus
 } from "../../actions/AnnotationActions";
 
-import {
-  ANNOTATION_SAVE_STATUS,
-  ANNOTATION_SETTINGS_OPTIONS
-} from "../../constants/application";
+import { ANNOTATION_SAVE_STATUS, KEYCODES } from "../../constants/application";
 
 class ThreeAnnotationController extends Component {
   raycaster: THREE.RayCaster;
@@ -41,8 +38,11 @@ class ThreeAnnotationController extends Component {
     open: false,
     editable: false,
     annotations: [],
-    updatingAnnotations: false
+    updatingAnnotations: false,
+    presentationMode: false,
+    currentIndex: -1
   };
+
   constructor(props: Object) {
     super(props);
 
@@ -68,6 +68,9 @@ class ThreeAnnotationController extends Component {
     this.setAnnotationSettingsValues = this.setAnnotationSettingsValues.bind(
       this
     );
+    this.togglePresentationMode = this.togglePresentationMode.bind(this);
+    this.handleKeyDown = this.handleKeyDown.bind(this);
+    this.goToAnnotation = this.goToAnnotation.bind(this);
     this.shortcutContainerRef = React.createRef();
   }
 
@@ -77,6 +80,7 @@ class ThreeAnnotationController extends Component {
     css.addEventListener("mousedown", this.handleDown, true);
     css.addEventListener("mousemove", this.handleMove, true);
     css.addEventListener("mouseup", this.handleUp, true);
+    css.addEventListener("keydown", this.handleKeyDown, true);
     css.style.pointerEvents = "auto";
   }
 
@@ -85,24 +89,79 @@ class ThreeAnnotationController extends Component {
     css.removeEventListener("mousedown", this.handleDown, true);
     css.removeEventListener("mousemove", this.handleMove, true);
     css.removeEventListener("mouseup", this.handleUp, true);
+    css.removeEventListener("keydown", this.handleKeyDown, true);
     css.style.pointerEvents = "none";
   }
 
   toggle(): void {
     const { active } = this.state;
-    this.setState({
-      active: !active
-    }, () => {
-      if (!this.state.active) {
-        this.props.drawCallback([])
+    this.setState(
+      {
+        active: !active
+      },
+      () => {
+        if (!this.state.active) {
+          this.props.drawCallback([]);
+        }
       }
-    });
+    );
   }
 
   toggleEdit(): void {
     this.setState({
       editable: !this.state.editable
     });
+  }
+
+  togglePresentationMode() {
+    const { onTogglePresentationMode } = this.props;
+    this.setState(
+      {
+        presentationMode: !this.state.presentationMode
+      },
+      () => {
+        this.toggleKeydownListeners();
+        onTogglePresentationMode(this.state.presentationMode);
+      }
+    );
+  }
+
+  toggleKeydownListeners() {
+    const { presentationMode } = this.state;
+    if (presentationMode) {
+      window.addEventListener("keydown", this.handleKeyDown, true);
+    } else {
+      window.removeEventListener("keydown", this.handleKeyDown, true);
+    }
+  }
+
+  handleKeyDown(event) {
+    const { presentationMode, currentIndex } = this.state;
+    if (presentationMode) {
+      switch (event.keyCode) {
+        case KEYCODES.LEFT:
+          this.goToAnnotation(currentIndex - 1);
+          break;
+        case KEYCODES.RIGHT:
+          this.goToAnnotation(currentIndex + 1);
+          break;
+        case KEYCODES.ESCAPE:
+          this.togglePresentationMode();
+        default:
+          break;
+      }
+    }
+  }
+
+  goToAnnotation(index) {
+    const { annotations } = this.state;
+    const max = annotations.length-1;
+    let nextIndex = index;
+    if (nextIndex < 0) nextIndex = max;
+    if (nextIndex > max) nextIndex = 0;
+    this.setState({ currentIndex: nextIndex }, () =>
+      this.viewAnnotation(this.state.currentIndex)
+    );
   }
 
   reset(): void {
@@ -420,7 +479,9 @@ class ThreeAnnotationController extends Component {
     const annotation = cloned[index];
     if (annotation) {
       annotation.settings[settingsKey].enabled = value;
-      annotation.saveStatus = ANNOTATION_SAVE_STATUS.NEEDS_UPDATE;
+      if (annotation.saveStatus !== ANNOTATION_SAVE_STATUS.UNSAVED) {
+        annotation.saveStatus = ANNOTATION_SAVE_STATUS.NEEDS_UPDATE;
+      }
     }
     this.setState({
       annotations: cloned
@@ -428,13 +489,14 @@ class ThreeAnnotationController extends Component {
   }
 
   render() {
-    const { css } = this.props;
-    const { editable, annotations } = this.state;
+    const { user } = this.props;
+    const { annotations, presentationMode } = this.state;
     const renderedAnnotations = annotations.map(annotation => {
       return <div>{annotation.component}</div>;
     });
     let editToggle;
-    if (this.state.active)
+    let togglePresentationMode;
+    if (this.state.active) {
       editToggle = (
         <ThreeToggle
           title="edit mode"
@@ -442,7 +504,19 @@ class ThreeAnnotationController extends Component {
           defaultVal={this.state.editable}
         />
       );
-
+      if (!presentationMode) {
+        togglePresentationMode = (
+          <ThreeButton
+            className="toggle-annotations-presentation-button three-controls-button"
+            icon="play"
+            color="grey"
+            labelPosition="right"
+            content="Start Presentation"
+            onClick={this.togglePresentationMode}
+          />
+        );
+      }
+    }
     let shortcuts = annotations.map((annotation, index) => (
       <ThreeAnnotationShortcut
         title={annotation.title}
@@ -452,21 +526,23 @@ class ThreeAnnotationController extends Component {
         save={this.saveAnnotation}
         saveStatus={annotation.saveStatus}
         onSettingsUpdate={this.updateAnnotationSettings}
+        readOnly={!user.loggedIn}
       />
     ));
     let shortcutContainer;
-    if (this.state.active)
+    if (this.state.active) {
       shortcutContainer = (
         <div ref={this.shortcutContainerRef} className={"three-gui-group"}>
           <h4 className="three-gui-group-title">shortcuts</h4>
           {shortcuts}
         </div>
       );
-
+    }
     return (
       <div className="three-annotation-tool-container">
         <ThreeToggle title="annotations" callback={this.toggle} />
         {editToggle}
+        {togglePresentationMode}
         {shortcutContainer}
         {renderedAnnotations}
       </div>
@@ -476,7 +552,8 @@ class ThreeAnnotationController extends Component {
 
 function mapStateToProps(state) {
   return {
-    annotationData: state.annotationData
+    annotationData: state.annotationData,
+    user: state.user
   };
 }
 

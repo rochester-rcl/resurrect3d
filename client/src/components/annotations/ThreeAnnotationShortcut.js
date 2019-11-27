@@ -64,9 +64,32 @@ export default class ThreeAnnotationShortcut extends Component {
     }
   }
 
-  render() {
-    const { title, savedToDB } = this.props;
+  renderReadOnly() {
+    const { title } = this.props;
+    return (
+      <Segment className="annotation-shortcut-container">
+        <span className="annotation-shortcut-label-container">
+          <Label className="annotation-shortcut-title">{title}</Label>
+          <Button
+            icon
+            onClick={this.focus}
+            className="annotation-shortcut-button"
+            size="mini"
+          >
+            <Icon
+              color="grey"
+              className="annotation-shortcut-icon"
+              name="eye"
+              size="large"
+            />
+          </Button>
+        </span>
+      </Segment>
+    );
+  }
 
+  renderAdminMode() {
+    const { title } = this.props;
     return (
       <Segment className="annotation-shortcut-container">
         <span className="annotation-shortcut-label-container">
@@ -135,5 +158,11 @@ export default class ThreeAnnotationShortcut extends Component {
         </div>
       </Segment>
     );
+  }
+
+  render() {
+    const { readOnly } = this.props;
+    if (!readOnly) return this.renderAdminMode();
+    return this.renderReadOnly();
   }
 }

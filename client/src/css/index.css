@@ -474,6 +474,12 @@ body {
 }
 
 /*** Annotations ***/
+.three-annotation-tool-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
 .three-annotation-tool-container > .three-gui-group {
   max-height: 340px;
   overflow-y: scroll;
@@ -614,6 +620,16 @@ body {
 }
 .annotation-shortcut-settings-container > .three-tool-component-container {
   padding: 10px !important;
+}
+
+.toggle-annotations-presentation-button {
+  background-color: rgba(0,0,0,0.8) !important;
+  justify-self: center;
+  margin-right: 0px !important;
+}
+
+.toggle-annotations-presentation-button:hover {
+  background-color: rgba(255, 255, 255, 0.8) !important;
 }
 
 /*** MOBILE Styles ***/

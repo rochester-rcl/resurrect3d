@@ -171,3 +171,9 @@ export const ANNOTATION_SETTINGS_OPTIONS = {
   CAMERA_POSITION: "cameraPosition",
   LIGHT_SETTINGS: "lightSettings"
 }
+
+export const KEYCODES = {
+  LEFT: 37,
+  RIGHT: 39,
+  ESCAPE: 27
+}
