@@ -485,6 +485,7 @@ export default class ThreeView extends Component {
   /** THREE JS 'LIFECYCYLE'
    *****************************************************************************/
   initThree(): void {
+    const { localAssets } = this.props;
     this.GUI = new ThreeGUI();
     this.GUI.registerComponent("THREE_RANGE_SLIDER", ThreeRangeSlider);
     this.GUI.registerComponent("THREE_BUTTON", ThreeButton);
@@ -565,14 +566,24 @@ export default class ThreeView extends Component {
 
     // Label Sprite that we can just copy for all the measurement
     this.labelSprite = new LabelSprite(128, 128, "#fff", "+").toSprite();
-
+    const { annotationSpriteTexture } = localAssets.textures;
+    // annotation sprite that we can also clone
+    const spriteMaterial = new THREE.SpriteMaterial({
+      map: annotationSpriteTexture,
+      transparent: true,
+      alphaTest: 0.5
+    });
+    this.annotationSprite = new THREE.Sprite(spriteMaterial);
+    const spriteBbox = new THREE.Box3().setFromObject(this.annotationSprite);
+    const centerY = (spriteBbox.max.y - spriteBbox.min.y) / 2;
+    this.annotationSpriteOffset = new THREE.Vector3(0, centerY, 0);
     this.measurement = new THREE.Group();
     this.guiScene.add(this.measurement);
 
     this.annotationMarkers = new THREE.Group();
     this.annotationLines = new THREE.Group();
 
-    this.scene.add(this.annotationMarkers);
+    this.guiScene.add(this.annotationMarkers);
     this.overlayScene.add(this.annotationLines);
 
     // WebGL Renderer
@@ -915,30 +926,29 @@ export default class ThreeView extends Component {
     }
     if (annotations) {
       for (let i = 0; i < annotations.length; i++) {
-        const sphereGeometry = new THREE.SphereBufferGeometry(0.2, 32, 32);
-        const sphereMaterial = new THREE.MeshBasicMaterial({
-          color: annotations[i].open ? 0xe7e7e7 : 0x1b1b1b,
-          transparent: true
-        });
-        const annotationMarker = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        const annotationMarker = this.annotationSprite.clone();
+        annotationMarker.material = this.annotationSprite.material.clone();
         annotationMarker.position.copy(annotations[i].point);
+        annotationMarker.position.add(this.annotationSpriteOffset);
         if (annotations[i].open) {
+          annotationMarker.material.color.setHex(0x21ba45);
           const cssObj = new CSS2DObject(annotations[i].node);
           this.overlayScene.add(cssObj);
           this.setState({
             currentAnnotationIndex: i,
             currentAnnotationCSSObj: cssObj
           });
+        } else {
+          annotationMarker.material.color.setHex(0x000000);
         }
+        annotationMarker.needsUpdate = true;
         this.annotationMarkers.add(annotationMarker);
       }
     }
   }
 
   onAnnotationPresentationToggle(val) {
-    this.setState({ controllable: !val }, () =>
-      screenfull.toggle(this.threeView)
-    );
+    this.setState({ controllable: !val });
   }
 
   hideAnnotations() {
@@ -967,11 +977,6 @@ export default class ThreeView extends Component {
           offset,
           this.state.deltaTime / this.dampingFactor
         );
-        // max = max distance, min = 0
-        // o = x - min / max - min
-        annotation.material.opacity =
-          annotation.position.distanceTo(this.camera.position) /
-          this.maxDistance;
         offset = this.annotationOffsetPlaceholder;
         if (alpha > 0) {
           cssDiv.element.style.opacity = THREE.Math.lerp(0, 1, alpha);
@@ -1928,7 +1933,8 @@ export default class ThreeView extends Component {
           webGL: this.webGLRenderer.domElement,
           css: this.css2DRenderer.domElement,
           threeViewId: this.props.threeViewId,
-          onTogglePresentationMode: this.onAnnotationPresentationToggle
+          onTogglePresentationMode: this.onAnnotationPresentationToggle,
+          presentationRef: this.threeView
         }
       );
 

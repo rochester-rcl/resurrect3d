@@ -43,6 +43,7 @@ const defaultState = {
 
   },
   saveStatus: null,
+  localAssets: { textures: {}, meshes: {} }
 }
 
 function uiReducer(state: Object = defaultState, action: Object): Object {
@@ -80,6 +81,14 @@ function uiReducer(state: Object = defaultState, action: Object): Object {
           progress: PROGRESS_COMPLETE,
           image: action.payload.val
         }
+      }
+    
+    case ActionConstants.LOCAL_TEXTURE_ASSET_LOADED:
+      const copiedAssets = {...state.localAssets};
+      copiedAssets.textures[action.key] = action.payload.val;
+      return {
+        ...state,
+        localAssets: copiedAssets
       }
 
     case ActionConstants.THREE_ASSET_LOADED:

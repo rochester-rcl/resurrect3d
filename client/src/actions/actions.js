@@ -26,6 +26,14 @@ export function loadTextureAction(url: string): Object {
   };
 }
 
+export function loadLocalTextureAsset(asset, key) {
+  return {
+    type: ActionConstants.LOAD_LOCAL_TEXTURE_ASSET,
+    asset: asset,
+    key: key
+  }
+}
+
 // Load a null texture to short-circuit progress loader
 export function noSkyboxTexture(): Object {
   return {

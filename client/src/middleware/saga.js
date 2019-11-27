@@ -134,6 +134,8 @@ function getActionType(payload: Object): string {
         return ActionConstants.TEXTURE_LOADED;
       if (payload.loaderType === "converter")
         return ActionConstants.CONVERSION_COMPLETE;
+      if (payload.loaderType === "localtexture")
+        return ActionConstants.LOCAL_TEXTURE_ASSET_LOADED;
       // put in logic for converter
       return ActionConstants.MESH_LOADED;
 
@@ -350,6 +352,25 @@ export function* loadTextureSaga(
       });
     }
   } catch (error) {
+    console.log(error);
+  }
+}
+// TODO make loaderType constants
+function* loadLocalTextureSaga(action) {
+  try {
+    const textureLoader = new THREE.TextureLoader();
+    // set up image here
+    textureLoader.crossOrigin = "anonymous";
+    const textureLoaderChannel = yield call(createLoadProgressChannel, textureLoader, "localtexture", action.asset);
+    while (true) {
+      const payload = yield take(textureLoaderChannel);
+      yield put({
+        type: getActionType(payload),
+        payload: payload,
+        key: action.key
+      });
+    }
+  } catch(error) {
     console.log(error);
   }
 }
@@ -608,6 +629,10 @@ export function* watchForLoadTexture(): Generator<any, any, any> {
   yield takeEvery(ActionConstants.LOAD_TEXTURE, loadTextureSaga);
 }
 
+function* watchForLoadLocalTexture() {
+  yield takeEvery(ActionConstants.LOAD_LOCAL_TEXTURE_ASSET, loadLocalTextureSaga);
+}
+
 export function* watchForAddUser(): Generator<any, any, any> {
   yield takeEvery(ActionConstants.ADD_USER, addUserSaga);
 }
@@ -663,6 +688,7 @@ export default function* rootSaga(): Generator<any, any, any> {
     watchForSaveSettings(),
     watchForLoadMesh(),
     watchForLoadTexture(),
+    watchForLoadLocalTexture(),
     watchForAddUser(),
     watchForVerifyUser(),
     watchForDeleteUser(),

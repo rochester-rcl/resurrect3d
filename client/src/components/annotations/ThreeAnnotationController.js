@@ -27,6 +27,8 @@ import {
   resetLocalStateUpdateStatus
 } from "../../actions/AnnotationActions";
 
+import screenfull from "screenfull";
+
 import { ANNOTATION_SAVE_STATUS, KEYCODES } from "../../constants/application";
 
 class ThreeAnnotationController extends Component {
@@ -69,6 +71,7 @@ class ThreeAnnotationController extends Component {
       this
     );
     this.togglePresentationMode = this.togglePresentationMode.bind(this);
+    this.onFullscreenChanged = this.onFullscreenChanged.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
     this.goToAnnotation = this.goToAnnotation.bind(this);
     this.shortcutContainerRef = React.createRef();
@@ -81,6 +84,7 @@ class ThreeAnnotationController extends Component {
     css.addEventListener("mousemove", this.handleMove, true);
     css.addEventListener("mouseup", this.handleUp, true);
     css.addEventListener("keydown", this.handleKeyDown, true);
+    window.addEventListener("fullscreenchange", this.onFullscreenChanged, true);
     css.style.pointerEvents = "auto";
   }
 
@@ -90,6 +94,11 @@ class ThreeAnnotationController extends Component {
     css.removeEventListener("mousemove", this.handleMove, true);
     css.removeEventListener("mouseup", this.handleUp, true);
     css.removeEventListener("keydown", this.handleKeyDown, true);
+    window.removeEventListener(
+      "fullscreenchange",
+      this.onFullscreenChanged,
+      true
+    );
     css.style.pointerEvents = "none";
   }
 
@@ -114,16 +123,31 @@ class ThreeAnnotationController extends Component {
   }
 
   togglePresentationMode() {
-    const { onTogglePresentationMode } = this.props;
+    const { onTogglePresentationMode, presentationRef } = this.props;
+    const { presentationMode } = this.state;
     this.setState(
       {
-        presentationMode: !this.state.presentationMode
+        presentationMode: !presentationMode
       },
       () => {
         this.toggleKeydownListeners();
+        screenfull.toggle(presentationRef);
         onTogglePresentationMode(this.state.presentationMode);
       }
     );
+  }
+
+  onFullscreenChanged(event) {
+    const { onTogglePresentationMode } = this.props;
+    const { presentationMode } = this.state;
+    if (!screenfull.isFullscreen && presentationMode) {
+      this.setState(
+        {
+          presentationMode: false
+        },
+        () => onTogglePresentationMode(this.state.presentationMode)
+      );
+    }
   }
 
   toggleKeydownListeners() {
@@ -145,8 +169,6 @@ class ThreeAnnotationController extends Component {
         case KEYCODES.RIGHT:
           this.goToAnnotation(currentIndex + 1);
           break;
-        case KEYCODES.ESCAPE:
-          this.togglePresentationMode();
         default:
           break;
       }
@@ -155,7 +177,7 @@ class ThreeAnnotationController extends Component {
 
   goToAnnotation(index) {
     const { annotations } = this.state;
-    const max = annotations.length-1;
+    const max = annotations.length - 1;
     let nextIndex = index;
     if (nextIndex < 0) nextIndex = max;
     if (nextIndex > max) nextIndex = 0;

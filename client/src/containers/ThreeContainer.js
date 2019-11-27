@@ -20,17 +20,20 @@ import LoaderModal from '../components/LoaderModal';
 // Constants
 import { WEBGL_SUPPORT, PROGRESS_COMPLETE } from '../constants/application';
 
+// images
+import mapPin from "../images/map-pin.png";
+
 class ThreeContainer extends Component {
 
   componentDidMount(): void {
-    const { embedded, viewerId, url, getThreeAssetAction } = this.props;
+    const { embedded, viewerId, url, getThreeAssetAction, loadLocalTextureAsset } = this.props;
     if (!embedded)
     {
       getThreeAssetAction(viewerId, url);
     } else {
       getThreeAssetAction(viewerId, url, embedded);
     }
-    
+    loadLocalTextureAsset(mapPin, "annotationSpriteTexture");
   }
 
   componentDidUpdate(prevProps: Object): void {
@@ -60,6 +63,7 @@ class ThreeContainer extends Component {
           saveStatus={saveStatus}
           loggedIn={user.loggedIn}
           threeViewId={viewerId}
+          localAssets={this.props.localAssets}
         />
       );
     } else {
@@ -90,6 +94,7 @@ function mapStateToProps(state: Object): Object {
     threeAsset: state.ui.threeAsset,
     user: state.user,
     saveStatus: state.ui.saveStatus,
+    localAssets: state.ui.localAssets
   }
 
 }
