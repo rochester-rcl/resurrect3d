@@ -42,7 +42,7 @@ export default class ThreeAnnotationController extends Component
 	    	active: false,
 	    	open: false,
 	    	editable: true,
-	    	annotations: []
+	    	annotations: props.annotations ? props.annotations : []
 	    }
   	}
 

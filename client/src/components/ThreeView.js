@@ -565,10 +565,9 @@ export default class ThreeView extends Component {
     this.camera.updateProjectionMatrix();
 
     this.css2DRenderer = new CSS2DRenderer();
-    this.css2DRenderer.setSize(this.width, this.height, false);
-    console.log("Height: " + this.webGLRenderer.domElement.offsetHeight);
-    this.css2DRenderer.domElement.style.marginTop = "-710px";
+    this.css2DRenderer.domElement.className = "css-renderer";
     this.threeView.appendChild(this.css2DRenderer.domElement);
+    this.threeView.style.position = "relative";
 
 
     this.setState((prevState, props) => {
@@ -912,7 +911,6 @@ export default class ThreeView extends Component {
     for (let i = 0; i < this.annotationMarkers.children.length; i++)
     {
       let annotation = this.annotationMarkers.children[i];
-      let line = annotation.children[0];
       let cssDiv = this.annotationCSS.children[i];
 
       let annotationPos = annotation.position.clone().project(this.camera);
@@ -1365,6 +1363,7 @@ export default class ThreeView extends Component {
     const sign = zoomDelta < 0 ? -1 : zoomDelta > 0 ? 1 : 0;
     scale = ( 1 - Math.pow( 0.95, this.zoomSpeed ) ) * sign;
     this.setState({ scale: scale });
+    this.positionAnnotations();
   }
 
   orbit(x: number, y: number): void {
@@ -1459,7 +1458,8 @@ export default class ThreeView extends Component {
       scale: scale,
     });
 
-    this.positionAnnotations();
+    if (this.state.dragging)
+      this.positionAnnotations();
   }
 
   updateThreeMaterial(material: THREE.Material, prop: string, scale: Number) {
@@ -1533,7 +1533,7 @@ export default class ThreeView extends Component {
       Math.floor(val / this.state.quality.current.value)
     );
     this.webGLRenderer.setSize(width, height, false);
-    this.css2DRenderer.setSize(width, height, false);
+    this.css2DRenderer.setSize(resolution[0], resolution[1], false);
     this.sceneComposer.setSize(width, height, false);
     this.modelComposer.setSize(width, height, false);
     this.guiComposer.setSize(width, height, false);
@@ -1552,6 +1552,8 @@ export default class ThreeView extends Component {
     );
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
+    this.overlayCamera.aspect = width / height;
+    this.overlayCamera.updateProjectionMatrix();
   }
 
   updateShaders(obj: Object, cb) {

@@ -64,3 +64,8 @@ export const UPDATE_CONVERSION_PROGRESS: string = 'UPDATE_CONVERSION_PROGRESS';
 export const CONVERSION_COMPLETE: string = 'CONVERSION_COMPLETE';
 export const CONVERSION_ERROR: string = 'CONVERSION_ERROR';
 export const RESTART_CONVERTER: string = 'RESTART_CONVERTER';
+
+// Annotations
+export const ADD_ANNOTATION: string = 'ADD_ANNOTATION';
+export const DELETE_ANNOTATION: string = 'DELETE_ANNOTATION';
+export const UPDATE_ANNOTATION: string = 'UPDATE_ANNOTATION';
