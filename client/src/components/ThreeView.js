@@ -156,6 +156,7 @@ export default class ThreeView extends Component {
     pinching: false,
     // auto camera movement
     controllable: true,
+    annotationPresentationMode: false,
     target: undefined,
     animator: null,
     deltaTime: 0,
@@ -378,7 +379,6 @@ export default class ThreeView extends Component {
    *****************************************************************************/
 
   componentDidMount(): void {
-    console.log(this.props);
     this.initThree();
     window.addEventListener("resize", this.handleWindowResize);
     // TODO will remove this after when FB fixes onWheel events (https://github.com/facebook/react/issues/14856)
@@ -930,6 +930,7 @@ export default class ThreeView extends Component {
         annotationMarker.material = this.annotationSprite.material.clone();
         annotationMarker.position.copy(annotations[i].point);
         annotationMarker.position.add(this.annotationSpriteOffset);
+        annotationMarker.scale.multiplyScalar(this.spriteScaleFactor / 10);
         if (annotations[i].open) {
           annotationMarker.material.color.setHex(0x21ba45);
           const cssObj = new CSS2DObject(annotations[i].node);
@@ -948,7 +949,11 @@ export default class ThreeView extends Component {
   }
 
   onAnnotationPresentationToggle(val) {
-    this.setState({ controllable: !val });
+    this.setState({
+      controllable: !val,
+      cameraControlPaused: val,
+      annotationPresentationMode: val
+    });
   }
 
   hideAnnotations() {
@@ -984,6 +989,7 @@ export default class ThreeView extends Component {
         // If we run into any performance issues we can change this
         annotationPos.add(new THREE.Vector3(offset, 0, 0));
         annotationPos.unproject(this.overlayCamera);
+        // set annotationPos.y so that the top of the div doesn't extend beyond the viewport
         cssDiv.position.set(annotationPos.x, annotationPos.y, annotationPos.z);
       }
     }
@@ -1497,12 +1503,12 @@ export default class ThreeView extends Component {
   }
 
   controlAnimation() {
-    const { controllable, animator } = this.state;
+    const { controllable, animator, annotationPresentationMode } = this.state;
     if (!controllable) {
       if (animator != null) {
         if (animator.next().done) {
           this.setState({
-            controllable: true,
+            controllable: annotationPresentationMode ? false : true,
             target: undefined,
             animator: null
           });
@@ -2534,8 +2540,11 @@ export default class ThreeView extends Component {
   }
 
   handleMouseWheel(event: SyntheticWheelEvent): void {
+    const { controllable } = this.state;
     event.preventDefault();
-    this.zoom(event.deltaY);
+    if (controllable) {
+      this.zoom(event.deltaY);
+    }
   }
 
   handleMouseUp(event: SyntheticEvent): void {

@@ -20,15 +20,9 @@ module.exports = function override(config, env) {
       ...compress,
       ...{ unused: false }
     };
-    const { mangle } = config.optimization.minimizer[
-      terserIndex
-    ].options.terserOptions;
     config.optimization.minimizer[terserIndex].options.terserOptions.keep_classnames = true;
     config.optimization.minimizer[terserIndex].options.terserOptions.keep_fnames = true;
   }
-  console.log(config.optimization.minimizer[
-    terserIndex
-  ].options.terserOptions)
   const babelLoader = config.module.rules[2].oneOf.find(
     loader => loader.loader.includes("babel-loader") !== false
   );
