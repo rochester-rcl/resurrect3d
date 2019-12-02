@@ -6,18 +6,27 @@ const three = require("three");
 
 module.exports = function override(config, env) {
   // Add worker-loader by hijacking configuration for regular .js files.
-  const uglifyIndex = config.plugins.findIndex(
-    plugin => plugin.constructor.name === "UglifyJsPlugin"
+  const terserIndex = config.optimization.minimizer.findIndex(
+    plugin => plugin.constructor.name === "TerserPlugin"
   );
   // cannot have unused code removal as it messes up numjs
-  if (uglifyIndex !== -1) {
-    const { compress } = config.plugins[uglifyIndex].options;
-    config.plugins[uglifyIndex].options.compress = {
+  if (terserIndex !== -1) {
+    console.log(config.optimization.minimizer[terserIndex]);
+    const { compress } = config.optimization.minimizer[
+      terserIndex
+    ].options.terserOptions;
+    config.optimization.minimizer[
+      terserIndex
+    ].options.terserOptions.compress = {
       ...compress,
       ...{ unused: false }
     };
-    config.plugins[uglifyIndex].options.mangle = {
-      except: Object.keys(three)
+    const { mangle } = config.optimization.minimizer[
+      terserIndex
+    ].options.terserOptions;
+    config.optimization.minimizer[terserIndex].options.terserOptions.mangle = {
+      ...mangle,
+      ...{ properties: { reserved: Object.keys(three) } }
     };
   }
   const babelLoader = config.module.rules[2].oneOf.find(
@@ -27,7 +36,7 @@ module.exports = function override(config, env) {
   const workerRule = {
     test: workerExtension,
     use: [
-      'worker-loader',
+      "worker-loader",
       {
         loader: babelLoader.loader,
         options: babelLoader.options
@@ -47,7 +56,7 @@ module.exports = function override(config, env) {
       {
         loader: babelLoader.loader,
         options: babelLoader.options
-      },
+      }
     ];
   }
 
