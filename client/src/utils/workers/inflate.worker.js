@@ -27,7 +27,7 @@ const inflate = (gzip: Uint8Array, chunkSize: number ): string => {
 /* For now this handles geometries only as textures need to be done on the main thread for DOM access
   Geometries take the longest anyways */
 
-self.onmessage = (event: Event) => {
+self.onmessage = (event: Event) => {  // eslint-disable-line no-restricted-globals
   const { data } = event;
   const uint8 = new Uint8Array(data);
   const gunzipped = inflate(uint8, GZIP_CHUNK_SIZE);

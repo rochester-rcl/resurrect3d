@@ -24,7 +24,7 @@ const deflate = (inputData: string, chunkSize: number): Uint8Array => {
   }
 }
 
-self.onmessage = (event: Event) => {
+self.onmessage = (event: Event) => {  // eslint-disable-line no-restricted-globals
   const { data } = event;
   let inputData = data;
   if (data.constructor !== String) {

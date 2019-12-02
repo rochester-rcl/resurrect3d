@@ -16,7 +16,7 @@ const handlePayload = (payload: Object): void => {
     modelLoader: {
       eventType: 'loaded',
       val: payload,
-      loaderType: self.loaderType
+      loaderType: self.loaderType  // eslint-disable-line no-restricted-globals
     }
   });
 }
@@ -28,7 +28,7 @@ const handleUpdate = (progress: ProgressEvent): void => {
     modelLoader: {
       eventType: 'progress',
       val: update,
-      loaderType: self.loaderType
+      loaderType: self.loaderType  // eslint-disable-line no-restricted-globals
     }
   });
 }
@@ -39,15 +39,15 @@ const handleError = (error: Error): void => {
     modelLoader: {
       eventType: 'error',
       val: error,
-      loaderType: self.loaderType
+      loaderType: self.loaderType  // eslint-disable-line no-restricted-globals
     }
   })
 }
 
-self.onmessage = (event: MessageEvent): void => {
+self.onmessage = (event: MessageEvent): void => {  // eslint-disable-line no-restricted-globals
   const { type, url } = event.data;
   if (type === undefined || url === undefined) postMessage({status: false, error: 'Invalid data passed to ModelLoaderWorker'});
-  self.loaderType = type;
+  self.loaderType = type;  // eslint-disable-line no-restricted-globals
   const loader = new THREE.ObjectLoader();
   console.log(loader.parseGeometries);
   loader.load(url, handlePayload, handleUpdate, handleError);
