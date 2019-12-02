@@ -519,14 +519,16 @@ class ThreeAnnotationController extends Component {
     let editToggle;
     let togglePresentationMode;
     if (this.state.active) {
-      editToggle = (
-        <ThreeToggle
-          title="edit mode"
-          callback={this.toggleEdit}
-          defaultVal={this.state.editable}
-        />
-      );
-      if (!presentationMode) {
+      if (user.loggedIn) {
+        editToggle = (
+          <ThreeToggle
+            title="edit mode"
+            callback={this.toggleEdit}
+            defaultVal={this.state.editable}
+          />
+        );
+      }
+      if (!presentationMode && annotations.length > 0) {
         togglePresentationMode = (
           <ThreeButton
             className="toggle-annotations-presentation-button three-controls-button"
