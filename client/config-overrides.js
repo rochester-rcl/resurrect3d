@@ -24,6 +24,7 @@ module.exports = function override(config, env) {
       terserIndex
     ].options.terserOptions;
     config.optimization.minimizer[terserIndex].options.terserOptions.keep_classnames = true;
+    config.optimization.minimizer[terserIndex].options.terserOptions.keep_fnames = true;
   }
   console.log(config.optimization.minimizer[
     terserIndex
