@@ -11,7 +11,6 @@ module.exports = function override(config, env) {
   );
   // cannot have unused code removal as it messes up numjs
   if (terserIndex !== -1) {
-    console.log(config.optimization.minimizer[terserIndex]);
     const { compress } = config.optimization.minimizer[
       terserIndex
     ].options.terserOptions;
@@ -24,11 +23,11 @@ module.exports = function override(config, env) {
     const { mangle } = config.optimization.minimizer[
       terserIndex
     ].options.terserOptions;
-    config.optimization.minimizer[terserIndex].options.terserOptions.mangle = {
-      ...mangle,
-      ...{ properties: { reserved: Object.keys(three) } }
-    };
+    config.optimization.minimizer[terserIndex].options.terserOptions.keep_classnames = true;
   }
+  console.log(config.optimization.minimizer[
+    terserIndex
+  ].options.terserOptions)
   const babelLoader = config.module.rules[2].oneOf.find(
     loader => loader.loader.includes("babel-loader") !== false
   );
