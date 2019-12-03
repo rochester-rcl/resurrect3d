@@ -468,10 +468,11 @@ class ThreeAnnotationController extends Component {
       const { component } = annotation;
       if (idx === index) {
         annotation.open = true;
+        console.log(this.state.editable);
         if (!component.props.visible) {
           annotation.component = React.cloneElement(component, {
             ...component.props,
-            ...{ visible: true }
+            ...{ visible: true, editable: this.state.editable }
           });
         }
       } else {
