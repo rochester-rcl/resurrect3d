@@ -517,14 +517,21 @@ body {
   min-height: 20%;
 }
 
+.annotation-head > textarea {
+  font-size: 1vw !important;
+  font-weight: bold;
+}
+
 .annotation-body
 {
   flex-grow: 1;
   color: white;
   background-color: none;
-  text-align: center;
-  align-items: center;
   resize: both;
+}
+
+.annotation-body > textarea {
+  text-align: left;
 }
 
 .text-area

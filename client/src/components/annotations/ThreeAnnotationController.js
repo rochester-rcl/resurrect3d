@@ -74,6 +74,7 @@ class ThreeAnnotationController extends Component {
     this.onFullscreenChanged = this.onFullscreenChanged.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
     this.goToAnnotation = this.goToAnnotation.bind(this);
+    this.updateEditableAnnotations = this.updateEditableAnnotations.bind(this);
     this.shortcutContainerRef = React.createRef();
   }
 
@@ -117,9 +118,12 @@ class ThreeAnnotationController extends Component {
   }
 
   toggleEdit(): void {
-    this.setState({
-      editable: !this.state.editable
-    });
+    this.setState(
+      {
+        editable: !this.state.editable
+      },
+      this.updateEditableAnnotations
+    );
   }
 
   togglePresentationMode() {
@@ -127,7 +131,8 @@ class ThreeAnnotationController extends Component {
     const { presentationMode } = this.state;
     this.setState(
       {
-        presentationMode: !presentationMode
+        presentationMode: !presentationMode,
+        currentIndex: -1
       },
       () => {
         this.toggleKeydownListeners();
@@ -201,11 +206,11 @@ class ThreeAnnotationController extends Component {
     if (this.props.open != prevProps.open) {
       this.setState({ open: this.props.open });
     }
-    if (prevState.editable && !editable) {
+    if (!editable || !active) {
       css.style.pointerEvents = "none";
       css.style.cursor = "pointer";
     }
-    if (!prevState.editable && editable) {
+    if (editable) {
       css.style.pointerEvents = "all";
       css.style.cursor = "crosshair";
     }
@@ -372,6 +377,21 @@ class ThreeAnnotationController extends Component {
     });
   }
 
+  updateEditableAnnotations() {
+    const { annotations, editable } = this.state;
+    const cloned = [...annotations];
+    const openIndex = cloned.findIndex(a => a.open === true);
+    if (openIndex > -1) {
+      const oa = cloned[openIndex];
+      const { component } = oa;
+      oa.component = React.cloneElement(component, {
+        ...component.props,
+        ...{ editable: editable }
+      });
+      this.setState({ annotations: cloned });
+    }
+  }
+
   mergeAnnotations(newAnnotations) {
     const { annotations } = this.state;
     if (annotations.length === 0) return newAnnotations;
@@ -463,16 +483,16 @@ class ThreeAnnotationController extends Component {
   }
 
   viewAnnotation(index) {
-    let annotations = this.state.annotations;
+    const { annotations } = this.state;
+    const { editable } = this.state;
     annotations.forEach((annotation, idx) => {
       const { component } = annotation;
       if (idx === index) {
         annotation.open = true;
-        console.log(this.state.editable);
         if (!component.props.visible) {
           annotation.component = React.cloneElement(component, {
             ...component.props,
-            ...{ visible: true, editable: this.state.editable }
+            ...{ visible: true, editable: editable }
           });
         }
       } else {
@@ -487,7 +507,7 @@ class ThreeAnnotationController extends Component {
     });
     const { settings, point } = annotations[index];
     const { cameraPosition } = settings;
-    this.props.cameraCallback(point, cameraPosition.val);
+    this.props.cameraCallback(point, cameraPosition.val, index < 1);
     this.setState(
       {
         annotations: annotations

@@ -152,7 +152,7 @@ export class LabelSprite extends ImageGenerator {
     imgCanvas.height = this.height;
     let ctx = imgCanvas.getContext('2d');
     if (ctx) {
-      ctx.font = "18px Courier";
+      ctx.font = "bold 24px Courier";
       ctx.textAlign = "center";
       ctx.fillStyle = this.color1;
       ctx.fillText(this.text, imgCanvas.width / 2, imgCanvas.height / 2);

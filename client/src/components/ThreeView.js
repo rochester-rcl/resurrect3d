@@ -571,7 +571,9 @@ export default class ThreeView extends Component {
     const spriteMaterial = new THREE.SpriteMaterial({
       map: annotationSpriteTexture,
       transparent: true,
-      alphaTest: 0.5
+      alphaTest: 0.5,
+      depthTest: false,
+      depthWrite: false
     });
     this.annotationSprite = new THREE.Sprite(spriteMaterial);
     const spriteBbox = new THREE.Box3().setFromObject(this.annotationSprite);
@@ -1332,9 +1334,10 @@ export default class ThreeView extends Component {
       this.modelComposer.renderTarget2.texture
     );
     const rawGui = new THREE.TexturePass(
-      this.guiComposer.renderTarget2.texture
+      this.guiComposer.renderTarget2.texture, 0.8
     );
-
+    this.addShaderPass({ GUI: rawGui });
+    
     this.effectComposer.addPass(rawModel);
     this.effectComposer.addPass(chromaKeyPass);
     this.effectComposer.addPass(SSAOPass);
@@ -1402,10 +1405,12 @@ export default class ThreeView extends Component {
     this.setState({ panOffset: this.state.panOffset.add(left.add(up)) });
   }
 
-  *animateZoom(pos, duration, cameraPos) {
+  *animateZoom(pos, duration, cameraPos, storeLastPosition = false) {
     // TODO should clean this up and abstract a lot of this away into another method that can also be used in controlCamera
     const { spherical } = this;
-    this.setState({ lastCameraPosition: this.camera.position.clone() });
+    if (storeLastPosition) {
+      this.setState({ lastCameraPosition: this.camera.position.clone() });
+    }
     this.hideAnnotations();
     const distance = 10;
     let dest;
@@ -2305,11 +2310,11 @@ export default class ThreeView extends Component {
     );
   }
 
-  viewAnnotation(point: THREE.Vector3, cameraPos: THREE.Vector3): void {
+  viewAnnotation(point: THREE.Vector3, cameraPos: THREE.Vector3, storeLastPosition = false): void {
     this.setState({
       controllable: false,
       target: point,
-      animator: this.animateZoom(point, 3, cameraPos)
+      animator: this.animateZoom(point, 3, cameraPos, storeLastPosition)
     });
   }
 
