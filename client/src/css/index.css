@@ -483,6 +483,7 @@ body {
 .three-annotation-tool-container > .three-gui-group {
   max-height: 340px;
   overflow-y: scroll;
+  scroll-behavior: smooth;
 }
 
 .annotation

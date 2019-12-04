@@ -21,10 +21,16 @@ export default class ThreeAnnotationShortcut extends Component {
     this.save = this.save.bind(this);
     this.saveStatusLabel = this.saveStatusLabel.bind(this);
     this.handleSettingsChange = this.handleSettingsChange.bind(this);
+    this.updateIndex = this.updateIndex.bind(this);
+    this.renderReadOnly = this.renderReadOnly.bind(this);
+    this.renderAdminMode = this.renderAdminMode.bind(this);
+    this.scrollToShortcut = this.scrollToShortcut.bind(this);
+    this.shortcutRef = React.createRef();
   }
 
   focus() {
     this.props.focus(this.props.index);
+    this.scrollToShortcut();
   }
 
   del() {
@@ -38,6 +44,19 @@ export default class ThreeAnnotationShortcut extends Component {
   handleSettingsChange(settingsKey, value) {
     const { index, onSettingsUpdate } = this.props;
     onSettingsUpdate(index, settingsKey, value);
+  }
+
+  updateIndex(direction) {
+    const { index, onUpdateIndex } = this.props;
+    const dst = direction ? index + 1 : index - 1;
+    onUpdateIndex(index, dst, this.scrollToShortcut);
+  }
+
+  scrollToShortcut() {
+    const { current } = this.shortcutRef;
+    if (current) {
+      current.parentNode.scrollTop = current.offsetTop - current.parentNode.offsetTop;
+    }
   }
 
   saveStatusLabel() {
@@ -67,7 +86,7 @@ export default class ThreeAnnotationShortcut extends Component {
   renderReadOnly() {
     const { title } = this.props;
     return (
-      <Segment className="annotation-shortcut-container">
+      <Segment ref={this.shortcutRef} className="annotation-shortcut-container">
         <span className="annotation-shortcut-label-container">
           <Label className="annotation-shortcut-title">{title}</Label>
           <Button
@@ -91,7 +110,7 @@ export default class ThreeAnnotationShortcut extends Component {
   renderAdminMode() {
     const { title } = this.props;
     return (
-      <Segment className="annotation-shortcut-container">
+      <Segment ref={this.shortcutRef} className="annotation-shortcut-container">
         <span className="annotation-shortcut-label-container">
           <Label className="annotation-shortcut-title">{title}</Label>
           {this.saveStatusLabel()}
@@ -133,6 +152,32 @@ export default class ThreeAnnotationShortcut extends Component {
               color="grey"
               className="annotation-shortcut-icon"
               name="close"
+              size="large"
+            />
+          </Button>
+          <Button
+            icon
+            onClick={() => this.updateIndex(true)}
+            className="annotation-shortcut-button"
+            size="mini"
+          >
+            <Icon
+              color="grey"
+              className="annotation-shortcut-icon"
+              name="plus"
+              size="large"
+            />
+          </Button>
+          <Button
+            icon
+            onClick={() => this.updateIndex(false)}
+            className="annotation-shortcut-button"
+            size="mini"
+          >
+            <Icon
+              color="grey"
+              className="annotation-shortcut-icon"
+              name="minus"
               size="large"
             />
           </Button>

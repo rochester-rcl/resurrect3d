@@ -22,6 +22,10 @@ const annotationSchema = new Schema({
     type: Object,
     required: true
   },
+  index: {
+    type: Number,
+    required: false
+  },
   saveStatus: {
     type: String,
     enum: Object.values(saveStatus),
@@ -32,7 +36,7 @@ const annotationSchema = new Schema({
 
 annotationSchema.methods.refresh = function(callback) {
   this.model("annotation").findOne({ _id: this._id }, callback);
-}
+};
 
 annotationSchema.methods.updateSaveStatus = function(status, callback) {
   this.update({ saveStatus: status }, (error, updated) => {
@@ -44,4 +48,4 @@ annotationSchema.methods.updateSaveStatus = function(status, callback) {
 module.exports = {
   model: mongoose.model("annotation", annotationSchema),
   SAVE_STATUS: saveStatus
-}
+};

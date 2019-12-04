@@ -77,6 +77,7 @@ class ThreeAnnotationController extends Component {
     this.goToAnnotation = this.goToAnnotation.bind(this);
     this.updateEditableAnnotations = this.updateEditableAnnotations.bind(this);
     this.onAnnotationBlur = this.onAnnotationBlur.bind(this);
+    this.updateIndex = this.updateIndex.bind(this);
     this.shortcutContainerRef = React.createRef();
   }
 
@@ -305,6 +306,7 @@ class ThreeAnnotationController extends Component {
     const ref = React.createRef();
     const component = (
       <ThreeAnnotation
+        key={THREE.Math.generateUUID()}
         innerRef={ref}
         title={"Untitled"}
         text={""}
@@ -321,6 +323,7 @@ class ThreeAnnotationController extends Component {
         return this.component.props.innerRef.current;
       },
       point: point,
+      text: "",
       title: component.props.title,
       settings: { cameraPosition: { val: null, enabled: false } },
       saveStatus: ANNOTATION_SAVE_STATUS.UNSAVED,
@@ -397,6 +400,26 @@ class ThreeAnnotationController extends Component {
     }
   }
 
+  updateIndex(currentIndex, newIndex, callback) {
+    const { annotations } = this.state;
+    const cloned = [...annotations];
+    cloned.splice(newIndex, 0, cloned.splice(currentIndex, 1)[0]);
+    cloned[newIndex].saveStatus = ANNOTATION_SAVE_STATUS.NEEDS_UPDATE;
+    cloned[currentIndex].saveStatus = ANNOTATION_SAVE_STATUS.NEEDS_UPDATE;
+    const updated = cloned.map((annotation, index) =>
+      this.hydrateAnnotation(annotation, index)
+    );
+    this.setState(
+      {
+        annotations: updated
+      },
+      () => {
+        this.props.drawCallback(this.state.annotations);
+        if (callback) callback();
+      }
+    );
+  }
+
   mergeAnnotations(newAnnotations) {
     const { annotations } = this.state;
     if (annotations.length === 0) return newAnnotations;
@@ -418,6 +441,7 @@ class ThreeAnnotationController extends Component {
     const ref = React.createRef();
     const component = (
       <ThreeAnnotation
+        key={THREE.Math.generateUUID()}
         innerRef={ref}
         title={title}
         text={text}
@@ -435,6 +459,8 @@ class ThreeAnnotationController extends Component {
       },
       point: point,
       title: title,
+      text: text,
+      index: index,
       settings: settings,
       _id: _id,
       open: false,
@@ -475,6 +501,7 @@ class ThreeAnnotationController extends Component {
     if (annotation) {
       const { component, node, titleStyle, textStyle, ...rest } = annotation;
       const a = this.setAnnotationSettingsValues({ ...rest });
+      a.index = index;
       saveAnnotation(a, threeViewId);
     }
   }
@@ -488,8 +515,13 @@ class ThreeAnnotationController extends Component {
   }
 
   viewAnnotation(index) {
-    const { changeAnnotationFocus, cameraCallback, drawCallback, annotationData } = this.props;
-    const { annotations, editable, currentIndex } = this.state;
+    const {
+      changeAnnotationFocus,
+      cameraCallback,
+      drawCallback,
+      annotationData
+    } = this.props;
+    const { annotations, editable } = this.state;
     annotations.forEach((annotation, idx) => {
       const { component } = annotation;
       if (idx === index) {
@@ -548,7 +580,7 @@ class ThreeAnnotationController extends Component {
     const { user } = this.props;
     const { annotations, presentationMode } = this.state;
     const renderedAnnotations = annotations.map(annotation => {
-      return <div>{annotation.component}</div>;
+      return <div key={annotation.component.key}>{annotation.component}</div>;
     });
     let editToggle;
     let togglePresentationMode;
@@ -577,6 +609,7 @@ class ThreeAnnotationController extends Component {
     }
     let shortcuts = annotations.map((annotation, index) => (
       <ThreeAnnotationShortcut
+        key={THREE.Math.generateUUID()}
         title={annotation.title}
         index={index}
         focus={this.viewAnnotation}
@@ -584,7 +617,8 @@ class ThreeAnnotationController extends Component {
         save={this.saveAnnotation}
         saveStatus={annotation.saveStatus}
         onSettingsUpdate={this.updateAnnotationSettings}
-        readOnly={!user.loggedIn}
+        onUpdateIndex={this.updateIndex}
+        readOnly={/*!user.loggedIn*/ false}
       />
     ));
     let shortcutContainer;

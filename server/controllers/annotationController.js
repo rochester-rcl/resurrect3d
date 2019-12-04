@@ -54,9 +54,21 @@ const loadAnnotations = (req, res) => {
   const { threeViewId } = req.params;
   Annotation.find({ threeViewId: threeViewId }, (err, annotations) => {
     if (err) res.send(err);
-    res.json(annotations);
+    res.json(annotations.sort(sortAnnotations));
   });
 };
+
+const sortAnnotations = (a, b) => {
+  if (a.index && b.index) {
+    if (a.index < b.index) {
+      return -1;
+    }
+    if (a.index > b.index) {
+      return 1;
+    }
+  }
+  return 0;
+}
 
 module.exports = {
   save: saveAnnotation,
