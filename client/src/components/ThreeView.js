@@ -386,9 +386,14 @@ export default class ThreeView extends Component {
   }
 
   componentDidUpdate(prevProps: Object, prevState: Object): void {
+    const { cameraControlPaused } = this.state;
+    const { changeAnnotationFocus } = this.props;
     if (prevState.units !== this.state.units) {
       this.removeAxisLabels();
       this.addAxisLabels();
+    }
+    if (prevState.cameraControlPaused && !cameraControlPaused) {
+      changeAnnotationFocus(false);
     }
     if (prevProps.saveStatus !== this.props.saveStatus) {
       this.updateButtonLabel(
@@ -636,7 +641,7 @@ export default class ThreeView extends Component {
       }
       return false;
     };
-
+    // TODO should probably remove refs from these props and find a better way ...
     let buttonProps = {
       content: "re-center",
       className: "three-controls-button",
@@ -1334,10 +1339,11 @@ export default class ThreeView extends Component {
       this.modelComposer.renderTarget2.texture
     );
     const rawGui = new THREE.TexturePass(
-      this.guiComposer.renderTarget2.texture, 0.8
+      this.guiComposer.renderTarget2.texture,
+      0.8
     );
     this.addShaderPass({ GUI: rawGui });
-    
+
     this.effectComposer.addPass(rawModel);
     this.effectComposer.addPass(chromaKeyPass);
     this.effectComposer.addPass(SSAOPass);
@@ -1520,18 +1526,6 @@ export default class ThreeView extends Component {
         }
       }
     }
-
-    /*if (this.camera.position.equals(dest))
-      this.setState({
-        controllable: true,
-        target: undefined
-      });
-    else {
-      let move = dest.clone().sub(this.camera.position);
-      move = move.length() < alpha ? move : move.normalize().multiplyScalar(alpha);
-      this.camera.position.add(move);
-      this.camera.lookAt(pos);
-    }*/
   }
 
   rotate(deltaX: number, deltaY: number): void {
@@ -1675,7 +1669,6 @@ export default class ThreeView extends Component {
       this.camera.lookAt(this.camera.target);
     }
     if (!this.state.dynamicLightProps.lock) {
-      const distance = this.camera.position.distanceTo(this.bboxMesh.max);
       this.dynamicLight.position
         .copy(this.camera.position)
         .add(this.state.dynamicLightProps.offset);
@@ -2310,7 +2303,11 @@ export default class ThreeView extends Component {
     );
   }
 
-  viewAnnotation(point: THREE.Vector3, cameraPos: THREE.Vector3, storeLastPosition = false): void {
+  viewAnnotation(
+    point: THREE.Vector3,
+    cameraPos: THREE.Vector3,
+    storeLastPosition = false
+  ): void {
     this.setState({
       controllable: false,
       target: point,
@@ -2545,11 +2542,9 @@ export default class ThreeView extends Component {
   }
 
   handleMouseWheel(event: SyntheticWheelEvent): void {
-    const { controllable } = this.state;
+    const { cameraControlPaused } = this.state;
     event.preventDefault();
-    if (controllable) {
-      this.zoom(event.deltaY);
-    }
+    this.zoom(event.deltaY);
   }
 
   handleMouseUp(event: SyntheticEvent): void {

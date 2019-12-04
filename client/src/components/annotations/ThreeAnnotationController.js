@@ -24,7 +24,8 @@ import {
   loadAnnotations,
   saveAnnotation,
   deleteAnnotation,
-  resetLocalStateUpdateStatus
+  resetLocalStateUpdateStatus,
+  changeAnnotationFocus
 } from "../../actions/AnnotationActions";
 
 import screenfull from "screenfull";
@@ -75,6 +76,7 @@ class ThreeAnnotationController extends Component {
     this.handleKeyDown = this.handleKeyDown.bind(this);
     this.goToAnnotation = this.goToAnnotation.bind(this);
     this.updateEditableAnnotations = this.updateEditableAnnotations.bind(this);
+    this.onAnnotationBlur = this.onAnnotationBlur.bind(this);
     this.shortcutContainerRef = React.createRef();
   }
 
@@ -202,7 +204,7 @@ class ThreeAnnotationController extends Component {
   componentDidUpdate(prevProps, prevState): void {
     const { editable, updatingAnnotations, active } = this.state;
     const { css, annotationData } = this.props;
-    const { annotations, localStateNeedsUpdate } = annotationData;
+    const { localStateNeedsUpdate, focused } = annotationData;
     if (this.props.open != prevProps.open) {
       this.setState({ open: this.props.open });
     }
@@ -216,6 +218,9 @@ class ThreeAnnotationController extends Component {
     }
     if (localStateNeedsUpdate && !updatingAnnotations) {
       this.requestAnnotationsUpdate();
+    }
+    if (prevProps.annotationData.focused && !focused) {
+      this.onAnnotationBlur();
     }
   }
 
@@ -483,8 +488,8 @@ class ThreeAnnotationController extends Component {
   }
 
   viewAnnotation(index) {
-    const { annotations } = this.state;
-    const { editable } = this.state;
+    const { changeAnnotationFocus, cameraCallback, drawCallback, annotationData } = this.props;
+    const { annotations, editable, currentIndex } = this.state;
     annotations.forEach((annotation, idx) => {
       const { component } = annotation;
       if (idx === index) {
@@ -507,13 +512,21 @@ class ThreeAnnotationController extends Component {
     });
     const { settings, point } = annotations[index];
     const { cameraPosition } = settings;
-    this.props.cameraCallback(point, cameraPosition.val, index < 1);
+    cameraCallback(point, cameraPosition.val, !annotationData.focused);
+    changeAnnotationFocus(true);
     this.setState(
       {
-        annotations: annotations
+        annotations: annotations,
+        currentIndex: index
       },
-      () => this.props.drawCallback(this.state.annotations)
+      () => drawCallback(this.state.annotations)
     );
+  }
+
+  onAnnotationBlur() {
+    this.setState({
+      currentIndex: -1
+    });
   }
 
   updateAnnotationSettings(index, settingsKey, value) {
@@ -606,5 +619,6 @@ export default connect(mapStateToProps, {
   saveAnnotation,
   loadAnnotations,
   deleteAnnotation,
-  resetLocalStateUpdateStatus
+  resetLocalStateUpdateStatus,
+  changeAnnotationFocus
 })(ThreeAnnotationController);

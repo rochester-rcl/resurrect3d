@@ -1,34 +1,39 @@
 /* @flow */
 
 // React
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
 // Redux
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
 
 //lodash
-import lodash from 'lodash';
+import lodash from "lodash";
 
 // Actions
-import * as AppActionCreators from '../actions/actions';
+import * as AppActionCreators from "../actions/actions";
+import { changeAnnotationFocus } from "../actions/AnnotationActions";
 
 // Components
-import ThreeView from '../components/ThreeView';
-import LoaderModal from '../components/LoaderModal';
+import ThreeView from "../components/ThreeView";
+import LoaderModal from "../components/LoaderModal";
 
 // Constants
-import { WEBGL_SUPPORT, PROGRESS_COMPLETE } from '../constants/application';
+import { WEBGL_SUPPORT, PROGRESS_COMPLETE } from "../constants/application";
 
 // images
 import mapPin from "../images/map-pin.png";
 
 class ThreeContainer extends Component {
-
   componentDidMount(): void {
-    const { embedded, viewerId, url, getThreeAssetAction, loadLocalTextureAsset } = this.props;
-    if (!embedded)
-    {
+    const {
+      embedded,
+      viewerId,
+      url,
+      getThreeAssetAction,
+      loadLocalTextureAsset
+    } = this.props;
+    if (!embedded) {
       getThreeAssetAction(viewerId, url);
     } else {
       getThreeAssetAction(viewerId, url, embedded);
@@ -48,11 +53,24 @@ class ThreeContainer extends Component {
   }
 
   render(): Object {
-    const { mesh, texture, metadata, threeAsset, saveViewerSettings, user, saveStatus, viewerId } = this.props;
+    const {
+      mesh,
+      texture,
+      metadata,
+      threeAsset,
+      saveViewerSettings,
+      user,
+      saveStatus,
+      viewerId
+    } = this.props;
     // TODO Need to put some logic in here -- if the user is logged in AND they own the mesh
     // TODO Complete needs to be a constant
-    if (mesh.progress === PROGRESS_COMPLETE && texture.progress === PROGRESS_COMPLETE && WEBGL_SUPPORT) {
-      return(
+    if (
+      mesh.progress === PROGRESS_COMPLETE &&
+      texture.progress === PROGRESS_COMPLETE &&
+      WEBGL_SUPPORT
+    ) {
+      return (
         <ThreeView
           skyboxTexture={texture}
           mesh={mesh}
@@ -64,6 +82,7 @@ class ThreeContainer extends Component {
           loggedIn={user.loggedIn}
           threeViewId={viewerId}
           localAssets={this.props.localAssets}
+          changeAnnotationFocus={this.props.changeAnnotationFocus}
         />
       );
     } else {
@@ -73,7 +92,7 @@ class ThreeContainer extends Component {
       } else {
         progressStatus = mesh.progress.label;
       }
-      return(
+      return (
         <LoaderModal
           text={progressStatus}
           className="three-loader-dimmer"
@@ -81,7 +100,8 @@ class ThreeContainer extends Component {
           percent={mesh.progress.percent}
           progress={progressStatus}
           progressColor={"#21ba45"}
-        />);
+        />
+      );
     }
   }
 }
@@ -95,14 +115,20 @@ function mapStateToProps(state: Object): Object {
     user: state.user,
     saveStatus: state.ui.saveStatus,
     localAssets: state.ui.localAssets
-  }
-
+  };
 }
 
 function mapActionCreatorsToProps(dispatch: Object) {
-
-  return bindActionCreators(AppActionCreators, dispatch);
-
+  return bindActionCreators(
+    {
+      ...AppActionCreators,
+      ...{ changeAnnotationFocus: changeAnnotationFocus }
+    },
+    dispatch
+  );
 }
 
-export default connect(mapStateToProps, mapActionCreatorsToProps)(ThreeContainer);
+export default connect(
+  mapStateToProps,
+  mapActionCreatorsToProps
+)(ThreeContainer);

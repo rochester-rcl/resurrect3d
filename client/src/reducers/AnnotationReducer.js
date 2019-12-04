@@ -4,7 +4,8 @@ import * as ActionConstants from "../constants/actions";
 const defaultState = {
   annotations: [],
   threeViewId: null,
-  localStateNeedsUpdate: false
+  localStateNeedsUpdate: false,
+  focused: false
 };
 
 const addOrUpdate = (annotations, annotation) => {
@@ -40,6 +41,12 @@ const AnnotationReducer = (state = defaultState, action) => {
       return {
         ...state,
         localStateNeedsUpdate: false
+      }
+    
+    case ActionConstants.ANNOTATION_FOCUS_CHANGED:
+      return {
+        ...state,
+        focused: action.val
       }
 
     default:
