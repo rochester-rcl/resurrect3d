@@ -44,9 +44,21 @@ export default class ThreeAnnotationShortcut extends Component {
   }
 
   updateIndex(direction) {
-    const { index, onUpdateIndex } = this.props;
+    const { index, onUpdateIndex, total } = this.props;
     const dst = direction ? index + 1 : index - 1;
-    onUpdateIndex(index, dst, this.scrollToShortcut);
+    let canUpdate = false;
+    if (direction) {
+      if (dst <= total - 1) {
+        canUpdate = true;
+      }
+    } else {
+      if (dst >= 0) {
+        canUpdate = true;
+      }
+    }
+    if (canUpdate) {
+      onUpdateIndex(index, dst, this.scrollToShortcut);
+    }
   }
 
   saveStatusLabel() {
@@ -98,7 +110,7 @@ export default class ThreeAnnotationShortcut extends Component {
   }
 
   renderAdminMode() {
-    const { title, innerRef } = this.props;
+    const { title, innerRef, total, index } = this.props;
     return (
       <div ref={innerRef} className="annotation-shortcut-container">
         <span className="annotation-shortcut-label-container">
@@ -152,7 +164,7 @@ export default class ThreeAnnotationShortcut extends Component {
             size="mini"
           >
             <Icon
-              color="grey"
+              color={index + 1 <= total - 1 ? "grey" : "red"}
               className="annotation-shortcut-icon"
               name="plus"
               size="large"
@@ -165,7 +177,7 @@ export default class ThreeAnnotationShortcut extends Component {
             size="mini"
           >
             <Icon
-              color="grey"
+              color={index - 1 >= 0 ? "grey" : "red"}
               className="annotation-shortcut-icon"
               name="minus"
               size="large"
@@ -181,13 +193,13 @@ export default class ThreeAnnotationShortcut extends Component {
               )
             }
             defaultVal={false}
-            title="use camera position"
+            title="save camera data"
             size="mini"
           />
           <ThreeToggle
             callback={val => console.log(val)}
             defaultVal={false}
-            title="use light settings"
+            title="save light data"
             size="mini"
           />
         </div>

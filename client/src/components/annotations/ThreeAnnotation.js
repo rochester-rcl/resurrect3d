@@ -17,6 +17,7 @@ export default class ThreeAnnotation extends React.Component {
 
     (this: any).updateTitle = this.updateTitle.bind(this);
     (this: any).updateText = this.updateText.bind(this);
+    this.renderText = this.renderText.bind(this);
   }
 
   updateTitle(event): void {
@@ -51,6 +52,24 @@ export default class ThreeAnnotation extends React.Component {
     );
   }
 
+  renderText() {
+    const { editable } = this.props;
+    const { text } = this.state;
+    if (editable) {
+      return (
+        <textarea
+          defaultValue={this.state.text}
+          type="text"
+          onChange={this.updateText}
+          className="text-area"
+          readOnly={!editable}
+        />
+      );
+    } else {
+      return <div className="text-area">{text}</div>;
+    }
+  }
+
   render() {
     const { innerRef, visible } = this.props;
     if (visible) {
@@ -66,13 +85,7 @@ export default class ThreeAnnotation extends React.Component {
             />
           </div>
           <div className="annotation-body" style={this.state.textStyle}>
-            <textarea
-              defaultValue={this.state.text}
-              type="text"
-              onChange={this.updateText}
-              className="text-area"
-              readOnly={!this.props.editable}
-            />
+            {this.renderText()}
           </div>
         </div>
       );

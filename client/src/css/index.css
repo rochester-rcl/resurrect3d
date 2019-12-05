@@ -488,59 +488,70 @@ body {
 
 .annotation
 {
-  width: 175px;
-  height: 250px;
+  width: auto;
+  height: auto;
+  max-width: 20%;
   background-color: rgba(13, 13, 13, 0.9);
   border: 2px solid #1b1b1b;
   border-radius: 7px;
   text-align: center;
-  overflow: auto;
+  overflow: hidden;
   resize: both;
-  max-height: 400px;
   min-height: 150px;
-  max-width: 250px;
   min-width: 100px;
   display: flex;
   flex-direction: column;
+  pointer-events: auto;
 }
 
 .annotation-head
 {
+  position: relative;
   color: white;
   background-color: rgba(27, 27, 27, 0.9);
   border-radius: 5px 5px 0px 0px;
   width: 100%;
   text-align: center;
   align-items: center;
-  overflow: auto;
-  resize: vertical;
-  max-height: 60%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  height: auto !important;
   min-height: 20%;
 }
 
-.annotation-head > textarea {
-  font-size: 1vw !important;
+.annotation-head > .text-area {
+  font-size: 1.5vw !important;
   font-weight: bold;
 }
 
 .annotation-body
 {
+  position: relative;
   flex-grow: 1;
   color: white;
   background-color: none;
-  resize: both;
+  pointer-events: auto;
+  margin-bottom: 20px;
+  height: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
-.annotation-body > textarea {
-  text-align: left;
+.annotation-body > .text-area {
+  font-size: 1vw !important;
+  text-align: center;
 }
 
 .text-area
 {
-  height: 90%;
-  width: 90%;
-  padding-top: 5%;
-  padding-bottom: 5%;
+  height: auto;
+  width: auto;
+  padding: 5%;
   border: none;
   outline: none;
   resize: none;
@@ -551,6 +562,11 @@ body {
   font-size: 1rem;
   line-height: 20px;
   text-overflow: ellipsis;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
 }
 
 .annotation-shortcut-container {
@@ -560,7 +576,7 @@ body {
   min-height: 35px;
   background-color: rgba(0,0,0,0.7) !important;
   border: 2px solid #ccc !important;
-  padding: 0px !important;
+  padding: 5px !important;
   margin-top: 10px !important;
   display: flex;
   font-family: 'Source Code Pro', monospace;
@@ -599,11 +615,13 @@ body {
 
 .annotation-shortcut-button-container {
   display: flex;
-  width: 100%;
+  width: 80%;
   flex-direction: row;
-  align-items: stretch;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-around;
   background: #1b1b1b;
+  flex-wrap: wrap;
+  align-self: center;
 }
 
 .annotation-shortcut-button {

@@ -10,9 +10,9 @@ const defaultState = {
 
 const addOrUpdate = (annotations, annotation) => {
   const { _id } = annotation;
+  annotation.needsMerge = true;
   const index = annotations.findIndex(a => a._id === _id);
   if (index > -1) {
-    annotation.needsMerge = true;
     annotations[index] = annotation;
   } else {
     annotations.push(annotation);

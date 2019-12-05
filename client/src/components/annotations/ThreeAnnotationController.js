@@ -46,7 +46,7 @@ class ThreeAnnotationController extends Component {
     updatingAnnotations: false,
     presentationMode: false,
     currentIndex: -1,
-    shortcutsNeedUpdate: false,
+    shortcutsNeedUpdate: false
   };
 
   constructor(props: Object) {
@@ -231,6 +231,12 @@ class ThreeAnnotationController extends Component {
     }
   }
 
+  shouldComponentUpdate(prevState, prevProps) {
+    const { editable, dragging } = this.state;
+    if (editable && dragging) return false;
+    return true;
+  }
+
   handleDown(event: MouseEvent): void {
     this.setState({
       mousedown: true
@@ -386,12 +392,19 @@ class ThreeAnnotationController extends Component {
       this.hydrateAnnotation(annotation, index)
     );
     const merged = this.mergeAnnotations(updatedAnnotations);
-    this.setState({ annotations: merged, updatingAnnotations: false, shortcutsNeedUpdate: true }, () => {
-      this.props.resetLocalStateUpdateStatus();
-      if (active) {
-        this.props.drawCallback(this.state.annotations);
+    this.setState(
+      {
+        annotations: merged,
+        updatingAnnotations: false,
+        shortcutsNeedUpdate: true
+      },
+      () => {
+        this.props.resetLocalStateUpdateStatus();
+        if (active) {
+          this.props.drawCallback(this.state.annotations);
+        }
       }
-    });
+    );
   }
 
   updateEditableAnnotations() {
@@ -414,8 +427,12 @@ class ThreeAnnotationController extends Component {
     const { drawCallback, updateAnnotationsOrder } = this.props;
     const cloned = [...annotations];
     cloned.splice(newIndex, 0, cloned.splice(currentIndex, 1)[0]);
-    cloned[newIndex].saveStatus = ANNOTATION_SAVE_STATUS.NEEDS_UPDATE;
-    cloned[currentIndex].saveStatus = ANNOTATION_SAVE_STATUS.NEEDS_UPDATE;
+    if (cloned[newIndex]) {
+      cloned[newIndex].saveStatus = ANNOTATION_SAVE_STATUS.NEEDS_UPDATE;
+    }
+    if (cloned[currentIndex]) {
+      cloned[currentIndex].saveStatus = ANNOTATION_SAVE_STATUS.NEEDS_UPDATE;
+    }
     const updated = cloned.map((annotation, index) =>
       this.hydrateAnnotation(annotation, index)
     );
@@ -427,7 +444,7 @@ class ThreeAnnotationController extends Component {
       },
       () => {
         drawCallback(this.state.annotations);
-        updateAnnotationsOrder(updated.map((a) => a._id));
+        updateAnnotationsOrder(updated.map(a => a._id));
         this.scrollShortcut(this.currentShortcutRef.current);
       }
     );
@@ -451,7 +468,15 @@ class ThreeAnnotationController extends Component {
   }
 
   hydrateAnnotation(annotation, index) {
-    const { title, text, point, settings, saveStatus, needsMerge, _id } = annotation;
+    const {
+      title,
+      text,
+      point,
+      settings,
+      saveStatus,
+      needsMerge,
+      _id
+    } = annotation;
     const ref = React.createRef();
     const component = (
       <ThreeAnnotation
@@ -514,7 +539,14 @@ class ThreeAnnotationController extends Component {
     const { saveAnnotation, threeViewId } = this.props;
     const annotation = this.state.annotations[index];
     if (annotation) {
-      const { component, node, titleStyle, textStyle, needsMerge, ...rest } = annotation;
+      const {
+        component,
+        node,
+        titleStyle,
+        textStyle,
+        needsMerge,
+        ...rest
+      } = annotation;
       const a = this.setAnnotationSettingsValues({ ...rest });
       a.index = index;
       saveAnnotation(a, threeViewId);
@@ -609,12 +641,13 @@ class ThreeAnnotationController extends Component {
   renderShortcuts() {
     const { user } = this.props;
     const { annotations, currentIndex, shortcutsNeedUpdate } = this.state;
-    const render = () => (
+    const render = () =>
       annotations.map((annotation, index) => (
         <ThreeAnnotationShortcut
           key={THREE.Math.generateUUID()}
           title={annotation.title}
           index={index}
+          total={annotations.length}
           focus={this.viewAnnotation}
           delete={this.deleteAnnotation}
           save={this.saveAnnotation}
@@ -622,12 +655,14 @@ class ThreeAnnotationController extends Component {
           onSettingsUpdate={this.updateAnnotationSettings}
           onUpdateIndex={this.updateIndex}
           innerRef={index === currentIndex ? this.currentShortcutRef : null}
-          readOnly={/*!user.loggedIn*/ false}
+          readOnly={!user.loggedIn}
         />
-      ))
-    );
+      ));
 
-    if (annotations.length > 0 && this.shortcuts.length === 0 || shortcutsNeedUpdate) {
+    if (
+      (annotations.length > 0 && this.shortcuts.length === 0) ||
+      shortcutsNeedUpdate
+    ) {
       this.shortcuts = render();
     }
     return this.shortcuts;
@@ -664,7 +699,7 @@ class ThreeAnnotationController extends Component {
         );
       }
     }
-    
+
     let shortcutContainer;
     if (this.state.active) {
       shortcutContainer = (
