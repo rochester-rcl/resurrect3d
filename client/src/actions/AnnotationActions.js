@@ -4,7 +4,9 @@ import {
   UPDATE_ANNOTATION,
   DELETE_ANNOTATION,
   RESET_ANNOTATIONS_UPDATE_STATUS,
-  ANNOTATION_FOCUS_CHANGED
+  ANNOTATION_FOCUS_CHANGED,
+  ANNOTATIONS_MERGED,
+  UPDATE_ANNOTATIONS_ORDER
 } from "../constants/actions";
 
 export function loadAnnotations(threeViewId) {
@@ -28,6 +30,20 @@ export function deleteAnnotation(id, threeViewId) {
     id: id,
     threeViewId: threeViewId
   };
+}
+
+export function updateAnnotationsMergedStatus(ids) {
+  return {
+    type: ANNOTATIONS_MERGED,
+    ids: ids
+  }
+}
+
+export function updateAnnotationsOrder(ids) {
+  return {
+    type: UPDATE_ANNOTATIONS_ORDER,
+    ids: ids
+  }
 }
 
 export function resetLocalStateUpdateStatus() {

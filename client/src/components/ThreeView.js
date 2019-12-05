@@ -941,7 +941,6 @@ export default class ThreeView extends Component {
         if (annotations[i].open) {
           annotationMarker.material.color.setHex(0x21ba45);
           const cssObj = new CSS2DObject(annotations[i].node);
-          console.log(annotations[i]);
           this.overlayScene.add(cssObj);
           this.setState({
             currentAnnotationIndex: i,

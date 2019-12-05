@@ -24,13 +24,10 @@ export default class ThreeAnnotationShortcut extends Component {
     this.updateIndex = this.updateIndex.bind(this);
     this.renderReadOnly = this.renderReadOnly.bind(this);
     this.renderAdminMode = this.renderAdminMode.bind(this);
-    this.scrollToShortcut = this.scrollToShortcut.bind(this);
-    this.shortcutRef = React.createRef();
   }
 
   focus() {
     this.props.focus(this.props.index);
-    this.scrollToShortcut();
   }
 
   del() {
@@ -50,13 +47,6 @@ export default class ThreeAnnotationShortcut extends Component {
     const { index, onUpdateIndex } = this.props;
     const dst = direction ? index + 1 : index - 1;
     onUpdateIndex(index, dst, this.scrollToShortcut);
-  }
-
-  scrollToShortcut() {
-    const { current } = this.shortcutRef;
-    if (current) {
-      current.parentNode.scrollTop = current.offsetTop - current.parentNode.offsetTop;
-    }
   }
 
   saveStatusLabel() {
@@ -84,9 +74,9 @@ export default class ThreeAnnotationShortcut extends Component {
   }
 
   renderReadOnly() {
-    const { title } = this.props;
+    const { title, innerRef } = this.props;
     return (
-      <Segment ref={this.shortcutRef} className="annotation-shortcut-container">
+      <div ref={innerRef} className="annotation-shortcut-container">
         <span className="annotation-shortcut-label-container">
           <Label className="annotation-shortcut-title">{title}</Label>
           <Button
@@ -103,14 +93,14 @@ export default class ThreeAnnotationShortcut extends Component {
             />
           </Button>
         </span>
-      </Segment>
+      </div>
     );
   }
 
   renderAdminMode() {
-    const { title } = this.props;
+    const { title, innerRef } = this.props;
     return (
-      <Segment ref={this.shortcutRef} className="annotation-shortcut-container">
+      <div ref={innerRef} className="annotation-shortcut-container">
         <span className="annotation-shortcut-label-container">
           <Label className="annotation-shortcut-title">{title}</Label>
           {this.saveStatusLabel()}
@@ -201,7 +191,7 @@ export default class ThreeAnnotationShortcut extends Component {
             size="mini"
           />
         </div>
-      </Segment>
+      </div>
     );
   }
 
