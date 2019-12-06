@@ -59,7 +59,7 @@ export default class ThreeAnnotation extends React.Component {
       return (
         <div className="annotation-body" style={textStyle}>
           <textarea
-            defaultValue={this.state.text}
+            defaultValue={text}
             type="text"
             onChange={this.updateText}
             className="text-area"
@@ -67,8 +67,6 @@ export default class ThreeAnnotation extends React.Component {
           />
         </div>
       );
-    } else {
-      return text.length !== 0 ? <div className="text-area-read-only">{text}</div> : null;
     }
   }
 

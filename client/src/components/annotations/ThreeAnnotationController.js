@@ -14,7 +14,7 @@ import ThreeButton from "../ThreeButton";
 //ThreeAnnotation
 import ThreeAnnotation from "./ThreeAnnotation";
 import ThreeAnnotationShortcut from "./ThreeAnnotationShortcut";
-import PortalElement from "./PortalElement";
+import ThreeAnnotationReadOnlyBody from "./ThreeAnnotationBody";
 
 // Redux
 import { connect } from "react-redux";
@@ -33,6 +33,8 @@ import {
 import screenfull from "screenfull";
 
 import { ANNOTATION_SAVE_STATUS, KEYCODES } from "../../constants/application";
+
+// TODO add editing capabilities to the body and make it editable
 
 class ThreeAnnotationController extends Component {
   raycaster: THREE.RayCaster;
@@ -310,12 +312,18 @@ class ThreeAnnotationController extends Component {
     for (let i = 0; i < annotations.length; i++) {
       annotations[i].open = false;
       const component = annotations[i].component;
+      const bodyComponent = annotations[i].bodyComponent;
       annotations[i].component = React.cloneElement(component, {
         ...component.props,
         ...{ visible: false }
       });
+      annotations[i].bodyComponent = React.cloneElement(bodyComponent, {
+        ...bodyComponent.props,
+        ...{ visible: false }
+      });
     }
     const ref = React.createRef();
+    const bodyRef = React.createRef();
     const component = (
       <ThreeAnnotation
         key={THREE.Math.generateUUID()}
@@ -329,10 +337,22 @@ class ThreeAnnotationController extends Component {
         onUpdate={this.onAnnotationContentUpdated}
       />
     );
+    const bodyComponent = (
+      <ThreeAnnotationReadOnlyBody
+        key={THREE.Math.generateUUID()}
+        innerRef={bodyRef}
+        visible={false}
+        text={""}
+      />
+    );
     let annotation = {
       component: component,
+      bodyComponent: bodyComponent,
       get node() {
         return this.component.props.innerRef.current;
+      },
+      get bodyNode() {
+        return this.bodyComponent.props.innerRef.current;
       },
       point: point,
       text: "",
@@ -413,10 +433,14 @@ class ThreeAnnotationController extends Component {
     const openIndex = cloned.findIndex(a => a.open === true);
     if (openIndex > -1) {
       const oa = cloned[openIndex];
-      const { component } = oa;
+      const { component, bodyComponent } = oa;
       oa.component = React.cloneElement(component, {
         ...component.props,
         ...{ editable: editable }
+      });
+      oa.bodyComponent = React.cloneElement(bodyComponent, {
+        ...bodyComponent.props,
+        ...{ visible: !editable }
       });
       this.setState({ annotations: cloned });
     }
@@ -478,6 +502,7 @@ class ThreeAnnotationController extends Component {
       _id
     } = annotation;
     const ref = React.createRef();
+    const bodyRef = React.createRef();
     const component = (
       <ThreeAnnotation
         key={THREE.Math.generateUUID()}
@@ -491,10 +516,22 @@ class ThreeAnnotationController extends Component {
         onUpdate={this.onAnnotationContentUpdated}
       />
     );
+    const bodyComponent = (
+      <ThreeAnnotationReadOnlyBody
+        key={THREE.Math.generateUUID()}
+        innerRef={bodyRef}
+        visible={false}
+        text={text}
+      />
+    );
     const a = {
       component: component,
+      bodyComponent: bodyComponent,
       get node() {
         return this.component.props.innerRef.current;
+      },
+      get bodyNode() {
+        return this.bodyComponent.props.innerRef.current;
       },
       point: point,
       title: title,
@@ -579,7 +616,7 @@ class ThreeAnnotationController extends Component {
     } = this.props;
     const { annotations, editable } = this.state;
     annotations.forEach((annotation, idx) => {
-      const { component } = annotation;
+      const { component, bodyComponent } = annotation;
       if (idx === index) {
         annotation.open = true;
         if (!component.props.visible) {
@@ -587,12 +624,20 @@ class ThreeAnnotationController extends Component {
             ...component.props,
             ...{ visible: true, editable: editable }
           });
+          annotation.bodyComponent = React.cloneElement(bodyComponent, {
+            ...bodyComponent.props,
+            ...{ visible: !editable }
+          });
         }
       } else {
         annotation.open = false;
         if (component.props.visible) {
           annotation.component = React.cloneElement(component, {
             ...component.props,
+            ...{ visible: false }
+          });
+          annotation.bodyComponent = React.cloneElement(bodyComponent, {
+            ...bodyComponent.props,
             ...{ visible: false }
           });
         }
@@ -670,19 +715,31 @@ class ThreeAnnotationController extends Component {
 
   render() {
     const { user } = this.props;
-    const { annotations, presentationMode, currentIndex } = this.state;
+    const {
+      annotations,
+      presentationMode,
+      currentIndex,
+      editable
+    } = this.state;
+    const currentAnnotation =
+      currentIndex > -1 ? annotations[currentIndex] : null;
     const renderedAnnotations = annotations.map(annotation => {
       return <div key={annotation.component.key}>{annotation.component}</div>;
+    });
+    const renderedBodyAnnotations = annotations.map(annotation => {
+      return (
+        <div key={annotation.bodyComponent.key}>{annotation.bodyComponent}</div>
+      );
     });
     let editToggle;
     let togglePresentationMode;
     if (this.state.active) {
-      if (/*user.loggedIn*/ true) {
+      if (user.loggedIn) {
         editToggle = (
           <ThreeToggle
             title="edit mode"
             callback={this.toggleEdit}
-            defaultVal={this.state.editable}
+            defaultVal={editable}
           />
         );
       }
@@ -716,6 +773,7 @@ class ThreeAnnotationController extends Component {
         {togglePresentationMode}
         {shortcutContainer}
         {renderedAnnotations}
+        {renderedBodyAnnotations}
       </div>
     );
   }

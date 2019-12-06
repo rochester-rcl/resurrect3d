@@ -1,17 +1,21 @@
-import React from 'react';
+import React from "react";
 
-const ThreeAnnotationBody = (props) =>
-{
-	const handleChange = (event) =>
-	{
-		props.callback(event.target.data);
-	}
+const ThreeAnnotationReadOnlyBody = props => {
+  const { visible, text, innerRef } = props;
+  const display = text.length > 0 ? "flex" : "none";
+  if (visible) {
+    return (
+      <div
+        ref={innerRef}
+        style={{ display: display }}
+        className="annotation-body-read-only"
+      >
+        <div className="text-area-read-only">{text}</div>
+      </div>
+    );
+  } else {
+    return <div style={{ display: "none" }}></div>;
+  }
+};
 
-	return (
-		<div className="annotation-body">
-			<textarea type = 'text' defaultValue = {props.text} onChange = {handleChange} className="text-area"/>
-		</div>
-	);
-}
-
-export default ThreeAnnotationBody;
+export default ThreeAnnotationReadOnlyBody;

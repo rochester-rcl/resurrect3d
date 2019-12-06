@@ -162,6 +162,7 @@ export default class ThreeView extends Component {
     deltaTime: 0,
     currentAnnotationIndex: 0,
     currentAnnotationCSSObj: null,
+    currentAnnotationCSSReadOnlyBodyObj: null,
     // rotation
     rotateStart: new THREE.Vector2(),
     rotateEnd: new THREE.Vector2(),
@@ -921,7 +922,7 @@ export default class ThreeView extends Component {
   }
 
   drawAnnotations(annotations?: Object): void {
-    const { currentAnnotationCSSObj } = this.state;
+    const { currentAnnotationCSSObj, currentAnnotationCSSReadOnlyBodyObj } = this.state;
     for (let i = 0; i < this.annotationMarkers.children.length; i++) {
       this.annotationMarkers.children[i].remove(
         ...this.annotationMarkers.children[i].children
@@ -930,6 +931,9 @@ export default class ThreeView extends Component {
     }
     if (currentAnnotationCSSObj) {
       this.overlayScene.remove(currentAnnotationCSSObj);
+    }
+    if (currentAnnotationCSSReadOnlyBodyObj) {
+      this.overlayScene.remove(currentAnnotationCSSReadOnlyBodyObj);
     }
     if (annotations) {
       for (let i = 0; i < annotations.length; i++) {
@@ -941,10 +945,18 @@ export default class ThreeView extends Component {
         if (annotations[i].open) {
           annotationMarker.material.color.setHex(0x21ba45);
           const cssObj = new CSS2DObject(annotations[i].node);
+          const bodyNode = annotations[i].bodyNode;
+          const cssBodyObj = bodyNode
+            ? new CSS2DObject(annotations[i].bodyNode)
+            : null;
           this.overlayScene.add(cssObj);
+          if (cssBodyObj) {
+            this.overlayScene.add(cssBodyObj);
+          }
           this.setState({
             currentAnnotationIndex: i,
-            currentAnnotationCSSObj: cssObj
+            currentAnnotationCSSObj: cssObj,
+            currentAnnotationCSSReadOnlyBodyObj: cssBodyObj
           });
         } else {
           annotationMarker.material.color.setHex(0x000000);
@@ -964,12 +976,15 @@ export default class ThreeView extends Component {
   }
 
   hideAnnotations() {
-    const { currentAnnotationIndex, currentAnnotationCSSObj } = this.state;
+    const { currentAnnotationIndex, currentAnnotationCSSObj, currentAnnotationCSSReadOnlyBodyObj } = this.state;
     const annotation = this.annotationMarkers.children[currentAnnotationIndex];
     if (annotation) {
       const cssDiv = currentAnnotationCSSObj;
       if (cssDiv) {
         cssDiv.element.style.opacity = 0;
+      }
+      if (currentAnnotationCSSReadOnlyBodyObj) {
+        currentAnnotationCSSReadOnlyBodyObj.element.style.opacity = 0;
       }
     }
   }
@@ -977,7 +992,7 @@ export default class ThreeView extends Component {
   positionAnnotations(alpha = 0): void {
     //Make annotations position smartly to stay in camera -- use raycaster prob
     const distance = 0.05 * this.spriteScaleFactor;
-    const { currentAnnotationIndex, currentAnnotationCSSObj } = this.state;
+    const { currentAnnotationIndex, currentAnnotationCSSObj, currentAnnotationCSSReadOnlyBodyObj } = this.state;
     const annotation = this.annotationMarkers.children[currentAnnotationIndex];
     if (annotation) {
       const cssDiv = currentAnnotationCSSObj;
@@ -992,6 +1007,9 @@ export default class ThreeView extends Component {
         offset = this.annotationOffsetPlaceholder;
         if (alpha > 0) {
           cssDiv.element.style.opacity = THREE.Math.lerp(0, 1, alpha);
+          if (currentAnnotationCSSReadOnlyBodyObj) {
+            currentAnnotationCSSReadOnlyBodyObj.element.style.opacity = THREE.Math.lerp(0, 1, alpha);
+          }
         }
         // If we run into any performance issues we can change this
         annotationPos.add(new THREE.Vector3(offset, 0, 0));

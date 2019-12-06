@@ -490,7 +490,7 @@ body {
 {
   width: auto;
   height: auto;
-  max-width: 40%;
+  max-width: 20%;
   background-color: rgba(13, 13, 13, 0.9);
   border: 2px solid #1b1b1b;
   border-radius: 7px;
@@ -510,7 +510,7 @@ body {
   color: white;
   background-color: rgba(27, 27, 27, 0.9);
   border-radius: 5px 5px 0px 0px;
-  width: 100%;
+  width: auto;
   text-align: center;
   align-items: center;
   display: flex;
@@ -539,6 +539,34 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
   word-wrap: break-word;
+}
+
+.annotation-body-read-only {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 30%;
+  margin: 30px;
+  flex-grow: 1;
+  color: white;
+  background-color: none;
+  pointer-events: auto;
+  margin-bottom: 20px;
+  height: auto;
+  max-height: 90%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  word-wrap: break-word;
+  background-color: rgba(13, 13, 13, 0.3);
+  border: 2px solid #fff;
+  border-radius: 7px;
+  text-align: center;
+  overflow: hidden;
+  /*min-height: 150px;*/
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
 }
 
 .annotation-body > .text-area {
