@@ -490,7 +490,7 @@ body {
 {
   width: auto;
   height: auto;
-  max-width: 20%;
+  max-width: 40%;
   background-color: rgba(13, 13, 13, 0.9);
   border: 2px solid #1b1b1b;
   border-radius: 7px;
@@ -519,7 +519,7 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
   height: auto !important;
-  min-height: 20%;
+  line-height: 20px;
 }
 
 .annotation-head > .text-area {
@@ -567,8 +567,7 @@ body {
   justify-content: flex-start;
   align-items: center;
   position: relative;
-  word-break: break-all;
-  word-wrap: break-word;
+  word-break: break-word;
   margin-bottom: 10px;
   overflow-y: auto;
 }
