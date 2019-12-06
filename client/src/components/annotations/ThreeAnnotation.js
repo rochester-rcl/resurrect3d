@@ -18,6 +18,7 @@ export default class ThreeAnnotation extends React.Component {
     (this: any).updateTitle = this.updateTitle.bind(this);
     (this: any).updateText = this.updateText.bind(this);
     this.renderText = this.renderText.bind(this);
+    this.renderTitle = this.renderTitle.bind(this);
   }
 
   updateTitle(event): void {
@@ -70,20 +71,28 @@ export default class ThreeAnnotation extends React.Component {
     }
   }
 
+  renderTitle() {
+    const { editable } = this.props;
+    const { title, titleStyle } = this.state;
+    return (
+      <div className="annotation-head" style={titleStyle}>
+        <textarea
+          defaultValue={title}
+          type="text"
+          onChange={this.updateTitle}
+          className="text-area"
+          readOnly={!editable}
+        />
+      </div>
+    );
+  }
+
   render() {
     const { innerRef, visible, editable } = this.props;
     if (visible) {
       return (
         <div ref={innerRef} className="annotation">
-          <div className="annotation-head" style={this.state.titleStyle}>
-            <textarea
-              defaultValue={this.state.title}
-              type="text"
-              onChange={this.updateTitle}
-              className="text-area"
-              readOnly={!this.props.editable}
-            />
-          </div>
+          {this.renderTitle()}
           {this.renderText()}
         </div>
       );
