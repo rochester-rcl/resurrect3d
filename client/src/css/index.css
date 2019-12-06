@@ -497,7 +497,7 @@ body {
   text-align: center;
   overflow: hidden;
   resize: both;
-  min-height: 150px;
+  /*min-height: 150px;*/
   min-width: 100px;
   display: flex;
   flex-direction: column;
@@ -539,7 +539,6 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
   word-wrap: break-word;
-  word-break: break-word;
 }
 
 .annotation-body > .text-area {
@@ -547,10 +546,37 @@ body {
   text-align: center;
 }
 
-.text-area
-{
+.text-area-read-only {
+  font-size: 1vw !important;
+  text-align: center;
   height: auto;
   width: auto;
+  padding: 5%;
+  border: none;
+  outline: none;
+  resize: none;
+  background: none;
+  color: white;
+  text-align: center;
+  font-family: "Source Code Pro", monospace;
+  font-size: 1rem;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  position: relative;
+  word-break: break-all;
+  word-wrap: break-word;
+  margin-bottom: 10px;
+  overflow-y: auto;
+}
+
+.text-area
+{
+  height: 100%;
+  width: 100%;
   padding: 5%;
   border: none;
   outline: none;
