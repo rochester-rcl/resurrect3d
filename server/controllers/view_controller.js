@@ -80,6 +80,7 @@ exports.addView = (req, res) => {
     enableMaterials: req.body.enableMaterials,
     enableShaders: req.body.enableShaders,
     enableMeasurement: req.body.enableMeasurement,
+    enableDownload: req.body.enableDownload,
     modelUnits: req.body.modelUnits
   });
 
@@ -218,6 +219,7 @@ exports.updateView = (req, res) => {
             enableMaterials: body.enableMaterials,
             enableShaders: body.enableShaders,
             enableMeasurement: body.enableMeasurement,
+            enableDownload: body.enableDownload,
             modelUnits: body.modelUnits
           });
 

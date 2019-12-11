@@ -19,6 +19,7 @@ class Viewform extends Component {
     enableMaterials: false,
     enableShaders: false,
     enableMeasurement: false,
+    enableDownload: false,
     modelUnits: UNITS[0],
   }
 
@@ -34,11 +35,9 @@ class Viewform extends Component {
       this.setState({[e.target.name] : e.target.files[0]});
     }
     else if(e.target.name === 'threeThumbnail' ){
-      console.log(e.target.files[0]);
       this.setState({[e.target.name] : e.target.files[0]});
     }
     else if(e.target.name === 'skybox' ){
-      console.log(e.target.files[0]);
       this.setState({[e.target.name] : e.target.files[0]});
     }
     else{
@@ -79,7 +78,7 @@ class Viewform extends Component {
     }else{
       this.setState({[this.state.enableMeasurement] : true});
     }
-
+  
     const view = {
       threeFile: this.state.threeFile,
       threeThumbnail: this.state.threeThumbnail,

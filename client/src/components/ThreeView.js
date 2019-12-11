@@ -670,10 +670,12 @@ export default class ThreeView extends Component {
       renderer: this.webGLRenderer
     });
 
-    controls.addComponent("mesh-export", components.THREE_MESH_EXPORTER, {
-      threeInstance: THREE,
-      mesh: this.mesh
-    });
+    if (this.props.options.enableDownload) {
+      controls.addComponent("mesh-export", components.THREE_MESH_EXPORTER, {
+        threeInstance: THREE,
+        mesh: this.mesh
+      });
+    }
 
     if (this.props.options.enableLight) {
       controls.addComponent("lighting", components.THREE_BUTTON, {
@@ -922,7 +924,10 @@ export default class ThreeView extends Component {
   }
 
   drawAnnotations(annotations?: Object): void {
-    const { currentAnnotationCSSObj, currentAnnotationCSSReadOnlyBodyObj } = this.state;
+    const {
+      currentAnnotationCSSObj,
+      currentAnnotationCSSReadOnlyBodyObj
+    } = this.state;
     for (let i = 0; i < this.annotationMarkers.children.length; i++) {
       this.annotationMarkers.children[i].remove(
         ...this.annotationMarkers.children[i].children
@@ -976,7 +981,11 @@ export default class ThreeView extends Component {
   }
 
   hideAnnotations() {
-    const { currentAnnotationIndex, currentAnnotationCSSObj, currentAnnotationCSSReadOnlyBodyObj } = this.state;
+    const {
+      currentAnnotationIndex,
+      currentAnnotationCSSObj,
+      currentAnnotationCSSReadOnlyBodyObj
+    } = this.state;
     const annotation = this.annotationMarkers.children[currentAnnotationIndex];
     if (annotation) {
       const cssDiv = currentAnnotationCSSObj;
@@ -992,7 +1001,11 @@ export default class ThreeView extends Component {
   positionAnnotations(alpha = 0): void {
     //Make annotations position smartly to stay in camera -- use raycaster prob
     const distance = 0.05 * this.spriteScaleFactor;
-    const { currentAnnotationIndex, currentAnnotationCSSObj, currentAnnotationCSSReadOnlyBodyObj } = this.state;
+    const {
+      currentAnnotationIndex,
+      currentAnnotationCSSObj,
+      currentAnnotationCSSReadOnlyBodyObj
+    } = this.state;
     const annotation = this.annotationMarkers.children[currentAnnotationIndex];
     if (annotation) {
       const cssDiv = currentAnnotationCSSObj;
@@ -1008,7 +1021,11 @@ export default class ThreeView extends Component {
         if (alpha > 0) {
           cssDiv.element.style.opacity = THREE.Math.lerp(0, 1, alpha);
           if (currentAnnotationCSSReadOnlyBodyObj) {
-            currentAnnotationCSSReadOnlyBodyObj.element.style.opacity = THREE.Math.lerp(0, 1, alpha);
+            currentAnnotationCSSReadOnlyBodyObj.element.style.opacity = THREE.Math.lerp(
+              0,
+              1,
+              alpha
+            );
           }
         }
         // If we run into any performance issues we can change this

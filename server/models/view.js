@@ -40,6 +40,12 @@ var viewSchema = new Schema({
     required: true
   },
 
+  enableDownload: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+
   modelUnits:{
     type: String,
     required: true
