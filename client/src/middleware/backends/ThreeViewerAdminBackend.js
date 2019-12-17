@@ -11,6 +11,7 @@ import {
   LOGOUT_ENDPOINT,
   AUTHENTICATE_ENDPOINT,
   VERIFY_ENDPOINT,
+  ADMIN_CONTAINER_ENDPOINT
 } from "../../constants/api-endpoints";
 
 export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend {
@@ -85,7 +86,9 @@ export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend 
   }
 
   addView(viewData: Object): Promise {
+    console.log(viewData);
     const fd = ThreeViewerAdminBackend.objToFormData(viewData);
+    console.log(fd);
     return this._post(VIEWS_ENDPOINT, fd, {})
       .then(result => result)
       .catch(error => console.log(error));

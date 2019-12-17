@@ -61,6 +61,15 @@ const sleep = (duration: Number): Promise => {
   });
 };
 
+function arrayToObject (array) {
+
+  return array.reduce((obj, item) => {
+     obj[item._id] = item
+     return obj
+   }, {});
+}
+
+
 function* getThreeAssetSaga(
   getThreeAssetAction: Object
 ): Generator<any, any, any> {
@@ -470,14 +479,21 @@ export function* authenticateSaga(): Generator<any, any, any> {
   }
 }
 
-export function* addThreeViewSaga(
-  addThreeViewAction: Object
-): Generator<any, any, any> {
+export function* addThreeViewSaga(addThreeViewAction: Object): Generator<any, any, any> {
+  console.log(addThreeViewAction);
+
   try {
     if (backend.hasAdminBackend) {
-      const result = yield backend.adminBackend.addView(
-        addThreeViewAction.viewData
-      );
+      const result = yield call(backend.adminBackend.addView, addThreeViewAction.viewData);
+      yield put({
+        type: ActionConstants.VIEW_ADDED,
+      });
+      const results = yield call(backend.adminBackend.getViews);
+      const objConvertedResults = yield call(arrayToObject, results.views);
+      yield put({
+        type: ActionConstants.VIEWS_LOADED,
+        views: objConvertedResults
+      });
       // TODO add this to "views"
     } else {
       console.warn(genericAPIRouteMessage);
@@ -485,17 +501,18 @@ export function* addThreeViewSaga(
   } catch (error) {
     console.log(error);
   }
+
 }
 
-export function* getThreeViewsSaga(
-  getThreeViewsAction: Object
-): Generator<any, any, any> {
+export function* getThreeViewsSaga(getThreeViewsAction: Object): Generator<any, any, any> {
   try {
     if (backend.hasAdminBackend) {
-      const results = yield backend.adminBackend.getViews();
+      const results = yield call(backend.adminBackend.getViews);
+      const objConvertedResults = yield call(arrayToObject, results.views);
+
       yield put({
         type: ActionConstants.VIEWS_LOADED,
-        views: results
+        views: objConvertedResults
       });
     } else {
       console.warn(genericAPIRouteMessage);
@@ -505,12 +522,10 @@ export function* getThreeViewsSaga(
   }
 }
 
-export function* getThreeViewSaga(
-  getThreeViewAction: Object
-): Generator<any, any, any> {
+export function* getThreeViewSaga(getThreeViewAction: Object): Generator<any, any, any> {
   try {
     if (backend.hasAdminBackend) {
-      const result = yield backend.adminBackend.getView(getThreeViewAction.id);
+      const result = yield call(backend.adminBackend.getView, getThreeViewAction.id);
       yield put({
         type: ActionConstants.VIEW_LOADED,
         view: result
@@ -523,14 +538,10 @@ export function* getThreeViewSaga(
   }
 }
 
-export function* updateThreeViewSaga(
-  updateThreeViewAction: Object
-): Generator<any, any, any> {
+export function* updateThreeViewSaga(updateThreeViewAction: Object): Generator<any, any, any> {
   try {
     if (backend.hasAdminBackend) {
-      const result = yield backend.adminBackend.updateView(
-        updateThreeViewAction.viewData
-      );
+      const result = yield call(backend.adminBackend.updateView, updateThreeViewAction.viewData);
     } else {
       console.warn(genericAPIRouteMessage);
     }
@@ -539,14 +550,18 @@ export function* updateThreeViewSaga(
   }
 }
 
-export function* deleteThreeViewSaga(
-  deleteThreeViewAction: Object
-): Generator<any, any, any> {
+export function* deleteThreeViewSaga(deleteThreeViewAction: Object): Generator<any, any, any> {
   try {
     if (backend.hasAdminBackend) {
-      const result = yield backend.adminBackend.deleteView(
-        deleteThreeViewAction.id
-      );
+      const result = yield call(backend.adminBackend.deleteView, deleteThreeViewAction.id);
+      
+      const results = yield call(backend.adminBackend.getViews);
+      const objConvertedResults = yield call(arrayToObject, results.views);
+
+      yield put({
+        type: ActionConstants.VIEWS_LOADED,
+        views: objConvertedResults
+      });
     } else {
       console.warn(genericAPIRouteMessage);
     }

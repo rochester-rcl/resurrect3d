@@ -61,21 +61,35 @@ exports.getFile = (req, res) => {
   });
 };
 
-exports.getViews = (req, res) => {
-  View.find({}, (err, view) => {
-    if (err) res.send(err);
-    res.json(view);
-    console.log("View(s) successfully read");
+exports.findAllViews = (req, res) => {
+  View.find({})
+    .exec( (err, views) => {
+      if (err){
+        return res.status(500).json({
+          message: "Could not find views: Error[ " +err +" ]"
+        });
+      }
+    return res.status(200).json({views: views});
+    //console.log("View(s) successfully read");
   });
 };
 
 exports.addView = (req, res) => {
-  const { threeFile, threeThumbnail, skybox } = req.files;
+  console.log('req.body: ', req.body);
+  console.log('req.files:' , req.files);
+  console.log('req.file:' , req.file);
+   if (!req.files) {
+       console.log('No files to upload.');
+       return;
+   }
+
+  const { threeFile, threeThumbnail, skybox__file } = req.files;
+
   const newView = new View({
     threeFile: threeFile !== undefined ? threeFile[0].filename : null,
     threeThumbnail:
       threeThumbnail !== undefined ? threeThumbnail[0].filename : null,
-    skybox: { file: skybox !== undefined ? skybox[0].filename : null },
+    skybox: { file: skybox__file !== undefined ? skybox__file[0].filename : null },
     enableLight: req.body.enableLight,
     enableMaterials: req.body.enableMaterials,
     enableShaders: req.body.enableShaders,
@@ -83,7 +97,7 @@ exports.addView = (req, res) => {
     enableDownload: req.body.enableDownload,
     modelUnits: req.body.modelUnits
   });
-
+  console.log(newView);
   newView.save((err, view) => {
     if (err) res.send(err);
     res.json(view);

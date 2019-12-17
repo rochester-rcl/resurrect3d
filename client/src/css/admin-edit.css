@@ -1,0 +1,27 @@
+.root {
+  display: contents;
+  min-height: 100vh;
+}
+
+.appContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 48px 36px 0;
+  background: #eaeff1;
+}
+
+.sortableMargin {
+  margin-bottom: 1rem;
+
+}
+
+.listRoot {
+  width: 100%;
+  position: relative;
+  overflow: auto;
+}

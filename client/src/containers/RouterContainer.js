@@ -23,6 +23,9 @@ import LoginContainer from "./LoginContainer";
 import LogoutContainer from "./LogoutContainer";
 import AccountContainer from "./AccountContainer";
 import VerifyUserContainer from "./VerifyUserContainer";
+import AdminContainer from "../components/admin/AdminContainer";
+import Paperbase from "../components/admin/Paperbase";
+import SemanticBase from "../components/admin/SemanticBase";
 
 // actions
 import { authenticate, logout } from "../actions/UserActions";
@@ -125,56 +128,35 @@ class RouterContainer extends Component {
       );
     } else {
       return (
-        <Router basename={BASENAME}>
-          <div className="three-router">
-            <Route
-              path="/models/:id"
-              render={props =>
-                this.authenticateRouteWithoutRedirect(props, App)
-              }
-            />
-            <Route
-              path="/embed/:id"
-              render={props => this.embedRoute(props, App)}
-            />
-            <AdminMenu active={user.loggedIn} />
-            <Route path="/admin/login" component={LoginContainer} />
-            <Route path="/admin/logout" component={LogoutContainer} />
-            <Route
-              path="/admin/verify/:token"
-              component={VerifyUserContainer}
-            />
-            <Route
-              path="/admin/account"
-              render={props => this.authenticateRoute(props, AccountContainer)}
-            />
-            <Route
-              path="/admin/add"
-              render={props => this.authenticateRoute(props, ViewForm)}
-            />
-            <Route
-              path="/admin/views"
-              render={props => this.authenticateRoute(props, ThreeViews)}
-            />
-            <Route
-              path="/admin/view/:id"
-              render={props => this.authenticateRoute(props, ThreeViewDetails)}
-            />
-            <Route
-              path="/converter"
-              render={props => (
-                <ConverterContainer conversionType={CONVERSION_TYPE_MESH} />
-              )}
-            />
-            <Route
-              path="/ptm-converter"
-              render={props => (
-                <ConverterContainer conversionType={CONVERSION_TYPE_RTI} />
-              )}
-            />
-          </div>
-        </Router>
-      );
+          <Router basename={BASENAME}>
+            <div className="three-router">
+              <Route path="/models/:id" render={(props) => this.authenticateRouteWithoutRedirect(props, App)} />
+              {/*<AdminMenu active={user.loggedIn} />*/}
+              <Route path="/admin/login" component={LoginContainer} />
+              <Route path="/admin/logout" component={LogoutContainer} />
+              <Route path="/admin/verify/:token" component={VerifyUserContainer} />
+              <Route path="/admin/account" render={(props) => this.authenticateRoute(props, AccountContainer)} />
+              <Route path="/admin/add" render={(props) => this.authenticateRoute(props, ViewForm)} />
+              <Route path="/admin/views" render={(props) => this.authenticateRoute(props, ThreeViews)} />
+              <Route path="/admin/container" render={(props) => this.authenticateRoute(props, AdminContainer)} />
+              <Route path="/admin/paperbase" render={(props) => this.authenticateRoute(props, Paperbase)} />
+              <Route path="/admin/semanticBase" render={(props) => this.authenticateRoute(props, SemanticBase)} />
+              <Route path="/admin/view/:id" render={(props) => this.authenticateRoute(props, ThreeViewDetails)} />
+              <Route
+                path="/converter"
+                render={props => (
+                  <ConverterContainer conversionType={CONVERSION_TYPE_MESH} />
+                )}
+              />
+              <Route
+                path="/ptm-converter"
+                render={props => (
+                  <ConverterContainer conversionType={CONVERSION_TYPE_RTI} />
+                )}
+              />
+            </div>
+          </Router>
+        );
     }
   }
 }

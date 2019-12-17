@@ -10,6 +10,8 @@
   "dependencies": {
     "@tweenjs/tween.js": "^17.4.0",
     "babel-loader": "^8.0.6",
+    "@material-ui/core": "^4.0.0-rc.0",
+    "@material-ui/icons": "^3.0.2",
     "babel-polyfill": "^6.26.0",
     "history": "^4.10.1",
     "interweave": "^8.1.0",
@@ -25,6 +27,7 @@
     "react-redux": "^5.1.2",
     "react-router": "^3.2.5",
     "react-router-dom": "^4.3.1",
+    "react-swipeable-views": "^0.13.1",
     "react-tappable": "^1.0.4",
     "redux": "^3.6.0",
     "redux-saga": "^0.14.3",

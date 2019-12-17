@@ -26,11 +26,14 @@ class ViewDetails extends Component{
   }
 
   componentDidMount() {
+
     const {match: {params} } = this.props;
+    console.log(this.props);
     console.log('componentDidMount - was called');
     console.log(`componentDidMount - This is the params.id: ${params.id}`);
     console.log(`componentDidMount - getView was called`);
     this.props.getView(params.id);
+
   }
 
   componentDidUpdate(prevProps) {
