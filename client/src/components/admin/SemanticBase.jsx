@@ -101,7 +101,7 @@ class SemanticBase extends React.Component {
 
         <Sidebar.Pusher
           dimmed={this.state.dimmed && this.state.visible}
-          className="appContent"
+          className="admin-content-container"
         >
           <Segment basic inverted className="admin-form-container">
             <Divider inverted horizontal>My Files</Divider>

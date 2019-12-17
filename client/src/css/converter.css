@@ -5,6 +5,7 @@
   border-radius: 5px;
   margin-bottom: 50px !important;
   justify-content: center;
+  display: flex;
 }
 
 .three-converter-form {
@@ -32,8 +33,7 @@
 }
 
 .three-converter-form-submit {
-  align-self: flex-end;
-  float: right;
   color: #fff !important;
   font-family: 'Source Code Pro', monospace !important;
+  position: relative;
 }

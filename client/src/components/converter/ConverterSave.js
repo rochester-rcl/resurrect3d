@@ -5,7 +5,12 @@ import React, { Component } from "react";
 import * as THREE from "three";
 
 // constants
-import { GZIP_EXT, JSON_EXT } from "../../constants/application";
+import {
+  GZIP_EXT,
+  GZIP_MIME,
+  JSON_EXT,
+  JSON_MIME
+} from "../../constants/application";
 
 // semantic ui react
 import { Form, Divider, Button } from "semantic-ui-react";
@@ -18,7 +23,7 @@ export default class ConverterSave extends Component {
     filename: THREE.Math.generateUUID(),
     url: null,
     ext: null,
-    filesize: 0,
+    filesize: 0
   };
 
   constructor(props: Object) {
@@ -27,6 +32,18 @@ export default class ConverterSave extends Component {
     this.onName = this.onName.bind(this);
     this.performRedirect = this.performRedirect.bind(this);
     this.formatFileLabel = this.formatFileLabel.bind(this);
+  }
+
+  static prepareFile(data) {
+    let ext = GZIP_EXT;
+    let mime = GZIP_MIME;
+    if (data.constructor !== Uint8Array) {
+      ext = JSON_EXT;
+      mime = JSON_MIME;
+    }
+    return new File([new Blob([data])], THREE.Math.generateUUID() + ext, {
+      type: mime
+    });
   }
 
   componentDidMount() {
@@ -40,7 +57,7 @@ export default class ConverterSave extends Component {
     this.setState({
       url: window.URL.createObjectURL(new Blob([file])),
       ext: ext,
-      filesize: filesize,
+      filesize: filesize
     });
   }
 
@@ -69,13 +86,7 @@ export default class ConverterSave extends Component {
   formatFileLabel(): string {
     const { filename, ext, filesize } = this.state;
     return (
-      "current filename: " +
-      filename +
-      ext +
-      " (" +
-      filesize +
-      " MB" +
-      ")"
+      "current filename: " + filename + ext + " (" + filesize + " MB" + ")"
     );
   }
 
@@ -104,9 +115,6 @@ export default class ConverterSave extends Component {
           >
             save
           </Button>
-          <Divider className="three-converter-form-divider" inverted horizontal>
-            or
-          </Divider>
           <Button
             size="large"
             className="three-converter-form-submit"

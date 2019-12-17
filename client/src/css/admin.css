@@ -1,79 +1,77 @@
-
 .hp-logo {
-    position: fixed;
-    top: 30px;
-    left: 0;
-    right: 0;
-    margin: auto;
-    width: 250px;
+  position: fixed;
+  top: 30px;
+  left: 0;
+  right: 0;
+  margin: auto;
+  width: 250px;
 }
 
-.hp-login-container{
-    width: 350px;
-    position: absolute;
-    margin: auto;
-    left: 0;
-    right:0;
-    margin-top: 20px;
+.hp-login-container {
+  width: 350px;
+  position: absolute;
+  margin: auto;
+  left: 0;
+  right: 0;
+  margin-top: 20px;
 }
 
 .hp-content {
-    top: 40%;
-    margin: auto;
-    text-align: center;
-    position: absolute;
-    left: 0;
-    right: 0;
-    font-family: "Source Code Pro", monospace;
+  top: 40%;
+  margin: auto;
+  text-align: center;
+  position: absolute;
+  left: 0;
+  right: 0;
+  font-family: "Source Code Pro", monospace;
 }
 .hp-body-container,
-.hp-body{
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
+.hp-body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 .content__heading {
-    margin-bottom: 24px;
-    color: #272727;
-    font-size: 44px;
+  margin-bottom: 24px;
+  color: #272727;
+  font-size: 44px;
 }
 
 .hp-tagline {
-    margin-bottom: 24px;
-    color: #ccd2d6;
-    font-size: 22px;
-    width: 305px;
-    left: 0;
-    right: 0;
-    margin: auto;
+  margin-bottom: 24px;
+  color: #ccd2d6;
+  font-size: 22px;
+  width: 305px;
+  left: 0;
+  right: 0;
+  margin: auto;
 }
 
-.hp-overlay{
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 2;
-    position: absolute;
-
+.hp-overlay {
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2;
+  position: absolute;
 }
 
 .hp-field-margin-0 {
-    margin-bottom: 0!important;
+  margin-bottom: 0 !important;
 }
 
 .hp-forgot-pass-container {
-    width: 350px;
-    color: white;
-    padding: 30px;
+  width: 350px;
+  color: white;
+  padding: 30px;
 }
 .hp-forgot-pass-container a {
-    background: rgba(0, 0, 0, 0.5);
-    padding: 5px 15px;
-    margin: 0 5px;
-    border-radius: 2px;
-    color: #21ba45;
-    cursor: pointer;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 5px 15px;
+  margin: 0 5px;
+  border-radius: 2px;
+  color: #21ba45;
+  cursor: pointer;
 }
 
 .hp-forgot-pass-container a:hover {
@@ -81,27 +79,27 @@
   opacity: 0.7;
 }
 
-.hp-login-container form .ui input[name=email],
-.hp-login-container form .ui input[name=email]:focus{
-    border-radius: 5px 5px 0 0;
+.hp-login-container form .ui input[name="email"],
+.hp-login-container form .ui input[name="email"]:focus {
+  border-radius: 5px 5px 0 0;
 }
-.hp-login-container form .ui input[name=password],
-.hp-login-container form .ui input[name=password]:focus{
-    border-radius: 0 0 5px 5px;
+.hp-login-container form .ui input[name="password"],
+.hp-login-container form .ui input[name="password"]:focus {
+  border-radius: 0 0 5px 5px;
 }
 
 .mediate-intro-video {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    z-index: 1;
-    min-width: 100%;
-    min-height: 100%;
-    width: auto;
-    height: auto;
-    -webkit-transform: translate(-50%, -50%);
-    -ms-transform: translate(-50%, -50%);
-    transform: translate(-50%, -50%);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  -webkit-transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
 }
 
 .login-form-field {
@@ -125,15 +123,18 @@
   font-family: "Source Code Pro", monospace !important;
 }
 
-.login-error .header, .signup-error .header {
+.login-error .header,
+.signup-error .header {
   font-family: "Source Code Pro", monospace !important;
 }
 
-.login-error.show, .signup-error.show {
+.login-error.show,
+.signup-error.show {
   display: block;
 }
 
-.login-error.hide, .signup-error.hide {
+.login-error.hide,
+.signup-error.hide {
   display: none;
 }
 
@@ -275,8 +276,10 @@
   border: none !important;
 }
 
-.admin-main-form .header, .admin-main-form .form > .field > label {
+.admin-main-form .header,
+.admin-main-form .form > .field > label {
   color: #fff !important;
+  font-family: "Source Code Pro", monospace;
 }
 
 .admin-menu {
@@ -287,4 +290,78 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+}
+
+.admin-list-label {
+  background: none !important;
+  color: #ccc !important;
+  border: 1px solid #ccc !important;
+}
+
+.admin-upload-label {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: block;
+  white-space: nowrap;
+  max-width: 200px;
+  display: block !important;
+}
+
+.admin-list > .item {
+  padding: 10px 0px 10px 0px !important;
+  font-family: "Source Code Pro", monospace;
+}
+
+.admin-content-container {
+  background: #000 !important;
+}
+
+.admin-select-dropdown > .ui.selection.dropdown:hover {
+  border: 1px solid #323232;
+  color: #fff !important;
+}
+
+.admin-select-dropdown > .ui.selection.dropdown {
+  background: none !important;
+  border: 1px solid #323232;
+  color: #ccc !important;
+  font-family: "Source Code Pro", monospace;
+}
+
+.admin-select-dropdown * .menu.transition {
+  background: #1b1b1b !important;
+}
+
+.admin-select-dropdown * .menu.transition > .item {
+  color: #fff !important;
+  border-top: 1px solid #323232 !important;
+}
+
+.admin-select-dropdown * .menu.transition > .item:hover {
+  background: #323232 !important;
+}
+
+.admin-form-content * .button, .admin-form-content * .label {
+  font-family: "Source Code Pro", monospace !important;
+}
+
+/*** Admin Converter ***/
+.admin-form-content * .three-converter-form {
+  margin: 0% 2% 0% 2%;
+  border: 2px solid #1b1b1b;
+  border-radius: 0.3em;
+  padding: 20px;
+}
+
+.three-converter-container-no-save {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-content: center;
+}
+
+.three-converter-restart-button {
+  z-index: 1001;
+  position: relative;
+  background-color: #66da81 !important;
 }

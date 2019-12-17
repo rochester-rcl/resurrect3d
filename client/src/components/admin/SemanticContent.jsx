@@ -6,7 +6,10 @@ import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 
 import * as ActionCreators from "../../actions/ThreeViewActions";
-import uniqueId from "lodash/uniqueId";
+import ConverterContainer from "../../containers/converter/ConverterContainer";
+
+import lodash from "lodash";
+
 import {
   Button,
   Checkbox,
@@ -71,7 +74,8 @@ class SemanticContent extends React.Component {
     open: false,
     setOpen: false,
     isUpdate: false,
-    _id: null
+    _id: null,
+    showConversionTool: false
   };
   constructor(props: Object) {
     super(props);
@@ -129,6 +133,14 @@ class SemanticContent extends React.Component {
       default:
         console.log(event.target.name);
     }
+  };
+
+  handleMeshConverted = threeFile => {
+    this.setState({
+      threeFileUpload: threeFile,
+      threeFileCancel: false,
+      threeFile: threeFile.name
+    });
   };
 
   handleEnableChange = (event, { name, value }) => {
@@ -204,20 +216,25 @@ class SemanticContent extends React.Component {
     const { threeFileUpload, skyboxUpload, threeThumbnailUpload } = this.state;
     const needsUpdate = {};
     if (this.isUploadFile(threeFileUpload)) {
-      needsUpdate.threeFileUpload = threeFileUpload;
+      needsUpdate.threeFile = threeFileUpload;
     }
     if (this.isUploadFile(skyboxUpload)) {
-      needsUpdate.skyboxUpload = { file: skyboxUpload };
+      needsUpdate.skybox = { file: skyboxUpload };
     }
     if (this.isUploadFile(threeThumbnailUpload)) {
-      needsUpdate.threeThumbnailUpload = threeThumbnailUpload;
+      needsUpdate.threeThumbnail = threeThumbnailUpload;
     }
-    console.log(needsUpdate);
     return needsUpdate;
-  }
+  };
+
+  toggleConversionTool = () => {
+    this.setState(prevState => ({
+      ...prevState,
+      showConversionTool: !prevState.showConversionTool
+    }));
+  };
 
   handleUpdate = () => {
-    
     const view = {
       enableLight: this.state.enableLight,
       enableMaterials: this.state.enableMaterials,
@@ -226,7 +243,7 @@ class SemanticContent extends React.Component {
       modelUnits: this.state.modelUnits,
       _id: this.state._id
     };
-    const updated = {...view, ...this.filesNeedUpdate()}
+    const updated = { ...view, ...this.filesNeedUpdate() };
     this.props.updateView(updated);
     this.setState(prevState => ({
       ...prevState,
@@ -235,9 +252,8 @@ class SemanticContent extends React.Component {
   };
 
   render() {
-    const { isUpdate } = this.state;
+    const { isUpdate, showConversionTool } = this.state;
     const entries = Object.entries(this.props.views);
-
     const list = entries.map(obj => (
       <Segment inverted key={obj[1]._id}>
         <Button.Group>
@@ -255,15 +271,55 @@ class SemanticContent extends React.Component {
             <Icon size="large" name="remove circle" />
           </Button>
         </Button.Group>
-        <List>
-          <List.Item>{obj[1].threeFile}</List.Item>
-          <List.Item>{obj[1].threeThumbnail}</List.Item>
-          <List.Item>{obj[1].enableLight.toString()}</List.Item>
-          <List.Item>{obj[1].enableMaterials.toString()}</List.Item>
-          <List.Item>{obj[1].enableShaders.toString()}</List.Item>
-          <List.Item>{obj[1].enableMeasurement.toString()}</List.Item>
-          <List.Item>{obj[1].modelUnits}</List.Item>
-          <List.Item>{obj[1].skybox.file}</List.Item>
+        <List className="admin-list" inverted divided>
+          <List.Item>
+            <Label className="admin-list-label" horizontal>
+              three.js file
+            </Label>
+            {obj[1].threeFile}
+          </List.Item>
+          <List.Item>
+            <Label className="admin-list-label" horizontal>
+              thumbnail
+            </Label>
+            {obj[1].threeThumbnail}
+          </List.Item>
+          <List.Item>
+            <Label className="admin-list-label" horizontal>
+              skybox
+            </Label>
+            {obj[1].skybox.file}
+          </List.Item>
+          <List.Item>
+            <Label className="admin-list-label" horizontal>
+              light tools
+            </Label>
+            {obj[1].enableLight.toString()}
+          </List.Item>
+          <List.Item>
+            <Label className="admin-list-label" horizontal>
+              material tools
+            </Label>
+            {obj[1].enableMaterials.toString()}
+          </List.Item>
+          <List.Item>
+            <Label className="admin-list-label" horizontal>
+              shader tools
+            </Label>
+            {obj[1].enableShaders.toString()}
+          </List.Item>
+          <List.Item>
+            <Label className="admin-list-label" horizontal>
+              measurement tools
+            </Label>
+            {obj[1].enableMeasurement.toString()}
+          </List.Item>
+          <List.Item>
+            <Label className="admin-list-label" horizontal>
+              model units
+            </Label>
+            {obj[1].modelUnits}
+          </List.Item>
         </List>
       </Segment>
     ));
@@ -302,10 +358,10 @@ class SemanticContent extends React.Component {
                             <Icon name="cloud upload" />
                           </Button.Content>
                         </Button>
-                        <Label as="span" basic pointing="left">
+                        <Label className="admin-upload-label" basic pointing="left">
                           {this.state.threeFile != ""
                             ? this.state.threeFile
-                            : "no threeFile upload"}
+                            : "Select three.js File"}
                         </Label>
                         <input
                           ref={this.threeFileRef}
@@ -315,6 +371,13 @@ class SemanticContent extends React.Component {
                           onChange={this.handleFileUpload}
                           accept=".json,.gz"
                         />
+                      </Button>
+                      <Button
+                        onClick={this.toggleConversionTool}
+                        icon
+                        color="grey"
+                      >
+                        <Icon size="large" name="cube" />
                       </Button>
                       <Button
                         onClick={() => this.handleFileDiscard("threeFile")}
@@ -341,10 +404,10 @@ class SemanticContent extends React.Component {
                             <Icon name="cloud upload" />
                           </Button.Content>
                         </Button>
-                        <Label as="span" basic pointing="left">
+                        <Label className="admin-upload-label" basic pointing="left">
                           {this.state.threeThumbnail != ""
                             ? this.state.threeThumbnail
-                            : "no threeThumbnail upload"}
+                            : "Select Thumbnail"}
                         </Label>
                         <input
                           ref={this.threeThumbnailRef}
@@ -380,10 +443,10 @@ class SemanticContent extends React.Component {
                             <Icon name="cloud upload" />
                           </Button.Content>
                         </Button>
-                        <Label as="span" basic pointing="left">
+                        <Label className="admin-upload-label" basic pointing="left">
                           {this.state.skybox != ""
                             ? this.state.skybox
-                            : "no skybox upload"}
+                            : "Select Skybox"}
                         </Label>
                         <input
                           ref={this.skyboxRef}
@@ -407,7 +470,8 @@ class SemanticContent extends React.Component {
 
                   <Form.Field
                     control={Select}
-                    label="enableLight"
+                    className="admin-select-dropdown"
+                    label="Enable Light Tools"
                     name="enableLight"
                     value={this.state.enableLight}
                     onChange={this.handleEnableChange}
@@ -417,7 +481,8 @@ class SemanticContent extends React.Component {
 
                   <Form.Field
                     control={Select}
-                    label="enableShaders"
+                    className="admin-select-dropdown"
+                    label="Enable Shader Tools"
                     name="enableShaders"
                     value={this.state.enableShaders}
                     onChange={this.handleEnableChange}
@@ -427,7 +492,8 @@ class SemanticContent extends React.Component {
 
                   <Form.Field
                     control={Select}
-                    label="enableMaterials"
+                    className="admin-select-dropdown"
+                    label="Enable Material Tools"
                     name="enableMaterials"
                     value={this.state.enableMaterials}
                     onChange={this.handleEnableChange}
@@ -437,7 +503,8 @@ class SemanticContent extends React.Component {
 
                   <Form.Field
                     control={Select}
-                    label="enableMeasurement"
+                    className="admin-select-dropdown"
+                    label="Enable Measurement Tools"
                     name="enableMeasurement"
                     value={this.state.enableMeasurement}
                     onChange={this.handleEnableChange}
@@ -447,7 +514,8 @@ class SemanticContent extends React.Component {
 
                   <Form.Field
                     control={Select}
-                    label="Select measurement"
+                    className="admin-select-dropdown"
+                    label="Original Model Units"
                     name="modelUnits"
                     value={this.state.modelUnits}
                     onChange={this.handleEnableChange}
@@ -463,7 +531,14 @@ class SemanticContent extends React.Component {
             </Sticky>
           </Grid.Column>
           <Grid.Column width={10}>
-            <Visibility className="admin-views-list">{list}</Visibility>
+            {!showConversionTool ? (
+              <Visibility className="admin-views-list">{list}</Visibility>
+            ) : (
+              <ConverterContainer
+                onConversionComplete={this.handleMeshConverted}
+                disable
+              />
+            )}
           </Grid.Column>
         </Grid>
       </div>
@@ -487,4 +562,3 @@ export default connect(
   mapStateToProps,
   mapActionCreatorsToProps
 )(SemanticContent);
-
