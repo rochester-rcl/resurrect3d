@@ -22,3 +22,5 @@ client/public/*.js
 client/public/*.jpg
 client/public/*.png
 server/config.js
+server/email.json
+server/privatekey.json

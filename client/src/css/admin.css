@@ -259,3 +259,32 @@
 .three-admin-home-link:hover {
   opacity: 0.8;
 }
+
+/*** Famous' UI ***/
+
+.admin-form-container {
+  background: #000 !important;
+}
+
+.admin-views-list {
+  background: #000 !important;
+}
+
+.admin-form-content {
+  background: #000 !important;
+  border: none !important;
+}
+
+.admin-main-form .header, .admin-main-form .form > .field > label {
+  color: #fff !important;
+}
+
+.admin-menu {
+  background: #000 !important;
+}
+
+.update-view-header-container {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
