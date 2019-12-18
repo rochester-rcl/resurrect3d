@@ -20,22 +20,32 @@ class LoginContainer extends Component {
   }
 
   render() {
-    const { loginError, loggedIn, loginUser, addUser, info } = this.props;
+    const {
+      loginError,
+      loggedIn,
+      loginUser,
+      addUser,
+      info,
+      onLoginRedirectPath
+    } = this.props;
     return (
       <div className="hp-body-container">
         <div className="hp-overlay">
           <div className="hp-content">
-            <p className="hp-tagline">
-              Some great tagline about 3D stuff
-            </p>
+            <p className="hp-tagline">Some great tagline about 3D stuff</p>
             <div className="hp-login-container">
               <Login
                 loginError={loginError}
                 loggedIn={loggedIn}
                 loginUser={loginUser}
+                onLoginRedirectPath={onLoginRedirectPath}
               />
               <div className="hp-forgot-pass-container">
-                <AdminSignUpModal trigger={<a>sign up</a>} signUpUser={addUser} status={info.email !== undefined} />
+                <AdminSignUpModal
+                  trigger={<a>sign up</a>}
+                  signUpUser={addUser}
+                  status={info.email !== undefined}
+                />
               </div>
             </div>
           </div>
@@ -45,16 +55,17 @@ class LoginContainer extends Component {
   }
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state, ownProps) {
+  const ownState = ownProps.location.state;
   return {
     loggedIn: state.user.loggedIn,
     loginError: state.user.loginError,
     info: state.user.info,
+    onLoginRedirectPath: ownState ? ownState.from : null
   };
 }
 
 //donot connect to store
-export default connect(
-  mapStateToProps,
-  { loginUser, authenticate, addUser }
-)(LoginContainer);
+export default connect(mapStateToProps, { loginUser, authenticate, addUser })(
+  LoginContainer
+);

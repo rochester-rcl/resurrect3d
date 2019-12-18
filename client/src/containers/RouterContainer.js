@@ -57,6 +57,7 @@ class RouterContainer extends Component {
 
   authenticateRoute(props: Object, component: Component) {
     const { user } = this.props;
+    const { location } = props;
     const { authenticateAttempted } = user;
     if (user.loggedIn !== false) {
       return this._element(component, props, null);
@@ -66,7 +67,15 @@ class RouterContainer extends Component {
         return <AuthenticatingLoader />;
       } else {
         // Need to use process.env
-        return <Redirect to={BASENAME + "/admin/login"} />;
+        return (
+          <Redirect
+            from={location.pathname}
+            to={{
+              pathname: BASENAME + "/admin/login",
+              state: { from: location.pathname }
+            }}
+          />
+        );
       }
     }
   }
@@ -128,35 +137,65 @@ class RouterContainer extends Component {
       );
     } else {
       return (
-          <Router basename={BASENAME}>
-            <div className="three-router">
-              <Route path="/models/:id" render={(props) => this.authenticateRouteWithoutRedirect(props, App)} />
-              {/*<AdminMenu active={user.loggedIn} />*/}
-              <Route path="/admin/login" component={LoginContainer} />
-              <Route path="/admin/logout" component={LogoutContainer} />
-              <Route path="/admin/verify/:token" component={VerifyUserContainer} />
-              <Route path="/admin/account" render={(props) => this.authenticateRoute(props, AccountContainer)} />
-              <Route path="/admin/add" render={(props) => this.authenticateRoute(props, ViewForm)} />
-              <Route path="/admin/views" render={(props) => this.authenticateRoute(props, ThreeViews)} />
-              <Route path="/admin/container" render={(props) => this.authenticateRoute(props, AdminContainer)} />
-              <Route path="/admin/paperbase" render={(props) => this.authenticateRoute(props, Paperbase)} />
-              <Route path="/admin/semanticBase" render={(props) => this.authenticateRoute(props, SemanticBase)} />
-              <Route path="/admin/view/:id" render={(props) => this.authenticateRoute(props, ThreeViewDetails)} />
-              <Route
-                path="/converter"
-                render={props => (
-                  <ConverterContainer conversionType={CONVERSION_TYPE_MESH} />
-                )}
-              />
-              <Route
-                path="/ptm-converter"
-                render={props => (
-                  <ConverterContainer conversionType={CONVERSION_TYPE_RTI} />
-                )}
-              />
-            </div>
-          </Router>
-        );
+        <Router basename={BASENAME}>
+          <div className="three-router">
+            <Route exact path="/" component={LoginContainer} />
+            <Route
+              path="/models/:id"
+              render={props =>
+                this.authenticateRouteWithoutRedirect(props, App)
+              }
+            />
+            {/*<AdminMenu active={user.loggedIn} />*/}
+            <Route path="/admin/login" component={LoginContainer} />
+            <Route path="/admin/logout" component={LogoutContainer} />
+            <Route
+              path="/admin/verify/:token"
+              component={VerifyUserContainer}
+            />
+            <Route
+              path="/admin/account"
+              render={props => this.authenticateRoute(props, AccountContainer)}
+            />
+            <Route
+              path="/admin/add"
+              render={props => this.authenticateRoute(props, ViewForm)}
+            />
+            <Route
+              path="/admin/views"
+              render={props => this.authenticateRoute(props, ThreeViews)}
+            />
+            <Route
+              path="/admin/container"
+              render={props => this.authenticateRoute(props, AdminContainer)}
+            />
+            <Route
+              path="/admin/paperbase"
+              render={props => this.authenticateRoute(props, Paperbase)}
+            />
+            <Route
+              path="/admin/models"
+              render={props => this.authenticateRoute(props, SemanticBase)}
+            />
+            <Route
+              path="/admin/view/:id"
+              render={props => this.authenticateRoute(props, ThreeViewDetails)}
+            />
+            <Route
+              path="/converter"
+              render={props => (
+                <ConverterContainer conversionType={CONVERSION_TYPE_MESH} />
+              )}
+            />
+            <Route
+              path="/ptm-converter"
+              render={props => (
+                <ConverterContainer conversionType={CONVERSION_TYPE_RTI} />
+              )}
+            />
+          </div>
+        </Router>
+      );
     }
   }
 }
@@ -167,7 +206,4 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
-export default connect(
-  mapStateToProps,
-  { authenticate }
-)(RouterContainer);
+export default connect(mapStateToProps, { authenticate })(RouterContainer);

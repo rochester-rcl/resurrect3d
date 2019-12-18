@@ -68,7 +68,7 @@ export default class Login extends Component {
 
   render() {
     const { password, showPassword } = this.state;
-    const { loginError, loggedIn } = this.props;
+    const { loginError, loggedIn, onLoginRedirectPath } = this.props;
     let messageClass = "login-error ";
     messageClass += loginError === true ? "show" : "hide";
     if (loggedIn === false) {
@@ -123,7 +123,8 @@ export default class Login extends Component {
       );
     } else {
       // likely need to use process info here to properly redirect when building
-      return <Redirect to={BASENAME + "/admin/views"} />;
+      const redirectPath = onLoginRedirectPath ? onLoginRedirectPath : "/admin/models";
+      return <Redirect to={redirectPath} />;
     }
   }
 }

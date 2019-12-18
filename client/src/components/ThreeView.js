@@ -125,7 +125,7 @@ export default class ThreeView extends Component {
   // Controls
   rotateSpeed: Number = 0.4;
   zoomSpeed: Number = 0.9;
-  dampingFactor: Number = 0.4;
+  dampingFactor: Number = 0.2;
 
   // Rendering
   webGLRenderer: THREE.WebGLRenderer;

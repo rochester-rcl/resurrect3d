@@ -149,12 +149,12 @@ export default class ConverterForm extends Component {
 
   renderGroup(group: Object): Form.Group {
     return (
-      <Form.Group className="three-converter-form-group">
+      <Form.Group fluid className="three-converter-form-group">
         {Object.keys(group).map((key, index) => {
           let field = group[key];
           return (
             <Form.Input
-              fluid
+             
               className="three-converter-form-field"
               label={field.label}
               type={field.type}

@@ -295,7 +295,7 @@
 .admin-list-label {
   background: none !important;
   color: #ccc !important;
-  border: 1px solid #ccc !important;
+  border: 1px solid #323232 !important;
 }
 
 .admin-upload-label {
@@ -303,7 +303,14 @@
   overflow: hidden;
   display: block;
   white-space: nowrap;
-  max-width: 200px;
+  display: block !important;
+}
+
+.admin-file-upload-header {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: block;
+  white-space: nowrap;
   display: block !important;
 }
 
@@ -316,9 +323,34 @@
   background: #000 !important;
 }
 
+.admin-main-form-field {
+  padding: 10px;
+  border: 1px solid #323232;
+  border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.admin-select-text-input > .input input {
+  background: none !important;
+  border: 1px solid #323232 !important;
+  font-family: "Source Code Pro", monospace !important;
+  color: #ccc !important;
+}
+
 .admin-select-dropdown > .ui.selection.dropdown:hover {
   border: 1px solid #323232;
   color: #fff !important;
+}
+
+.admin-select-dropdown * .default.text {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: block;
+  white-space: nowrap;
+  display: block !important;
 }
 
 .admin-select-dropdown > .ui.selection.dropdown {
@@ -343,6 +375,11 @@
 
 .admin-form-content * .button, .admin-form-content * .label {
   font-family: "Source Code Pro", monospace !important;
+}
+
+.admin-button-group, .admin-list-button-group {
+  display: flex;
+  flex-wrap: wrap;
 }
 
 /*** Admin Converter ***/

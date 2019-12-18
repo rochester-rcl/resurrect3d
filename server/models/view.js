@@ -3,6 +3,12 @@ var Schema = mongoose.Schema;
 const UserSchema = require('./user');
 
 var viewSchema = new Schema({
+  
+  displayName: {
+    type: String,
+    required: false
+  },
+
   threeFile:{
     type: String,
     required: true

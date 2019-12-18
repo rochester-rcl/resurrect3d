@@ -64,12 +64,12 @@ class SemanticBase extends React.Component {
           Home
         </Menu.Item>
         <Menu.Item as="a">
-          <Icon name="gamepad" />
-          Games
+          <Icon name="address card outline" />
+          Account
         </Menu.Item>
         <Menu.Item as="a">
-          <Icon name="camera" />
-          Channels
+          <Icon name="window close outline" />
+          Logout
         </Menu.Item>
       </Sidebar>
     );
@@ -104,7 +104,6 @@ class SemanticBase extends React.Component {
           className="admin-content-container"
         >
           <Segment basic inverted className="admin-form-container">
-            <Divider inverted horizontal>My Files</Divider>
             <Menu
               className="admin-menu"
               inverted
@@ -115,12 +114,14 @@ class SemanticBase extends React.Component {
               <Menu.Menu position="right">
                 <Menu.Item>
                   <Button circular basic icon onClick={this.handleSidebar}>
-                    <Icon name="content" />
+                    <Icon name="content" color="grey" />
                   </Button>
                 </Menu.Item>
               </Menu.Menu>
             </Menu>
-
+            <Divider inverted horizontal>
+              My Models
+            </Divider>
             <Segment inverted className="admin-form-content" attached="bottom">
               <SemanticContent />
             </Segment>
@@ -147,4 +148,3 @@ function mapActionCreatorsToProps(dispatch) {
 }
 
 export default connect(mapStateToProps, mapActionCreatorsToProps)(SemanticBase);
-

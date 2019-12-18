@@ -60,44 +60,48 @@ exports.getFile = (req, res) => {
     }
   });
 };
-
+// TODO should probably have some sort of parameter or 
+// something to make this for admin only - in the future we will have a browse feature that will require everything
 exports.findAllViews = (req, res) => {
-  View.find({})
-    .exec( (err, views) => {
-      if (err){
-        return res.status(500).json({
-          message: "Could not find views: Error[ " +err +" ]"
-        });
-      }
-    return res.status(200).json({views: views});
+  const query = {};
+  if (req.user) {
+    query.createdBy = req.user.id;
+  }
+  View.find(query).exec((err, views) => {
+    if (err) {
+      return res.status(500).json({
+        message: "Could not find views: Error[ " + err + " ]"
+      });
+    }
+    return res.status(200).json({ views: views });
     //console.log("View(s) successfully read");
   });
 };
 
 exports.addView = (req, res) => {
-  console.log('req.body: ', req.body);
-  console.log('req.files:' , req.files);
-  console.log('req.file:' , req.file);
-   if (!req.files) {
-       console.log('No files to upload.');
-       return;
-   }
+  if (!req.files) {
+    console.log("No files to upload.");
+    return;
+  }
 
   const { threeFile, threeThumbnail, skybox__file } = req.files;
 
   const newView = new View({
+    displayName: req.body.displayName,
     threeFile: threeFile !== undefined ? threeFile[0].filename : null,
     threeThumbnail:
       threeThumbnail !== undefined ? threeThumbnail[0].filename : null,
-    skybox: { file: skybox__file !== undefined ? skybox__file[0].filename : null },
+    skybox: {
+      file: skybox__file !== undefined ? skybox__file[0].filename : null
+    },
     enableLight: req.body.enableLight,
     enableMaterials: req.body.enableMaterials,
     enableShaders: req.body.enableShaders,
     enableMeasurement: req.body.enableMeasurement,
     enableDownload: req.body.enableDownload,
-    modelUnits: req.body.modelUnits
+    modelUnits: req.body.modelUnits,
+    createdBy: req.user.id
   });
-  console.log(newView);
   newView.save((err, view) => {
     if (err) res.send(err);
     res.json(view);
@@ -218,6 +222,7 @@ exports.updateView = (req, res) => {
         }).then(() => {
           const newView = new View({
             _id: req.params.id,
+            displayName: body.displayName,
             threeFile: threeFileBool
               ? req.files.threeFile[0].filename
               : req.body.threeFile,
@@ -234,7 +239,8 @@ exports.updateView = (req, res) => {
             enableShaders: body.enableShaders,
             enableMeasurement: body.enableMeasurement,
             enableDownload: body.enableDownload,
-            modelUnits: body.modelUnits
+            modelUnits: body.modelUnits,
+            createdBy: req.user.id
           });
 
           //console.log(newView);

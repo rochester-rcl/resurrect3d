@@ -8,7 +8,7 @@ import { bindActionCreators } from "redux";
 import * as ActionCreators from "../../actions/ThreeViewActions";
 import ConverterContainer from "../../containers/converter/ConverterContainer";
 
-import lodash from "lodash";
+import { Link } from "react-router-dom";
 
 import {
   Button,
@@ -22,11 +22,13 @@ import {
   Image,
   Menu,
   Segment,
+  Input,
   Select,
   Sticky,
   Label,
   List,
-  Visibility
+  Visibility,
+  Divider
 } from "semantic-ui-react";
 
 class SemanticContent extends React.Component {
@@ -70,6 +72,7 @@ class SemanticContent extends React.Component {
     enableShaders: "",
     enableMeasurement: "",
     modelUnits: "",
+    displayName: "",
 
     open: false,
     setOpen: false,
@@ -97,7 +100,7 @@ class SemanticContent extends React.Component {
 
   handleVisablityUpdate = (e, { calculations }) =>
     this.setState({ calculations });
-
+    
   editView(view) {
     const { viewerSettings, __v, skybox, ...rest } = view;
     rest.isUpdate = true;
@@ -142,9 +145,12 @@ class SemanticContent extends React.Component {
       threeFile: threeFile.name
     });
   };
-
+  // TODO change this
   handleEnableChange = (event, { name, value }) => {
     switch (name) {
+      case "displayName":
+        this.setState({ [name]: value });
+        break;
       case "enableLight":
         this.setState({ [name]: value });
         break;
@@ -161,7 +167,7 @@ class SemanticContent extends React.Component {
         this.setState({ [name]: value });
         break;
       default:
-        console.log(name);
+        break;
     }
   };
 
@@ -192,6 +198,7 @@ class SemanticContent extends React.Component {
 
   handleSubmit = () => {
     const view = {
+      displayName: this.state.displayName,
       threeFile: this.state.threeFileUpload,
       threeThumbnail: this.state.threeThumbnailUpload,
       skybox: { file: this.state.skyboxUpload },
@@ -199,7 +206,7 @@ class SemanticContent extends React.Component {
       enableMaterials: this.state.enableMaterials,
       enableShaders: this.state.enableShaders,
       enableMeasurement: this.state.enableMeasurement,
-      modelUnits: this.state.modelUnits
+      modelUnits: this.state.modelUnits,
     };
     this.props.addView(view);
     this.setState(prevState => ({
@@ -236,6 +243,7 @@ class SemanticContent extends React.Component {
 
   handleUpdate = () => {
     const view = {
+      displayName: this.state.displayName,
       enableLight: this.state.enableLight,
       enableMaterials: this.state.enableMaterials,
       enableShaders: this.state.enableShaders,
@@ -256,10 +264,20 @@ class SemanticContent extends React.Component {
     const entries = Object.entries(this.props.views);
     const list = entries.map(obj => (
       <Segment inverted key={obj[1]._id}>
-        <Button.Group>
-          <Label as="span" basic>
-            {obj[1]._id}
-          </Label>
+        <Header as="h5">
+            {obj[1].displayName ? obj[1].displayName : obj[1]._id}
+          </Header>
+        <Button.Group className="admin-list-button-group">
+          
+          <Button
+            as={Link}
+            to={`/models/${obj[1]._id}`}
+            target="_blank"
+            icon
+            color="white"
+          >
+            <Icon size="large" name="eye" />
+          </Button>
           <Button onClick={() => this.editView(obj[1])} icon color="grey">
             <Icon size="large" name="pencil" />
           </Button>
@@ -326,43 +344,49 @@ class SemanticContent extends React.Component {
     const addButton = <Button onClick={this.resetAddForm}>Add New</Button>;
     return (
       <div ref={this.handleContextRef}>
-        <Grid centered={true} stackable columns={2}>
+        <Grid centered={true} columns={2}>
           <Grid.Column width={6}>
             <Sticky
               className="admin-main-form-sticky"
               context={this.state.context}
             >
-              <Segment inverted className="admin-main-form">
+              <Segment inverted className="admin-main-form" fluid>
                 <Header>
                   {isUpdate ? (
                     <div className="update-view-header-container">
-                      {"Update View"}
+                      {"Update Model"}
                       {addButton}
                     </div>
                   ) : (
-                    "Add New View"
+                    "Add New Model"
                   )}
                 </Header>
-                <Form className="admin-main-form">
-                  <Form.Field>
-                    <Button.Group>
+                <Form fluid className="admin-main-form">
+                <Form.Field
+                    control={Input}
+                    className="admin-select-text-input"
+                    fluid
+                    label="Display Name"
+                    name="displayName"
+                    value={this.state.displayName}
+                    onChange={this.handleEnableChange}
+                    placeholder="Name"
+                  />
+                  <Divider horizontal inverted> Files </Divider>
+                  <Form.Field className="admin-main-form-field">
+                    <Header as="h5" className="admin-file-upload-header">
+                      {this.state.threeFile != ""
+                        ? this.state.threeFile
+                        : "Select three.js File"}
+                    </Header>
+                    <Button.Group className="admin-button-group">
                       <Button
-                        as="div"
-                        type="button"
-                        labelPosition="right"
+                        className="admin-button-group-button"
+                        icon
+                        title="Open File"
                         onClick={() => this.threeFileRef.current.click()}
                       >
-                        <Button animated="fade">
-                          <Button.Content visible>Upload</Button.Content>
-                          <Button.Content hidden>
-                            <Icon name="cloud upload" />
-                          </Button.Content>
-                        </Button>
-                        <Label className="admin-upload-label" basic pointing="left">
-                          {this.state.threeFile != ""
-                            ? this.state.threeFile
-                            : "Select three.js File"}
-                        </Label>
+                        <Icon name="folder outline" size="large" />
                         <input
                           ref={this.threeFileRef}
                           type="file"
@@ -373,15 +397,21 @@ class SemanticContent extends React.Component {
                         />
                       </Button>
                       <Button
+                        className="admin-button-group-button"
                         onClick={this.toggleConversionTool}
                         icon
+                        title="Open Converter"
                         color="grey"
                       >
-                        <Icon size="large" name="cube" />
+                        <Icon
+                          size="large"
+                          name={showConversionTool ? "list" : "cube"}
+                        />
                       </Button>
                       <Button
                         onClick={() => this.handleFileDiscard("threeFile")}
                         icon
+                        title="Discard File"
                         disabled={this.state.threeFileCancel}
                         color="red"
                       >
@@ -389,26 +419,20 @@ class SemanticContent extends React.Component {
                       </Button>
                     </Button.Group>
                   </Form.Field>
-
-                  <Form.Field>
-                    <Button.Group>
+                  <Form.Field className="admin-main-form-field">
+                    <Header as="h5" className="admin-file-upload-header">
+                      {this.state.threeThumbnail != ""
+                        ? this.state.threeThumbnail
+                        : "Select Thumbnail"}
+                    </Header>
+                    <Button.Group className="admin-button-group">
                       <Button
-                        as="div"
-                        type="button"
-                        labelPosition="right"
+                        className="admin-button-group-button"
+                        icon
+                        title="Open File"
                         onClick={() => this.threeThumbnailRef.current.click()}
                       >
-                        <Button animated="fade">
-                          <Button.Content visible>Upload</Button.Content>
-                          <Button.Content hidden>
-                            <Icon name="cloud upload" />
-                          </Button.Content>
-                        </Button>
-                        <Label className="admin-upload-label" basic pointing="left">
-                          {this.state.threeThumbnail != ""
-                            ? this.state.threeThumbnail
-                            : "Select Thumbnail"}
-                        </Label>
+                        <Icon size="large" name="folder outline" />
                         <input
                           ref={this.threeThumbnailRef}
                           type="file"
@@ -421,6 +445,7 @@ class SemanticContent extends React.Component {
                       <Button
                         onClick={() => this.handleFileDiscard("threeThumbnail")}
                         icon
+                        title="Discard File"
                         disabled={this.state.threeThumbnailCancel}
                         color="red"
                       >
@@ -429,25 +454,20 @@ class SemanticContent extends React.Component {
                     </Button.Group>
                   </Form.Field>
 
-                  <Form.Field>
-                    <Button.Group>
+                  <Form.Field className="admin-main-form-field">
+                    <Header as="h5" className="admin-file-upload-header">
+                      {this.state.skybox != ""
+                        ? this.state.skybox
+                        : "Select Skybox"}
+                    </Header>
+                    <Button.Group className="admin-button-group">
                       <Button
-                        as="div"
-                        type="button"
-                        labelPosition="right"
+                        className="admin-button-group-button"
+                        icon
+                        title="Open File"
                         onClick={() => this.skyboxRef.current.click()}
                       >
-                        <Button animated="fade">
-                          <Button.Content visible>Upload</Button.Content>
-                          <Button.Content hidden>
-                            <Icon name="cloud upload" />
-                          </Button.Content>
-                        </Button>
-                        <Label className="admin-upload-label" basic pointing="left">
-                          {this.state.skybox != ""
-                            ? this.state.skybox
-                            : "Select Skybox"}
-                        </Label>
+                        <Icon size="large" name="folder outline" />
                         <input
                           ref={this.skyboxRef}
                           type="file"
@@ -460,6 +480,7 @@ class SemanticContent extends React.Component {
                       <Button
                         onClick={() => this.handleFileDiscard("skybox")}
                         icon
+                        title="Discard File"
                         disabled={this.state.skyboxCancel}
                         color="red"
                       >
@@ -467,10 +488,11 @@ class SemanticContent extends React.Component {
                       </Button>
                     </Button.Group>
                   </Form.Field>
-
+                  <Divider horizontal inverted> Settings </Divider>  
                   <Form.Field
                     control={Select}
                     className="admin-select-dropdown"
+                    fluid
                     label="Enable Light Tools"
                     name="enableLight"
                     value={this.state.enableLight}
@@ -482,6 +504,7 @@ class SemanticContent extends React.Component {
                   <Form.Field
                     control={Select}
                     className="admin-select-dropdown"
+                    fluid
                     label="Enable Shader Tools"
                     name="enableShaders"
                     value={this.state.enableShaders}
@@ -493,6 +516,7 @@ class SemanticContent extends React.Component {
                   <Form.Field
                     control={Select}
                     className="admin-select-dropdown"
+                    fluid
                     label="Enable Material Tools"
                     name="enableMaterials"
                     value={this.state.enableMaterials}
@@ -504,6 +528,7 @@ class SemanticContent extends React.Component {
                   <Form.Field
                     control={Select}
                     className="admin-select-dropdown"
+                    fluid
                     label="Enable Measurement Tools"
                     name="enableMeasurement"
                     value={this.state.enableMeasurement}
@@ -515,6 +540,7 @@ class SemanticContent extends React.Component {
                   <Form.Field
                     control={Select}
                     className="admin-select-dropdown"
+                    fluid
                     label="Original Model Units"
                     name="modelUnits"
                     value={this.state.modelUnits}
