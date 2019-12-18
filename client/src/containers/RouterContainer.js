@@ -146,6 +146,10 @@ class RouterContainer extends Component {
                 this.authenticateRouteWithoutRedirect(props, App)
               }
             />
+            <Route
+              path="/embed/:id"
+              render={props => this.embedRoute(props, App)}
+            />
             {/*<AdminMenu active={user.loggedIn} />*/}
             <Route path="/admin/login" component={LoginContainer} />
             <Route path="/admin/logout" component={LogoutContainer} />
