@@ -102,7 +102,7 @@ Texture Import Formats
 - [ ] EXR
 - [ ] DDS
 
-Mesh conversion is integrated into the admin interface, but can also be accessed at the */converter*/ route.
+Mesh conversion is integrated into the admin interface, but can also be accessed at the */converter* route.
 
 ![Mesh Conversion Interface](doc/images/admin-conversion-interface.png)
 Mesh -- the mesh input files (OBJ and MTL)
@@ -151,7 +151,7 @@ Models can be viewed at */models/:model_id*. To view a model from the admin inte
 Models can also be embedded via an iframe. To point to an embeddable version of the model, use the route */embed/:model_id*.
 
 ##### NOTE 
-Resurrect3D uses a caching system with Web Workers, and as of right now it needs to be disabled when embedded via an iframe. If you attempt to embed a model without using the */embed route it will cause an error. 
+Resurrect3D uses a caching system with Web Workers, and as of right now it needs to be disabled when embedded via an iframe. If you attempt to embed a model without using the */embed* route it will cause an error. 
 
 #### Saving Tools Settings
 A model's owner can save any of the tool settings (lights, shaders, materials) from the main viewer interface by clicking the *save tool settings* option on the toolbar. Once saved, all of these settings will be loaded when a user views the model.
