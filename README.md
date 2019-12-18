@@ -158,12 +158,15 @@ A model's owner can save any of the tool settings (lights, shaders, materials) f
 
 #### Adding Annotations
 To add annotations to a model, a user must a) be logged in and b) own the model they wish to annotate. When logged in, there will be an additional button under tools -- annotations:
+
 ![Edit Annotations Button](doc/images/edit-annotations-option.png)
 
 When turned on, the user can pick a point on an object and add an annotation. Once the annotation is added, the title and body of the annotation can be edited via their respective text areas:
+
 ![Edit Annotation](doc/images/edit-annotation.png)
 
 The annotation will also appear in the *shortcuts* section of the annotation toolbar:
+
 ![Annotation Shortcuts](doc/images/annotation-shortcuts.png)
 
 From here the annotation can be viewed, saved, or discarded. When more than one annotation is added, the **+** and **-** buttons can be used to change the order in which the annotations appear in *presentation mode*. By selecting the *save camera data* or *save light data* options, the current camera position and light settings *at the time of saving* will be associated with the given annotation. These options can provide more control over how the model is displayed at a certain annotation.
