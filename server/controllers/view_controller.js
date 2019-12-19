@@ -26,8 +26,8 @@ exports.get = (app, upload, conn, Grid) => {
     { name: "skybox", maxcount: 1 }
   ]);
 
-  conn.once("open", () => {
-    gfs = Grid(conn.db, mongoose.mongo);
+  mongoose.connection.on("open", () => {
+    gfs = Grid(mongoose.connection.db, mongoose.mongo);
   });
 };
 

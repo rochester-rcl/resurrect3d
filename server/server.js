@@ -24,7 +24,6 @@ const serverConfig = require('./config');
 const connPromise = mongoose.Promise = global.Promise;
 const conn = mongoose.connect(
   serverConfig.mongoURL,
-  {useMongoClient: true},
   (err) => {
     if (err) {
       console.error('Please make sure Mongodb is installed and running!'); // eslint-disable-line no-console
@@ -33,7 +32,6 @@ const conn = mongoose.connect(
 
     //dummyViewData();
   });
-const connection = mongoose.connection;
 Grid.mongo = mongoose.mongo;
 //const gfs = Grid(connection.db)
 // Create storage engine
