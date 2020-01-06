@@ -733,7 +733,7 @@ export default class ThreeView extends Component {
       frameOfReference: "stage",
       className: "three-controls-button"
     });
-    
+
     controls.addComponent("embed", ThreeEmbed, {
       ...buttonProps,
       className: "three-embed-button",
@@ -2600,13 +2600,9 @@ export default class ThreeView extends Component {
   handleWindowResize(event: Event): void {
     let { clientWidth, clientHeight } = this.webGLRenderer.domElement;
     // we're concerned with client height + client width of our canvas
-    if (!this.state.toolsActive) {
-      this.width = clientWidth;
-      this.height = clientHeight;
-      this.updateRenderSize([this.width, this.height]);
-    } else {
-      this.updateRenderSize([clientWidth, clientHeight]);
-    }
+    this.width = clientWidth;
+    this.height = clientHeight;
+    this.updateRenderSize([this.width, this.height]);
   }
 
   handleKeyDown(event: SyntheticKeyboardEvent): void {

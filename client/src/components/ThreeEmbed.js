@@ -6,6 +6,9 @@ import { Modal, Form, Transition } from "semantic-ui-react";
 
 import { Link } from "react-router-dom";
 
+const hide = 1000;
+const show = 2000;
+
 export default class ThreeEmbed extends Component {
   state = { show: false, embedContent: "", copied: false };
   textRef = createRef();
@@ -13,7 +16,7 @@ export default class ThreeEmbed extends Component {
     const { origin, pathname } = window.location;
     const embedPath = pathname.replace("models", "embed");
     return `<iframe src="${origin +
-      embedPath}" width="500" height="500" frameborder="0"></iframe>`;
+      embedPath}" width="1000" height="1000" allowfullscreen="true" frameborder="0"></iframe>`;
   };
   getFullViewPath = () => {
     const { pathname } = window.location;
@@ -26,7 +29,7 @@ export default class ThreeEmbed extends Component {
       embedContent: this.generateEmbedCode()
     }));
   };
-  updateEmbedContent = (event) => {  
+  updateEmbedContent = event => {
     this.setState(prevState => ({
       embedContent: this.textRef.current.value
     }));
@@ -54,8 +57,6 @@ export default class ThreeEmbed extends Component {
         onClick={this.toggle}
       />
     );
-    const hide = 1000;
-    const show = 2000;
     if (!embedded) {
       return (
         <Modal
