@@ -475,6 +475,29 @@ body {
   cursor: pointer;
 }
 
+/*** Embed Modal ***/
+.three-embed-form * {
+  font-family: "Source Code Pro", monospace !important;
+  color: #fff !important;
+}
+
+.three-embed-form .field textarea {
+  background: #000 !important;
+}
+
+.three-embed-form-copy-container {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  margin-top: 20px;
+}
+
+.three-embed-copy-status {
+  font-family: "Source Code Pro", monospace !important;
+  position: absolute;
+  align-self: flex-end;
+}
+
 /*** Annotations ***/
 .three-annotation-tool-container {
   display: flex;

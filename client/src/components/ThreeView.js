@@ -64,6 +64,7 @@ import ThreeButton from "./ThreeButton";
 import ThreeTools from "./ThreeTools";
 import ThreeScreenshot from "./ThreeScreenshot";
 import ThreeMeshExporter from "./ThreeMeshExporter";
+import ThreeEmbed from "./ThreeEmbed";
 
 // Components
 import ThreeWebVR, { checkVR } from "./webvr/ThreeWebVR";
@@ -731,6 +732,12 @@ export default class ThreeView extends Component {
       onEnterCallback: this.enterVR,
       frameOfReference: "stage",
       className: "three-controls-button"
+    });
+    
+    controls.addComponent("embed", ThreeEmbed, {
+      ...buttonProps,
+      className: "three-embed-button",
+      embedded: this.props.embedded
     });
 
     this.controls = (

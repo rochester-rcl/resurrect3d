@@ -83,6 +83,7 @@ class ThreeContainer extends Component {
           threeViewId={viewerId}
           localAssets={this.props.localAssets}
           changeAnnotationFocus={this.props.changeAnnotationFocus}
+          embedded={this.props.embedded}
         />
       );
     } else {
