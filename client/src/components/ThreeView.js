@@ -481,7 +481,6 @@ export default class ThreeView extends Component {
               onKeyDown={this.handleKeyDown}
               onKeyUp={this.handleKeyUp}
               onContextMenu={event => event.preventDefault()}
-              contentEditable
             />
           </ThreeTouchControls>
         </div>
