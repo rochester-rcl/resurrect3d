@@ -71,6 +71,8 @@ class SemanticContent extends React.Component {
     enableMaterials: "",
     enableShaders: "",
     enableMeasurement: "",
+    enableDownload: "",
+    enableEmbed: "",
     modelUnits: "",
     displayName: "",
 
@@ -147,28 +149,8 @@ class SemanticContent extends React.Component {
   };
   // TODO change this
   handleEnableChange = (event, { name, value }) => {
-    switch (name) {
-      case "displayName":
-        this.setState({ [name]: value });
-        break;
-      case "enableLight":
-        this.setState({ [name]: value });
-        break;
-      case "enableShaders":
-        this.setState({ [name]: value });
-        break;
-      case "enableMaterials":
-        this.setState({ [name]: value });
-        break;
-      case "enableMeasurement":
-        this.setState({ [name]: value });
-        break;
-      case "modelUnits":
-        this.setState({ [name]: value });
-        break;
-      default:
-        break;
-    }
+    // We probably don't need a switch here
+    this.setState({ [name]: value });
   };
 
   handleFileDiscard = target => {
@@ -206,6 +188,8 @@ class SemanticContent extends React.Component {
       enableMaterials: this.state.enableMaterials,
       enableShaders: this.state.enableShaders,
       enableMeasurement: this.state.enableMeasurement,
+      enableDownload: this.state.enableDownload,
+      enableEmbed: this.state.enableEmbed,
       modelUnits: this.state.modelUnits,
     };
     this.props.addView(view);
@@ -248,6 +232,8 @@ class SemanticContent extends React.Component {
       enableMaterials: this.state.enableMaterials,
       enableShaders: this.state.enableShaders,
       enableMeasurement: this.state.enableMeasurement,
+      enableDownload: this.state.enableDownload,
+      enableEmbed: this.state.enableEmbed,
       modelUnits: this.state.modelUnits,
       _id: this.state._id
     };
@@ -337,6 +323,18 @@ class SemanticContent extends React.Component {
               model units
             </Label>
             {obj[1].modelUnits}
+          </List.Item>
+          <List.Item>
+            <Label className="admin-list-label" horizontal>
+              user download
+            </Label>
+            {obj[1].enableDownload.toString()}
+          </List.Item>
+          <List.Item>
+            <Label className="admin-list-label" horizontal>
+              user embed
+            </Label>
+            {obj[1].enableEmbed.toString()}
           </List.Item>
         </List>
       </Segment>
@@ -548,6 +546,31 @@ class SemanticContent extends React.Component {
                     options={this.state.measurements}
                     placeholder="--"
                   />
+
+                  <Form.Field
+                    control={Select}
+                    className="admin-select-dropdown"
+                    fluid
+                    label="Enable User Download"
+                    name="enableDownload"
+                    value={this.state.enableDownload}
+                    onChange={this.handleEnableChange}
+                    options={this.state.booleans}
+                    placeholder="enable/disable"
+                  />
+
+                  <Form.Field
+                    control={Select}
+                    className="admin-select-dropdown"
+                    fluid
+                    label="Enable User Embed"
+                    name="enableEmbed"
+                    value={this.state.enableEmbed}
+                    onChange={this.handleEnableChange}
+                    options={this.state.booleans}
+                    placeholder="enable/disable"
+                  />
+
                   <Form.Button
                     content={isUpdate ? "Update" : "Submit"}
                     onClick={isUpdate ? this.handleUpdate : this.handleSubmit}

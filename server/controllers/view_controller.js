@@ -73,6 +73,7 @@ exports.findAllViews = (req, res) => {
         message: "Could not find views: Error[ " + err + " ]"
       });
     }
+    console.log(views);
     return res.status(200).json({ views: views });
     //console.log("View(s) successfully read");
   });
@@ -99,6 +100,7 @@ exports.addView = (req, res) => {
     enableShaders: req.body.enableShaders,
     enableMeasurement: req.body.enableMeasurement,
     enableDownload: req.body.enableDownload,
+    enableEmbed: req.body.enableEmbed,
     modelUnits: req.body.modelUnits,
     createdBy: req.user.id
   });
@@ -239,6 +241,7 @@ exports.updateView = (req, res) => {
             enableShaders: body.enableShaders,
             enableMeasurement: body.enableMeasurement,
             enableDownload: body.enableDownload,
+            enableEmbed: body.enableEmbed,
             modelUnits: body.modelUnits,
             createdBy: req.user.id
           });

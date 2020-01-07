@@ -480,8 +480,6 @@ export function* authenticateSaga(): Generator<any, any, any> {
 }
 
 export function* addThreeViewSaga(addThreeViewAction: Object): Generator<any, any, any> {
-  console.log(addThreeViewAction);
-
   try {
     if (backend.hasAdminBackend) {
       const result = yield call(backend.adminBackend.addView, addThreeViewAction.viewData);
@@ -509,7 +507,6 @@ export function* getThreeViewsSaga(getThreeViewsAction: Object): Generator<any, 
     if (backend.hasAdminBackend) {
       const results = yield call(backend.adminBackend.getViews);
       const objConvertedResults = yield call(arrayToObject, results.views);
-
       yield put({
         type: ActionConstants.VIEWS_LOADED,
         views: objConvertedResults

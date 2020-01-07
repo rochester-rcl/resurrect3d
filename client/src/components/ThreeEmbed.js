@@ -46,7 +46,7 @@ export default class ThreeEmbed extends Component {
   };
   render() {
     const { embedContent, copied } = this.state;
-    const { embedded } = this.props;
+    const { embedded, readOnly } = this.props;
     const trigger = (
       <ThreeButton
         content="share"
@@ -57,7 +57,7 @@ export default class ThreeEmbed extends Component {
         onClick={this.toggle}
       />
     );
-    if (!embedded) {
+    if (!embedded || !readOnly) {
       return (
         <Modal
           basic

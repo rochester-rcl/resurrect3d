@@ -52,6 +52,12 @@ var viewSchema = new Schema({
     default: false
   },
 
+  enableEmbed: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+
   modelUnits:{
     type: String,
     required: true

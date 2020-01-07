@@ -737,7 +737,8 @@ export default class ThreeView extends Component {
     controls.addComponent("embed", ThreeEmbed, {
       ...buttonProps,
       className: "three-embed-button",
-      embedded: this.props.embedded
+      embedded: this.props.embedded,
+      readOnly: !this.props.enableEmbed
     });
 
     this.controls = (
