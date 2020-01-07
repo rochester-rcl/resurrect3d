@@ -2,7 +2,7 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-export default function loadBloomPass(threeInstance: Object): typeof Promise {
+export default function loadBloomPass(threeInstance) {    //=>: typeof Promise
 	return new Promise((resolve, reject) => {
 		threeInstance.BloomPass = function ( strength, kernelSize, sigma, resolution ) {
 

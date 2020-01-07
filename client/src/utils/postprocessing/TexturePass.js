@@ -2,7 +2,7 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-export default function loadTexturePass(threeInstance: Object): Promise {
+export default function loadTexturePass(threeInstance) {
   return new Promise((resolve, reject) => {
     threeInstance.TexturePass = function(map, opacity) {
       threeInstance.Pass.call(this);

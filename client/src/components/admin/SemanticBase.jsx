@@ -25,10 +25,10 @@ import {
 import SemanticContent from "./SemanticContent";
 
 class SemanticBase extends React.Component {
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
-    (this: any).handleSidebar = this.handleSidebar.bind(this);
-    (this: any).state = {
+    this.handleSidebar = this.handleSidebar.bind(this);
+    this.state = {
       dimmed: false,
       visible: false
     };
@@ -136,7 +136,7 @@ SemanticBase.propTypes = {
   classes: PropTypes.object.isRequired
 };
 
-function mapStateToProps(state, ownProps): Object {
+function mapStateToProps(state, ownProps) {
   return {
     views: state.views.views
     //newView: state.views.view

@@ -26,7 +26,7 @@ export default class ConverterSave extends Component {
     filesize: 0
   };
 
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
     this.onSave = this.onSave.bind(this);
     this.onName = this.onName.bind(this);
@@ -61,7 +61,7 @@ export default class ConverterSave extends Component {
     });
   }
 
-  onSave(event: SyntheticEvent) {
+  onSave(event) {
     event.preventDefault();
     event.stopPropagation();
     // get rid of the url, redirect to main converter
@@ -71,19 +71,19 @@ export default class ConverterSave extends Component {
     });
   }
 
-  performRedirect(event: SynteticEvent) {
+  performRedirect(event) {
     event.preventDefault();
     event.stopPropagation();
     this.props.restartConverter();
   }
 
-  onName(event: SyntheticEvent, { value }): void {
+  onName(event, { value }) {
     this.setState({
       filename: value
     });
   }
 
-  formatFileLabel(): string {
+  formatFileLabel() {
     const { filename, ext, filesize } = this.state;
     return (
       "current filename: " + filename + ext + " (" + filesize + " MB" + ")"

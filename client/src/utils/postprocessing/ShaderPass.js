@@ -2,7 +2,7 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-export default function loadShaderPass(threeInstance: Object): typeof Promise {
+export default function loadShaderPass(threeInstance) {
 	return new Promise((resolve, reject) => {
 		threeInstance.ShaderPass = function ( shader, textureID ) {
 

@@ -11,22 +11,22 @@ import { GROUP, COMPONENT } from "../constants/application";
 const e = React.createElement;
 
 export default class ThreeGUI {
-  components: Object;
-  layouts: Object;
+  components;
+  layouts;
   constructor() {
     this.components = {};
     this.layouts = {};
   }
 
-  registerLayout(name: string, layout: ThreeGUILayout): void {
+  registerLayout(name, layout) {
     this.layouts[name] = layout;
   }
 
-  registerComponent(name: string, component: Component): void {
+  registerComponent(name, component) {
     this.components[name] = component;
   }
 
-  removeLayout(name: string): boolean {
+  removeLayout(name) {
     if (this.layouts[name]) {
       delete this.layouts[name];
       return true;
@@ -35,7 +35,7 @@ export default class ThreeGUI {
     }
   }
 
-  removeComponent(name: string): boolean {
+  removeComponent(name) {
     if (this.components[name]) {
       delete this.components[name];
       return true;
@@ -44,7 +44,7 @@ export default class ThreeGUI {
     }
   }
 
-  getComponent(name: string): Component | boolean {
+  getComponent(name) {
     if (this.components[name]) {
       return this.components[name];
     } else {
@@ -52,7 +52,7 @@ export default class ThreeGUI {
     }
   }
 
-  getLayout(name: string): ThreeGUILayout | boolean {
+  getLayout(name) {
     if (this.layouts[name]) {
       return this.layouts[name];
     } else {
@@ -62,18 +62,18 @@ export default class ThreeGUI {
 }
 
 export class ThreeGUIGroup {
-  name: string;
-  components: Array<Object>;
-  constructor(name: string) {
+  name;
+  components;
+  constructor(name) {
     this.name = name;
     this.components = [];
   }
 
   addComponent(
-    name: string,
-    component: Component,
-    componentProps: Object
-  ): void {
+    name,
+    component,
+    componentProps
+  ) {
     this.components.push({
       name: name,
       type: COMPONENT,
@@ -82,7 +82,7 @@ export class ThreeGUIGroup {
     });
   }
 
-  addGroup(name: string, component: ThreeGUIGroup): void {
+  addGroup(name, component) {
     this.components.push({
       name: name,
       type: GROUP,
@@ -92,7 +92,7 @@ export class ThreeGUIGroup {
     });
   }
 
-  remove(name: string): boolean {
+  remove(name) {
     let index = this.components.findIndex(component => {
       return component.name === name;
     });
@@ -104,7 +104,7 @@ export class ThreeGUIGroup {
     }
   }
 
-  find(name: string): Object {
+  find(name) {
     let index = this.components.findIndex(component => {
       return component.name === name;
     });
@@ -115,7 +115,7 @@ export class ThreeGUIGroup {
     }
   }
 
-  _renderGroup(group: ThreeGUIGroup): Array<Object> {
+  _renderGroup(group) {
     return group.components.map(element => {
       if (element.type === GROUP) {
         return (
@@ -139,7 +139,7 @@ export class ThreeGUIGroup {
 // Meant for a single group!
 export class ThreeGUILayout extends Component {
   state = {};
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
   }
 
@@ -152,16 +152,16 @@ export class ThreeGUILayout extends Component {
 // Nested Layout w/ Collapsible Panel
 // Meant for a group of groups!
 export class ThreeGUIPanelLayout extends ThreeGUILayout {
-  state: Object = {
+  state = {
     activeIndex: -1,
     menuExpanded: false,
     transitionRunCallback: null,
     transitionEndCallback: null
   };
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
-    (this: any).selectTool = this.selectTool.bind(this);
-    (this: any).expandMenu = this.expandMenu.bind(this);
+    this.selectTool = this.selectTool.bind(this);
+    this.expandMenu = this.expandMenu.bind(this);
     this.handleMenuTransitionEnd = this.handleMenuTransitionEnd.bind(this);
     this.handleMenuTransitionRun = this.handleMenuTransitionRun.bind(this);
     this.transitionDuration = 0;
@@ -202,7 +202,7 @@ export class ThreeGUIPanelLayout extends ThreeGUILayout {
     }
   }
 
-  selectTool(index: Number): void {
+  selectTool(index) {
     if (this.state.activeIndex === index) {
       this.setState({ activeIndex: -1 });
     } else {
@@ -210,7 +210,7 @@ export class ThreeGUIPanelLayout extends ThreeGUILayout {
     }
   }
 
-  expandMenu(callback: any, transitionRunCallback): void {
+  expandMenu(callback, transitionRunCallback) {
     this.setState({
       transitionEndCallback: callback,
       transitionRunCallback: transitionRunCallback,

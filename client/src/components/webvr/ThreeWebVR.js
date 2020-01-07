@@ -26,7 +26,7 @@ export default class ThreeWebVR extends Component {
     displayStatus: WEBVR_SUPPORT.NOT_SUPPORTED
   };
 
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
     this.handleSessionStarted = this.handleSessionStarted.bind(this);
     this.handleSessionEnded = this.handleSessionEnded.bind(this);

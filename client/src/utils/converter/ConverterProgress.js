@@ -13,7 +13,7 @@ export default class ConverterProgress {
     this.queue = {};
   }
 
-  on(eventType: string, callback) {
+  on(eventType, callback) {
     if (this.EVENT_TYPES[eventType] === undefined) {
       console.warn('Attempting to register an invalid event type for ConverterProgress');
       return;
@@ -24,7 +24,7 @@ export default class ConverterProgress {
     this.queue[eventType].push(callback);
   }
 
-  dispatch(eventType: string, data: Object) {
+  dispatch(eventType, data) {
     if (this.EVENT_TYPES[eventType] === undefined) {
       console.warn('Attempting to register an invalid event type for ConverterProgress');
       return;

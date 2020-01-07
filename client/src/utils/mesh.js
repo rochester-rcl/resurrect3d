@@ -9,7 +9,7 @@ import { base64ImageToBlob } from './image';
 // constants
 import { MAP_TYPES } from '../constants/application';
 
-export function volumeFromBounds(bbox: typeof THREE.Box3): Object {
+export function volumeFromBounds(bbox) {
 
   let { min, max } = bbox;
   let shape = {};
@@ -21,7 +21,7 @@ export function volumeFromBounds(bbox: typeof THREE.Box3): Object {
 
 }
 
-export function fitBoxes(bbox1: typeof THREE.Box3, bbox2: typeof THREE.Box3, factor: number): number {
+export function fitBoxes(bbox1, bbox2, factor) {
 
   let shape1 = volumeFromBounds(bbox1);
   let shape2 = volumeFromBounds(bbox2);
@@ -32,14 +32,14 @@ export function fitBoxes(bbox1: typeof THREE.Box3, bbox2: typeof THREE.Box3, fac
 
 }
 
-type Materials = THREE.MeshStandardMaterial | THREE.MeshPhongMaterial | THREE.MeshLambertMaterial;
+//type Materials = THREE.MeshStandardMaterial | THREE.MeshPhongMaterial | THREE.MeshLambertMaterial;
 
-export function mapMaterials(materials: Array<Materials> , callback): Array<Materials> {
+export function mapMaterials(materials , callback) {
   if (materials.constructor === Array) return materials.map(material => callback(material));
   return callback(materials);
 }
 
-export function exportMap(material: Materials): Array<Object> {
+export function exportMap(material) {  //material type Materials
   let images = [];
   if (material.map !== null) {
     if (material.map.image !== undefined) {
@@ -56,6 +56,6 @@ export function exportMap(material: Materials): Array<Object> {
   return images;
 }
 
-export function getExtension(path: string): string {
+export function getExtension(path) {
   return '.' + path.split('.').pop();
 }

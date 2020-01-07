@@ -9,7 +9,7 @@ import { Provider } from "react-redux";
 // Containers
 import RouterContainer from "./RouterContainer";
 
-const Root = (props: Object) => (
+const Root = (props) => (
   <Provider store={props.store}>
     <RouterContainer />
   </Provider>

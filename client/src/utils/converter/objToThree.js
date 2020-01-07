@@ -5,7 +5,7 @@ import createConverterProgressChannel from './createConverterProgressChannel';
 import ConverterProgress from './ConverterProgress';
 import { put, take } from 'redux-saga/effects';
 
-export default function convertObjToThree(threeData: Object): Promise {
+export default function convertObjToThree(threeData) {
   return new Promise((resolve, reject) => {
     const { mesh, material, maps, options } = threeData;
     const converter = new ThreeObjConverter(mesh, material, maps, options);
@@ -19,7 +19,7 @@ export default function convertObjToThree(threeData: Object): Promise {
   });
 }
 
-export function* convertObjToThreeWithProgress(threeData: Object): Generator<any, any, any> {
+export function* convertObjToThreeWithProgress(threeData) {  //=>: Generator<any, any, any>
   const { mesh, material, maps, options } = threeData;
   const progress = new ConverterProgress();
   const converterChannel = createConverterProgressChannel(progress);

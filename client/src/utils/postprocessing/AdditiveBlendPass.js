@@ -1,4 +1,4 @@
-export default function loadAdditiveBlendPass(threeInstance: Object): typeof Promise {
+export default function loadAdditiveBlendPass(threeInstance) {  //=> : typeof Promise
 	return new Promise((resolve, reject) => {
 		threeInstance.AdditiveBlendPass = function (tex) {
 

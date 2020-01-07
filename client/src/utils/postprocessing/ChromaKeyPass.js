@@ -1,6 +1,6 @@
-export default function loadChromaKeyPass(threeInstance: Object): typeof Promise {
+export default function loadChromaKeyPass(threeInstance) {
 	return new Promise((resolve, reject) => {
-		threeInstance.ChromaKeyPass = function (enable: boolean, chroma: threeInstance.Color, threshold: Number, invert: boolean) {
+		threeInstance.ChromaKeyPass = function (enable, chroma, threshold, invert) {  //bool, threeInstance.Color, Number, bool
 
       threeInstance.Pass.call(this);
       if (threeInstance.ChromaKeyShader === undefined) {

@@ -30,11 +30,11 @@ import ThreeConverter from './ThreeConverter';
 const THREE = _THREE;
 
 export default class ThreeObjConverter extends ThreeConverter {
-  OPTIONS_MAP: {
+  /*OPTIONS_MAP: {
     center: centerGeometry,
-    createNormalMap: createNormalMap,
-  }
-  constructor(mesh: File, materials: File, maps: Object, options: Object, progress: ConverterProgress) {
+    createNormalMap: createNormalMap
+  }*/
+  constructor(mesh, materials, maps, options, progress) {  //File, file, object, object, converterprogress
     super(mesh, maps, options, progress);
     this.mtlFile = materials;
     this.loadObj = this.loadObj.bind(this);
@@ -49,7 +49,7 @@ export default class ThreeObjConverter extends ThreeConverter {
     this.loadedMaps = {};
   }
 
-  loadObj(material: THREE.MeshStandardMaterial) {
+  loadObj(material) {  //: THREE.MeshStandardMaterial
     return new Promise((resolve, reject) => {
       try {
         if (this.loadersInitialized === false) {
@@ -76,8 +76,8 @@ export default class ThreeObjConverter extends ThreeConverter {
   }
 
   rectifyTextureURL(
-    _materials: THREE.MTLLoader.MaterialCreator,
-    maps: Array<Object>
+    _materials,  //: THREE.MTLLoader.MaterialCreator
+    maps  //: Array<Object>
   ) {
     const diffuse = maps.find(map => map.type === THREE_DIFFUSE_MAP);
     for (let key in _materials.materialsInfo) {
@@ -90,7 +90,7 @@ export default class ThreeObjConverter extends ThreeConverter {
     }
   }
 
-  rectifyDataURLs(serialized: object) {
+  rectifyDataURLs(serialized) {
     serialized.images.forEach((image) => {
       let mapKey = Object.keys(this.loadedMaps).find((key) => {
         const _map = this.loadedMaps[key];
@@ -104,7 +104,7 @@ export default class ThreeObjConverter extends ThreeConverter {
   }
 
   // TODO so far only working with ONE MAP - will have to think about how to do it otherwise, UUIDs will work
-  setUpMaterials(): Promise {
+  setUpMaterials() {
     const tasks = [];
     let children;
     if (this.mesh.constructor.name === THREE_MESH) {
@@ -204,7 +204,7 @@ export default class ThreeObjConverter extends ThreeConverter {
       .catch((error) => this.handleError(error));
   }
 
-  convert(): Promise {
+  convert() {
     this.emitProgress('Reading Material Data', 25);
     if (this.mtlFile !== null) {
       return this.convertWithMaterials();

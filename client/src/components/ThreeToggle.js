@@ -9,16 +9,16 @@ import { Label, Segment, Checkbox, Button } from "semantic-ui-react";
 export class ThreeToggleMulti extends Component {
   state = { toggleButtons: [] };
 
-  constructor(props: Object): void {
+  constructor(props) {
     super(props);
-    (this: any).updateChecked = this.updateChecked.bind(this);
+    this.updateChecked = this.updateChecked.bind(this);
   }
 
   componentDidMount() {
     this.setState({ toggleButtons: this.props.buttons });
   }
 
-  updateChecked(index: number): void {
+  updateChecked(index) {
     const { toggleButtons } = this.state;
     let cloned = toggleButtons.slice(0);
     cloned.forEach(button => {
@@ -78,16 +78,16 @@ export class ThreeToggleMulti extends Component {
 export default class ThreeToggle extends Component {
   state = { checked: false };
 
-  constructor(props: Object): void {
+  constructor(props) {
     super(props);
-    (this: any).updateChecked = this.updateChecked.bind(this);
+    this.updateChecked = this.updateChecked.bind(this);
   }
 
   componentDidMount() {
     this.setState({ checked: this.props.defaultVal });
   }
 
-  updateChecked(): void {
+  updateChecked() {
     let newVal = !this.state.checked;
     this.setState(
       {

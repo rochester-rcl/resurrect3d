@@ -2,7 +2,7 @@
 import * as THREE from "three";
 import ThreePtmConverter from "./ThreePtmConverter";
 
-export default function convertPtmToThree(threeData: Object): Promise {
+export default function convertPtmToThree(threeData) {
   return new Promise((resolve, reject) => {
     const { ptm, options } = threeData;
     const converter = new ThreePtmConverter(ptm, options);

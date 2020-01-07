@@ -2,7 +2,7 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-export default function loadEffectComposer(threeInstance: Object): typeof Promise {
+export default function loadEffectComposer(threeInstance) {
 	return new Promise((resolve, reject) => {
 		threeInstance.EffectComposer = function ( renderer, renderTarget ) {
 

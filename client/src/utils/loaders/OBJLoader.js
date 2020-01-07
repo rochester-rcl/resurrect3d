@@ -3,7 +3,7 @@
  * @author mrdoob / http://mrdoob.com/
  */
 
-export default function initOBJLoader(threeInstance: Object): Promise {
+export default function initOBJLoader(threeInstance) {
   return new Promise((resolve, reject) => {
     threeInstance.OBJLoader = ( function () {
 

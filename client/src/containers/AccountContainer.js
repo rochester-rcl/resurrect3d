@@ -18,7 +18,7 @@ import { BASENAME } from "../constants/api-endpoints";
 import DeleteAccount from "../components/admin/DeleteAccount";
 
 class AccountContainer extends Component {
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
     this.handleDeleteUser = this.handleDeleteUser.bind(this);
   }

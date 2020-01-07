@@ -22,7 +22,7 @@ import { CONVERSION_TYPE_RTI } from "../../constants/application";
 import { Button } from "semantic-ui-react";
 
 class ConverterContainer extends Component {
-  render(): Object {
+  render() {
     const {
       startConversion,
       restartConverter,
@@ -85,7 +85,7 @@ class ConverterContainer extends Component {
   }
 }
 
-function mapStateToProps(state: Object): Object {
+function mapStateToProps(state) {
   return {
     ...state.converter
   };

@@ -3,7 +3,7 @@ import * as THREE from 'three';
 
 import { DEFAULT_DAMPING_FACTOR } from '../constants/application';
 
-export function panLeft(distance: number, matrix: typeof THREE.Vector3, dampingFactor: Number = DEFAULT_DAMPING_FACTOR): typeof THREE.Vector3 {
+export function panLeft(distance, matrix, dampingFactor = DEFAULT_DAMPING_FACTOR) {	//Matrix THREE.Vector3
 
   let dstX = new THREE.Vector3();
   dstX.setFromMatrixColumn(matrix, 0);
@@ -12,7 +12,7 @@ export function panLeft(distance: number, matrix: typeof THREE.Vector3, dampingF
 
 }
 
-export function panUp(distance: number, matrix: typeof THREE.Vector3, dampingFactor: Number = DEFAULT_DAMPING_FACTOR): typeof THREE.Vector3 {
+export function panUp(distance, matrix, dampingFactor = DEFAULT_DAMPING_FACTOR) {
 
   let dstY = new THREE.Vector3();
   dstY.setFromMatrixColumn(matrix, 1);
@@ -21,12 +21,12 @@ export function panUp(distance: number, matrix: typeof THREE.Vector3, dampingFac
 
 }
 
-export function rotateLeft(): typeof THREE.Vector3 {
+export function rotateLeft() {
 
 
 }
 
-export function rotateUp(): typeof THREE.Vector3 {
+export function rotateUp() {
 
 
 }

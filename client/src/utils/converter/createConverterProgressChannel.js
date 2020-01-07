@@ -2,8 +2,8 @@ import { eventChannel, END } from "redux-saga";
 import ConverterProgress from "./ConverterProgress";
 
 export default function createConverterProgressChannel(
-  converterProgress: ConverterProgress
-): void {
+  converterProgress//: ConverterProgress
+) {
   const {
     UPDATE_CONVERSION_PROGRESS,
     DONE,

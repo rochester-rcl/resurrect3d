@@ -25,7 +25,7 @@ import loadTexturePass from './postprocessing/TexturePass';
 import loadAdditiveBlendPass from './postprocessing/AdditiveBlendPass';
 import { loadMaskPass, loadClearMaskPass } from './postprocessing/MaskPass';
 
-export default function loadPostProcessor(threeInstance: Object): Promise<*> {
+export default function loadPostProcessor(threeInstance) {    // Object => : Promise<*>
   const shaders = [
     loadCopyShader(threeInstance),
     loadBokehShader(threeInstance),

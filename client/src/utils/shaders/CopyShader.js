@@ -3,7 +3,7 @@
  *
  * Full-screen textured quad shader
  */
-export default function loadCopyShader(threeInstance: Object): typeof Promise {
+export default function loadCopyShader(threeInstance) {
 	return new Promise((resolve, reject) => {
 		threeInstance.CopyShader = {
 

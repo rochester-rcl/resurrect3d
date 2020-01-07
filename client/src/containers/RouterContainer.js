@@ -47,15 +47,15 @@ const AuthenticatingLoader = () => (
 class RouterContainer extends Component {
   _element = React.createElement;
 
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
-    (this: any).authenticateRoute = this.authenticateRoute.bind(this);
-    (this: any).authenticateRouteWithoutRedirect = this.authenticateRouteWithoutRedirect.bind(
+    this.authenticateRoute = this.authenticateRoute.bind(this);
+    this.authenticateRouteWithoutRedirect = this.authenticateRouteWithoutRedirect.bind(
       this
     );
   }
 
-  authenticateRoute(props: Object, component: Component) {
+  authenticateRoute(props, component) {
     const { user } = this.props;
     const { location } = props;
     const { authenticateAttempted } = user;
@@ -86,7 +86,7 @@ class RouterContainer extends Component {
   }
 
   // i.e. for the routes that you could optionally be signed in for
-  authenticateRouteWithoutRedirect(props: Object, component: Component) {
+  authenticateRouteWithoutRedirect(props, component) {
     const { user } = this.props;
     const { authenticateAttempted } = user;
     if (user.loggedIn !== false) {

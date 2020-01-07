@@ -33,7 +33,7 @@ export default class ThreeConverter {
     center: centerGeometry,
     createNormalMap: createNormalMap,
   };
-  constructor(mesh: File, maps: Object, options: Object, progress: ConverterProgress) {
+  constructor(mesh, maps, options, progress) {  //File, Object, Object, ConverterProgress
     this.meshFile = mesh;
     this.mapFiles = maps;
     this.options = options;
@@ -42,7 +42,7 @@ export default class ThreeConverter {
     this.converted = false;
   }
 
-  init(): Promise {
+  init() {
     return new Promise((resolve, reject) => {
       this.textureLoader = new THREE.TextureLoader();
       initLoaders(THREE).then(() => {
@@ -61,7 +61,7 @@ export default class ThreeConverter {
     return Promise.all(toFetch);
   }
 
-  readMap(type: string, map: File): Promise {
+  readMap(type, map) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -73,7 +73,7 @@ export default class ThreeConverter {
     });
   }
   // can be used for MTL, OBJ, any ASCII file , doesn't have to be geometry data
-  readASCII(dataFile: File) {
+  readASCII(dataFile) {
     // has to be ASCII for now, can add readMeshBinary
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -86,7 +86,7 @@ export default class ThreeConverter {
     });
   }
 
-  readBinary(dataFile: File) {
+  readBinary(dataFile) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -98,7 +98,7 @@ export default class ThreeConverter {
     });
   }
 
-  loadTexture(url: string, onLoad, onErr): Promise {
+  loadTexture(url, onLoad, onErr) {
     return new Promise((resolve, reject) =>{
       const tex = this.textureLoader;
       const _onLoad = (_tex) => {
@@ -113,7 +113,7 @@ export default class ThreeConverter {
     });
   }
 
-  handleOptions(): Promise {
+  handleOptions() {
     return new Promise((resolve, reject) => {
       if (this.converted === false) {
         reject(
@@ -137,7 +137,7 @@ export default class ThreeConverter {
     });
   }
 
-  handleError(error: Error): Promise {
+  handleError(error) {
     this.emitError(error);
     return Promise.reject(error);
   }
@@ -147,7 +147,7 @@ export default class ThreeConverter {
     this.converted = true;
   }
 
-  emitProgress(label: string, percent: Number) {
+  emitProgress(label, percent) {
     if (this.progress !== undefined) {
       this.progress.dispatch(this.progress.EVENT_TYPES.UPDATE_CONVERSION_PROGRESS, {
         val: label,
@@ -156,7 +156,7 @@ export default class ThreeConverter {
     }
   }
 
-  emitError(error: Error) {
+  emitError(error) {
     if (this.progress !== undefined) {
       this.progress.dispatch(this.progress.EVENT_TYPES.CONVERSION_ERROR, {
         error: error,
@@ -164,7 +164,7 @@ export default class ThreeConverter {
     }
   }
 
-  emitDone(file: Object) {
+  emitDone(file) {
     if (this.progress !== undefined) {
       this.progress.dispatch(this.progress.EVENT_TYPES.DONE, {
         file: file,

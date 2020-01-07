@@ -13,13 +13,13 @@ import ThreeToggle from './ThreeToggle';
 // semantic-ui-react
 import { Label, Segment, Checkbox, Button } from "semantic-ui-react";
 
-const rgbString = (colorRGB: Object) => {
+const rgbString = (colorRGB) => {
   let { r, g, b } = colorRGB;
   let rgb = [r, g, b];
   return new THREE.Color("rgb(" + rgb.join(",") + ")");
 };
 
-const stringToRGB = (hex: String) => {
+const stringToRGB = (hex) => {
   const color = new THREE.Color(parseInt(hex.substring(1), 16)).multiplyScalar(
     255
   );
@@ -30,7 +30,7 @@ const stringToRGB = (hex: String) => {
   };
 };
 
-const ThreeColorPicker = (props: Object) => {
+const ThreeColorPicker = (props) => {
   const { callback, title, color } = props;
   return (
     <Segment className="three-tool-component-container">
@@ -48,7 +48,7 @@ const ThreeColorPicker = (props: Object) => {
   );
 };
 
-export const ThreeMicroColorPicker = (props: Object) => {
+export const ThreeMicroColorPicker = (props) => {
   const { callback, title, color } = props;
   return (
     <Segment className="three-tool-component-container">
@@ -76,14 +76,14 @@ export class ThreeEyeDropperColorPicker extends Component {
     active: false
   };
 
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
-    (this: any).pickColor = this.pickColor.bind(this);
-    (this: any).activate = this.activate.bind(this);
-    (this: any).handleChangeComplete = this.handleChangeComplete.bind(this);
+    this.pickColor = this.pickColor.bind(this);
+    this.activate = this.activate.bind(this);
+    this.handleChangeComplete = this.handleChangeComplete.bind(this);
   }
 
-  activate(): void {
+  activate() {
     this.setState({
       active: !this.state.active
     }, () => {
@@ -93,7 +93,7 @@ export class ThreeEyeDropperColorPicker extends Component {
     });
   }
 
-  pickColor(event: SyntheticEvent): void {
+  pickColor(event) {
     let { active } = this.state;
     if (active) {
       let { renderer, renderTarget } = this.props;
@@ -127,7 +127,7 @@ export class ThreeEyeDropperColorPicker extends Component {
     }
   }
 
-  handleChangeComplete(color: Object): void {
+  handleChangeComplete(color) {
     this.setState(
       {
         currentColor: { ...color.rgb }
@@ -138,7 +138,7 @@ export class ThreeEyeDropperColorPicker extends Component {
     );
   }
 
-  componentDidMount(): void {
+  componentDidMount() {
     this.props.renderer.domElement.addEventListener(
       "click",
       this.pickColor,
@@ -152,7 +152,7 @@ export class ThreeEyeDropperColorPicker extends Component {
     }
   }
 
-  componentWillUnmount(): void {
+  componentWillUnmount() {
     this.props.renderer.domElement.removeEventListener(
       "click",
       this.pickColor,

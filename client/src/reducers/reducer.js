@@ -46,7 +46,7 @@ const defaultState = {
   localAssets: { textures: {}, meshes: {} }
 }
 
-function uiReducer(state: Object = defaultState, action: Object): Object {
+function uiReducer(state = defaultState, action) {
 
   switch (action.type) {
 

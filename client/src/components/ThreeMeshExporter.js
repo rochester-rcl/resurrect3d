@@ -36,7 +36,7 @@ import { OBJ_EXT, STL_EXT, ZIP_EXT } from "../constants/application";
 const short = require("short-uuid");
 
 export default class ThreeMeshExporter extends Component {
-  FORMATS: Object = {
+  FORMATS = {
     OBJ: {
       ext: ".obj",
       mime: "text/plain",
@@ -48,11 +48,11 @@ export default class ThreeMeshExporter extends Component {
       exporter: null
     }
   };
-  OBJ_FORMAT: string = "OBJ";
-  STL_FORMAT: string = "STL";
-  MIME: string = "text/plain";
-  _cache: IndexedCache;
-  state: Object = {
+  OBJ_FORMAT = "OBJ";
+  STL_FORMAT = "STL";
+  MIME = "text/plain";
+  _cache;
+  state = {
     url: null,
     OBJKey: null,
     STLKey: null,
@@ -61,18 +61,18 @@ export default class ThreeMeshExporter extends Component {
     filename: null
   };
   uuid = short();
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
-    (this: any).export = this.export.bind(this);
-    (this: any).save = this.save.bind(this);
-    (this: any).initCache = this.initCache.bind(this);
-    (this: any).toggleExportMenu = this.toggleExportMenu.bind(this);
-    (this: any).handleClientDownload = this.handleClientDownload.bind(this);
-    (this: any).OBJExporter = null;
-    (this: any).STLExporter = null;
+    this.export = this.export.bind(this);
+    this.save = this.save.bind(this);
+    this.initCache = this.initCache.bind(this);
+    this.toggleExportMenu = this.toggleExportMenu.bind(this);
+    this.handleClientDownload = this.handleClientDownload.bind(this);
+    this.OBJExporter = null;
+    this.STLExporter = null;
   }
 
-  componentDidMount(): void {
+  componentDidMount() {
     loadExporters(this.props.threeInstance).then(() => {
       this.FORMATS[
         this.OBJ_FORMAT
@@ -84,11 +84,11 @@ export default class ThreeMeshExporter extends Component {
     });
   }
 
-  componentWillUnmount(): void {
+  componentWillUnmount() {
     this._cache.close();
   }
 
-  initCache(): void {
+  initCache() {
     this._cache = new IndexedCache("ThreeMesh", {
       name: "ThreeMeshIndex",
       items: ["mesh.name", "mesh.format"]
@@ -99,7 +99,7 @@ export default class ThreeMeshExporter extends Component {
       .catch(error => console.log(error));
   }
 
-  export(event: SyntheticEvent, format: string): void {
+  export(event, format) {
     event.preventDefault();
     event.stopPropagation();
     let name = (this.props.mesh.children[0] !== undefined) ? this.props.mesh.children[0].name : this.props.mesh.name;
@@ -127,7 +127,7 @@ export default class ThreeMeshExporter extends Component {
     }
   }
 
-  save(format: string): void {
+  save(format) {
     let name = (this.props.mesh.children[0] !== undefined) ? this.props.mesh.children[0].name : this.props.mesh.name;
     let meshData = this.FORMATS[format].exporter.parse(
       this.props.mesh,
@@ -148,13 +148,13 @@ export default class ThreeMeshExporter extends Component {
       .catch(error => console.log(error));
   }
 
-  toggleExportMenu(): void {
+  toggleExportMenu() {
     this.setState({
       menuVisible: !this.state.menuVisible
     });
   }
 
-  handleClientDownload(data: Object, format: string): void {
+  handleClientDownload(data, format) {
     switch (format) {
       case this.OBJ_FORMAT:
         let zipFile = new JSZip();

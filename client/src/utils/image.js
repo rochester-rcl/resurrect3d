@@ -12,13 +12,13 @@ import { loadNoiseFunc } from './noise';
 // Abstract Base Class
 class ImageGenerator {
 
-  width: number;
-  height: number;
-  color1: string;
-  color2: string;
-  element: HTMLCanvasElement;
+  width;
+  height;
+  color1;
+  color2;
+  element;   //: HTMLCanvasElement
 
-  constructor(width: number, height: number, outerColor: string, innerColor: string) {
+  constructor(width, height, outerColor, innerColor) {
 
     this.width = width;
     this.height = height;
@@ -27,13 +27,13 @@ class ImageGenerator {
 
   }
 
-  toBase64(): string {
+  toBase64() {
 
     return this.element.toDataURL();
 
   }
 
-  toTexture(): THREE.Texture {
+  toTexture() {
 
     /* For whatever reason the THREE.Texture constructor is not working with
        a canvas object. */
@@ -44,10 +44,10 @@ class ImageGenerator {
 }
 
 export class LinearGradientShader {
-  topColor: string;
-  bottomColor: string;
-  uniforms: Object;
-  fragmentShader: string = [
+  topColor;
+  bottomColor;
+  uniforms;
+  fragmentShader = [
     'uniform vec3 topColor;',
     'uniform vec3 bottomColor;',
     'uniform vec2 resolution;',
@@ -62,7 +62,7 @@ export class LinearGradientShader {
     '}'
   ].join('\n');
 
-  constructor(topColor: string, bottomColor: string, width: number, height: number) {
+  constructor(topColor, bottomColor, width, height) {
     this.innerColor = topColor;
     this.outerColor = bottomColor;
     this.uniforms = {
@@ -73,11 +73,11 @@ export class LinearGradientShader {
     this.shaderMaterial = this.generateShaderMaterial();
   }
 
-  updateUniforms(uniformName: string, value: Number | THREE.Vector2): void {
+  updateUniforms(uniformName, value) {
     this.uniforms[uniformName].value = value;
   }
 
-  generateShaderMaterial(): THREE.ShaderMaterial {
+  generateShaderMaterial() {
     return new THREE.ShaderMaterial({
       uniforms: this.uniforms,
       fragmentShader: this.fragmentShader,
@@ -89,14 +89,14 @@ export class LinearGradientShader {
 
 export class RadialGradientCanvas extends ImageGenerator {
 
-  constructor(width: number, height: number, outerColor: string, innerColor: string) {
+  constructor(width, height, outerColor, innerColor) {
 
     super(width, height, outerColor, innerColor);
     this.element = this.createGradient();
 
   }
 
-  createGradient(): HTMLCanvasElement {
+  createGradient() {   //: HTMLCanvasElement
 
     let imgCanvas = document.createElement('canvas');
     imgCanvas.width = this.width;
@@ -117,7 +117,7 @@ export class RadialGradientCanvas extends ImageGenerator {
     return imgCanvas;
   }
 
-  toTexture(): THREE.Texture {
+  toTexture() {
 
     /* For whatever reason the THREE.Texture constructor is not working with
        a canvas object. */
@@ -135,9 +135,9 @@ export class RadialGradientCanvas extends ImageGenerator {
 
 export class LabelSprite extends ImageGenerator {
 
-  text: string;
+  text;
 
-  constructor(width: number, height: number, color: string, text: string) {
+  constructor(width, height, color, text) {
 
     super(width, height, color, color);
     this.text = text;
@@ -165,7 +165,7 @@ export class LabelSprite extends ImageGenerator {
 
   }
 
-  toSprite(): typeof THREE.Sprite {
+  toSprite() {
 
     /* For whatever reason the THREE.Texture constructor is not working with
        a canvas object. */
@@ -178,7 +178,7 @@ export class LabelSprite extends ImageGenerator {
 }
 
 // https://stackoverflow.com/questions/16245767/creating-a-blob-from-a-base64-string-in-javascript
-export function base64ImageToBlob(b64String: string, chunkSize: number): Object {
+export function base64ImageToBlob(b64String, chunkSize) {
   let data = b64String.split(',')
   let contentType = data[0].split(';base64')[0].slice(5);
   let ext = '.' + contentType.split('/')[1];

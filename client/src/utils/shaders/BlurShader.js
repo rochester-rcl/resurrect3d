@@ -10,7 +10,7 @@
  * - "h" and "v" parameters should be set to "1 / (width / 4)" and "1 / (height / 4)"
  */
 
-export default function loadBlurShader(threeInstance: Object): Promise {
+export default function loadBlurShader(threeInstance) {
   return new Promise((resolve, reject) => {
     threeInstance.HorizontalBlurShader = {
 

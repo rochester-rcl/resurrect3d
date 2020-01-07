@@ -6,7 +6,7 @@ import React from "react";
 // Semantic UI
 import { Dimmer, Loader, Grid } from "semantic-ui-react";
 
-const InfoModal = (props: Object) => {
+const InfoModal = (props) => {
   let { info, active, className } = props;
   return (
     <Dimmer className={className} active={active}>

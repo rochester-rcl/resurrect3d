@@ -1,7 +1,7 @@
 /* @flow */
 
 // React
-import React, { Component } from "react";
+import * as React from "react";
 
 // semantic-ui-react
 import { Label, Segment, Icon, Button } from "semantic-ui-react";
@@ -12,7 +12,22 @@ import {
   ANNOTATION_SETTINGS_OPTIONS
 } from "../../constants/application";
 
-export default class ThreeAnnotationShortcut extends Component {
+type ShortcutProps = {
+  focus: (number) => void;
+  delete: (number) => void;
+  save: (number) => void;
+  index: number;
+  onSettingsUpdate: (index: number, settingsKey: number, value: number) => void;
+  onUpdateIndex: (index: number, dst: number, callback: () => void) => void;
+  readOnly: boolean;
+  saveStatus: string;
+  title: string;
+  innerRef: React.Ref<HTMLDivElement>;
+  total: number;
+
+}
+
+export default class ThreeAnnotationShortcut extends React.Component<ShortcutProps> {
   state = { settings: { useCamera: false, useLights: false } };
   constructor(props) {
     super(props);

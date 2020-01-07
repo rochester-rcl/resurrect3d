@@ -3,7 +3,7 @@
 import initMTLLoader from './MTLLoader';
 import initOBJLoader from './OBJLoader';
 
-export default function initLoaders(threeInstance: Object): Promise {
+export default function initLoaders(threeInstance) {
   const tasks = [
     initOBJLoader(threeInstance),
     initMTLLoader(threeInstance)

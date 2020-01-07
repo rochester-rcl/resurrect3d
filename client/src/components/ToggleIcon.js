@@ -5,12 +5,12 @@ import { Icon, Label, Button } from "semantic-ui-react";
 export default class ToggleIcon extends Component {
   state = { toggled: false };
 
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
     this.handleClick = this.handleClick.bind(this);
   }
 
-  handleClick(event: SyntheticEvent) {
+  handleClick(event) {
     event.preventDefault();
     event.stopPropagation();
     this.setState(

@@ -22,7 +22,7 @@ const link = (
 
 export default class DeleteAccount extends Component {
   state = { open: false, deleteAttempted: false, redirectTimeout: 0 };
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
     this.onDelete = this.onDelete.bind(this);
     this.close = this.close.bind(this);

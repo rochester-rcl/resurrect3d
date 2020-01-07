@@ -11,7 +11,7 @@ import * as ops from 'ndarray-ops'
 import { smoothFaceNormals, getChildren } from './geometry';
 
 // TODO apparently need to implement my own image loader now? This currently doesn't work once everything has been minified / optimized.
-export function createNormalMap(mesh: THREE.Group | THREE.Mesh): Promise {
+export function createNormalMap(mesh) {  //: THREE.Group | THREE.Mesh => promise
   const canvas = document.createElement('canvas');
   return new Promise((resolve, reject) => {
     try {
@@ -46,7 +46,7 @@ export function createNormalMap(mesh: THREE.Group | THREE.Mesh): Promise {
   });
 }
 
-export function toUint8(val: Number): Number {
+export function toUint8(val) {
   return parseInt((val + 1.0) * (255.0 / 2.0), 10);
 }
 
@@ -73,16 +73,16 @@ const sobelKernel = [
   { offset: [1, 1], array: 1 } // i
 ];
 
-function _sobelY(s, img, a, b, c, d, f, g, h, i): void {
+function _sobelY(s, img, a, b, c, d, f, g, h, i) {
   s = a + 2 * b + c - g - 2 * h - i;
 }
 
-function _sobelX(s, img, a, b, c, d, f, g, h, i): void {
+function _sobelX(s, img, a, b, c, d, f, g, h, i) {
   s = a - c + 2 * d - 2 * f + g - i;
 }
 
 // borrowed from https://github.com/nicolaspanel/numjs/blob/8bc3d8b5159a4a5aa69800de88fabe3fe35cc6b7/src/utils.js
-function shapeSize(shape: Array<Number>): Number {
+function shapeSize(shape) {
   let s = 1;
   for (let i = 0; i < shape.length; i++) {
     s *= shape[i];
@@ -139,7 +139,7 @@ function gaussianBlur(arr) {
   return out;
 }
 
-export function sobel(img: nj.NDArray): Object {
+export function sobel(img) {  //: nj.NDArray => Object
   let gray = nj.images.rgb2gray(img);
   gray = gaussianBlur(gray);
   const iShape = gray.shape;
@@ -155,7 +155,7 @@ export function sobel(img: nj.NDArray): Object {
 
 export const ZERO_TOL = 1.0e-5;
 
-export function solveCubic(c: Array, s: Array) {
+export function solveCubic(c, s) {  //Arrays
 
     const a = c[2] / c[3];
     const b = c[1] / c[3];
@@ -204,7 +204,7 @@ export function solveCubic(c: Array, s: Array) {
     return [s, num];
 }
 
-export function solveQuadric(c: Array, s: Array, _n: Number) {
+export function solveQuadric(c, s, _n) {  //Arrays
     const n = (_n !== undefined) ? _n : 0;
 
     const p = c[1] / (2 * c[2]);
@@ -226,7 +226,7 @@ export function solveQuadric(c: Array, s: Array, _n: Number) {
     return [s, -1];
 }
 
-export function solveQuartic(c: Array, _s: Array) {
+export function solveQuartic(c, _s) {  //Arrays
     const a = c[3] / c[4];
     const b = c[2] / c[4];
     const _c = c[1] / c[4];
@@ -292,7 +292,7 @@ export function solveQuartic(c: Array, _s: Array) {
   }
 }
 
-export function isZero(num: Number): bool {
+export function isZero(num) {
     const limit = 1e-9;
     if (num > -limit && num < limit) {
         return true;
@@ -301,7 +301,7 @@ export function isZero(num: Number): bool {
     }
 }
 
-export function cubeRoot(num: Number): Number {
+export function cubeRoot(num) {
     if (num > 0) {
         return num ** (1.0 / 3.0);
     } else if (num < 0) {

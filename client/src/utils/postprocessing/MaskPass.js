@@ -2,7 +2,7 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-export function loadMaskPass(threeInstance: Object): typeof Promise {
+export function loadMaskPass(threeInstance) {
 	return new Promise((resolve, reject) => {
 		threeInstance.MaskPass = function ( scene, camera ) {
 
@@ -81,7 +81,7 @@ export function loadMaskPass(threeInstance: Object): typeof Promise {
 }
 
 
-export function loadClearMaskPass(threeInstance: Object): typeof Promise {
+export function loadClearMaskPass(threeInstance) {
 	return new Promise((resolve, reject) => {
 		threeInstance.ClearMaskPass = function () {
 

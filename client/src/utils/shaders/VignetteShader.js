@@ -4,7 +4,7 @@ import { SIMPLEX_2D } from '../../constants/application';
 // noise function
 import { loadNoiseFunc } from '../noise';
 
-export default function loadVignetteShader(threeInstance: Object): Promise {
+export default function loadVignetteShader(threeInstance) {
   return new Promise((resolve, reject) => {
     threeInstance.VignetteShader = {
 

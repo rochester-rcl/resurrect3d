@@ -19,13 +19,13 @@ import { getExtension } from "../../utils/mesh";
 import { serializeThreeTypes } from "../../utils/serialization";
 
 export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend {
-  constructor(options: Object) {
+  constructor(options) {
     super(options);
     this.hasAdminBackend = false;
     this.isOmekaBackend = true;
   }
 
-  authenticate(): Promise {
+  authenticate() {
     return new Promise((resolve, reject) => {
       const apiKey = localStorage.getItem("omekaApiKey");
       const status = {};
@@ -34,7 +34,7 @@ export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend 
     });
   }
 
-  static formatOmekaResponse(response: Object): Object {
+  static formatOmekaResponse(response) {
     return new Promise((resolve, reject) => {
       try {
         const normalized = {};
@@ -51,14 +51,14 @@ export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend 
     });
   }
 
-  getThreeAsset(assetId: string | Number, params: Object): Promise {
+  getThreeAsset(assetId, params) {  // | Number
     return super
       .getThreeAsset(OMEKA_API_ENDPOINT + assetId, params)
       .then(ThreeViewerOmekaBackend.formatOmekaResponse)
       .catch(error => console.log(error));
   }
 
-  getThreeFile(path: string): Promise {
+  getThreeFile(path) {
     const ext = getExtension(path);
     if (ext === GZIP_EXT) {
       return this._getBinary(path, {})
@@ -72,11 +72,11 @@ export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend 
   }
 
   // Incredibly stupid but allows for polymorphism between the different backends
-  getThreeFileURL(path: string): Promise {
+  getThreeFileURL(path) {
     return new Promise((resolve, reject) => resolve(path));
   }
 
-  getMetadata(url: string, params: Object) {
+  getMetadata(url, params) {
     return this._get(url, params)
       .then(result => {
         return ThreeViewerOmekaBackend.parseMetadata(result.element_texts);
@@ -85,7 +85,7 @@ export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend 
   }
 
   // need to parse a cleaner key-value representation of the item metadata
-  static parseMetadata(elementTexts: Array<Object>): Object {
+  static parseMetadata(elementTexts) {  //: Array<Object>
     return elementTexts.map(element => {
       return {
         label: element.element.name,
@@ -95,7 +95,7 @@ export default class ThreeViewerOmekaBackend extends ThreeViewerAbstractBackend 
   }
 
   // settings
-  saveViewerSettings(id: Number, settings: Object): Promise {
+  saveViewerSettings(id, settings) {
     const body = JSON.stringify({
       viewer_settings: serializeThreeTypes(settings)
     });

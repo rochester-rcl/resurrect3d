@@ -6,16 +6,16 @@ import * as THREE from 'three';
 // Constants
 import { THREE_COLOR, THREE_VECTOR2, THREE_VECTOR3, THREE_TYPES } from '../constants/application';
 
-export function isValidThreeType(value: Object) {
+export function isValidThreeType(value) {
     return THREE_TYPES.has(value.constructor.name);
 }
 
-export function isThreeType(value: Object) {
+export function isThreeType(value) {
   if (!value) return false;
   return THREE[value.constructor.name] !== undefined;
 }
 
-function serializeThreeType(value: Object): Object {
+function serializeThreeType(value) {
   switch(value.constructor.name) {
     case THREE_COLOR:
       return value.getHexString();
@@ -30,13 +30,13 @@ function serializeThreeType(value: Object): Object {
   }
 }
 
-function parseSerializedThreeType(value: string): Object {
+function parseSerializedThreeType(value) {
   const values = value.split('__');
   values.shift();
   return { type: values[0], value: values[1] }
 }
 
-function deserializeThreeType(_value: string): Object {
+function deserializeThreeType(_value) {
   const { type, value } = parseSerializedThreeType(_value);
   switch(type) {
     case THREE_COLOR:
@@ -50,7 +50,7 @@ function deserializeThreeType(_value: string): Object {
   }
 }
 
-function walkThreeObject(values: Object, _mask: Set, func: any): Object {
+function walkThreeObject(values, _mask, func) {  // (values, Set, any)
   const update = (obj, mask) => {
     const serialized = {};
     for (let key in obj) {
@@ -78,7 +78,7 @@ function walkThreeObject(values: Object, _mask: Set, func: any): Object {
   return result;
 }
 
-export function serializeThreeTypes(threeValues: Object, _mask: Set): Object {
+export function serializeThreeTypes(threeValues, _mask) {  //mask is Set
   const serialize = (val, key, serializedObj) => {
     if (isThreeType(val)) {
       if (isValidThreeType(val)) {
@@ -92,7 +92,7 @@ export function serializeThreeTypes(threeValues: Object, _mask: Set): Object {
   return result;
 }
 
-export function deserializeThreeTypes(threeValues: Object): Object {
+export function deserializeThreeTypes(threeValues) {
   const deserialize = (val, key, serializedObj) => {
     if ((val && val.constructor === String) && val.startsWith('__')) {
       serializedObj[key] = deserializeThreeType(val);

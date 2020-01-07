@@ -20,7 +20,7 @@ export default class ThreeViewerAbstractBackend {
    * 3) some authentication in order to get 1 and 2
    */
 
-  _post(url: string, body: Object | FormData, params: Object): Promise {
+  _post(url, body, params) { // body: Object | FormData
     return new Promise((resolve, reject) => {
       fetch(url, {
         ...{
@@ -41,7 +41,7 @@ export default class ThreeViewerAbstractBackend {
     });
   }
 
-  _put(url: string, body: Object, params: Object): Promise {
+  _put(url, body, params) {
     return new Promise((resolve, reject) => {
       fetch(url, {
         ...{
@@ -60,7 +60,7 @@ export default class ThreeViewerAbstractBackend {
     });
   }
 
-  _get(url: string, params: Object): Promise {
+  _get(url, params) {
     return new Promise((resolve, reject) => {
       fetch(url, { method: "GET", credentials: "include" }, params)
         .then(response => {
@@ -72,7 +72,7 @@ export default class ThreeViewerAbstractBackend {
     });
   }
 
-  _getBinary(url: string, params: Object): Promise {
+  _getBinary(url, params) {
     return new Promise((resolve, reject) => {
       fetch(url, params)
         .then(response => {
@@ -85,7 +85,7 @@ export default class ThreeViewerAbstractBackend {
     });
   }
 
-  _delete(url: string, params: Object): Promise {
+  _delete(url, params) {
     return new Promise((resolve, reject) => {
       fetch(url, {
         ...{
@@ -107,20 +107,20 @@ export default class ThreeViewerAbstractBackend {
    * be a function that passes the URL to the asset to an appropriate loader
    */
 
-  getThreeAsset(url: string, params: Object): Promise {
+  getThreeAsset(url, params) {
     // returns a url to the skybox image
     return this._get(url, params)
       .then(result => result)
       .catch(error => console.log(error));
   }
 
-  postThreeAsset(url: string, body: Object, params: Object): Promise {
+  postThreeAsset(url, body, params) {
     return this._post(url, body, params)
       .then(result => result)
       .catch(error => console.error(error));
   }
 
-  static fetchGZippedAsset(id: string, url: string, fileId: string): Promise {
+  static fetchGZippedAsset(id, url, fileId) {
     return new Promise((resolve, reject) => {
       fetch(url)
         .then(response => {
@@ -146,12 +146,12 @@ export default class ThreeViewerAbstractBackend {
   }
 
   static fetchGZippedAssetSaga(
-    id: string,
-    url: string,
-    fileId: string,
-    channel: EventChannel,
+    id,
+    url,
+    fileId,
+    channel, //: EventChannel,
     saveToCache = true
-  ): Promise {
+  ) {
     return new Promise((resolve, reject) => {
       fetch(url)
         .then(response => {
@@ -189,11 +189,11 @@ export default class ThreeViewerAbstractBackend {
   }
 
   static fetchJSONAssetSaga(
-    id: string,
-    url: string,
-    fileId: string,
+    id,
+    url,
+    fileId,
     saveToCache = true
-  ): Promise {
+  ) {
     return new Promise((resolve, reject) => {
       fetch(url)
         .then(response => {
@@ -215,11 +215,11 @@ export default class ThreeViewerAbstractBackend {
     });
   }
 
-  static gunzipAsset(buf: ArrayBuffer): Promise {
+  static gunzipAsset(buf) {
     return new Promise((resolve, reject) => {
       const inflateWorker = new InflateWorker();
       inflateWorker.postMessage(buf, [buf]);
-      inflateWorker.onmessage = (event: Event) => {
+      inflateWorker.onmessage = (event) => {  //: Event
         const { data } = event;
         resolve(data);
       };
@@ -227,7 +227,7 @@ export default class ThreeViewerAbstractBackend {
   }
 
   // takes saga event channel for progress
-  static gunzipAssetSaga(buf: ArrayBuffer, channel: EventChannel): Promise {
+  static gunzipAssetSaga(buf, channel) {  //: EventChannel
     return new Promise((resolve, reject) => {
       const inflateWorker = new InflateWorker();
       inflateWorker.postMessage(buf, [buf]);
@@ -235,14 +235,14 @@ export default class ThreeViewerAbstractBackend {
     });
   }
 
-  static serialize(obj: Object): string {
+  static serialize(obj) {
     const serialized = JSON.stringify(obj);
     return serialized;
   }
 
-  static objToFormData(obj: Object): FormData {
+  static objToFormData(obj) { //: FormData
     const fd = new FormData();
-    const formatFormData = (obj: Object, rootKey: undefined | string) => {
+    const formatFormData = (obj, rootKey) => {  //: undefined | string
       for (let key in obj) {
         let newKey = rootKey !== undefined ? rootKey + "__" + key : key;
         if (obj[key] !== null && obj[key].constructor === Object) {
@@ -256,14 +256,14 @@ export default class ThreeViewerAbstractBackend {
     return fd;
   }
 
-  static checkCache(id: string, fileId: string): Promise {
+  static checkCache(id, fileId) {
     return new Promise((resolve, reject) => {
       const cacheWorker = new ModelCacheWorker();
       cacheWorker.postMessage({
         modelData: { id: id, fileId: fileId },
         mode: THREE_MODEL_CACHE_GET
       });
-      cacheWorker.onmessage = (event: Event) => {
+      cacheWorker.onmessage = (event) => {  //: Event
         const { data } = event;
         if (
           data.status === false ||
@@ -275,7 +275,7 @@ export default class ThreeViewerAbstractBackend {
     });
   }
 
-  static saveToCache(id: string, buf: ArrayBuffer, fileId: string): Promise {
+  static saveToCache(id, buf, fileId) {
     return new Promise((resolve, reject) => {
       const cacheWorker = new ModelCacheWorker();
       const data = {
@@ -283,7 +283,7 @@ export default class ThreeViewerAbstractBackend {
         mode: THREE_MODEL_CACHE_SAVE
       };
       cacheWorker.postMessage(data);
-      cacheWorker.onmessage = (event: Event) => {
+      cacheWorker.onmessage = (event) => {  //: Event
         const { data } = event;
         if (
           data.status === false ||

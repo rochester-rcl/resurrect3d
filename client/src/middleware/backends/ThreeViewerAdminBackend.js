@@ -15,17 +15,17 @@ import {
 } from "../../constants/api-endpoints";
 
 export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend {
-  constructor(endpoint: string) {
+  constructor(endpoint) {
     super(endpoint);
-    (this: any).getViews = this.getViews.bind(this);
-    (this: any).getView = this.getView.bind(this);
-    (this: any).getThreeFile = this.getThreeFile.bind(this);
-    (this: any).updateView = this.updateView.bind(this);
-    (this: any).addView = this.addView.bind(this);
-    (this: any).deleteView = this.deleteView.bind(this);
+    this.getViews = this.getViews.bind(this);
+    this.getView = this.getView.bind(this);
+    this.getThreeFile = this.getThreeFile.bind(this);
+    this.updateView = this.updateView.bind(this);
+    this.addView = this.addView.bind(this);
+    this.deleteView = this.deleteView.bind(this);
   }
 
-  addUser(userInfo: Object): Promise {
+  addUser(userInfo) {
     const body = JSON.stringify(userInfo);
     return this._post(USERS_ENDPOINT, body, {
       headers: { "Content-Type": "application/json" }
@@ -34,19 +34,19 @@ export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend 
       .catch(error => console.log(error));
   }
 
-  deleteUser(id: Number): Promise {
+  deleteUser(id) {
     return this._delete(USERS_ENDPOINT + id, {})
       .then(result => result)
       .catch(error => console.log(error));
   }
 
-  verifyUser(token: string): Promise {
+  verifyUser(token) {
     return this._get(VERIFY_ENDPOINT + token, {})
       .then(result => result)
       .catch(error => console.log(error));
   }
 
-  login(userData: Object): Promise {
+  login(userData) {
     const body = JSON.stringify(userData);
     return this._post(LOGIN_ENDPOINT, body, {
       headers: { "Content-Type": "application/json" }
@@ -55,37 +55,37 @@ export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend 
       .catch(error => console.log(error));
   }
 
-  logout(): Promise {
+  logout() {
     return this._get(LOGOUT_ENDPOINT, {})
       .then(result => result)
       .catch(error => console.log(error));
   }
 
-  authenticate(): Promise {
+  authenticate() {
     return this._get(AUTHENTICATE_ENDPOINT, {})
       .then(result => result)
       .catch(error => console.log(error));
   }
 
-  getViews(): Promise {
+  getViews() {
     return this._get(VIEWS_ENDPOINT, {})
       .then(result => result)
       .catch(error => console.log(error));
   }
 
-  getView(id: number): Promise {
+  getView(id) {
     return this._get(VIEWS_ENDPOINT + id, {})
       .then(result => result)
       .catch(error => console.log(error));
   }
 
-  getThreeFile(id: number): Promise {
+  getThreeFile(id) {
     return this._get(FILE_ENDPOINT + id, {})
       .then(result => result)
       .catch(error => console.log(error));
   }
 
-  addView(viewData: Object): Promise {
+  addView(viewData) {
     console.log(viewData);
     const fd = ThreeViewerAdminBackend.objToFormData(viewData);
     console.log(fd);
@@ -94,20 +94,20 @@ export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend 
       .catch(error => console.log(error));
   }
 
-  updateView(viewData: Object): Promise {
+  updateView(viewData) {
     const body = ThreeViewerAdminBackend.objToFormData(viewData);
     return this._put(VIEWS_ENDPOINT + viewData._id, body, {})
       .then(result => result)
       .catch(error => console.log(error));
   }
 
-  deleteView(id: number): Promise {
+  deleteView(id) {
     return this._delete(VIEWS_ENDPOINT + id, {})
       .then(result => result)
       .catch(error => console.log(error));
   }
 
-  updateFile(filename: string, fileData: File): Promise {
+  updateFile(filename, fileData) {
     return this._put(FILE_ENDPOINT + filename, fileData, {})
       .then(result => result)
       .catch(error => console.log(error));

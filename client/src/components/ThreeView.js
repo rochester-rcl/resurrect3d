@@ -75,73 +75,73 @@ export default class ThreeView extends Component {
   /* Flow - declare all instance property types here */
 
   // settings
-  height: number;
-  width: number;
-  pixelRatio: number;
-  minAzimuthAngle: number;
-  maxAzimuthAngle: number;
-  minPolarAngle: number;
-  maxPolarAngle: number;
-  minDistance: number;
-  maxDistance: number;
-  environmentRadius: number;
-  maxPan: number;
-  minPan: number;
-  spriteScaleFactor: number;
+  height;//: number;
+  width;//: number;
+  pixelRatio;//: number;
+  minAzimuthAngle;//: number;
+  maxAzimuthAngle;//: number;
+  minPolarAngle;//: number;
+  maxPolarAngle;//: number;
+  minDistance;//: number;
+  maxDistance;//: number;
+  environmentRadius;//: number;
+  maxPan;//: number;
+  minPan;//: number;
+  spriteScaleFactor;//: number;
 
   // objects
-  bboxMesh: THREE.Vector3;
-  axisGuides: Array<Object>;
-  bboxSkybox: THREE.MESH;
-  mesh: THREE.Group;
-  labelSprite: THREE.Sprite;
-  labelSphere: THREE.Sphere;
+  bboxMesh;//: THREE.Vector3;
+  axisGuides;//: Array<Object>;
+  bboxSkybox;//: THREE.MESH;
+  mesh;//: THREE.Group;
+  labelSprite;//: THREE.Sprite;
+  labelSphere;//: THREE.Sphere;
 
   // mesh properties
-  measurement: THREE.Group;
-  meshDepth: number;
-  meshWidth: number;
-  meshHeight: number;
+  measurement;//: THREE.Group;
+  meshDepth;//: number;
+  meshWidth;//: number;
+  meshHeight;//: number;
 
   // environments
-  scene: THREE.Scene;
-  overlayScene: THREE.Scene;
-  envScene: THREE.Scene;
-  guiScene: THREE.Scene;
-  ambientLight: THREE.AmbientLight;
-  pointLights: ThreePointLights;
-  dynamicLight: THREE.SpotLight;
-  skyboxGeom: THREE.SphereGeometry;
-  skyboxMaterial: THREE.ShaderMaterial;
-  skyboxMaterialShader: THREE.ShaderMaterial;
-  skyboxMesh: THREE.Mesh;
+  scene;//: THREE.Scene;
+  overlayScene;//: THREE.Scene;
+  envScene;//: THREE.Scene;
+  guiScene;//: THREE.Scene;
+  ambientLight;//: THREE.AmbientLight;
+  pointLights;//: ThreePointLights;
+  dynamicLight;//: THREE.SpotLight;
+  skyboxGeom;//: THREE.SphereGeometry;
+  skyboxMaterial;//: THREE.ShaderMaterial;
+  skyboxMaterialShader;//: THREE.ShaderMaterial;
+  skyboxMesh;//: THREE.Mesh;
 
   // cameras
-  lastCameraPosition: THREE.Vector3;
-  lastCameraTarget: THREE.Vector3;
-  camera: THREE.PerspectiveCamera;
+  lastCameraPosition;//: THREE.Vector3;
+  lastCameraTarget;//: THREE.Vector3;
+  camera;//: THREE.PerspectiveCamera;
   overlayCamera = THREE.OrthographicCamera;
 
   // Controls
-  rotateSpeed: Number = 0.4;
-  zoomSpeed: Number = 0.9;
-  dampingFactor: Number = 0.2;
+  rotateSpeed;//: Number = 0.4;
+  zoomSpeed;//: Number = 0.9;
+  dampingFactor;//: Number = 0.2;
 
   // Rendering
-  webGLRenderer: THREE.WebGLRenderer;
-  css2DRenderer: CSS2DRenderer;
-  envRenderPass: THREE.RenderPass;
-  effectComposer: THREE.EffectComposer;
-  bokehPass: THREE.BokehPass;
-  bloomPass: THREE.BloomPass;
-  brightnessPass: THREE.BrightnessPass;
+  webGLRenderer;//: THREE.WebGLRenderer;
+  css2DRenderer;//: CSS2DRenderer;
+  envRenderPass;//: THREE.RenderPass;
+  effectComposer;//: THREE.EffectComposer;
+  bokehPass;//: THREE.BokehPass;
+  bloomPass;//: THREE.BloomPass;
+  brightnessPass;//: THREE.BrightnessPass;
 
   // GUI
-  panelLayout: ThreeGUIPanelLayout;
-  controls: ThreeGUILayout;
+  panelLayout;//: ThreeGUIPanelLayout;
+  controls;//: ThreeGUILayout;
 
   // DOM
-  threeContainer: HTMLElement;
+  threeContainer;//: HTMLElement;
   // Mask for settings we don't want to save (aka uniforms)
   settingsMask = {
     materials: new Set([]),
@@ -242,32 +242,32 @@ export default class ThreeView extends Component {
     presentationMode: false
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
-  clock: THREE.Clock;
-  constructor(props: Object) {
+  clock;//: THREE.Clock;
+  constructor(props) {
     super(props);
 
     /** Properties
      ***************************************************************************/
 
-    (this: any).height = window.innerHeight;
-    (this: any).width = window.innerWidth;
-    (this: any).pixelRatio = window.devicePixelRatio;
-    (this: any).minAzimuthAngle = -Infinity;
-    (this: any).maxAzimuthAngle = Infinity;
-    (this: any).minPolarAngle = 0;
-    (this: any).maxPolarAngle = Math.PI;
-    (this: any).minDistance = 0;
-    (this: any).maxDistance = Infinity;
-    (this: any).environmentRadius = 0;
-    (this: any).maxPan = 0;
-    (this: any).minPan = 0;
-    (this: any).bboxMesh = null;
-    (this: any).axisGuides = [];
-    (this: any).bboxSkybox = null;
-    (this: any).lastCameraPosition = new THREE.Vector3();
-    (this: any).EDL_TEXTURE_RADIUS = 1.0;
-    (this: any).EDL_TEXTURE_STEP = 0.01;
-    (this: any).clock = new THREE.Clock();
+    this.height = window.innerHeight;
+    this.width = window.innerWidth;
+    this.pixelRatio = window.devicePixelRatio;
+    this.minAzimuthAngle = -Infinity;
+    this.maxAzimuthAngle = Infinity;
+    this.minPolarAngle = 0;
+    this.maxPolarAngle = Math.PI;
+    this.minDistance = 0;
+    this.maxDistance = Infinity;
+    this.environmentRadius = 0;
+    this.maxPan = 0;
+    this.minPan = 0;
+    this.bboxMesh = null;
+    this.axisGuides = [];
+    this.bboxSkybox = null;
+    this.lastCameraPosition = new THREE.Vector3();
+    this.EDL_TEXTURE_RADIUS = 1.0;
+    this.EDL_TEXTURE_STEP = 0.01;
+    this.clock = new THREE.Clock();
     this.lastTarget = new THREE.Vector3();
     this.cameraTargetAlpha = 0;
     // TODO needs serious refactoring for VR to work
@@ -276,74 +276,74 @@ export default class ThreeView extends Component {
 
     // Initialization
 
-    (this: any).initEnvironment = this.initEnvironment.bind(this);
-    (this: any).initMesh = this.initMesh.bind(this);
-    (this: any).initPostprocessing = this.initPostprocessing.bind(this);
-    (this: any).initThree = this.initThree.bind(this);
-    (this: any).initControls = this.initControls.bind(this);
-    (this: any).initTools = this.initTools.bind(this);
-    (this: any).addShaderPass = this.addShaderPass.bind(this);
-    (this: any).hydrateSettings = this.hydrateSettings.bind(this);
+    this.initEnvironment = this.initEnvironment.bind(this);
+    this.initMesh = this.initMesh.bind(this);
+    this.initPostprocessing = this.initPostprocessing.bind(this);
+    this.initThree = this.initThree.bind(this);
+    this.initControls = this.initControls.bind(this);
+    this.initTools = this.initTools.bind(this);
+    this.addShaderPass = this.addShaderPass.bind(this);
+    this.hydrateSettings = this.hydrateSettings.bind(this);
 
     // Updates / Geometry / Rendering
 
-    (this: any).animate = this.animate.bind(this);
-    (this: any).update = this.update.bind(this);
-    (this: any).updateCamera = this.updateCamera.bind(this);
-    (this: any).controlCamera = this.controlCamera.bind(this);
-    (this: any).orbit = this.orbit.bind(this);
-    (this: any).zoom = this.zoom.bind(this);
-    (this: any).pan = this.pan.bind(this);
-    (this: any).controlAnimation = this.controlAnimation.bind(this);
-    (this: any).renderWebGL = this.renderWebGL.bind(this);
-    (this: any).renderCSS = this.renderCSS.bind(this);
-    (this: any).getScale = this.getScale.bind(this);
-    (this: any).fitPerspectiveCamera = this.fitPerspectiveCamera.bind(this);
-    (this: any).panBounds = this.panBounds.bind(this);
-    (this: any).centerCamera = this.centerCamera.bind(this);
+    this.animate = this.animate.bind(this);
+    this.update = this.update.bind(this);
+    this.updateCamera = this.updateCamera.bind(this);
+    this.controlCamera = this.controlCamera.bind(this);
+    this.orbit = this.orbit.bind(this);
+    this.zoom = this.zoom.bind(this);
+    this.pan = this.pan.bind(this);
+    this.controlAnimation = this.controlAnimation.bind(this);
+    this.renderWebGL = this.renderWebGL.bind(this);
+    this.renderCSS = this.renderCSS.bind(this);
+    this.getScale = this.getScale.bind(this);
+    this.fitPerspectiveCamera = this.fitPerspectiveCamera.bind(this);
+    this.panBounds = this.panBounds.bind(this);
+    this.centerCamera = this.centerCamera.bind(this);
     this.center = this.center.bind(this);
-    (this: any).computeAxisGuides = this.computeAxisGuides.bind(this);
-    (this: any).drawAxisGuides = this.drawAxisGuides.bind(this);
-    (this: any).addAxisLabels = this.addAxisLabels.bind(this);
-    (this: any).removeAxisLabels = this.removeAxisLabels.bind(this);
-    (this: any).toggleBackground = this.toggleBackground.bind(this);
-    (this: any).captureScreenshot = this.captureScreenshot.bind(this);
-    (this: any).showAxes = this.showAxes.bind(this);
-    (this: any).showLightHelper = this.showLightHelper.bind(this);
-    (this: any).toggleDynamicLighting = this.toggleDynamicLighting.bind(this);
-    (this: any).updateDynamicLight = this.updateDynamicLighting.bind(this);
-    (this: any).updateLights = this.updateLights.bind(this);
-    (this: any).toggleInfo = this.toggleInfo.bind(this);
-    (this: any).toggleTools = this.toggleTools.bind(this);
+    this.computeAxisGuides = this.computeAxisGuides.bind(this);
+    this.drawAxisGuides = this.drawAxisGuides.bind(this);
+    this.addAxisLabels = this.addAxisLabels.bind(this);
+    this.removeAxisLabels = this.removeAxisLabels.bind(this);
+    this.toggleBackground = this.toggleBackground.bind(this);
+    this.captureScreenshot = this.captureScreenshot.bind(this);
+    this.showAxes = this.showAxes.bind(this);
+    this.showLightHelper = this.showLightHelper.bind(this);
+    this.toggleDynamicLighting = this.toggleDynamicLighting.bind(this);
+    this.updateDynamicLight = this.updateDynamicLighting.bind(this);
+    this.updateLights = this.updateLights.bind(this);
+    this.toggleInfo = this.toggleInfo.bind(this);
+    this.toggleTools = this.toggleTools.bind(this);
     this.handleToolMenuExpanded = this.handleToolMenuExpanded.bind(this);
     this.handleToolMenuTransition = this.handleToolMenuTransition.bind(this);
-    (this: any).toggleQuality = this.toggleQuality.bind(this);
-    (this: any).drawMeasurement = this.drawMeasurement.bind(this);
-    (this: any).drawAnnotations = this.drawAnnotations.bind(this);
-    (this: any).viewAnnotation = this.viewAnnotation.bind(this);
+    this.toggleQuality = this.toggleQuality.bind(this);
+    this.drawMeasurement = this.drawMeasurement.bind(this);
+    this.drawAnnotations = this.drawAnnotations.bind(this);
+    this.viewAnnotation = this.viewAnnotation.bind(this);
     this.onAnnotationPresentationToggle = this.onAnnotationPresentationToggle.bind(
       this
     );
-    (this: any).drawSpriteTarget = this.drawSpriteTarget.bind(this);
-    (this: any).computeSpriteScaleFactor = this.computeSpriteScaleFactor.bind(
+    this.drawSpriteTarget = this.drawSpriteTarget.bind(this);
+    this.computeSpriteScaleFactor = this.computeSpriteScaleFactor.bind(
       this
     );
-    (this: any).updateDynamicMaterials = this.updateDynamicMaterials.bind(this);
-    (this: any).deepUpdateThreeMaterial = this.deepUpdateThreeMaterial.bind(
+    this.updateDynamicMaterials = this.updateDynamicMaterials.bind(this);
+    this.deepUpdateThreeMaterial = this.deepUpdateThreeMaterial.bind(
       this
     );
-    (this: any).updateThreeMaterial = this.updateThreeMaterial.bind(this);
-    (this: any).updateMaterials = this.updateMaterials.bind(this);
-    (this: any).updateDynamicShaders = this.updateDynamicShaders.bind(this);
-    (this: any).updateShaders = this.updateShaders.bind(this);
-    (this: any).updateRenderSize = this.updateRenderSize.bind(this);
-    (this: any).setEnvMap = this.setEnvMap.bind(this);
-    (this: any).exportObj = this.exportObj.bind(this);
-    (this: any).saveSettings = this.saveSettings.bind(this);
-    (this: any).updateButtonLabel = this.updateButtonLabel.bind(this);
-    (this: any).toggleRaycasting = this.toggleRaycasting.bind(this);
-    (this: any).enterVR = this.enterVR.bind(this);
-    (this: any).exitVR = this.exitVR.bind(this);
+    this.updateThreeMaterial = this.updateThreeMaterial.bind(this);
+    this.updateMaterials = this.updateMaterials.bind(this);
+    this.updateDynamicShaders = this.updateDynamicShaders.bind(this);
+    this.updateShaders = this.updateShaders.bind(this);
+    this.updateRenderSize = this.updateRenderSize.bind(this);
+    this.setEnvMap = this.setEnvMap.bind(this);
+    this.exportObj = this.exportObj.bind(this);
+    this.saveSettings = this.saveSettings.bind(this);
+    this.updateButtonLabel = this.updateButtonLabel.bind(this);
+    this.toggleRaycasting = this.toggleRaycasting.bind(this);
+    this.enterVR = this.enterVR.bind(this);
+    this.exitVR = this.exitVR.bind(this);
     this.animateZoom = this.animateZoom.bind(this);
     this.animateAnnotationTransition = this.animateAnnotationTransition.bind(
       this
@@ -355,19 +355,19 @@ export default class ThreeView extends Component {
     this.hideAnnotations = this.hideAnnotations.bind(this);
     // event handlers
 
-    (this: any).handleMouseDown = this.handleMouseDown.bind(this);
-    (this: any).handleMouseMove = this.handleMouseMove.bind(this);
-    (this: any).handleMouseUp = this.handleMouseUp.bind(this);
-    (this: any).handleMouseWheel = this.handleMouseWheel.bind(this);
-    (this: any).handleWindowResize = this.handleWindowResize.bind(this);
-    (this: any).handleKeyDown = this.handleKeyDown.bind(this);
-    (this: any).handleKeyUp = this.handleKeyUp.bind(this);
+    this.handleMouseDown = this.handleMouseDown.bind(this);
+    this.handleMouseMove = this.handleMouseMove.bind(this);
+    this.handleMouseUp = this.handleMouseUp.bind(this);
+    this.handleMouseWheel = this.handleMouseWheel.bind(this);
+    this.handleWindowResize = this.handleWindowResize.bind(this);
+    this.handleKeyDown = this.handleKeyDown.bind(this);
+    this.handleKeyUp = this.handleKeyUp.bind(this);
 
     // touch events
-    (this: any).handlePinchMove = this.handlePinchMove.bind(this);
-    (this: any).handlePinch = this.handlePinch.bind(this);
-    (this: any).handleTouch = this.handleTouch.bind(this);
-    (this: any).handleTouchMove = this.handleTouchMove.bind(this);
+    this.handlePinchMove = this.handlePinchMove.bind(this);
+    this.handlePinch = this.handlePinch.bind(this);
+    this.handleTouch = this.handleTouch.bind(this);
+    this.handleTouchMove = this.handleTouchMove.bind(this);
 
     // VR
     this.vrSupported = checkVR();
@@ -379,14 +379,14 @@ export default class ThreeView extends Component {
   /** COMPONENT LIFECYCYLE
    *****************************************************************************/
 
-  componentDidMount(): void {
+  componentDidMount() {
     this.initThree();
     window.addEventListener("resize", this.handleWindowResize);
     // TODO will remove this after when FB fixes onWheel events (https://github.com/facebook/react/issues/14856)
     this.threeView.addEventListener("wheel", this.handleMouseWheel);
   }
 
-  componentDidUpdate(prevProps: Object, prevState: Object): void {
+  componentDidUpdate(prevProps, prevState) {
     const { cameraControlPaused } = this.state;
     const { changeAnnotationFocus } = this.props;
     if (prevState.units !== this.state.units) {
@@ -406,7 +406,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  shouldComponentUpdate(nextProps: Object, nextState: Object): boolean {
+  shouldComponentUpdate(nextProps, nextState) {
     if (nextProps.mesh !== this.props.mesh) return true;
     if (nextState.loadProgress !== this.state.loadProgress) return true;
     if (nextState.showInfo !== this.state.showInfo) return true;
@@ -423,12 +423,12 @@ export default class ThreeView extends Component {
     return false;
   }
 
-  componentWillUnmount(): void {
+  componentWillUnmount() {
     window.removeEventListener("resize", this.handleWindowResize);
     this.threeView.removeEventListener("wheel", this.handleMouseWheel);
   }
 
-  render(): Object {
+  render() {
     const {
       loadProgress,
       loadText,
@@ -490,7 +490,7 @@ export default class ThreeView extends Component {
 
   /** THREE JS 'LIFECYCYLE'
    *****************************************************************************/
-  initThree(): void {
+  initThree() {
     const { localAssets } = this.props;
     this.GUI = new ThreeGUI();
     this.GUI.registerComponent("THREE_RANGE_SLIDER", ThreeRangeSlider);
@@ -629,7 +629,7 @@ export default class ThreeView extends Component {
     }, this.initMesh());
   }
 
-  initControls(): void {
+  initControls() {
     let components = this.GUI.components;
     let layouts = this.GUI.layouts;
     let controls = new ThreeGUIGroup("controls");
@@ -741,13 +741,13 @@ export default class ThreeView extends Component {
     );
   }
 
-  update(): void {
+  update() {
     this.updateCamera();
     this.renderWebGL();
     this.renderCSS();
   }
 
-  renderWebGL(): void {
+  renderWebGL() {
     this.webGLRenderer.clear();
     if (
       this.sceneComposer !== undefined &&
@@ -767,7 +767,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  renderCSS(): void {
+  renderCSS() {
     //render css
     this.css2DRenderer.render(
       this.overlayScene,
@@ -775,7 +775,7 @@ export default class ThreeView extends Component {
     );
   }
 
-  animate(): void {
+  animate() {
     if (this.vrSupported) {
       this.webGLRenderer.setAnimationLoop(this.animate);
     } else {
@@ -784,7 +784,7 @@ export default class ThreeView extends Component {
     this.update();
   }
 
-  computeAxisGuides(): void {
+  computeAxisGuides() {
     let axes = ["x", "y", "z"];
     let colors = ["rgb(180,0,0)", "rgb(0,180,0)", "rgb(0,0,180)"];
     this.axisGuides = axes.map((axis, index) => {
@@ -814,7 +814,7 @@ export default class ThreeView extends Component {
     });
   }
 
-  addAxisLabels(): void {
+  addAxisLabels() {
     let { modelUnits } = this.props.options;
     let dimensions = [this.meshWidth, this.meshHeight, this.meshDepth];
     this.axisGuides.forEach((axisGuide, index) => {
@@ -836,13 +836,13 @@ export default class ThreeView extends Component {
     });
   }
 
-  removeAxisLabels(): void {
+  removeAxisLabels() {
     this.axisGuides.forEach((axisGuide, index) => {
       axisGuide.remove(...axisGuide.children);
     });
   }
 
-  drawAxisGuides(showLabels: boolean): void {
+  drawAxisGuides(showLabels) {
     if (showLabels) this.addAxisLabels();
     if (this.axisGuides.length > 0) {
       this.axisGuides.forEach(axisGuide => {
@@ -853,7 +853,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  computeSpriteScaleFactor(): void {
+  computeSpriteScaleFactor() {
     if (this.bboxMesh) {
       /* assuming sprite is 1x1 plane as per constructor, we want it no more
         than 1/4 of the mesh. A divisor of 4 seems to work best */
@@ -868,13 +868,13 @@ export default class ThreeView extends Component {
     }
   }
 
-  drawSpriteTarget(position: THREE.Vector3): THREE.Sprite {
+  drawSpriteTarget(position) {
     let sprite = this.labelSprite.clone();
     sprite.position.copy(position);
     sprite.scale.multiplyScalar(this.spriteScaleFactor);
   }
 
-  drawMeasurement(points?: Object): void {
+  drawMeasurement(points) {
     if (points) {
       let { modelUnits } = this.props.options;
       let { a, b, distance } = points;
@@ -923,7 +923,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  drawAnnotations(annotations?: Object): void {
+  drawAnnotations(annotations) {
     const {
       currentAnnotationCSSObj,
       currentAnnotationCSSReadOnlyBodyObj
@@ -998,7 +998,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  positionAnnotations(alpha = 0): void {
+  positionAnnotations(alpha = 0) {
     //Make annotations position smartly to stay in camera -- use raycaster prob
     const distance = 0.05 * this.spriteScaleFactor;
     const {
@@ -1037,7 +1037,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  initMesh(): void {
+  initMesh() {
     this.mesh = this.props.mesh.object3D;
     const setMicrosurface = material => {
       if (material.type === THREE_MESH_STANDARD_MATERIAL) {
@@ -1141,7 +1141,7 @@ export default class ThreeView extends Component {
     }, this.initEnvironment());
   }
 
-  initEnvironment(): void {
+  initEnvironment() {
     let { skybox } = this.props.options;
     // Skybox
     let cubeSize = this.environmentRadius * 4;
@@ -1209,11 +1209,11 @@ export default class ThreeView extends Component {
 
   // TODO make this a separate component
 
-  addShaderPass(pass: Object): void {
+  addShaderPass(pass) {
     this.setState({ shaderPasses: { ...this.state.shaderPasses, ...pass } });
   }
 
-  hydrateSettings(): Promise {
+  hydrateSettings() { //: Promise
     const tasks = [];
     if (this.props.options.viewerSettings !== undefined) {
       const { lights, materials, shaders } = this.props.options.viewerSettings;
@@ -1232,7 +1232,7 @@ export default class ThreeView extends Component {
     return Promise.all(tasks);
   }
 
-  setEnvMap(): void {
+  setEnvMap() {
     let mesh = this.mesh;
     if (mesh.constructor === THREE.Group) {
       mesh = mesh.children[0];
@@ -1265,7 +1265,7 @@ export default class ThreeView extends Component {
     mesh.material = mapMaterials(mesh.material, setEnv);
   }
 
-  initPostprocessing(): void {
+  initPostprocessing() {
     const rtParams = {
       minFilter: THREE.LinearFilter,
       magFilter: THREE.LinearFilter,
@@ -1411,18 +1411,18 @@ export default class ThreeView extends Component {
   /** Rendering / Updates / Camera
    *****************************************************************************/
   //{
-  getScale(dstScale: number): number {
+  getScale(dstScale) {
     let { maxScale } = this.state;
     if (dstScale > maxScale) dstScale = maxScale;
     if (dstScale <= 0) dstScale = 0;
     return dstScale;
   }
 
-  panBounds(targetPosition: typeof THREE.Vector3): boolean {
+  panBounds(targetPosition) {
     return this.bboxSkybox.containsPoint(targetPosition);
   }
 
-  fitPerspectiveCamera(): void {
+  fitPerspectiveCamera() {
     let distance = this.camera.position.distanceTo(this.bboxMesh.min);
     let fovV =
       2 *
@@ -1430,7 +1430,7 @@ export default class ThreeView extends Component {
       (180 / Math.PI);
   }
 
-  pan(deltaX: number, deltaY: number): void {
+  pan(deltaX, deltaY) {
     let offset = new THREE.Vector3();
     let position = this.camera.position;
     offset.copy(position).sub(this.camera.target);
@@ -1563,7 +1563,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  rotate(deltaX: number, deltaY: number): void {
+  rotate(deltaX, deltaY) {
     let { sphericalDelta } = this.state;
     sphericalDelta.theta -=
       ((2 * Math.PI * deltaX) / this.width) * this.rotateSpeed;
@@ -1571,7 +1571,7 @@ export default class ThreeView extends Component {
       ((2 * Math.PI * deltaY) / this.height) * this.rotateSpeed;
   }
 
-  zoom(zoomDelta: number): void {
+  zoom(zoomDelta) {
     let { scale, cameraControlPaused } = this.state;
     const sign = zoomDelta < 0 ? -1 : zoomDelta > 0 ? 1 : 0;
     scale = (1 - Math.pow(0.95, this.zoomSpeed)) * sign;
@@ -1581,7 +1581,7 @@ export default class ThreeView extends Component {
     });
   }
 
-  orbit(x: number, y: number): void {
+  orbit(x, y) {
     if (this.state.dragging) {
       if (this.state.shiftDown || this.state.rmbDown || this.state.pinching) {
         const { panStart, panEnd, panDelta } = this.state;
@@ -1607,7 +1607,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  centerCamera(): void {
+  centerCamera() {
     this.setState({
       controllable: false,
       animator: this.center(2),
@@ -1638,13 +1638,13 @@ export default class ThreeView extends Component {
     yield null;
   }
 
-  updateCamera(): void {
+  updateCamera() {
     if (this.state.controllable) this.controlCamera();
     else this.controlAnimation();
     this.setState({ deltaTime: this.clock.getDelta() });
   }
 
-  controlCamera(): void {
+  controlCamera() {
     // Borrowed from THREEJS OrbitControls
     const { sphericalDelta, panOffset, cameraControlPaused } = this.state;
     const { spherical } = this;
@@ -1716,7 +1716,7 @@ export default class ThreeView extends Component {
     this.positionAnnotations();
   }
 
-  updateThreeMaterial(material: THREE.Material, prop: string, scale: Number) {
+  updateThreeMaterial(material, prop, scale) {
     if (material[prop] !== null || material[prop] !== undefined) {
       if (prop === "normalScale") {
         material[prop].set(scale, scale, 0);
@@ -1728,7 +1728,7 @@ export default class ThreeView extends Component {
     return material;
   }
 
-  deepUpdateThreeMaterial(obj: Object): void {
+  deepUpdateThreeMaterial(obj) {
     let children = this.mesh.children;
     if (children.length === 0) {
       children = [this.mesh];
@@ -1748,7 +1748,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  updateMaterials(obj: Object, cb) {
+  updateMaterials(obj, cb) {
     const { materialsInfo } = this.state;
     const updated = { ...materialsInfo, ...obj };
     this.setState(
@@ -1764,9 +1764,9 @@ export default class ThreeView extends Component {
     );
   }
 
-  updateDynamicMaterials(scale: number, prop: string): void {
+  updateDynamicMaterials(scale, prop) {
     const updated = { ...this.state.materialsInfo };
-    const update = (scale: number, prop: string, obj: Object) => {
+    const update = (scale, prop, obj) => {
       for (let key in obj) {
         const val = obj[key];
         if (val.constructor === Object) {
@@ -1782,7 +1782,7 @@ export default class ThreeView extends Component {
     this.updateMaterials(updated);
   }
 
-  updateRenderSize(resolution: Array<number>, updateCSSRenderer = true): void {
+  updateRenderSize(resolution, updateCSSRenderer = true) {
     const [width, height] = resolution.map(val =>
       Math.floor(val / this.state.quality.current.value)
     );
@@ -1814,7 +1814,7 @@ export default class ThreeView extends Component {
     this.positionAnnotations();
   }
 
-  updateShaders(obj: Object, cb) {
+  updateShaders(obj, cb) {
     const { shaderPasses } = this.state;
     this.setState(
       {
@@ -1829,10 +1829,10 @@ export default class ThreeView extends Component {
   }
 
   updateDynamicShaders(
-    value: number | boolean,
-    shaderName: string,
-    uniformProp: string
-  ): void {
+    value,
+    shaderName,
+    uniformProp
+  ) {
     const { shaderPasses } = this.state;
     // Need to copy prototype properties too
     const pass = Object.assign(shaderPasses[shaderName]);
@@ -1882,7 +1882,7 @@ export default class ThreeView extends Component {
     this.updateShaders(updatedPasses);
   }
 
-  updateLights(obj: Object, cb): void {
+  updateLights(obj, cb) {
     const { dynamicLightProps } = this.state;
     this.setState(
       {
@@ -1908,9 +1908,9 @@ export default class ThreeView extends Component {
   }
 
   updateDynamicLighting(
-    value: string | number | THREE.Vector3,
-    prop: string
-  ): void {
+    value,
+    prop
+  ) {
     const { dynamicLightProps } = this.state;
     let updated = {};
     if (!prop.includes("offset")) {
@@ -1948,7 +1948,7 @@ export default class ThreeView extends Component {
 
   /** UI
    *****************************************************************************/
-  initTools(): void {
+  initTools() {
     const layouts = this.GUI.layouts;
     const components = this.GUI.components;
     //let panelGroup = new ThreeGUIGroup("tools");
@@ -2339,10 +2339,10 @@ export default class ThreeView extends Component {
   }
 
   viewAnnotation(
-    point: THREE.Vector3,
-    cameraPos: THREE.Vector3,
+    point,
+    cameraPos,
     storeLastPosition = false
-  ): void {
+  ) {
     this.setState({
       controllable: false,
       target: point,
@@ -2351,7 +2351,7 @@ export default class ThreeView extends Component {
   }
 
   // TODO make this thing resize properly
-  toggleTools(): void {
+  toggleTools() {
     if (this.toolsMenu) {
       this.toolsMenu.expandMenu(this.handleToolMenuExpanded);
     }
@@ -2385,7 +2385,7 @@ export default class ThreeView extends Component {
     });
   }
 
-  toggleQuality(): void {
+  toggleQuality() {
     let { options, current } = this.state.quality;
     let currentIndex = options.findIndex(option => {
       return option.label === current.label;
@@ -2407,7 +2407,7 @@ export default class ThreeView extends Component {
     );
   }
 
-  toggleBackground(): void {
+  toggleBackground() {
     let { detailMode } = this.state;
     let { skyboxTexture } = this.props;
 
@@ -2427,9 +2427,9 @@ export default class ThreeView extends Component {
     }
   }
 
-  captureScreenshot(): void {}
+  captureScreenshot() {}
 
-  showAxes(show: boolean): void {
+  showAxes(show) {
     this.setState({ showAxes: show }, () =>
       this.axisGuides.forEach(axisGuide => {
         axisGuide.visible = show;
@@ -2437,14 +2437,14 @@ export default class ThreeView extends Component {
     );
   }
 
-  showLightHelper(show: boolean): void {
+  showLightHelper(show) {
     this.setState(
       { showLightHelper: show },
       () => (this.lightHelper.visible = this.state.showLightHelper)
     );
   }
 
-  toggleDynamicLighting(): void {
+  toggleDynamicLighting() {
     this.setState(
       {
         dynamicLighting: !this.state.dynamicLighting
@@ -2467,7 +2467,7 @@ export default class ThreeView extends Component {
     );
   }
 
-  toggleInfo(): void {
+  toggleInfo() {
     if (this.state.showInfo) {
       this.setState({ showInfo: false });
     } else {
@@ -2475,12 +2475,12 @@ export default class ThreeView extends Component {
     }
   }
 
-  exportObj(): void {
+  exportObj() {
     const exporter = new THREE.OBJExporter();
     const result = exporter.parse(this.mesh);
   }
 
-  saveSettings(): void {
+  saveSettings() {
     const { shaderPasses, dynamicLightProps, materialsInfo } = this.state;
     const settings = { lights: {}, shaders: {}, materials: {} };
     for (let key in shaderPasses) {
@@ -2501,10 +2501,10 @@ export default class ThreeView extends Component {
 
   updateButtonLabel(
     buttonRef,
-    neutral: string,
-    success: string,
-    failure: string
-  ): void {
+    neutral,
+    success,
+    failure
+  ) {
     const { saveStatus } = this.props;
     if (buttonRef !== undefined) {
       let statusClass = "save-status ";
@@ -2522,19 +2522,19 @@ export default class ThreeView extends Component {
     }
   }
 
-  toggleRaycasting(val): void {
+  toggleRaycasting(val) {
     this.setState({
       isRaycasting: val
     });
   }
 
-  enterVR(): void {
+  enterVR() {
     this.setState({
       vrActive: true
     });
   }
 
-  exitVR(): void {
+  exitVR() {
     this.setState({
       vrActive: false
     });
@@ -2545,7 +2545,7 @@ export default class ThreeView extends Component {
   /** EVENT HANDLERS
    *****************************************************************************/
 
-  handleMouseDown(event: SyntheticMouseEvent): void {
+  handleMouseDown(event) {
     if (this.state.shiftDown) {
       this.setState({
         dragging: true,
@@ -2572,17 +2572,17 @@ export default class ThreeView extends Component {
     }
   }
 
-  handleMouseMove(event: SyntheticMouseEvent): void {
+  handleMouseMove(event) {
     if (this.state.controllable) this.orbit(event.clientX, event.clientY);
   }
 
-  handleMouseWheel(event: SyntheticWheelEvent): void {
+  handleMouseWheel(event) {
     const { cameraControlPaused } = this.state;
     event.preventDefault();
     this.zoom(event.deltaY);
   }
 
-  handleMouseUp(event: SyntheticEvent): void {
+  handleMouseUp(event) {
     if (this.state.dragging) {
       this.setState({ dragging: false });
     } else {
@@ -2590,7 +2590,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  handleWindowResize(event: Event): void {
+  handleWindowResize(event) {
     let { clientWidth, clientHeight } = this.webGLRenderer.domElement;
     // we're concerned with client height + client width of our canvas
     if (!this.state.toolsActive) {
@@ -2602,7 +2602,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  handleKeyDown(event: SyntheticKeyboardEvent): void {
+  handleKeyDown(event) {
     // TODO redo rotation
     // this.mesh.getWorldQuaternion(this.rotationTarget);
     switch (event.keyCode) {
@@ -2623,7 +2623,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  handleKeyUp(event: SyntheticKeyboardEvent): void {
+  handleKeyUp(event) {
     switch (event.keyCode) {
       case 16:
         this.setState({ shiftDown: false });
@@ -2635,7 +2635,7 @@ export default class ThreeView extends Component {
 
   // touch methods
 
-  handlePinch(pinchInfo: Object, type: string): void {
+  handlePinch(pinchInfo, type) {
     switch (type) {
       case "pinchstart":
         this.setState({
@@ -2658,7 +2658,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  handlePinchMove(pinchInfo: Object, type: string): void {
+  handlePinchMove(pinchInfo, type) {
     let { pinchDelta, normalizedDistance } = pinchInfo;
     if (normalizedDistance > ZOOM_PINCH_DISTANCE_SIZE) {
       this.zoom(pinchDelta);
@@ -2667,7 +2667,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  handleTouch(touch: Touch, type: string): void {
+  handleTouch(touch, type) {
     switch (type) {
       case "touchstart":
         this.setState({
@@ -2687,7 +2687,7 @@ export default class ThreeView extends Component {
     }
   }
 
-  handleTouchMove(touch: Touch): void {
+  handleTouchMove(touch) {
     this.orbit(touch.clientX, touch.clientY);
   }
 

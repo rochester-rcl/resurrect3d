@@ -12,7 +12,7 @@
 */
 
 
-export default function loadSSAOShader(threeInstance: Object): typeof Promise {
+export default function loadSSAOShader(threeInstance) {
   return new Promise((resolve, reject) => {
     threeInstance.SSAOShader = {
 

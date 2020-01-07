@@ -17,7 +17,7 @@ import { BASENAME } from '../../constants/api-endpoints';
 const verifyLoader = () => <LoaderModal active={true} text="Verifying Account ..." />;
 const link = <Link className="three-admin-home-link" to={BASENAME + '/admin/login'}>Back to Login</Link>
 
-const VerifyUser = (props: Object) => {
+const VerifyUser = (props) => {
   const { verified, message } = props;
   if (verified === undefined) {
     return (

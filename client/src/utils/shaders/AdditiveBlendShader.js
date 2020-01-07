@@ -1,4 +1,4 @@
-export default function loadAdditiveBlendShader(threeInstance: Object): Promise {
+export default function loadAdditiveBlendShader(threeInstance) {
   return new Promise((resolve, reject) => {
     threeInstance.AdditiveBlendShader = {
 

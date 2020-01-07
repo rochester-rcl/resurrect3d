@@ -41,11 +41,11 @@ class AdminContainer extends Component {
 
   constructor(props) {
     super(props);
-    (this: any).handleAddView = this.handleAddView.bind(this);
-    (this: any).handleUpdateViews = this.handleUpdateViews.bind(this);
-    (this : any).handleLoadAsync = this.handleLoadAsync.bind(this);
-    (this : any).handlePostAsync = this.handlePostAsync.bind(this);
-    (this : any).state = {
+    this.handleAddView = this.handleAddView.bind(this);
+    this.handleUpdateViews = this.handleUpdateViews.bind(this);
+    this.handleLoadAsync = this.handleLoadAsync.bind(this);
+    this.handlePostAsync = this.handlePostAsync.bind(this);
+    this.state = {
       views: []
     }
   }
@@ -207,7 +207,7 @@ function mapStateToProps(state) {
   }
 }
 
-function mapActionCreatorsToProps(dispatch: Object) {
+function mapActionCreatorsToProps(dispatch) {
 
   return bindActionCreators(AdminActionCreators, dispatch);
 

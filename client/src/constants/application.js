@@ -24,7 +24,7 @@ export const MIN_SCALE = 0;
 export const MAX_SCALE = 2.5;
 
 // Controls
-export const DEFAULT_DAMPING_FACTOR: Number = 0.7;
+export const DEFAULT_DAMPING_FACTOR = 0.7;
 
 // Touch controls
 export const PINCH_END = "pinchend";
@@ -71,18 +71,18 @@ export const DISPLAY_DEVICE = {
 };
 
 export const CONVERSIONS = {
-  MM_TO_CM: (measurement: Number) => measurement / 10,
-  MM_TO_IN: (measurement: Number) => measurement / 25.4,
-  MM_TO_FT: (measurement: Number) => measurement / 304.8,
-  CM_TO_IN: (measurement: Number) => measurement / 2.54,
-  CM_TO_MM: (measurement: Number) => measurement * 10,
-  CM_TO_FT: (measurement: Number) => measurement / 30.48,
-  IN_TO_FT: (measurement: Number) => measurement / 12,
-  IN_TO_CM: (measurement: Number) => measurement * 2.54,
-  IN_TO_MM: (measurement: Number) => measurement * 25.4,
-  FT_TO_IN: (measurement: Number) => measurement * 12,
-  FT_TO_CM: (measurement: Number) => measurement * 30.48,
-  FT_TO_MM: (measurement: Number) => measurement * 304.8
+  MM_TO_CM: (measurement) => measurement / 10,
+  MM_TO_IN: (measurement) => measurement / 25.4,
+  MM_TO_FT: (measurement) => measurement / 304.8,
+  CM_TO_IN: (measurement) => measurement / 2.54,
+  CM_TO_MM: (measurement) => measurement * 10,
+  CM_TO_FT: (measurement) => measurement / 30.48,
+  IN_TO_FT: (measurement) => measurement / 12,
+  IN_TO_CM: (measurement) => measurement * 2.54,
+  IN_TO_MM: (measurement) => measurement * 25.4,
+  FT_TO_IN: (measurement) => measurement * 12,
+  FT_TO_CM: (measurement) => measurement * 30.48,
+  FT_TO_MM: (measurement) => measurement * 304.8
 };
 
 // Mesh exports
@@ -150,10 +150,10 @@ export const DATA_URL_PNG = "data:image/jpeg;base64,";
 export const SIMPLEX_2D = "SIMPLEX_2D";
 
 // WebVR
-export const WEBVR_DEVICE_NOT_FOUND: string = "WEBVR DEVICE NOT FOUND";
-export const WEBVR_NOT_SUPPORTED: string = "WEBVR NOT SUPPORTED";
-export const WEBVR_ENTER: string = "ENTER VR";
-export const WEBVR_EXIT: string = "EXIT VR";
+export const WEBVR_DEVICE_NOT_FOUND = "WEBVR DEVICE NOT FOUND";
+export const WEBVR_NOT_SUPPORTED = "WEBVR NOT SUPPORTED";
+export const WEBVR_ENTER = "ENTER VR";
+export const WEBVR_EXIT = "EXIT VR";
 
 export const WEBVR_SUPPORT = {
   NOT_SUPPORTED: 0,

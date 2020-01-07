@@ -2,7 +2,7 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-export default function loadRenderPass(threeInstance: Object): typeof Promise {
+export default function loadRenderPass(threeInstance) {
 	return new Promise((resolve, reject) => {
 		threeInstance.RenderPass = function ( scene, camera, overrideMaterial, clearColor, clearAlpha ) {
 

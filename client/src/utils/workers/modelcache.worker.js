@@ -10,7 +10,7 @@ self._dbLoaded = false;  // eslint-disable-line no-restricted-globals
 
 self._cache.open().then(() => self._dbLoaded = true);  // eslint-disable-line no-restricted-globals
 
-self.get = (id: string, fileId: string): Promise => {  // eslint-disable-line no-restricted-globals
+self.get = (id, fileId) => {  // eslint-disable-line no-restricted-globals
   return new Promise((resolve, reject) => {
     self._cache.get([id]).then((query) => {  // eslint-disable-line no-restricted-globals
       if (query.data === null) {
@@ -25,7 +25,7 @@ self.get = (id: string, fileId: string): Promise => {  // eslint-disable-line no
   });
 }
 
-self.getOrCreate = (modelData: Object): Promise => {  // eslint-disable-line no-restricted-globals
+self.getOrCreate = (modelData) => {  // eslint-disable-line no-restricted-globals
   return new Promise((resolve, reject) => {
     self.get(modelData.id).then((result) => {  // eslint-disable-line no-restricted-globals
       if (result.status === true) {
@@ -48,7 +48,7 @@ self.getOrCreate = (modelData: Object): Promise => {  // eslint-disable-line no-
   });
 }
 
-self.query = (data: Object) => {  // eslint-disable-line no-restricted-globals
+self.query = (data) => {  // eslint-disable-line no-restricted-globals
   switch(data.mode) {
     case THREE_MODEL_CACHE_SAVE:
       self.getOrCreate(data.modelData).then((result) => {  // eslint-disable-line no-restricted-globals
@@ -70,7 +70,7 @@ self.query = (data: Object) => {  // eslint-disable-line no-restricted-globals
 }
 
 
-self.onmessage = (event: Event) => {  // eslint-disable-line no-restricted-globals
+self.onmessage = (event) => {  // eslint-disable-line no-restricted-globals
   const { data } = event;
   if (self._dbLoaded === false) {  // eslint-disable-line no-restricted-globals
     self._cache.open().then(() => {  // eslint-disable-line no-restricted-globals

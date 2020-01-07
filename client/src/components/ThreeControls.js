@@ -8,7 +8,7 @@ import React from 'react';
 // Semantic UI
 import { Button, Icon } from 'semantic-ui-react';
 
-const ThreeControls = (props: Object) => {
+const ThreeControls = (props) => {
   const {
     handleResetCamera,
     handleToggleInfo,

@@ -25,7 +25,7 @@ import { WEBGL_SUPPORT, PROGRESS_COMPLETE } from "../constants/application";
 import mapPin from "../images/map-pin.png";
 
 class ThreeContainer extends Component {
-  componentDidMount(): void {
+  componentDidMount() {
     const {
       embedded,
       viewerId,
@@ -41,7 +41,7 @@ class ThreeContainer extends Component {
     loadLocalTextureAsset(mapPin, "annotationSpriteTexture");
   }
 
-  componentDidUpdate(prevProps: Object): void {
+  componentDidUpdate(prevProps) {
     if (!lodash.isEqual(prevProps.threeAsset, this.props.threeAsset)) {
       if (this.props.threeAsset.skybox.file !== null) {
         this.props.loadTextureAction(this.props.threeAsset.skybox.file);
@@ -52,7 +52,7 @@ class ThreeContainer extends Component {
     }
   }
 
-  render(): Object {
+  render() {
     const {
       mesh,
       texture,
@@ -106,7 +106,7 @@ class ThreeContainer extends Component {
   }
 }
 
-function mapStateToProps(state: Object): Object {
+function mapStateToProps(state) {
   return {
     mesh: state.ui.mesh,
     texture: state.ui.texture,
@@ -118,7 +118,7 @@ function mapStateToProps(state: Object): Object {
   };
 }
 
-function mapActionCreatorsToProps(dispatch: Object) {
+function mapActionCreatorsToProps(dispatch) {
   return bindActionCreators(
     {
       ...AppActionCreators,

@@ -80,14 +80,14 @@ class SemanticContent extends React.Component {
     _id: null,
     showConversionTool: false
   };
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
-    (this: any).threeFileRef = React.createRef();
-    (this: any).threeThumbnailRef = React.createRef();
-    (this: any).skyboxRef = React.createRef();
-    (this: any).contextRef = React.createRef();
-    (this: any).context = null;
-    (this: any).state = this.defaultState;
+    this.threeFileRef = React.createRef();
+    this.threeThumbnailRef = React.createRef();
+    this.skyboxRef = React.createRef();
+    this.contextRef = React.createRef();
+    this.context = null;
+    this.state = this.defaultState;
   }
 
   componentDidMount = () => {
@@ -572,7 +572,7 @@ class SemanticContent extends React.Component {
   }
 }
 
-function mapStateToProps(state, ownProps): Object {
+function mapStateToProps(state, ownProps) {
   return {
     views: state.views.views
     //userProfile: state.app.userProfile,

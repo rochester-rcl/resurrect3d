@@ -1,4 +1,4 @@
-export default function loadChromaKeyShader(threeInstance: Object): Promise {
+export default function loadChromaKeyShader(threeInstance) {
   return new Promise((resolve, reject) => {
     threeInstance.ChromaKeyShader = {
       uniforms: {

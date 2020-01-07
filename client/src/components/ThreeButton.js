@@ -12,7 +12,7 @@ export default class ThreeButton extends Component {
     label: null
   };
 
-  componentDidMount(): void {
+  componentDidMount() {
     this.setState({
       label: this.props.content
     });
@@ -26,12 +26,12 @@ export default class ThreeButton extends Component {
     }
   }
 
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
-    (this: any).updateLabel = this.updateLabel.bind(this);
+    this.updateLabel = this.updateLabel.bind(this);
   }
 
-  updateLabel(label: string) {
+  updateLabel(label) {
     this.setState({ label: label });
   }
 

@@ -4,7 +4,7 @@
  Luminosity
  * http://en.wikipedia.org/wiki/Luminosity
  */
-export default function loadBrightnessContrastShader(threeInstance: Object): typeof Promise {
+export default function loadBrightnessContrastShader(threeInstance) {
 	return new Promise((resolve, reject) => {
 		threeInstance.BrightnessContrastShader = {
 

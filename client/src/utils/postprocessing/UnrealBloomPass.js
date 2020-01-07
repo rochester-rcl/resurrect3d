@@ -5,7 +5,7 @@
  * https://docs.unrealengine.com/latest/INT/Engine/Rendering/PostProcessEffects/Bloom/
  */
 
-export default function loadUnrealBloomPass(threeInstance: Object): Promise {
+export default function loadUnrealBloomPass(threeInstance) {
   return new Promise((resolve, reject) => {
       threeInstance.UnrealBloomPass = function ( resolution, strength, radius, threshold, overrideTex ) {
 

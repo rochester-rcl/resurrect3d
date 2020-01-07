@@ -6,14 +6,14 @@ import React, { Component } from "react";
 // semantic-ui-react
 import { Accordion, Button, Icon } from "semantic-ui-react";
 export default class ThreeTools extends Component {
-  state: Object = { activeIndex: -1, menuExpanded: false };
-  constructor(props: Object) {
+  state = { activeIndex: -1, menuExpanded: false };
+  constructor(props) {
     super(props);
-    (this: any).selectTool = this.selectTool.bind(this);
-    (this: any).expandMenu = this.expandMenu.bind(this);
+    this.selectTool = this.selectTool.bind(this);
+    this.expandMenu = this.expandMenu.bind(this);
   }
 
-  selectTool(index: Number): void {
+  selectTool(index) {
     if (this.state.activeIndex === index) {
       this.setState({ activeIndex: -1 });
     } else {
@@ -21,7 +21,7 @@ export default class ThreeTools extends Component {
     }
   }
 
-  expandMenu(callback: any): void {
+  expandMenu(callback) {
     this.setState(
       {
         menuExpanded: !this.state.menuExpanded

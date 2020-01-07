@@ -5,7 +5,7 @@
 // constants
 import { STL_EXT } from '../../constants/application';
 
-export default function loadSTLExporter(threeInstance: Object): typeof Promise {
+export default function loadSTLExporter(threeInstance) {    //: typeof Promise
   return new Promise((resolve, reject) => {
     threeInstance.STLExporter = function () {};
 

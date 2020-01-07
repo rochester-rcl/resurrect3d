@@ -6,7 +6,7 @@
  * http://artmartinsh.blogspot.com/2010/02/glsl-lens-blur-filter-with-bokeh.html
  */
 
-export default function loadBokehShader(threeInstance: Object): typeof Promise {
+export default function loadBokehShader(threeInstance) {
 	return new Promise((resolve, reject) => {
 
 		threeInstance.BokehShader = {

@@ -9,7 +9,7 @@ const defaultState = {
   progress: { label: 'performing conversion (this will take a while).', percent: null }
 }
 
-export default function ConverterReducer(state: Object = defaultState, action: Object): Object {
+export default function ConverterReducer(state = defaultState, action) {
   switch(action.type) {
 
     case ActionConstants.CONVERSION_STARTED:

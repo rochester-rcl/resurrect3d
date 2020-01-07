@@ -11,19 +11,19 @@ import InputRange from "react-input-range";
 import "react-input-range/lib/css/index.css";
 
 export default class ThreeRangeSlider extends Component {
-  state: Object = {
+  state = {
     value: 0,
     minValue: 0,
     maxValue: 100
   };
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
-    (this: any).updateRange = this.updateRange.bind(this);
-    (this: any).updateThreshold = this.updateThreshold.bind(this);
-    (this: any).resetToDefaults = this.resetToDefaults.bind(this);
+    this.updateRange = this.updateRange.bind(this);
+    this.updateThreshold = this.updateThreshold.bind(this);
+    this.resetToDefaults = this.resetToDefaults.bind(this);
   }
 
-  componentDidMount(): void {
+  componentDidMount() {
     this.setState({
       value: this.props.defaultVal,
       stepValue: this.props.step,
@@ -37,13 +37,13 @@ export default class ThreeRangeSlider extends Component {
     });
   }
 
-  updateRange(value: Number, callback: any): void {
+  updateRange(value, callback) {
     this.setState({ value: value }, () => {
       if (callback) callback(value);
     });
   }
 
-  updateThreshold(minValue: Number, maxValue: Number, stepValue: Number): void {
+  updateThreshold(minValue, maxValue, stepValue) {
     this.setState({
       minValue: minValue,
       maxValue: maxValue,
@@ -51,7 +51,7 @@ export default class ThreeRangeSlider extends Component {
     });
   }
 
-  resetToDefaults(): void {
+  resetToDefaults() {
     let { minValue, maxValue, stepValue } = this.state.defaults;
     this.updateThreshold(minValue, maxValue, stepValue);
   }

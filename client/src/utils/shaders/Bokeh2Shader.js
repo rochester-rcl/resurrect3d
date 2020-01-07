@@ -8,7 +8,7 @@
  * Requires #define RINGS and SAMPLES integers
  */
 
-export default function loadBokeh2Shader(threeInstance: Object): Promise {
+export default function loadBokeh2Shader(threeInstance) {
   return new Promise((resolve, reject) => {
 
     threeInstance.Bokeh2Shader = {

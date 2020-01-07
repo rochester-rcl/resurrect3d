@@ -31,11 +31,11 @@ class Viewform extends Component {
   constructor(props){
     super(props);
 
-    (this: any).addView = this.addView.bind(this);
-    (this: any).onChange = this.onChange.bind(this);
-    (this: any).onDiscard = this.onDiscard.bind(this);
-    (this: any).handleChange = this.handleChange.bind(this);
-    (this: any).state = {
+    this.addView = this.addView.bind(this);
+    this.onChange = this.onChange.bind(this);
+    this.onDiscard = this.onDiscard.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+    this.state = {
       threeFile: '',
       threeThumbnail: '',
       skybox: '',

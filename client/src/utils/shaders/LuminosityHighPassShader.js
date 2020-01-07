@@ -5,7 +5,7 @@
  * http://en.wikipedia.org/wiki/Luminosity
  */
 
-export default function loadLuminosityHighPassShader(threeInstance: Object): Promise {
+export default function loadLuminosityHighPassShader(threeInstance) {
   return new Promise((resolve, reject) => {
     threeInstance.LuminosityHighPassShader = {
 

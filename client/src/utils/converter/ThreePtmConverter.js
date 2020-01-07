@@ -15,12 +15,12 @@ export default class ThreePtmConverter extends ThreeConverter {
     createMesh: () => console.log('hi'),
     compress: () => console.log('bye'),
   }
-  constructor(ptm: File, options: Object) {
+  constructor(ptm, options) {
     super(undefined, undefined, options);
     this.ptmFile = ptm;
   }
 
-  loadPtm(): Promise {
+  loadPtm() {
     return new Promise((resolve, reject) => {
       this.readBinary(this.ptmFile)
         .then((ptmData) => {
@@ -30,7 +30,7 @@ export default class ThreePtmConverter extends ThreeConverter {
     });
   }
   // ptm data needs both diffuse and normalMap properties
-  createMesh(ptmData: Object): Promise {
+  createMesh(ptmData) {
     return new Promise((resolve, reject) => {
       const { normalMap, diffuse } = ptmData;
       if (normalMap === undefined || diffuse === undefined) reject('Normal Map and / or Diffuse Map were not properly read from the ptm file');
@@ -53,7 +53,7 @@ export default class ThreePtmConverter extends ThreeConverter {
     });
   }
 
-  makePlane(): THREE.Mesh {
+  makePlane() {
     // use defaults for now
     const plane = new THREE.PlaneGeometry(1, 1, 1);
     return new THREE.Mesh(plane, this.material);

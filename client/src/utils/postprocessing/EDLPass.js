@@ -2,7 +2,7 @@
  * EDL Shader Pass
  */
 
-export default function loadEDLPass(threeInstance: Object): typeof Promise {
+export default function loadEDLPass(threeInstance) {
 	return new Promise((resolve, reject) => {
 		threeInstance.EDLPass = function (scene, camera, params) {
 

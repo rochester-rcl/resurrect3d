@@ -20,19 +20,19 @@ import ThreeViewerAdminBackend from "./ThreeViewerAdminBackend";
 import { serializeThreeTypes } from "../../utils/serialization";
 
 export default class ThreeViewerNodeBackend extends ThreeViewerAbstractBackend {
-  constructor(options: Object) {
+  constructor(options) {
     super(options);
     this.adminBackend = new ThreeViewerAdminBackend();
     this.hasAdminBackend = true;
   }
 
-  authenticate(): Promise {
+  authenticate() {
     return this._get(AUTHENTICATE_ENDPOINT, {})
       .then(result => result)
       .catch(error => console.log(error));
   }
 
-  getThreeAsset(id: string): Promise {
+  getThreeAsset(id) {
     return new Promise((resolve, reject) => {
       this._get(VIEWS_ENDPOINT + id, {})
         .then(result => result)
@@ -44,17 +44,17 @@ export default class ThreeViewerNodeBackend extends ThreeViewerAbstractBackend {
     });
   }
 
-  getThreeFile(id: string): Promise {
+  getThreeFile(id) {
     return this._getBinary(FILE_ENDPOINT + id, {})
       .then(result => result)
       .catch(error => console.log(error));
   }
 
-  getThreeFileURL(id: string): Promise {
+  getThreeFileURL(id) {
     return new Promise((resolve, reject) => resolve(FILE_ENDPOINT + id));
   }
 
-  formatAsset(asset: Object): Object {
+  formatAsset(asset) {
     // replace 'null' with null
     const format = _asset => {
       const formatted = {};
@@ -74,7 +74,7 @@ export default class ThreeViewerNodeBackend extends ThreeViewerAbstractBackend {
   }
 
   // settings
-  saveViewerSettings(id: Number, settings: Object): Promise {
+  saveViewerSettings(id, settings) {
     const body = JSON.stringify({
       viewerSettings: serializeThreeTypes(settings)
     });

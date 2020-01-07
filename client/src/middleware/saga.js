@@ -1,4 +1,4 @@
-/* @flow */
+
 // Redux Saga
 import { put, takeEvery, take, call, fork } from "redux-saga/effects";
 
@@ -51,11 +51,11 @@ const genericAPIRouteMessage =
   "Attempting to access an API route that has not been registered in " +
   backend.constructor.name;
 
-const computeProgress = (request: ProgressEvent): string => {
+const computeProgress = (request) => {  //: ProgressEvent => 
   return parseFloat(request.loaded / 1000000).toFixed(2) + " MB";
 };
 
-const sleep = (duration: Number): Promise => {
+const sleep = (duration) => {
   return new Promise((resolve, reject) => {
     setTimeout(() => resolve(), duration);
   });
@@ -71,8 +71,8 @@ function arrayToObject (array) {
 
 
 function* getThreeAssetSaga(
-  getThreeAssetAction: Object
-): Generator<any, any, any> {
+  getThreeAssetAction
+) {  ////: Generator<any, any, any>
   try {
     const asset = yield backend.getThreeAsset(getThreeAssetAction.id);
     const { viewerSettings } = asset;
@@ -111,8 +111,8 @@ function* getThreeAssetSaga(
 }
 
 function* saveSettingsSaga(
-  saveSettingsAction: Object
-): Generator<any, any, any> {
+  saveSettingsAction
+) {  ////: Generator<any, any, any>
   try {
     const { id, settings } = saveSettingsAction;
     const result = yield backend.saveViewerSettings(id, settings);
@@ -129,7 +129,7 @@ function* saveSettingsSaga(
   }
 }
 
-function getActionType(payload: Object): string {
+function getActionType(payload) {
   switch (payload.eventType) {
     case "progress":
       if (payload.loaderType === "texture")
@@ -157,9 +157,9 @@ function getActionType(payload: Object): string {
   }
 }
 
-function createWorkerProgressChannel(worker: Object, loaderType: string) {
+function createWorkerProgressChannel(worker, loaderType) {
   return eventChannel(emit => {
-    worker.onmessage = (event: MessageEvent) => {
+    worker.onmessage = (event) => {  //: MessageEvent
       const { data } = event;
       if (data.type === WORKER_PROGRESS) {
         emit({
@@ -184,14 +184,14 @@ function createWorkerProgressChannel(worker: Object, loaderType: string) {
 }
 // TODO how to handle type checking for polymorphic function that could take an ObjectLoader or TextLoader class
 function createLoadProgressChannel(
-  loader: Object,
-  loaderType: string,
+  loader,
+  loaderType,
   url
-): void {
+) {  //: void
   return eventChannel(emit => {
     loader.load(
       url,
-      (payload: Object) => {
+      (payload) => {
         // We're going to use this as a skybox texture so ...
         payload.mapping = THREE.EquirectangularReflectionMapping;
         payload.magFilter = THREE.LinearFilter;
@@ -203,7 +203,7 @@ function createLoadProgressChannel(
         });
         emit(END);
       },
-      (progress: ProgressEvent) => {
+      (progress) => {  //: ProgressEvent
         let update = computeProgress(progress);
         emit({
           eventType: "progress",
@@ -211,7 +211,7 @@ function createLoadProgressChannel(
           loaderType: loaderType
         });
       },
-      (error: Error) => {
+      (error) => {  //: Error
         emit({
           eventType: "error",
           val: error,
@@ -227,7 +227,7 @@ function createLoadProgressChannel(
   });
 }
 
-function* parseJSONMesh(meshData: Object) {
+function* parseJSONMesh(meshData) {
   const loader = new THREE.ObjectLoader();
   const object3D = loader.parse(meshData);
   yield put({
@@ -327,8 +327,8 @@ function* loadGzippedMesh(loadMeshAction) {
 }
 
 export function* loadMeshSaga(
-  loadMeshAction: Object
-): Generator<any, any, any> {
+  loadMeshAction
+) {//: Generator<any, any, any>
   try {
     if (loadMeshAction.ext === GZIP_EXT) {
       yield loadGzippedMesh(loadMeshAction);
@@ -341,8 +341,8 @@ export function* loadMeshSaga(
 }
 
 export function* loadTextureSaga(
-  loadTextureAction: Object
-): Generator<any, any, any> {
+  loadTextureAction
+) {//: Generator<any, any, any>
   // load the texture
   try {
     const textureLoader = new THREE.TextureLoader();
@@ -386,7 +386,7 @@ function* loadLocalTextureSaga(action) {
 
 /***************** ADMIN ADDITIONS ********************************************/
 
-function* addUserSaga(userAction: Object): Generator<any, any, any> {
+function* addUserSaga(userAction) {//: Generator<any, any, any>
   try {
     if (backend.hasAdminBackend) {
       const user = yield backend.adminBackend.addUser(userAction.userInfo);
@@ -402,7 +402,7 @@ function* addUserSaga(userAction: Object): Generator<any, any, any> {
   }
 }
 
-function* deleteUserSaga(userAction: Object): Generator<any, any, any> {
+function* deleteUserSaga(userAction) {//: Generator<any, any, any>
   try {
     if (backend.hasAdminBackend) {
       const deleted = yield backend.adminBackend.deleteUser(userAction.id);
@@ -417,7 +417,7 @@ function* deleteUserSaga(userAction: Object): Generator<any, any, any> {
   }
 }
 
-function* verifyUserSaga(verifyAction: Object): Generator<any, any, any> {
+function* verifyUserSaga(verifyAction) {//: Generator<any, any, any>
   try {
     if (backend.hasAdminBackend) {
       const verified = yield backend.adminBackend.verifyUser(
@@ -432,7 +432,7 @@ function* verifyUserSaga(verifyAction: Object): Generator<any, any, any> {
   }
 }
 
-function* loginSaga(loginAction: Object): Generator<any, any, any> {
+function* loginSaga(loginAction) {//: Generator<any, any, any>
   try {
     if (backend.hasAdminBackend) {
       const user = yield backend.adminBackend.login(loginAction.loginInfo);
@@ -454,7 +454,7 @@ function* loginSaga(loginAction: Object): Generator<any, any, any> {
   }
 }
 
-function* logoutSaga(): Generator<any, any, any> {
+function* logoutSaga() {//: Generator<any, any, any>
   try {
     if (backend.hasAdminBackend) {
       const status = yield backend.adminBackend.logout();
@@ -469,7 +469,7 @@ function* logoutSaga(): Generator<any, any, any> {
   }
 }
 
-export function* authenticateSaga(): Generator<any, any, any> {
+export function* authenticateSaga() {//: Generator<any, any, any>
   try {
     const status = yield backend.authenticate();
     yield put({ type: USER_AUTHENTICATED, loggedIn: status.authenticated });
@@ -479,7 +479,7 @@ export function* authenticateSaga(): Generator<any, any, any> {
   }
 }
 
-export function* addThreeViewSaga(addThreeViewAction: Object): Generator<any, any, any> {
+export function* addThreeViewSaga(addThreeViewAction) {//: Generator<any, any, any>
   console.log(addThreeViewAction);
 
   try {
@@ -504,7 +504,7 @@ export function* addThreeViewSaga(addThreeViewAction: Object): Generator<any, an
 
 }
 
-export function* getThreeViewsSaga(getThreeViewsAction: Object): Generator<any, any, any> {
+export function* getThreeViewsSaga(getThreeViewsAction) {//: Generator<any, any, any>
   try {
     if (backend.hasAdminBackend) {
       const results = yield call(backend.adminBackend.getViews);
@@ -522,7 +522,7 @@ export function* getThreeViewsSaga(getThreeViewsAction: Object): Generator<any, 
   }
 }
 
-export function* getThreeViewSaga(getThreeViewAction: Object): Generator<any, any, any> {
+export function* getThreeViewSaga(getThreeViewAction) {//: Generator<any, any, any>
   try {
     if (backend.hasAdminBackend) {
       const result = yield call(backend.adminBackend.getView, getThreeViewAction.id);
@@ -538,7 +538,7 @@ export function* getThreeViewSaga(getThreeViewAction: Object): Generator<any, an
   }
 }
 
-export function* updateThreeViewSaga(updateThreeViewAction: Object): Generator<any, any, any> {
+export function* updateThreeViewSaga(updateThreeViewAction) {//: Generator<any, any, any>
   try {
     if (backend.hasAdminBackend) {
       const result = yield call(backend.adminBackend.updateView, updateThreeViewAction.viewData);
@@ -550,7 +550,7 @@ export function* updateThreeViewSaga(updateThreeViewAction: Object): Generator<a
   }
 }
 
-export function* deleteThreeViewSaga(deleteThreeViewAction: Object): Generator<any, any, any> {
+export function* deleteThreeViewSaga(deleteThreeViewAction) {//: Generator<any, any, any>
   try {
     if (backend.hasAdminBackend) {
       const result = yield call(backend.adminBackend.deleteView, deleteThreeViewAction.id);
@@ -572,7 +572,7 @@ export function* deleteThreeViewSaga(deleteThreeViewAction: Object): Generator<a
 
 // Converter
 
-function* compressConvertedFile(data: Object): void {
+function* compressConvertedFile(data) {  //: void
   const deflateWorker = new DeflateWorker();
   deflateWorker.postMessage(data.threeFile);
   const progressChannel = yield createWorkerProgressChannel(
@@ -600,8 +600,8 @@ function* compressConvertedFile(data: Object): void {
 }
 
 export function* runConversionSaga(
-  conversionAction: Object
-): Generator<any, any, any> {
+  conversionAction
+) {//: Generator<any, any, any>
   try {
     yield put({ type: ActionConstants.CONVERSION_STARTED });
     const { inputData } = conversionAction;
@@ -628,19 +628,19 @@ export function* runConversionSaga(
 }
 
 /*************************** Observers ****************************************/
-export function* watchForGetThreeAsset(): Generator<any, any, any> {
+export function* watchForGetThreeAsset() {//: Generator<any, any, any>
   yield takeEvery(ActionConstants.GET_THREE_ASSET, getThreeAssetSaga);
 }
 
-export function* watchForSaveSettings(): Generator<any, any, any> {
+export function* watchForSaveSettings() {//: Generator<any, any, any>
   yield takeEvery(ActionConstants.SAVE_VIEWER_SETTINGS, saveSettingsSaga);
 }
 
-export function* watchForLoadMesh(): Generator<any, any, any> {
+export function* watchForLoadMesh() {//: Generator<any, any, any>
   yield takeEvery(ActionConstants.LOAD_MESH, loadMeshSaga);
 }
 
-export function* watchForLoadTexture(): Generator<any, any, any> {
+export function* watchForLoadTexture() {//: Generator<any, any, any>
   yield takeEvery(ActionConstants.LOAD_TEXTURE, loadTextureSaga);
 }
 
@@ -648,56 +648,56 @@ function* watchForLoadLocalTexture() {
   yield takeEvery(ActionConstants.LOAD_LOCAL_TEXTURE_ASSET, loadLocalTextureSaga);
 }
 
-export function* watchForAddUser(): Generator<any, any, any> {
+export function* watchForAddUser() {//: Generator<any, any, any>
   yield takeEvery(ActionConstants.ADD_USER, addUserSaga);
 }
 
-export function* watchForVerifyUser(): Generator<any, any, any> {
+export function* watchForVerifyUser() {//: Generator<any, any, any>
   yield takeEvery(ActionConstants.VERIFY_USER, verifyUserSaga);
 }
 
-export function* watchForDeleteUser(): Generator<any, any, any> {
+export function* watchForDeleteUser() {//: Generator<any, any, any>
   yield takeEvery(ActionConstants.DELETE_USER, deleteUserSaga);
 }
 
-export function* watchForLogin(): Generator<any, any, any> {
+export function* watchForLogin() {//: Generator<any, any, any>
   yield takeEvery(ActionConstants.LOGIN_USER, loginSaga);
 }
 
-export function* watchForLogout(): Generator<any, any, any> {
+export function* watchForLogout() {//: Generator<any, any, any>
   yield takeEvery(ActionConstants.LOGOUT_USER, logoutSaga);
 }
 
-export function* watchForAuthenticate(): Generator<any, any, any> {
+export function* watchForAuthenticate() {//: Generator<any, any, any>
   yield takeEvery(ActionConstants.AUTHENTICATE, authenticateSaga);
 }
 
-export function* watchForAddThreeView(): Generator<any, any, any> {
+export function* watchForAddThreeView() {//: Generator<any, any, any>
   yield takeEvery(ActionConstants.ADD_VIEW, addThreeViewSaga);
 }
 
-export function* watchForGetThreeViews(): Generator<any, any, any> {
+export function* watchForGetThreeViews() {//: Generator<any, any, any>
   yield takeEvery(ActionConstants.GET_VIEWS, getThreeViewsSaga);
 }
 
-export function* watchForGetThreeView(): Generator<any, any, any> {
+export function* watchForGetThreeView() {//: Generator<any, any, any>
   yield takeEvery(ActionConstants.GET_VIEW, getThreeViewSaga);
 }
 
-export function* watchForUpdateThreeView(): Generator<any, any, any> {
+export function* watchForUpdateThreeView() {//: Generator<any, any, any>
   yield takeEvery(ActionConstants.UPDATE_VIEW, updateThreeViewSaga);
 }
 
-export function* watchForDeleteThreeView(): Generator<any, any, any> {
+export function* watchForDeleteThreeView() {//: Generator<any, any, any>
   yield takeEvery(ActionConstants.DELETE_VIEW, deleteThreeViewSaga);
 }
 
 // Converter
-export function* watchForConversion(): Generator<any, any, any> {
+export function* watchForConversion() {//: Generator<any, any, any>
   yield takeEvery(ActionConstants.START_CONVERSION, runConversionSaga);
 }
 
-export default function* rootSaga(): Generator<any, any, any> {
+export default function* rootSaga() {//: Generator<any, any, any>
   yield [
     watchForGetThreeAsset(),
     watchForSaveSettings(),

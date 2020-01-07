@@ -84,11 +84,11 @@ const useStyles = theme => ({
 
 class Content extends React.Component {
 
-  constructor(props : Object) {
+  constructor(props) {
     super(props);
-    (this : any).handleSnackBarClose = this.handleSnackBarClose.bind(this);
-    (this : any).handleChange = this.handleChange.bind(this);
-    (this : any).state = {
+    this.handleSnackBarClose = this.handleSnackBarClose.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+    this.state = {
       sortables: [
         "test test test test test test tets test tets test tets tte tst stts sttst",
         'test',
@@ -372,7 +372,7 @@ class Content extends React.Component {
   }
 }
 
-function mapStateToProps(state, ownProps): Object {
+function mapStateToProps(state, ownProps) {
   return {
     views: state.views.views,
     //userProfile: state.app.userProfile,

@@ -13,7 +13,7 @@ const formatOffsets = {
   PTM_FORMAT_LRGB: 9
 };
 
-const fixNormal = (vec: THREE.Vector3): void => {
+const fixNormal = (vec) => {
   if (isNaN(vec.x)) {
     if (vec.x === -Infinity) {
       vec.setX(-1.0);
@@ -37,7 +37,7 @@ const fixNormal = (vec: THREE.Vector3): void => {
   }
 }
 
-const checkNormal = (vec: THREE.Vector3): bool => {
+const checkNormal = (vec) => {
   if (isNaN(vec.x)) return false;
   if (isNaN(vec.y)) return false;
   if (isNaN(vec.z)) return false;
@@ -97,7 +97,7 @@ const getNormal = (coefficients) => {
   return vec;
 };
 
-const formatHeader = (ascii: string) => {
+const formatHeader = (ascii) => {
   const headerArray = ascii.split("\n").slice(1, 6);
   return {
     format: headerArray[0],
@@ -118,7 +118,7 @@ const formatHeader = (ascii: string) => {
   };
 };
 
-const readHeader = (ptmData: ArrayBuffer): Object => {
+const readHeader = (ptmData)=> {  //ArrayBuffer => Object
   // header byte size may vary so we may as well load in a large chunk
   const ascii = new TextDecoder("iso-8859-2").decode(
     ptmData.slice(0, CHUNK_SIZE)
@@ -129,11 +129,11 @@ const readHeader = (ptmData: ArrayBuffer): Object => {
 
 // Apparently this is missing from the npm version. No idea why
 // https://github.com/mrdoob/three.js/blob/dev/src/math/Math.js
-const ceilPowerOfTwo = (val: Number): Number => {
+const ceilPowerOfTwo = (val) => {
   return Math.pow(2, Math.ceil(Math.log(val) / Math.LN2));
 };
 
-const pad = (arr: Uint8Array, squareSize: Number, w: Number, h: Number, padded: Uint8Array): nj.NdArray => {
+const pad = (arr, squareSize, w, h, padded) => {  //(: Uint8Array, num, num, num, : Uint8Array) => nj.NdArray
   const offsetTop = Math.floor((squareSize - h) / 2);
   const offsetLeft = Math.floor((squareSize - w) / 2);
   for (let i = 0; i < h; i++) {
@@ -158,7 +158,7 @@ const pad = (arr: Uint8Array, squareSize: Number, w: Number, h: Number, padded: 
 };
 
 // Instantiating more than 4 NdArrays at a higher resolution leads to a segfault!
-export default function readPtm(ptmData: ArrayBuffer | Uint8Array): Promise {
+export default function readPtm(ptmData) {  //: ArrayBuffer | Uint8Array => Promise
   return new Promise((resolve, reject) => {
     // ptm data
     const header = readHeader(ptmData);
@@ -181,7 +181,7 @@ export default function readPtm(ptmData: ArrayBuffer | Uint8Array): Promise {
     const offsetTop = Math.floor((squareVal - h) / 2);
     const offsetLeft = Math.floor((squareVal - w) / 2);
     const rgba = new Uint8ClampedArray(h * w * 4);
-    const getDataURL = (data: Uint8Array, _w: Number, _h: Number) => {
+    const getDataURL = (data, _w, _h) => {  //Uint8Array, num, num
       let chan = 0;
       let achan = 0;
       for (let i = 0; i < _w * _h; i++, chan += 3, achan += 4) {

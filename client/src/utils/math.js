@@ -3,19 +3,19 @@ import { CM, MM, IN, CONVERSIONS } from '../constants/application';
 
 import * as THREE from 'three';
 
-export function cmToInches(measurement: number): number {
+export function cmToInches(measurement) {
   return measurement * 0.393701;
 }
 
-export function cmToMM(measurement: number): number {
+export function cmToMM(measurement) {
   return measurement * 0.1;
 }
 
-export function inchesToCM(measurement: number): number {
+export function inchesToCM(measurement) {
   return measurement * 2.54;
 }
 
-export function convertUnits(from: string, to: string, measurement: number): number {
+export function convertUnits(from, to, measurement) {
   from = from.toUpperCase();
   if (from === to) return measurement;
   let conversion = from + '_TO_' + to;
@@ -23,11 +23,11 @@ export function convertUnits(from: string, to: string, measurement: number): num
   return (cback !== undefined) ? cback(measurement) : measurement;
 }
 
-function sleep(duration: Number): Promise {
+function sleep(duration) {
   return new Promise((resolve, reject) => setTimeout(() => resolve(), duration));
 }
 
-export function animateLerp(from: THREE.Vector3, to: THREE.Vector3, duration: Number, steps: Number): void {
+export function animateLerp(from, to, duration, steps) {  //from, to vectors
   let tasks = [];
   for (let i = 0; i < steps; i++) {
     let alpha = i / steps;

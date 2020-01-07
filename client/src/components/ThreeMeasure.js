@@ -13,7 +13,7 @@ import { Button, Icon } from "semantic-ui-react";
 import ThreeToggle from "./ThreeToggle";
 
 export default class ThreeMeasure extends Component {
-  raycaster: THREE.RayCaster;
+  raycaster;
 
   defaultState = {
     active: false,
@@ -34,25 +34,25 @@ export default class ThreeMeasure extends Component {
     },
     secondClick: false
   };
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
-    (this: any).activate = this.activate.bind(this);
-    (this: any).measure = this.measure.bind(this);
-    (this: any).handleIntersection = this.handleIntersection.bind(this);
-    (this: any).reset = this.reset.bind(this);
-    (this: any).doCallback = this.doCallback.bind(this);
-    (this: any).raycaster = new THREE.Raycaster();
+    this.activate = this.activate.bind(this);
+    this.measure = this.measure.bind(this);
+    this.handleIntersection = this.handleIntersection.bind(this);
+    this.reset = this.reset.bind(this);
+    this.doCallback = this.doCallback.bind(this);
+    this.raycaster = new THREE.Raycaster();
   }
 
-  componentDidMount(): void {
+  componentDidMount() {
     this.props.target.addEventListener("click", this.measure, true);
   }
 
-  componentWillUnmount(): void {
+  componentWillUnmount() {
     this.props.target.removeEventListener("click", this.measure, true);
   }
 
-  activate(): void {
+  activate() {
     this.setState(
       {
         active: !this.state.active
@@ -61,7 +61,7 @@ export default class ThreeMeasure extends Component {
     );
   }
 
-  reset(): void {
+  reset() {
     if (!this.state.active) {
       this.setState(
         {
@@ -75,11 +75,11 @@ export default class ThreeMeasure extends Component {
     }
   }
 
-  doCallback(): void {
+  doCallback() {
     this.props.updateCallback(this.state.active ? this.state.points : null);
   }
 
-  measure(event: MouseEvent): void {
+  measure(event) {
     if (this.state.active) {
       let { camera, mesh } = this.props;
 
@@ -101,7 +101,7 @@ export default class ThreeMeasure extends Component {
     }
   }
 
-  handleIntersection(intersection: Object): void {
+  handleIntersection(intersection) {
     let { points } = this.state;
     if (!this.state.secondClick) {
       points.a = intersection.point;

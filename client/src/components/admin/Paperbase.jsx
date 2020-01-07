@@ -200,7 +200,7 @@ Paperbase.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-function mapStateToProps(state, ownProps): Object {
+function mapStateToProps(state, ownProps) {
   return {
     views: state.views.views,
     //newView: state.views.view

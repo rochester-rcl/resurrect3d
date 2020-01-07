@@ -26,7 +26,7 @@ const mtlTemplate = [
   "Ns 0.000000\n"].join("\n"),
 ];
 
-export default function loadOBJExporter(threeInstance: Object): typeof Promise {
+export default function loadOBJExporter(threeInstance) {  // => : typeof Promise
   return new Promise((resolve, reject) => {
     threeInstance.OBJExporter = function() {};
 

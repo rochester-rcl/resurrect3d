@@ -1,6 +1,6 @@
 
 
-export default function loadConvolutionShader(threeInstance: Object): typeof Promise {
+export default function loadConvolutionShader(threeInstance) {
 	return new Promise((resolve, reject) => {
 		threeInstance.ConvolutionShader = {
 

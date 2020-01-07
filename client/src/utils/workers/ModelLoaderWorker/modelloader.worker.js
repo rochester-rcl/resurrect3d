@@ -2,11 +2,11 @@ import 'babel-polyfill';
 
 import * as THREE from 'three';
 
-const computeProgress = (request: ProgressEvent): string => {
+const computeProgress = (request) => {  //: ProgressEvent
   return parseFloat(request.loaded / 1000000).toFixed(2) + ' MB';
 }
 
-const handlePayload = (payload: Object): void => {
+const handlePayload = (payload) => {
   // We're going to use this as a skybox texture so ...
   payload.mapping = THREE.EquirectangularReflectionMapping;
   payload.magFilter = THREE.LinearFilter;
@@ -21,7 +21,7 @@ const handlePayload = (payload: Object): void => {
   });
 }
 
-const handleUpdate = (progress: ProgressEvent): void => {
+const handleUpdate = (progress) => {  //: ProgressEvent
   const update = computeProgress(progress);
   postMessage({
     status: true,
@@ -33,7 +33,7 @@ const handleUpdate = (progress: ProgressEvent): void => {
   });
 }
 
-const handleError = (error: Error): void => {
+const handleError = (error) => {
   postMessage({
     status: false,
     modelLoader: {
@@ -44,7 +44,7 @@ const handleError = (error: Error): void => {
   })
 }
 
-self.onmessage = (event: MessageEvent): void => {  // eslint-disable-line no-restricted-globals
+self.onmessage = (event) => {  // eslint-disable-line no-restricted-globals  //MessageEvent
   const { type, url } = event.data;
   if (type === undefined || url === undefined) postMessage({status: false, error: 'Invalid data passed to ModelLoaderWorker'});
   self.loaderType = type;  // eslint-disable-line no-restricted-globals

@@ -33,17 +33,17 @@ export default class PtmConverterForm extends ConverterForm {
     }
   };
 
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
-    (this: any).handleFileUpload = this.handleFileUpload.bind(this);
-    (this: any).handleField = this.handleField.bind(this);
-    (this: any).renderGroup = this.renderGroup.bind(this);
-    (this: any).checkFileUploadType = this.checkFileUploadType.bind(this);
-    (this: any).handleSubmit = this.handleSubmit.bind(this);
-    (this: any).prepare = this.prepare.bind(this);
+    this.handleFileUpload = this.handleFileUpload.bind(this);
+    this.handleField = this.handleField.bind(this);
+    this.renderGroup = this.renderGroup.bind(this);
+    this.checkFileUploadType = this.checkFileUploadType.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.prepare = this.prepare.bind(this);
   }
 
-  prepare(data: Object): Object {
+  prepare(data) {
     const { ptm, options } = data;
     const toSubmit = {};
     toSubmit.ptm = ptm.file;
@@ -56,7 +56,7 @@ export default class PtmConverterForm extends ConverterForm {
     return toSubmit;
   }
 
-  handleSubmit(event: SyntheticEvent): void {
+  handleSubmit(event) {
     event.preventDefault();
     event.stopPropagation();
     this.props.startConversion(this.prepare(this.state));

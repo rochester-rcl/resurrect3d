@@ -3,7 +3,7 @@
 // Constants
 import * as ActionConstants from "../constants/actions";
 
-export function getThreeAssetAction(assetId: Number, url: string, embedded = false): Object {
+export function getThreeAssetAction(assetId: number, url: string, embedded = false): Object {
   return {
     type: ActionConstants.GET_THREE_ASSET,
     id: assetId,
@@ -26,7 +26,7 @@ export function loadTextureAction(url: string): Object {
   };
 }
 
-export function loadLocalTextureAsset(asset, key) {
+export function loadLocalTextureAsset(asset: Object, key: number): Object {
   return {
     type: ActionConstants.LOAD_LOCAL_TEXTURE_ASSET,
     asset: asset,
@@ -42,7 +42,7 @@ export function noSkyboxTexture(): Object {
   };
 }
 
-export function saveViewerSettings(id: Number, settings: Object): Object {
+export function saveViewerSettings(id: number, settings: Object): Object {
   return {
     type: ActionConstants.SAVE_VIEWER_SETTINGS,
     settings: settings,
@@ -50,7 +50,7 @@ export function saveViewerSettings(id: Number, settings: Object): Object {
   };
 }
 
-export function loadViewerSettings(id: Number): Object {
+export function loadViewerSettings(id: number): Object {
   return {
     type: ActionConstants.LOAD_VIEWER_SETTINGS,
     id: id

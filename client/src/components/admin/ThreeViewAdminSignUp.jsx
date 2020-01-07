@@ -15,7 +15,7 @@ export default class AdminSignUpModal extends Component {
     email: ""
   };
 
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
     this.handleSignUpUser = this.handleSignUpUser.bind(this);
     this.handleEmailChange = this.handleEmailChange.bind(this);

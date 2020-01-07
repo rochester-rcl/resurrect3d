@@ -21,7 +21,7 @@
  */
 
 
-export default function loadSSAOPass(threeInstance: Object): Promise {
+export default function loadSSAOPass(threeInstance) {
   return new Promise((resolve, reject) => {
 
     threeInstance.SSAOPass = function ( scene, camera, width, height ) {

@@ -9,14 +9,14 @@ export function getViews(): Object  {
   }
 }
 
-export function getView(id: Number): Object {
+export function getView(id: number): Object {
   return {
     type: ActionConstants.GET_VIEW,
     id: id
   }
 }
 
-export function getThreeFile(id: Number): Object {
+export function getThreeFile(id: number): Object {
   return {
     type: ActionConstants.GET_THREEFILE,
     id: id

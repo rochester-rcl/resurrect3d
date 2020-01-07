@@ -23,10 +23,10 @@ class Views extends Component {
   constructor(props) {
     super(props);
 
-    (this : any).handleDelete = this.handleDelete.bind(this);
-    (this : any).handleLoadAsync = this.handleLoadAsync.bind(this);
-    (this : any).handleRemoveAsync = this.handleRemoveAsync.bind(this);
-    (this : any).state = {
+    this.handleDelete = this.handleDelete.bind(this);
+    this.handleLoadAsync = this.handleLoadAsync.bind(this);
+    this.handleRemoveAsync = this.handleRemoveAsync.bind(this);
+    this.state = {
       views: []
     }
   }
@@ -93,7 +93,7 @@ class Views extends Component {
     });
   }
 
-  handleDelete(id: number) {
+  handleDelete(id) {
     //e.preventDefault();
     console.log(id);
     this.handleRemoveAsync(id);

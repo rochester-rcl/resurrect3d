@@ -1,8 +1,8 @@
-/* @flow */
+
 
 // React
-import React, { Component } from "react";
-import ReactDom from "react-dom";
+import * as React from "react";
+import * as ReactDom from "react-dom";
 
 // THREEJS
 import * as THREE from "three";
@@ -36,7 +36,7 @@ import { ANNOTATION_SAVE_STATUS, KEYCODES } from "../../constants/application";
 
 // TODO add editing capabilities to the body and make it editable
 
-class ThreeAnnotationController extends Component {
+class ThreeAnnotationController extends React.Component {
   raycaster: THREE.RayCaster;
   state = {
     mousedown: false,
@@ -54,17 +54,17 @@ class ThreeAnnotationController extends Component {
   constructor(props: Object) {
     super(props);
 
-    (this: any).handleDown = this.handleDown.bind(this);
-    (this: any).handleMove = this.handleMove.bind(this);
-    (this: any).handleUp = this.handleUp.bind(this);
-    (this: any).handleIntersection = this.handleIntersection.bind(this);
-    (this: any).makeAnnotation = this.makeAnnotation.bind(this);
-    (this: any).updateAnnotation = this.updateAnnotation.bind(this);
-    (this: any).viewAnnotation = this.viewAnnotation.bind(this);
-    (this: any).deleteAnnotation = this.deleteAnnotation.bind(this);
-    (this: any).toggle = this.toggle.bind(this);
-    (this: any).toggleEdit = this.toggleEdit.bind(this);
-    (this: any).raycaster = new THREE.Raycaster();
+    this.handleDown = this.handleDown.bind(this);
+    this.handleMove = this.handleMove.bind(this);
+    this.handleUp = this.handleUp.bind(this);
+    this.handleIntersection = this.handleIntersection.bind(this);
+    this.makeAnnotation = this.makeAnnotation.bind(this);
+    this.updateAnnotation = this.updateAnnotation.bind(this);
+    this.viewAnnotation = this.viewAnnotation.bind(this);
+    this.deleteAnnotation = this.deleteAnnotation.bind(this);
+    this.toggle = this.toggle.bind(this);
+    this.toggleEdit = this.toggleEdit.bind(this);
+    this.raycaster = new THREE.Raycaster();
     this.saveAnnotation = this.saveAnnotation.bind(this);
     this.requestAnnotationsUpdate = this.requestAnnotationsUpdate.bind(this);
     this.updateAnnotations = this.updateAnnotations.bind(this);

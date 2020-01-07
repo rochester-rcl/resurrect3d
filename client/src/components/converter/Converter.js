@@ -88,22 +88,22 @@ export default class ConverterForm extends Component {
     }
   };
 
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
-    (this: any).handleFileUpload = this.handleFileUpload.bind(this);
-    (this: any).handleField = this.handleField.bind(this);
-    (this: any).renderGroup = this.renderGroup.bind(this);
-    (this: any).checkFileUploadType = this.checkFileUploadType.bind(this);
-    (this: any).handleSubmit = this.handleSubmit.bind(this);
-    (this: any).prepare = this.prepare.bind(this);
+    this.handleFileUpload = this.handleFileUpload.bind(this);
+    this.handleField = this.handleField.bind(this);
+    this.renderGroup = this.renderGroup.bind(this);
+    this.checkFileUploadType = this.checkFileUploadType.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.prepare = this.prepare.bind(this);
   }
 
-  checkFileUploadType(key: string): string {
+  checkFileUploadType(key) {
     if (this.state[key] === undefined) return MAP;
     return key;
   }
 
-  handleFileUpload(event: SynteticEvent, { name, value }): void {
+  handleFileUpload(event, { name, value }) {
     const type = this.checkFileUploadType(name);
     const shallowCopy = { ...this.state };
     if (type === MAP) {
@@ -114,14 +114,14 @@ export default class ConverterForm extends Component {
     this.setState(shallowCopy);
   }
 
-  handleField(event: SyntheticEvent, { name, value, type }): void {
+  handleField(event, { name, value, type }) {
     const val = type === CHECKBOX ? event.target.checked : value;
     const shallowCopy = { ...this.state.options };
     shallowCopy[name].val = val;
     this.setState({ options: shallowCopy }, () => console.log(this.state));
   }
 
-  prepare(data: Object): Object {
+  prepare(data) {
     const { mesh, material, maps, options } = data;
     const toSubmit = {};
     toSubmit.mesh = mesh.file;
@@ -141,13 +141,13 @@ export default class ConverterForm extends Component {
     return toSubmit;
   }
 
-  handleSubmit(event: SyntheticEvent): void {
+  handleSubmit(event) {
     event.preventDefault();
     event.stopPropagation();
     this.props.startConversion(this.prepare(this.state));
   }
 
-  renderGroup(group: Object): Form.Group {
+  renderGroup(group) {
     return (
       <Form.Group fluid className="three-converter-form-group">
         {Object.keys(group).map((key, index) => {

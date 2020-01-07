@@ -19,19 +19,19 @@ export default class ThreePointLights {
     this._group.add(...this._helpers);
   }
 
-  traverse(callback): void {
+  traverse(callback) {
     for (let i = 0; i < this._lights.length; i++) {
       if (callback) callback(this._lights[i]);
     }
   }
 
-  traverseHelpers(callback): void {
+  traverseHelpers(callback) {
     for (let i = 0; i < this._lights.length; i++) {
       if (callback) callback(this._lights[i]);
     }
   }
 
-  _initHelpers(): void {
+  _initHelpers() {
     let helpers = [];
     helpers.push(new THREE.SpotLightHelper(this.key));
     helpers.push(new THREE.SpotLightHelper(this.back));
@@ -41,11 +41,11 @@ export default class ThreePointLights {
     return helpers;
   }
 
-  addTo(obj: THREE.Object3D): void {
+  addTo(obj) {
     obj.add(...this._lights);
   }
 
-  addHelpers(obj: THREE.Object3D, scaleFactor: Number): void {
+  addHelpers(obj, scaleFactor) {
     const labelHelpers = (helper) => {
       helper.scale.multiplyScalar((scaleFactor));
     }
@@ -53,25 +53,25 @@ export default class ThreePointLights {
     obj.add(...this._helpers);
   }
 
-  toggleHelpers(): void {
+  toggleHelpers() {
     for (let i=0; i < this._helpers.length; i++) {
       let helper = this._helpers[i];
       helper.visible = !helper.visible;
     }
   }
 
-  toggleVisibility(): void {
+  toggleVisibility() {
     const visible = (light) => {
       light.visible = !light.visible;
     }
     this.traverse(visible);
   }
   // moves everything
-  setPosition(pos: THREE.Vector3): void {
+  setPosition(pos) {  //Three.Vector3
     this._group.position.copy(pos);
   }
   // moves lights around Box3
-  setLightPositions(pos: THREE.Box3): void {
+  setLightPositions(pos) {    //: THREE.Box3
     const max = pos.max.clone();
     const min = pos.min.clone();
     this.key.position.set(max.x, max.y / 2, min.z);
@@ -82,14 +82,14 @@ export default class ThreePointLights {
     this.flood.position.multiplyScalar(100);
   }
 
-  setTarget(target: Object3D): void {
+  setTarget(target) {    //: Object3D
     const addTarget = (light) => {
       light.target = target;
     }
     this.traverse(addTarget);
   }
 
-  positions(): Object {
+  positions() {
     return {
       key: this.key.position,
       back: this.back.position,

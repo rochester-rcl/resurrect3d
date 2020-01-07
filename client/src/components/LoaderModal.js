@@ -9,12 +9,12 @@ import { Dimmer, Loader, Segment, Progress, Accordion, Label, Icon, Message } fr
 
 class LoaderModalError extends Component {
   state = { active: false }
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
     this.toggleActive = this.toggleActive.bind(this);
   }
 
-  toggleActive(): void {
+  toggleActive() {
     this.setState({
       active: !this.state.active,
     });
@@ -40,7 +40,7 @@ class LoaderModalError extends Component {
   }
 }
 
-const LoaderModal = (props: Object) => {
+const LoaderModal = (props) => {
   let { text, active, className, percent, error } = props;
   const message = (error === true) ? <LoaderModalError message={text} /> : <h1>{text}</h1>;
   if (percent) {

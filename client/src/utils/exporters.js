@@ -1,7 +1,7 @@
 /* @flow */
 import loadOBJExporter from './exporters/OBJExporter';
 import loadSTLExporter from './exporters/STLExporter';
-export default function loadExporters(threeInstance: Object): Object {
+export default function loadExporters(threeInstance) {
   const exporters = [
     loadOBJExporter(threeInstance),
     loadSTLExporter(threeInstance),

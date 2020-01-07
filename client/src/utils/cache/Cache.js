@@ -1,15 +1,15 @@
 /* @flow */
 
 export default class IndexedCache {
-  _connectionOpened: bool = false;
-  _indexedDB: IDBFactory = indexedDB
-  _db: IDBOpenDBRequest | null;
-  _idbStore: IDBObjectStore;
-  index: Object;
-  dbKey: string;
-  storeKey: string;
-  name: string;
-  constructor(name: string, index: Object) {
+  _connectionOpened = false;//: bool
+  _indexedDB = indexedDB//: IDBFactory
+  _db;//: IDBOpenDBRequest | null
+  _idbStore;//: IDBObjectStore
+  index;//: Object
+  dbKey;//: string
+  storeKey;//: string
+  name;//: string
+  constructor(name, index) {  //:string,Object
     this.name = name;
     this.storeKey = this.name + 'Store';
     this.dbKey = this.name + 'DB';
@@ -18,13 +18,13 @@ export default class IndexedCache {
   }
 
   // "Private" members
-  _initDB(): Promise<Object> {
+  _initDB() {  //: Promise<Object>
     return new Promise((resolve, reject) => {
       this._db = this._indexedDB.open(this.dbKey);
       this._db.onupgradeneeded = (event) => {
         this._updateDB(event.target.result);
       }
-      this._db.onsuccess = (event: Event) => {
+      this._db.onsuccess = (event) => {
         if (this._idbStore === undefined) {
           this._idbStore = event.target.result;
         }
@@ -37,17 +37,17 @@ export default class IndexedCache {
     });
   }
 
-  _updateDB(db: IDBObjectStore): void {
+  _updateDB(db) {  //: IDBObjectStore
     this._idbStore = (this._db.result !== undefined) ? this._db.result : db;
     let store = this._idbStore.createObjectStore(this.storeKey, { keyPath: "id" });
     store.createIndex(this.index.name, this.index.items);
   }
 
-  open(): Promise<Object> {
+  open() {  //: Promise<Object>
     return this._initDB();
   }
 
-  get(keys: Array<string>): Promise<Object> {
+  get(keys) {  //: Array<string> => : Promise<Object>
     return new Promise((resolve, reject) => {
       let transaction = this._idbStore.transaction(this.storeKey, "readwrite");
       let store = transaction.objectStore(this.storeKey);
@@ -66,7 +66,7 @@ export default class IndexedCache {
     });
   }
 
-  add(val: Object | string | number): Promise<Object> {
+  add(val) {  //: Object | string | number => : Promise<Object>
     return new Promise((resolve, reject) => {
       const transaction = this._idbStore.transaction(this.storeKey, "readwrite");
       const store = transaction.objectStore(this.storeKey);
@@ -76,7 +76,7 @@ export default class IndexedCache {
     });
   }
 
-  remove(key: string): Promise<Object> {
+  remove(key) {  //: Promise<Object>
     return new Promise((resolve, reject) => {
       const transaction = this._idbStore.transaction(this.storeKey, "readwrite");
       const store = transaction.objectStore(this.storeKey);
@@ -87,7 +87,7 @@ export default class IndexedCache {
 
   }
 
-  clear(): Promise<Object> {
+  clear() {  //: Promise<Object>
     return new Promise((resolve, reject) => {
       let transaction = this._idbStore.transaction(this.storeKey, "readwrite");
       let store = transaction.objectStore(this.storeKey);
@@ -97,7 +97,7 @@ export default class IndexedCache {
     });
   }
 
-  close(): void {
+  close() {
     this._db.result.close();
   }
 }

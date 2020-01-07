@@ -17,7 +17,7 @@ export const addUser = (userInfo: Object): Object => {
   };
 };
 
-export const deleteUser = (id: Number): Object => {
+export const deleteUser = (id: number): Object => {
   return {
     type: DELETE_USER,
     id: id

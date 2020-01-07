@@ -10,7 +10,7 @@ import { BASENAME } from '../../constants/api-endpoints';
 // semantic-ui-react
 import { Dropdown, Menu, Icon } from 'semantic-ui-react';
 
-const AdminMenu = (props: Object) => {
+const AdminMenu = (props) => {
   const { active } = props;
   if (active === true) {
     const trigger = <Icon className="three-menu-admin-trigger" size="big" name="bars" />;

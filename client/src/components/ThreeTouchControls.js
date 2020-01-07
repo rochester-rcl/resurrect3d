@@ -17,32 +17,32 @@ export default class ThreeTouchControls extends Component {
     pinchDistanceFromCenter: 0,
     pinchVectors: new THREE.Vector2(),
   }
-  touchControlRef: Object;
-  width: number;
-  height: number;
+  touchControlRef;
+  width;
+  height;
   baseClassName = 'three-touch-listener ';
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
-    (this: any).handleTouch = this.handleTouch.bind(this);
-    (this: any).handleTouchMove = this.handleTouchMove.bind(this);
-    (this: any).handlePinch = this.handlePinch.bind(this);
-    (this: any).handlePinchMove = this.handlePinchMove.bind(this);
-    (this: any)._preparePinchCallback = this._preparePinchCallback.bind(this);
-    (this: any)._preparePinchMoveCallback = this._preparePinchMoveCallback.bind(this);
-    (this: any).pinchDistance = this.pinchDistance.bind(this);
-    (this: any).normalizedPinchDistance = this.normalizedPinchDistance.bind(this);
-    (this: any).pinchCenter = this.pinchCenter.bind(this);
-    (this: any).distanceFromCenter = this.distanceFromCenter.bind(this);
-    (this: any).setPinchVectors = this.setPinchVectors.bind(this);
-    (this: any).toVec2Array = this.toVec2Array.bind(this);
+    this.handleTouch = this.handleTouch.bind(this);
+    this.handleTouchMove = this.handleTouchMove.bind(this);
+    this.handlePinch = this.handlePinch.bind(this);
+    this.handlePinchMove = this.handlePinchMove.bind(this);
+    this._preparePinchCallback = this._preparePinchCallback.bind(this);
+    this._preparePinchMoveCallback = this._preparePinchMoveCallback.bind(this);
+    this.pinchDistance = this.pinchDistance.bind(this);
+    this.normalizedPinchDistance = this.normalizedPinchDistance.bind(this);
+    this.pinchCenter = this.pinchCenter.bind(this);
+    this.distanceFromCenter = this.distanceFromCenter.bind(this);
+    this.setPinchVectors = this.setPinchVectors.bind(this);
+    this.toVec2Array = this.toVec2Array.bind(this);
   }
 
-  componentDidMount(): void {
+  componentDidMount() {
     this.width = this.touchControlRef.clientWidth;
     this.height = this.touchControlRef.clientHeight;
   }
 
-  handleTouch(event: SyntheticEvent): void {
+  handleTouch(event) {
     let touches = event.nativeEvent.touches;
     event.preventDefault();
     event.stopPropagation();
@@ -66,7 +66,7 @@ export default class ThreeTouchControls extends Component {
     }
   }
 
-  handleTouchMove(event: SyntheticEvent): void {
+  handleTouchMove(event) {
     event.preventDefault();
     event.stopPropagation();
     let touches = event.nativeEvent.touches;
@@ -77,11 +77,11 @@ export default class ThreeTouchControls extends Component {
     }
   }
 
-  handlePinch(touches: TouchList, type: string): void {
+  handlePinch(touches, type) {
     this.setPinchVectors(touches, this._preparePinchCallback);
   }
 
-  _preparePinchCallback(vecs: Array<THREE.Vector2>, touches: TouchList): void {
+  _preparePinchCallback(vecs, touches) {
     let distance = this.pinchDistance();
     let normalizedDistance = this.normalizedPinchDistance();
     let pinchCenter = this.pinchCenter();
@@ -99,11 +99,11 @@ export default class ThreeTouchControls extends Component {
     });
   }
 
-  handlePinchMove(touches: TouchList): void {
+  handlePinchMove(touches) {
     this.setPinchVectors(touches, this._preparePinchMoveCallback);
   }
 
-  _preparePinchMoveCallback(vecs: Array<THREE.Vector2>, touches: TouchList): void {
+  _preparePinchMoveCallback(vecs, touches) {
     let pinchDistance = this.pinchDistance();
     let normalizedDistance = this.normalizedPinchDistance();
     let pinchCenter = this.pinchCenter();
@@ -125,28 +125,28 @@ export default class ThreeTouchControls extends Component {
     });
   }
   // distance from touches in pixels
-  pinchDistance(): number {
+  pinchDistance() {
     let [vec1, vec2] = this.state.pinchVectors;
     return vec1.distanceTo(vec2);
   }
   // distance from touches in normalized screen coords
-  normalizedPinchDistance(): number {
+  normalizedPinchDistance() {
     let [vec1, vec2] = this.state.pinchVectors.map((vec) => {
       return new THREE.Vector2(vec.x / this.width, vec.y / this.height);
     });
     return vec1.distanceTo(vec2);
   }
 
-  pinchCenter(): THREE.Vector2 {
+  pinchCenter() {
     let [vec1, vec2] = this.state.pinchVectors;
     return vec1.add(vec2).divideScalar(2);
   }
 
-  distanceFromCenter(vec1: THREE.Vector2, vec2: THREE.Vector2, center: THREE.Vector2): number {
+  distanceFromCenter(vec1, vec2, center) {
     return Math.max(vec1.distanceTo(center), vec2.distanceTo(center));
   }
 
-  setPinchVectors(touches: TouchList, callback: (vecs: Array<THREE.Vector2>, nativeTouches: TouchList) => void): void {
+  setPinchVectors(touches, callback) {
     this.setState({
       pinchVectors: this.toVec2Array(...touches),
     }, () => {
@@ -154,7 +154,7 @@ export default class ThreeTouchControls extends Component {
     });
   }
 
-  toVec2Array(touch1: Touch, touch2: Touch): Array<THREE.Vector2> {
+  toVec2Array(touch1, touch2) {
     return [
       new THREE.Vector2(touch1.clientX, touch2.clientY),
       new THREE.Vector2(touch2.clientX, touch2.clientY)

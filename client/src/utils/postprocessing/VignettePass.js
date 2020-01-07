@@ -2,9 +2,9 @@
  * Vignette Shader Pass + 2 pass gaussian
  */
 
-export default function loadVignettePass(threeInstance: Object): typeof Promise {
+export default function loadVignettePass(threeInstance) {
 	return new Promise((resolve, reject) => {
-		threeInstance.VignettePass = function (resolution: threeInstance.Vector2, strength: Number, color: threeInstance.Color) {
+		threeInstance.VignettePass = function (resolution, strength, color) {  //threeInstance,Vector2, Number, threeInstance,Color
 
             threeInstance.Pass.call(this);
 

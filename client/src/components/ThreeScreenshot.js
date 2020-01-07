@@ -13,13 +13,13 @@ const short = require("short-uuid");
 export default class ThreeScreenshot extends Component {
   state = { url: null, filename: null, inBuffer: false };
   uuid = short();
-  constructor(props: Object) {
+  constructor(props) {
     super(props);
-    (this: any).captureScreenshot = this.captureScreenshot.bind(this);
-    (this: any).handleClientDownload = this.handleClientDownload.bind(this);
+    this.captureScreenshot = this.captureScreenshot.bind(this);
+    this.handleClientDownload = this.handleClientDownload.bind(this);
   }
 
-  captureScreenshot(): void {
+  captureScreenshot() {
     const { url, filename, inBuffer } = this.state;
     this.setState({
       url: this.props.renderer.domElement.toDataURL(this.props.mime),
@@ -28,7 +28,7 @@ export default class ThreeScreenshot extends Component {
     });
   }
 
-  handleClientDownload(event: SyntheticEvent): void {
+  handleClientDownload(event) {
     // let the default event propagate
     this.setState({
       inBuffer: false

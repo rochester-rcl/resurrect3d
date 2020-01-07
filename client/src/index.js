@@ -16,7 +16,7 @@ import rootSaga from './middleware/saga';
 // containers
 import Root from './containers/Root';
 
-const store: Object = configureStore();
+const store = configureStore();
 
 sagaMiddleware.run(rootSaga);
 

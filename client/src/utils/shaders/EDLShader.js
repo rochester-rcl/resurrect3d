@@ -7,7 +7,7 @@
 // http://www.kitware.com/source/home/post/9
 // https://tel.archives-ouvertes.fr/tel-00438464/document p. 115+ (french)
 
-export default function loadEDLShader(threeInstance: Object): Promise {
+export default function loadEDLShader(threeInstance) {
   const neighbourCount = 4;
   const neighbours = new Float32Array(neighbourCount * 2);
   for (let i=0; i < neighbourCount; i++) {

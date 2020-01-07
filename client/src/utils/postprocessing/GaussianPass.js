@@ -2,7 +2,7 @@
  * Bokeh2 Shader Pass
  */
 
-export default function loadGaussianPass(threeInstance: Object): typeof Promise {
+export default function loadGaussianPass(threeInstance) {
 	return new Promise((resolve, reject) => {
 		threeInstance.GaussianPass = function (params) {
 

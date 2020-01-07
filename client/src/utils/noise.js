@@ -4,7 +4,7 @@
 
 import { SIMPLEX_2D } from '../constants/application';
 
-export function loadNoiseFunc(noiseType: String): String {
+export function loadNoiseFunc(noiseType) {
   const noiseMap = {
     SIMPLEX_2D: simplex2d,
   }

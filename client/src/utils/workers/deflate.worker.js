@@ -4,7 +4,7 @@ import pako from "pako";
 import { WORKER_PROGRESS, WORKER_DATA } from '../../constants/application';
 import {GZIP_CHUNK_SIZE} from '../../constants/application';
 // keep it consistent with inflator for progress - needs to be converted to Uint8Array
-const deflate = (inputData: string, chunkSize: number): Uint8Array => {
+const deflate = (inputData, chunkSize) => {  //=>: Uint8Array
   const deflator = new pako.Deflate({ gzip: true });
   let done = false;
   for (let i = 0; i < inputData.length; i += chunkSize) {
@@ -24,7 +24,7 @@ const deflate = (inputData: string, chunkSize: number): Uint8Array => {
   }
 }
 
-self.onmessage = (event: Event) => {  // eslint-disable-line no-restricted-globals
+self.onmessage = (event) => {  // eslint-disable-line no-restricted-globals
   const { data } = event;
   let inputData = data;
   if (data.constructor !== String) {

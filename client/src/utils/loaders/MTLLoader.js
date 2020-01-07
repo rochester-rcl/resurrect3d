@@ -5,7 +5,7 @@
  * @author angelxuanchang
  */
 
-export default function initMTLLoader(threeInstance: Object): Promise {
+export default function initMTLLoader(threeInstance) {
   return new Promise((resolve, reject) => {
     threeInstance.MTLLoader = function ( manager ) {
 

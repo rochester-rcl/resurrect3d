@@ -2,7 +2,7 @@
  * Depth-of-field post-process with bokeh shader
  */
 
-export default function loadBokehPass(threeInstance: Object): typeof Promise {
+export default function loadBokehPass(threeInstance) {
 	return new Promise((resolve, reject) => {
 		threeInstance.BokehPass = function ( scene, camera, params ) {
 

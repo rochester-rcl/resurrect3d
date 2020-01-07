@@ -41,7 +41,7 @@ function mapStateToProps(state) {
   };
 }
 
-function mapActionCreatorsToProps(dispatch: Object) {
+function mapActionCreatorsToProps(dispatch) {
   return bindActionCreators(AppActionCreators, dispatch);
 }
 
