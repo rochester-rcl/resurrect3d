@@ -452,11 +452,11 @@ export default class ThreeView extends Component {
         {this.controls ? this.controls : null}
         <div className="three-view-container">
           {this.panelLayout ? this.panelLayout : <span />}
-          <InfoModal
+          {/*<InfoModal
             className="three-info-modal"
             active={showInfo}
             info={info}
-          />
+          />*/}
           <LoaderModal
             text={loadText + loadProgress}
             className="three-loader-dimmer"
@@ -634,6 +634,7 @@ export default class ThreeView extends Component {
     let components = this.GUI.components;
     let layouts = this.GUI.layouts;
     let controls = new ThreeGUIGroup("controls");
+    const { enableEmbed, enableAnnotations, enableLight, enableDownload } = this.props.options;
     const checkTools = () => {
       for (let key in this.props.options) {
         if (key.includes("enable")) {
@@ -671,14 +672,14 @@ export default class ThreeView extends Component {
       renderer: this.webGLRenderer
     });
 
-    if (this.props.options.enableDownload) {
+    if (enableDownload) {
       controls.addComponent("mesh-export", components.THREE_MESH_EXPORTER, {
         threeInstance: THREE,
         mesh: this.mesh
       });
     }
 
-    if (this.props.options.enableLight) {
+    if (enableLight) {
       controls.addComponent("lighting", components.THREE_BUTTON, {
         ...buttonProps,
         content: "lighting: off",
@@ -697,14 +698,14 @@ export default class ThreeView extends Component {
       });
     }
 
-    if (this.props.info) {
+    /*if (this.props.info) {
       controls.addComponent("info", components.THREE_BUTTON, {
         ...buttonProps,
         content: "info",
         icon: "info",
         onClick: () => this.toggleInfo()
       });
-    }
+    }*/
 
     if (checkTools()) {
       controls.addComponent("tools", components.THREE_BUTTON, {
@@ -733,12 +734,11 @@ export default class ThreeView extends Component {
       frameOfReference: "stage",
       className: "three-controls-button"
     });
-
     controls.addComponent("embed", ThreeEmbed, {
       ...buttonProps,
       className: "three-embed-button",
       embedded: this.props.embedded,
-      readOnly: !this.props.enableEmbed
+      readOnly: !enableEmbed
     });
 
     this.controls = (

@@ -16,7 +16,7 @@ export default class ThreeEmbed extends Component {
     const { origin, pathname } = window.location;
     const embedPath = pathname.replace("models", "embed");
     return `<iframe src="${origin +
-      embedPath}" width="1000" height="1000" allowfullscreen="true" frameborder="0"></iframe>`;
+      embedPath}" width="1000" height="800" allowfullscreen="true" frameborder="0"></iframe>`;
   };
   getFullViewPath = () => {
     const { pathname } = window.location;
@@ -57,7 +57,7 @@ export default class ThreeEmbed extends Component {
         onClick={this.toggle}
       />
     );
-    if (!embedded || !readOnly) {
+    if (!embedded && !readOnly) {
       return (
         <Modal
           basic
@@ -101,7 +101,7 @@ export default class ThreeEmbed extends Component {
           </Modal.Content>
         </Modal>
       );
-    } else {
+    } else if(embedded) {
       return (
         <Link target="_blank" to={this.getFullViewPath()}>
           <ThreeButton
@@ -114,6 +114,8 @@ export default class ThreeEmbed extends Component {
           />
         </Link>
       );
+    } else {
+        return null;
     }
   }
 }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { createRef } from "react";
 import PropTypes from "prop-types";
 
 // React-redux
@@ -25,6 +25,7 @@ import {
   Input,
   Select,
   Sticky,
+  Ref,
   Label,
   List,
   Visibility,
@@ -90,14 +91,11 @@ class SemanticContent extends React.Component {
     (this: any).contextRef = React.createRef();
     (this: any).context = null;
     (this: any).state = this.defaultState;
+    this.contextRef = createRef();
   }
 
   componentDidMount = () => {
     this.props.getViews();
-  };
-
-  handleContextRef = ref => {
-    this.setState({ context: ref });
   };
 
   handleVisablityUpdate = (e, { calculations }) =>
@@ -341,12 +339,12 @@ class SemanticContent extends React.Component {
     ));
     const addButton = <Button onClick={this.resetAddForm}>Add New</Button>;
     return (
-      <div ref={this.handleContextRef}>
+      <Ref innerRef={this.contextRef}>
         <Grid centered={true} columns={2}>
           <Grid.Column width={6}>
             <Sticky
               className="admin-main-form-sticky"
-              context={this.state.context}
+              context={this.contextRef}
             >
               <Segment inverted className="admin-main-form" fluid>
                 <Header>
@@ -590,7 +588,7 @@ class SemanticContent extends React.Component {
             )}
           </Grid.Column>
         </Grid>
-      </div>
+      </Ref>
     );
   }
 }

@@ -60,7 +60,7 @@ exports.getFile = (req, res) => {
     }
   });
 };
-// TODO should probably have some sort of parameter or 
+// TODO should probably have some sort of parameter or
 // something to make this for admin only - in the future we will have a browse feature that will require everything
 exports.findAllViews = (req, res) => {
   const query = {};
@@ -73,7 +73,6 @@ exports.findAllViews = (req, res) => {
         message: "Could not find views: Error[ " + err + " ]"
       });
     }
-    console.log(views);
     return res.status(200).json({ views: views });
     //console.log("View(s) successfully read");
   });
