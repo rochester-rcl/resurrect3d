@@ -1007,7 +1007,7 @@ export default class ThreeView extends Component {
 
   positionAnnotations(alpha = 0): void {
     //Make annotations position smartly to stay in camera -- use raycaster prob
-    const distance = 0.05 * this.spriteScaleFactor;
+    const distance = 0.3;
     const {
       currentAnnotationIndex,
       currentAnnotationCSSObj,
