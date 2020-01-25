@@ -1,6 +1,13 @@
 import * as React from "react";
 
-const ThreeAnnotationReadOnlyBody = props => {
+type AnnotationBodyProps = {
+  key: string;
+  visible: boolean;
+  innerRef: React.RefObject<HTMLDivElement>;
+  text: string;
+}
+
+const ThreeAnnotationReadOnlyBody = (props: AnnotationBodyProps) => {
   const { visible, text, innerRef } = props;
   const display = text.length > 0 ? "flex" : "none";
   if (visible) {

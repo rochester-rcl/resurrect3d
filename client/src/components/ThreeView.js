@@ -6,7 +6,7 @@ import ReactDOM from "react-dom";
 
 // THREEJS
 import * as _THREE from "three";
-import { CSS2DObject, CSS2DRenderer } from "./CSS2DRenderer";
+import { CSS2DObject, CSS2DRenderer } from "../utils/CSS2DRenderer";
 
 // Semantic UI
 import LoaderModal from "./LoaderModal";

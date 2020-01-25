@@ -15,7 +15,7 @@ type AnnotationProps = {
   editable: boolean;
   onUpdate: (num: number) => void;
   callback: (num: number, obj: Object) => void;
-  innerRef: React.Ref<HTMLDivElement>;
+  innerRef: React.RefObject<HTMLDivElement>;
   visible: boolean;
 }
 
@@ -38,7 +38,7 @@ export default class ThreeAnnotation extends React.Component<AnnotationProps, An
     this.renderTitle = this.renderTitle.bind(this);
   }
 
-  updateTitle(event): void {
+  updateTitle(event: React.ChangeEvent<HTMLTextAreaElement>): void {
     const { index, onUpdate } = this.props;
     const { needsUpdate } = this.state;
     this.setState(
@@ -54,7 +54,7 @@ export default class ThreeAnnotation extends React.Component<AnnotationProps, An
     );
   }
 
-  updateText(event): void {
+  updateText(event: React.ChangeEvent<HTMLTextAreaElement>): void {
     const { index, onUpdate } = this.props;
     const { needsUpdate } = this.state;
     this.setState(
@@ -78,7 +78,7 @@ export default class ThreeAnnotation extends React.Component<AnnotationProps, An
         <div className="annotation-body" style={textStyle}>
           <textarea
             defaultValue={text}
-            type="text"
+            //type="text"
             onChange={this.updateText}
             className="text-area"
             readOnly={!editable}
