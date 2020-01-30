@@ -1,47 +1,46 @@
-var mongoose = require('mongoose');
+var mongoose = require("mongoose");
 var Schema = mongoose.Schema;
-const UserSchema = require('./user');
+const UserSchema = require("./user");
 
 var viewSchema = new Schema({
-  
   displayName: {
     type: String,
     required: false
   },
 
-  threeFile:{
+  threeFile: {
     type: String,
     required: true
   },
 
-  threeThumbnail:{
+  threeThumbnail: {
     type: String,
     required: false
   },
 
-  skybox:{
-    file:{
+  skybox: {
+    file: {
       type: String,
       required: false
     }
   },
 
-  enableLight:{
+  enableLight: {
     type: Boolean,
     required: true
   },
 
-  enableMaterials:{
+  enableMaterials: {
     type: Boolean,
     required: true
   },
 
-  enableShaders:{
+  enableShaders: {
     type: Boolean,
     required: true
   },
 
-  enableMeasurement:{
+  enableMeasurement: {
     type: Boolean,
     required: true
   },
@@ -58,21 +57,20 @@ var viewSchema = new Schema({
     default: false
   },
 
-  modelUnits:{
+  modelUnits: {
     type: String,
     required: true
   },
 
   viewerSettings: {
     type: Object,
-    required: false,
+    required: false
   },
-
   createdBy: {
     type: Schema.Types.ObjectId,
-    ref: 'User'
-  }
-  
+    ref: "User"
+  },
+  allowedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }]
 });
 
-module.exports = mongoose.model('view', viewSchema);
+module.exports = mongoose.model("view", viewSchema);

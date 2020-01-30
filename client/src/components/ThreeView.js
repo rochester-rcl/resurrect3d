@@ -955,7 +955,7 @@ export default class ThreeView extends Component {
         annotationMarker.position.add(this.annotationSpriteOffset);
         annotationMarker.scale.multiplyScalar(this.spriteScaleFactor / 10);
         if (annotations[i].open) {
-          annotationMarker.material.color.setHex(0x21ba45);
+          annotationMarker.material.color.setHex(annotations[i].pinColor);
           const cssObj = new CSS2DObject(annotations[i].node);
           const bodyNode = annotations[i].bodyNode;
           const cssBodyObj = bodyNode

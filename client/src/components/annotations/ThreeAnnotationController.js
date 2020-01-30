@@ -10,7 +10,7 @@ import * as THREE from "three";
 // UI
 import ThreeToggle from "../ThreeToggle";
 import ThreeButton from "../ThreeButton";
-
+import ThreeColorPicker from "../ThreeColorPicker";
 //ThreeAnnotation
 import ThreeAnnotation from "./ThreeAnnotation";
 import ThreeAnnotationShortcut from "./ThreeAnnotationShortcut";
@@ -48,7 +48,8 @@ class ThreeAnnotationController extends Component {
     updatingAnnotations: false,
     presentationMode: false,
     currentIndex: -1,
-    shortcutsNeedUpdate: false
+    shortcutsNeedUpdate: false,
+    pinColor: 0x21ba45
   };
 
   constructor(props: Object) {
@@ -308,7 +309,7 @@ class ThreeAnnotationController extends Component {
   }
 
   makeAnnotation(point) {
-    let annotations = this.state.annotations;
+    const annotations = this.state.annotations;
     for (let i = 0; i < annotations.length; i++) {
       annotations[i].open = false;
       const component = annotations[i].component;
@@ -345,7 +346,7 @@ class ThreeAnnotationController extends Component {
         text={""}
       />
     );
-    let annotation = {
+    const annotation = {
       component: component,
       bodyComponent: bodyComponent,
       get node() {
@@ -496,6 +497,7 @@ class ThreeAnnotationController extends Component {
       title,
       text,
       point,
+      pinColor,
       settings,
       saveStatus,
       needsMerge,
@@ -539,6 +541,7 @@ class ThreeAnnotationController extends Component {
       index: index,
       settings: settings,
       needsMerge: needsMerge,
+      pinColor: pinColor,
       _id: _id,
       open: false,
       saveStatus: saveStatus
@@ -731,8 +734,9 @@ class ThreeAnnotationController extends Component {
         <div key={annotation.bodyComponent.key}>{annotation.bodyComponent}</div>
       );
     });
-    let editToggle;
-    let togglePresentationMode;
+    let editToggle = null;
+    let colorPicker = null;
+    let togglePresentationMode = null;
     if (this.state.active) {
       if (user.loggedIn) {
         editToggle = (
@@ -740,6 +744,12 @@ class ThreeAnnotationController extends Component {
             title="edit mode"
             callback={this.toggleEdit}
             defaultVal={editable}
+          />
+        );
+        colorPicker = (
+          <ThreeColorPicker
+            title={"Active Pin Color"}
+            callback={color => console.log(color)}
           />
         );
       }
@@ -757,7 +767,7 @@ class ThreeAnnotationController extends Component {
       }
     }
 
-    let shortcutContainer;
+    let shortcutContainer = null;
     if (this.state.active) {
       shortcutContainer = (
         <div ref={this.shortcutContainerRef} className={"three-gui-group"}>
@@ -771,6 +781,7 @@ class ThreeAnnotationController extends Component {
         <ThreeToggle title="annotations" callback={this.toggle} />
         {editToggle}
         {togglePresentationMode}
+        {colorPicker}
         {shortcutContainer}
         {renderedAnnotations}
         {renderedBodyAnnotations}

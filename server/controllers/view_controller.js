@@ -104,8 +104,11 @@ exports.addView = (req, res) => {
     createdBy: req.user.id
   });
   newView.save((err, view) => {
-    if (err) res.send(err);
-    res.json(view);
+    if (err) {
+      res.send(err);
+    } else {
+      res.json(view);
+    }
     console.log("View successfully added");
   });
 };

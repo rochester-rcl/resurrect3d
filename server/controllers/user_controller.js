@@ -21,16 +21,20 @@ const addUser = (req, res) => {
     token: token
   });
   // should likely put this in a separate function
-  user.save((err, savedUser) => {
-    if (err) res.send(err);
-    if (savedUser !== undefined) {
+  user.save(err => {
+    if (err) {
+      res.json({
+        status: false,
+        message: `The server encountered a ${err.code} error. Please try again.`
+      });
+    } else {
       const response = {
-        username: savedUser.username,
-        email: savedUser.email,
-        token: savedUser.token,
-        id: savedUser._id
+        username: user.username,
+        email: user.email,
+        token: user.token,
+        id: user._id
       };
-      savedUser.sendVerificationEmail(function(err, info) {
+      user.sendVerificationEmail(function(err, info) {
         if (err) {
           res.json({ status: false, message: "Invalid e-mail address!" });
         } else {
@@ -42,7 +46,6 @@ const addUser = (req, res) => {
 };
 
 const deleteUser = (req, res) => {
-  console.log(req.user._id, req.params.id);
   if (req.user._id == req.params.id) {
     User.findOne(
       {
@@ -57,32 +60,39 @@ const deleteUser = (req, res) => {
       }
     );
   } else {
-    res
-      .status(403)
-      .json({
-        status: false,
-        message: "You can only delete your own account!"
-      });
+    res.status(403).json({
+      status: false,
+      message: "You can only delete your own account!"
+    });
   }
 };
 
 const verifyUser = (req, res) => {
   const token = req.params.token;
-  User.findOne({
-    token: token,
-  }, (err, user) => {
-    if (err) res.send(err)
-    if (user !== null) {
-      user.verified = true;
-      user.save((err, savedUser) => {
-        if (err) res.send(err);
-        res.json({ status: true, message: 'Account verified for ' + savedUser.email });
-      });
-    } else {
-      res.json({ status: false, message: 'No token found. Did you sign up for an account?' });
+  User.findOne(
+    {
+      token: token
+    },
+    (err, user) => {
+      if (err) res.send(err);
+      if (user !== null) {
+        user.verified = true;
+        user.save(err => {
+          if (err) res.send(err);
+          res.json({
+            status: true,
+            message: "Account verified for " + user.email
+          });
+        });
+      } else {
+        res.json({
+          status: false,
+          message: "No token found. Did you sign up for an account?"
+        });
+      }
     }
-  });
-}
+  );
+};
 
 const logout = (req, res) => {
   req.logout();
@@ -123,7 +133,6 @@ const authenticateServer = (req, res, next) => {
 
 passport.use(
   new LocalStrategy(function(email, password, done) {
-    console.log('here');
     // no idea why this is being set to undefined below, but this works
     const _password = password;
     User.findOne({ email: email }, function(err, user) {
