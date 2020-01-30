@@ -13,9 +13,9 @@ import {
 } from "../../constants/application";
 
 type ShortcutProps = {
-  focus: (number) => void;
-  delete: (number) => void;
-  save: (number) => void;
+  focus: (index: number) => void;
+  delete: (index: number) => void;
+  save: (index: number) => void;
   index: number;
   onSettingsUpdate: (index: number, settingsKey: number, value: number) => void;
   onUpdateIndex: (index: number, dst: number, callback: () => void) => void;
@@ -29,7 +29,7 @@ type ShortcutProps = {
 
 export default class ThreeAnnotationShortcut extends React.Component<ShortcutProps> {
   state = { settings: { useCamera: false, useLights: false } };
-  constructor(props) {
+  constructor(props: ShortcutProps) {
     super(props);
     this.focus = this.focus.bind(this);
     this.del = this.del.bind(this);
@@ -58,7 +58,7 @@ export default class ThreeAnnotationShortcut extends React.Component<ShortcutPro
     onSettingsUpdate(index, settingsKey, value);
   }
 
-  updateIndex(direction) {
+  updateIndex(direction: boolean) {
     const { index, onUpdateIndex, total } = this.props;
     const dst = direction ? index + 1 : index - 1;
     let canUpdate = false;

@@ -52,12 +52,12 @@ interface Annotation {
   _id?: number;
 }
 
-interface AnnotationData {
+interface AnnotationData {  //Interface for annotation data for storage. Hydrated into Annotations
   title: string;
   text: string;
   point: THREE.Vector3;
   settings: Object;
-  saveStatus: boolean;
+  saveStatus: string;
   needsMerge: boolean;
   _id: number;
 }
@@ -91,10 +91,16 @@ type ControllerState = {
   editable?: boolean;
   annotations: Annotation[];
   presentationMode?: boolean;
-  currentIndex?: number;
+  currentIndex?: number;  //Currently viewed annotation in presentation mode; -1 if presentation mode disabled
   shortcutsNeedUpdate?: boolean;
   updatingAnnotations?: boolean;
 }
+
+/*
+  ThreeAnnotationController class provides functionality for creating, managing, and viewing Annotations.
+  It interfaces with the model view through a CSS2DRenderer and controls the shortcut container in the
+  tools menu.
+*/
 
 class ThreeAnnotationController extends React.Component<ControllerProps, ControllerState> {
   raycaster: THREE.Raycaster;
@@ -171,6 +177,8 @@ class ThreeAnnotationController extends React.Component<ControllerProps, Control
     css.style.pointerEvents = "auto";
   }
 
+
+  //If component will unmount, remove event listeners and ignore pointer events in CSS2DRenderer
   componentWillUnmount(): void {
     const { css } = this.props;
     css.removeEventListener("mousedown", this.handleDown, true);
@@ -193,7 +201,7 @@ class ThreeAnnotationController extends React.Component<ControllerProps, Control
       },
       () => {
         if (!this.state.active) {
-          this.props.drawCallback([]);
+          this.props.drawCallback([]);  //If inactive, draw no annotations
         }
       }
     );
@@ -212,6 +220,13 @@ class ThreeAnnotationController extends React.Component<ControllerProps, Control
 
     const { onTogglePresentationMode, presentationRef } = this.props;
     const { presentationMode } = this.state;
+
+    if (!screenfull || !screenfull.isEnabled || !presentationRef.current)
+    {
+      console.log("Unable to toggle presentation mode");
+      return;
+    }
+
     this.setState(
       {
         presentationMode: !presentationMode,
@@ -219,7 +234,7 @@ class ThreeAnnotationController extends React.Component<ControllerProps, Control
       },
       () => {
         this.toggleKeydownListeners();
-        if (screenfull && screenfull.isEnabled && presentationRef.current)
+        if (screenfull && screenfull.isEnabled && presentationRef.current)  //Redundant but needed for typescript callbacks
           screenfull.toggle(presentationRef.current);
         onTogglePresentationMode(this.state.presentationMode);
       }
@@ -239,6 +254,7 @@ class ThreeAnnotationController extends React.Component<ControllerProps, Control
     }
   }
 
+  //If presentation mode enabled, allow control with left and right keys
   toggleKeydownListeners() {
     const { presentationMode } = this.state;
     if (presentationMode) {
@@ -264,10 +280,11 @@ class ThreeAnnotationController extends React.Component<ControllerProps, Control
     }
   }
 
+  //Set current index to index % annotations.length, view current index
   goToAnnotation(index: number) {
     const { annotations } = this.state;
     const max = annotations.length - 1;
-    let nextIndex = index;
+    let nextIndex = index;  //index % annotations.length?
     if (nextIndex < 0) nextIndex = max;
     if (nextIndex > max) nextIndex = 0;
     this.setState({ currentIndex: nextIndex }, () =>
@@ -276,7 +293,7 @@ class ThreeAnnotationController extends React.Component<ControllerProps, Control
   }
 
   reset(): void {
-    this.props.drawCallback([]);
+    this.props.drawCallback([]);  //Draw no annotations
     this.setState({ annotations: [], shortcutsNeedUpdate: true });
 
     if (this.props.onActiveCallback)
@@ -287,10 +304,10 @@ class ThreeAnnotationController extends React.Component<ControllerProps, Control
     const { editable, updatingAnnotations, active } = this.state;
     const { css, annotationData } = this.props;
     const { localStateNeedsUpdate, focused } = annotationData;
-    if (this.props.open != prevProps.open) {
+    if (this.props.open != prevProps.open) {  //Update open if needed
       this.setState({ open: this.props.open });
     }
-    if (!editable || !active) {
+    if (!editable || !active) { 
       css.style.pointerEvents = "none";
       css.style.cursor = "pointer";
     }
@@ -484,7 +501,7 @@ class ThreeAnnotationController extends React.Component<ControllerProps, Control
     const updatedAnnotations = annotations.map((annotation, index) =>
       this.hydrateAnnotation(annotation, index)
     );
-    const merged = this.mergeAnnotations(updatedAnnotations);
+    const merged = this.mergeAnnotations(updatedAnnotations); //What this do??
     this.setState(
       {
         annotations: merged,
@@ -550,14 +567,15 @@ class ThreeAnnotationController extends React.Component<ControllerProps, Control
   mergeAnnotations(newAnnotations: Annotation[]) {
     const { annotations } = this.state;
     const { updateAnnotationsMergedStatus } = this.props;
-    const updated = [];
+    const updated = new Array<number>();
     if (annotations.length === 0) return newAnnotations;
     const merged = annotations.slice(0);
     for (let i = 0; i < newAnnotations.length; i++) {
       const annotation = newAnnotations[i];
       if (annotation.needsMerge) {
         merged[i] = annotation;
-        updated.push(annotation._id);
+        if (annotation._id)
+          updated.push(annotation._id);
       }
     }
     updateAnnotationsMergedStatus(updated);
@@ -852,7 +870,7 @@ class ThreeAnnotationController extends React.Component<ControllerProps, Control
   }
 }
 
-function mapStateToProps(state: ControllerState) {
+function mapStateToProps(state) {
   return {
     annotationData: state.annotationData,
     user: state.user
