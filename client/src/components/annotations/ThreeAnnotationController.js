@@ -10,7 +10,7 @@ import * as THREE from "three";
 // UI
 import ThreeToggle from "../ThreeToggle";
 import ThreeButton from "../ThreeButton";
-import ThreeColorPicker from "../ThreeColorPicker";
+import ThreeColorPicker, { rgbToBase16 } from "../ThreeColorPicker";
 //ThreeAnnotation
 import ThreeAnnotation from "./ThreeAnnotation";
 import ThreeAnnotationShortcut from "./ThreeAnnotationShortcut";
@@ -49,7 +49,7 @@ class ThreeAnnotationController extends Component {
     presentationMode: false,
     currentIndex: -1,
     shortcutsNeedUpdate: false,
-    pinColor: 0x21ba45
+    pinColor: { hex: 0x21ba45, str: "#21ba45" }
   };
 
   constructor(props: Object) {
@@ -63,6 +63,7 @@ class ThreeAnnotationController extends Component {
     (this: any).updateAnnotation = this.updateAnnotation.bind(this);
     (this: any).viewAnnotation = this.viewAnnotation.bind(this);
     (this: any).deleteAnnotation = this.deleteAnnotation.bind(this);
+    this.handleColorPick = this.handleColorPick.bind(this);
     (this: any).toggle = this.toggle.bind(this);
     (this: any).toggleEdit = this.toggleEdit.bind(this);
     (this: any).raycaster = new THREE.Raycaster();
@@ -192,6 +193,13 @@ class ThreeAnnotationController extends Component {
     }
   }
 
+  handleColorPick(rgb) {
+    const color = new THREE.Color(...Object.values(rgb));
+    this.setState({
+      pinColor: { hex: color.getHex(), str: color.getHexString() }
+    });
+  }
+
   goToAnnotation(index) {
     const { annotations } = this.state;
     const max = annotations.length - 1;
@@ -309,7 +317,7 @@ class ThreeAnnotationController extends Component {
   }
 
   makeAnnotation(point) {
-    const annotations = this.state.annotations;
+    const { annotations, pinColor } = this.state;
     for (let i = 0; i < annotations.length; i++) {
       annotations[i].open = false;
       const component = annotations[i].component;
@@ -356,6 +364,7 @@ class ThreeAnnotationController extends Component {
         return this.bodyComponent.props.innerRef.current;
       },
       point: point,
+      pinColor: pinColor.hex,
       text: "",
       title: component.props.title,
       settings: { cameraPosition: { val: null, enabled: false } },
@@ -550,7 +559,7 @@ class ThreeAnnotationController extends Component {
   }
 
   updateAnnotation(index, data) {
-    let annotations = this.state.annotations;
+    const { annotations } = this.state;
 
     annotations[index] = { ...annotations[index], ...data };
 
@@ -622,6 +631,10 @@ class ThreeAnnotationController extends Component {
       const { component, bodyComponent } = annotation;
       if (idx === index) {
         annotation.open = true;
+        const color = new THREE.Color(annotation.pinColor);
+        this.setState({
+          pinColor: { hex: color.getHex(), str: color.getHexString() }
+        });
         if (!component.props.visible) {
           annotation.component = React.cloneElement(component, {
             ...component.props,
@@ -722,7 +735,8 @@ class ThreeAnnotationController extends Component {
       annotations,
       presentationMode,
       currentIndex,
-      editable
+      editable,
+      pinColor
     } = this.state;
     const currentAnnotation =
       currentIndex > -1 ? annotations[currentIndex] : null;
@@ -746,12 +760,15 @@ class ThreeAnnotationController extends Component {
             defaultVal={editable}
           />
         );
-        colorPicker = (
-          <ThreeColorPicker
-            title={"Active Pin Color"}
-            callback={color => console.log(color)}
-          />
-        );
+        if (editable) {
+          colorPicker = (
+            <ThreeColorPicker
+              title={"Active Pin Color"}
+              color={pinColor.str}
+              callback={this.handleColorPick}
+            />
+          );
+        }
       }
       if (!presentationMode && annotations.length > 0) {
         togglePresentationMode = (
