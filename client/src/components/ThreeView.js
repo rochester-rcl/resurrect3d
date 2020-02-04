@@ -67,7 +67,7 @@ import ThreeMeshExporter from "./ThreeMeshExporter";
 import ThreeEmbed from "./ThreeEmbed";
 
 // Components
-import ThreeWebVR, { checkVR } from "./webvr/ThreeWebVR";
+// import ThreeWebVR, { checkVR } from "./webvr/ThreeWebVR";
 
 // Because of all of the THREE examples' global namespace pollu
 const THREE = _THREE;
@@ -371,7 +371,8 @@ export default class ThreeView extends Component {
     (this: any).handleTouchMove = this.handleTouchMove.bind(this);
 
     // VR
-    this.vrSupported = checkVR();
+    // TODO disable until we see what the new plan is for WebXR
+    this.vrSupported = false //checkVR();
 
     //Updatable UI
     this.panelGroup = new ThreeGUIGroup("tools");
@@ -724,7 +725,7 @@ export default class ThreeView extends Component {
       }
     }
 
-    controls.addComponent("webvr", ThreeWebVR, {
+    /*controls.addComponent("webvr", ThreeWebVR, {
       ...buttonProps,
       renderer: this.webGLRenderer,
       hideOnUnsupported: true,
@@ -732,7 +733,7 @@ export default class ThreeView extends Component {
       onEnterCallback: this.enterVR,
       frameOfReference: "stage",
       className: "three-controls-button"
-    });
+    });*/
     controls.addComponent("embed", ThreeEmbed, {
       ...buttonProps,
       className: "three-embed-button",
