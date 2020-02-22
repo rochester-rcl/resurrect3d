@@ -1352,6 +1352,7 @@ export default class ThreeView extends Component {
     };
 
     const EDLPass = new THREE.EDLPass(this.scene, this.camera, EDLParams);
+
     const chromaKeyPass = new THREE.ChromaKeyPass(
       false,
       new THREE.Color(0),
@@ -1359,8 +1360,23 @@ export default class ThreeView extends Component {
       false
     );
     chromaKeyPass.renderToScreen = false;
+
+    const quadDiffuseParams = {
+      u_enable: false,
+      u_mouse: new THREE.Vector2(0, 0),
+      u_resolution: this.width * this.height
+    }
+
+    const quadDiffuseShader = THREE.QuadDiffuseShader;
+    const quadDiffusePass = new THREE.QuadDiffusePass(this.scene, this.camera, quadDiffuseParams);
+
+    quadDiffusePass.renderToScreen = false;
+
+    console.log(quadDiffusePass);
+
     this.addShaderPass({ EDL: EDLPass });
     this.addShaderPass({ ChromaKey: chromaKeyPass });
+    this.addShaderPass({ QuadDiffuse: quadDiffusePass });
 
     const SSAOPass = new THREE.SSAOPass(this.scene, this.camera);
 
@@ -1387,6 +1403,7 @@ export default class ThreeView extends Component {
     this.addShaderPass({ GUI: rawGui });
 
     this.effectComposer.addPass(rawModel);
+    this.effectComposer.addPass(quadDiffusePass);
     this.effectComposer.addPass(chromaKeyPass);
     this.effectComposer.addPass(SSAOPass);
     this.effectComposer.addPass(EDLPass);
@@ -1398,6 +1415,10 @@ export default class ThreeView extends Component {
     this.effectComposer.addPass(rawGui);
     this.effectComposer.addPass(clearMask);
     this.effectComposer.addPass(copyPass);
+
+    console.log(this.effectComposer);
+
+    console.log(this.scene);
 
     this.updateCamera();
     this.centerCamera();
@@ -1821,15 +1842,15 @@ export default class ThreeView extends Component {
     this.positionAnnotations();
   }
 
-  updateShaders(obj: Object, cb) {
+  updateShaders(obj: Object, callback) {
     const { shaderPasses } = this.state;
     this.setState(
       {
         shaderPasses: { ...shaderPasses, ...obj }
       },
       () => {
-        if (cb !== undefined) {
-          cb();
+        if (callback !== undefined) {
+          callback();
         }
       }
     );
@@ -1846,6 +1867,7 @@ export default class ThreeView extends Component {
     const uniforms = { ...pass.uniforms };
     uniforms[uniformProp].value = value;
     pass.uniforms = uniforms;
+    //console.log("now " + shaderName + " has uniform " + uniformProp + " with value " + value);
     switch (uniformProp) {
       case "screenWidth":
         if (pass.depthRenderTarget !== undefined) {
@@ -2102,7 +2124,7 @@ export default class ThreeView extends Component {
     /****************************** SHADERS ***********************************/
 
     if (this.props.options.enableShaders) {
-      const { EDL, ChromaKey } = this.state.shaderPasses;
+      const { EDL, ChromaKey, QuadDiffuse } = this.state.shaderPasses;
       const shaderGroup = new ThreeGUIGroup("shaders");
       const edlGroup = new ThreeGUIGroup("edl");
 
@@ -2241,8 +2263,22 @@ export default class ThreeView extends Component {
           this.updateDynamicShaders(value, "ChromaKey", "threshold")
       });
       this.settingsMask.shaders.add("threshold");
+
+      const quadDiffuseGroup = new ThreeGUIGroup("quadDiffuse");
+
+      quadDiffuseGroup.addComponent("enable", components.THREE_TOGGLE, {
+        key: 1,
+        callback: value =>
+          this.updateDynamicShaders(value, "QuadDiffuse", "u_enable"),
+        defaultVal: QuadDiffuse.uniforms.u_enable.value,
+        title: "enable"
+      });
+
+      this.settingsMask.shaders.add("u_enable");
+
       shaderGroup.addGroup("eye dome lighting", edlGroup);
       shaderGroup.addGroup("chroma key", chromaKeyGroup);
+      shaderGroup.addGroup("quad diffuse", quadDiffuseGroup);
       this.panelGroup.addGroup("shaders", shaderGroup);
     }
 

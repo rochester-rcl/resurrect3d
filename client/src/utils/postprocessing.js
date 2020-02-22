@@ -6,6 +6,7 @@ import loadEDLShader from './shaders/EDLShader';
 import loadChromaKeyShader from './shaders/ChromaKeyShader';
 import loadSSAOShader from './shaders/SSAOShader';
 import loadLuminosityHighPassShader from './shaders/LuminosityHighPassShader';
+import loadQuadDiffuseShader from './shaders/QuadDiffuseShader';
 import loadBlurShader from './shaders/BlurShader';
 import loadVignetteShader from './shaders/VignetteShader';
 import loadBrightnessContrastShader from './shaders/BrightnessContrastShader';
@@ -20,6 +21,7 @@ import loadGaussianPass from './postprocessing/GaussianPass';
 import loadVignettePass from './postprocessing/VignettePass';
 import loadEDLPass from './postprocessing/EDLPass';
 import loadChromaKeyPass from './postprocessing/ChromaKeyPass';
+import loadQuadDiffusePass from './postprocessing/QuadDiffusePass';
 import loadUnrealBloomPass from './postprocessing/UnrealBloomPass';
 import loadTexturePass from './postprocessing/TexturePass';
 import loadAdditiveBlendPass from './postprocessing/AdditiveBlendPass';
@@ -33,6 +35,7 @@ export default function loadPostProcessor(threeInstance: Object): Promise<*> {
     loadConvolutionShader(threeInstance),
     loadBlurShader(threeInstance),
     loadLuminosityHighPassShader(threeInstance),
+    loadQuadDiffuseShader(threeInstance),
     loadSSAOShader(threeInstance),
     loadEDLShader(threeInstance),
     loadChromaKeyShader(threeInstance),
@@ -47,6 +50,7 @@ export default function loadPostProcessor(threeInstance: Object): Promise<*> {
     loadEDLPass(threeInstance),
     loadChromaKeyPass(threeInstance),
     loadVignettePass(threeInstance),
+    loadQuadDiffusePass(threeInstance),
     loadSSAOPass(threeInstance),
     loadGaussianPass(threeInstance),
     loadBokehPass(threeInstance),
