@@ -1361,14 +1361,8 @@ export default class ThreeView extends Component {
     );
     chromaKeyPass.renderToScreen = false;
 
-    const quadDiffuseParams = {
-      u_enable: false,
-      u_mouse: new THREE.Vector2(0, 0),
-      u_resolution: this.width * this.height
-    }
-
     const quadDiffuseShader = THREE.QuadDiffuseShader;
-    const quadDiffusePass = new THREE.QuadDiffusePass(this.scene, this.camera, quadDiffuseParams);
+    const quadDiffusePass = new THREE.ShaderPass(THREE.QuadDiffuseShader);
 
     quadDiffusePass.renderToScreen = false;
 
@@ -1835,6 +1829,7 @@ export default class ThreeView extends Component {
       "vignette",
       "resolution"
     );
+    this.updateDynamicShaders(new THREE.Vector2(width, height), "QuadDiffuse", "u_resolution");  //Pass resolution to QuadDiffuse
     this.camera.aspect = clientWidth / clientHeight;
     this.overlayCamera.aspect = clientWidth / clientHeight;
     this.camera.updateProjectionMatrix();
@@ -2616,6 +2611,9 @@ export default class ThreeView extends Component {
   }
 
   handleMouseMove(event: SyntheticMouseEvent): void {
+    let rect = this.webGLRenderer.domElement.getBoundingClientRect()
+    let coords = new THREE.Vector2((event.clientX - rect.left) / rect.width, (event.clientY - rect.top) / rect.height);
+    this.updateDynamicShaders(coords, "QuadDiffuse", "u_mouse");
     if (this.state.controllable) this.orbit(event.clientX, event.clientY);
   }
 
