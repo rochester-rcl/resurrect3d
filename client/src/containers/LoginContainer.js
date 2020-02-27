@@ -44,7 +44,9 @@ class LoginContainer extends Component {
                 <AdminSignUpModal
                   trigger={<a>sign up</a>}
                   signUpUser={addUser}
-                  status={info.email !== undefined}
+                  status={info.email !== undefined && info.status === undefined}
+                  info={info}
+                  signUpError={info.status !== undefined && info.status === false}
                 />
               </div>
             </div>

@@ -70,7 +70,7 @@ export default class AdminSignUpModal extends Component {
 
   render() {
     const { password, showPassword, username, email } = this.state;
-    const { trigger, signUpUser, signUpError, status } = this.props;
+    const { trigger, signUpUser, signUpError, status, info } = this.props;
     let messageClass = "signup-error ";
     messageClass += signUpError === true ? "show" : "hide";
     return (
@@ -115,7 +115,7 @@ export default class AdminSignUpModal extends Component {
                 <Message.Header>
                   There was a problem creating your account!
                 </Message.Header>
-                <p>(real message goes here)</p>
+                <p>{info.message}</p>
               </Message>
               <Button className="login-submit" type="submit" color="green">
                 create

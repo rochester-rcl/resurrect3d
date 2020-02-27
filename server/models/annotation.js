@@ -26,6 +26,10 @@ const annotationSchema = new Schema({
     type: Number,
     required: false
   },
+  pinColor: {
+    type: Number,
+    default: 0x21ba45
+  },
   saveStatus: {
     type: String,
     enum: Object.values(saveStatus),
@@ -39,10 +43,14 @@ annotationSchema.methods.refresh = function(callback) {
 };
 
 annotationSchema.methods.updateSaveStatus = function(status, callback) {
-  this.update({ saveStatus: status }, (error, updated) => {
-    if (error) throw error;
-    this.refresh(callback);
-  });
+  this.model("annotation").updateOne(
+    { _id: this._id },
+    { saveStatus: status },
+    (error, updated) => {
+      if (error) throw error;
+      this.refresh(callback);
+    }
+  );
 };
 
 module.exports = {

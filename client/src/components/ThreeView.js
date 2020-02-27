@@ -67,7 +67,7 @@ import ThreeMeshExporter from "./ThreeMeshExporter";
 import ThreeEmbed from "./ThreeEmbed";
 
 // Components
-import ThreeWebVR, { checkVR } from "./webvr/ThreeWebVR";
+// import ThreeWebVR, { checkVR } from "./webvr/ThreeWebVR";
 
 // Because of all of the THREE examples' global namespace pollu
 const THREE = _THREE;
@@ -371,7 +371,8 @@ export default class ThreeView extends Component {
     (this: any).handleTouchMove = this.handleTouchMove.bind(this);
 
     // VR
-    this.vrSupported = checkVR();
+    // TODO disable until we see what the new plan is for WebXR
+    this.vrSupported = false //checkVR();
 
     //Updatable UI
     this.panelGroup = new ThreeGUIGroup("tools");
@@ -724,7 +725,7 @@ export default class ThreeView extends Component {
       }
     }
 
-    controls.addComponent("webvr", ThreeWebVR, {
+    /*controls.addComponent("webvr", ThreeWebVR, {
       ...buttonProps,
       renderer: this.webGLRenderer,
       hideOnUnsupported: true,
@@ -732,7 +733,7 @@ export default class ThreeView extends Component {
       onEnterCallback: this.enterVR,
       frameOfReference: "stage",
       className: "three-controls-button"
-    });
+    });*/
     controls.addComponent("embed", ThreeEmbed, {
       ...buttonProps,
       className: "three-embed-button",
@@ -955,7 +956,7 @@ export default class ThreeView extends Component {
         annotationMarker.position.add(this.annotationSpriteOffset);
         annotationMarker.scale.multiplyScalar(this.spriteScaleFactor / 10);
         if (annotations[i].open) {
-          annotationMarker.material.color.setHex(0x21ba45);
+          annotationMarker.material.color.setHex(annotations[i].pinColor);
           const cssObj = new CSS2DObject(annotations[i].node);
           const bodyNode = annotations[i].bodyNode;
           const cssBodyObj = bodyNode
@@ -1007,7 +1008,7 @@ export default class ThreeView extends Component {
 
   positionAnnotations(alpha = 0): void {
     //Make annotations position smartly to stay in camera -- use raycaster prob
-    const distance = 0.05 * this.spriteScaleFactor;
+    const distance = 0.3;
     const {
       currentAnnotationIndex,
       currentAnnotationCSSObj,

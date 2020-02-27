@@ -393,6 +393,8 @@ function* addUserSaga(userAction: Object): Generator<any, any, any> {
       if (user.id !== undefined) {
         const { token, id, ...rest } = user;
         yield put({ type: ActionConstants.USER_ADDED, info: rest });
+      } else {
+        yield put({ type: ActionConstants.USER_ADDED, info: user });
       }
     } else {
       console.warn(genericAPIRouteMessage);

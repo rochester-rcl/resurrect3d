@@ -3,6 +3,7 @@ const mailConfig = require('./email.json'); // DONT CHECK THIS IN
 
 const transporter = nodemailer.createTransport({
   service: mailConfig.service,
+  secure: false,
   auth: {
     user: mailConfig.email,
     pass: mailConfig.password
