@@ -56,6 +56,7 @@ class ThreeContainer extends Component {
     const {
       mesh,
       texture,
+      alternateMaps,
       metadata,
       threeAsset,
       saveViewerSettings,
@@ -74,6 +75,7 @@ class ThreeContainer extends Component {
         <ThreeView
           skyboxTexture={texture}
           mesh={mesh}
+          altternateMaps = {alternateMaps}
           renderDoubleSided={true}
           info={metadata}
           options={threeAsset}
@@ -111,6 +113,7 @@ function mapStateToProps(state: Object): Object {
   return {
     mesh: state.ui.mesh,
     texture: state.ui.texture,
+    alternateMaps: state.ui.alternateMaps,
     metadata: state.ui.metadata,
     threeAsset: state.ui.threeAsset,
     user: state.user,

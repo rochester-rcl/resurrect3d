@@ -18,8 +18,15 @@ export default class ConverterForm extends Component {
   state = {
     maps: {
       map: {
-        label: "Diffuse Map",
+        label: "Primary Diffuse Map",
         file: null,
+        info: "http://docs.cryengine.com/display/SDKDOC2/Diffuse+Maps",
+        type: FILE,
+        accept: VALID_IMAGE_FORMATS
+      },
+      alternateMaps: {
+        label: "Alternate Diffuse Maps",
+        files: [],
         info: "http://docs.cryengine.com/display/SDKDOC2/Diffuse+Maps",
         type: FILE,
         accept: VALID_IMAGE_FORMATS
@@ -107,7 +114,10 @@ export default class ConverterForm extends Component {
     const type = this.checkFileUploadType(name);
     const shallowCopy = { ...this.state };
     if (type === MAP) {
-      shallowCopy.maps[name].file = event.target.files[0];
+      if (name == "alternateMaps")
+        shallowCopy.maps[name].files.push(event.target.files[0]);
+      else
+        shallowCopy.maps[name].file = event.target.files[0];
     } else {
       shallowCopy[name].file = event.target.files[0];
     }
@@ -129,9 +139,11 @@ export default class ConverterForm extends Component {
     toSubmit.maps = {};
     toSubmit.options = {};
     for (let key in maps) {
-      let val = maps[key];
-      if (val.file !== null) {
-        toSubmit.maps[key] = val.file;
+        if (key != "alternateMaps") {
+          let val = maps[key];
+          if (val.file !== null) {
+            toSubmit.maps[key] = val.file;
+        }
       }
     }
     for (let key in options) {
@@ -145,6 +157,8 @@ export default class ConverterForm extends Component {
     event.preventDefault();
     event.stopPropagation();
     this.props.startConversion(this.prepare(this.state));
+    if (this.state.maps.alternateMaps.length > 0)
+      this.props.loadAlternateMaps(this.state.maps.alternateMaps);
   }
 
   renderGroup(group: Object): Form.Group {
@@ -152,20 +166,43 @@ export default class ConverterForm extends Component {
       <Form.Group fluid className="three-converter-form-group">
         {Object.keys(group).map((key, index) => {
           let field = group[key];
-          return (
-            <Form.Input
-             
-              className="three-converter-form-field"
-              label={field.label}
-              type={field.type}
-              accept={field.accept}
-              name={key}
-              key={index}
-              onChange={
-                field.type === FILE ? this.handleFileUpload : this.handleField
-              }
-            />
-          );
+          if (key == "alternateMaps")
+          {
+            let files = field.files.map(file => <li>{file.name}</li>);
+            return (
+              <div>
+                <Form.Input
+                    className="three-converter-form-field"
+                  label={field.label}
+                  type={field.type}
+                  accept={field.accept}
+                  name={key}
+                  key={index}
+                  onChange={
+                    field.type === FILE ? this.handleFileUpload : this.handleField
+                  }
+                />
+                <ul>
+                  {files}
+                </ul>
+              </div>
+            );
+          }
+          else 
+            return (
+              <Form.Input
+               
+                className="three-converter-form-field"
+                label={field.label}
+                type={field.type}
+                accept={field.accept}
+                name={key}
+                key={index}
+                onChange={
+                  field.type === FILE ? this.handleFileUpload : this.handleField
+                }
+              />
+            );
         })}
       </Form.Group>
     );

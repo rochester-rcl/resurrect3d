@@ -37,6 +37,8 @@ const defaultState = {
     image: null,
   },
 
+  alternateMaps: [],
+
   metadata: [],
 
   threeAsset: {
@@ -81,6 +83,12 @@ function uiReducer(state: Object = defaultState, action: Object): Object {
           progress: PROGRESS_COMPLETE,
           image: action.payload.val
         }
+      }
+
+    case ActionConstants.ALTERNATE_MAPS_LOADED:
+      return {
+        ...state,
+        alternateMaps: action.payload.maps
       }
     
     case ActionConstants.LOCAL_TEXTURE_ASSET_LOADED:

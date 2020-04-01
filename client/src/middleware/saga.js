@@ -626,6 +626,20 @@ export function* runConversionSaga(
   }
 }
 
+//Putting this in so backend updates can be done if wanted
+
+export function* loadAlternateMapsSaga(maps) 
+{
+  try {
+    yield put({ 
+      type: ActionConstants.ALTERNATE_MAPS_LOADED,
+      maps: maps
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 /*************************** Observers ****************************************/
 export function* watchForGetThreeAsset(): Generator<any, any, any> {
   yield takeEvery(ActionConstants.GET_THREE_ASSET, getThreeAssetSaga);
@@ -694,6 +708,10 @@ export function* watchForDeleteThreeView(): Generator<any, any, any> {
 // Converter
 export function* watchForConversion(): Generator<any, any, any> {
   yield takeEvery(ActionConstants.START_CONVERSION, runConversionSaga);
+}
+
+export function* watchForAlternateMaps() {
+  yield takeEvery(ActionConstants.LOAD_ALTERNATE_MAPS, loadAlternateMapsSaga);
 }
 
 export default function* rootSaga(): Generator<any, any, any> {

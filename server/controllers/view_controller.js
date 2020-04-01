@@ -64,10 +64,12 @@ exports.getFile = (req, res) => {
 // something to make this for admin only - in the future we will have a browse feature that will require everything
 exports.findAllViews = (req, res) => {
   const query = {};
+  //console.log(req.user);
   if (req.user) {
     query.createdBy = req.user.id;
   }
   View.find(query).exec((err, views) => {
+    //console.log(views);
     if (err) {
       return res.status(500).json({
         message: "Could not find views: Error[ " + err + " ]"
@@ -109,6 +111,8 @@ exports.addView = (req, res) => {
     } else {
       res.json(view);
     }
+    console.log(err);
+    console.log(view);
     console.log("View successfully added");
   });
 };

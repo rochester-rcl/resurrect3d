@@ -1,6 +1,10 @@
 /* @flow */
 // TODO Why is loadText not showing? And why is there a huge bottleneck at loadPostProcessor ?????????
 // React
+
+//e-mail: qwerty@gmail.com
+//pwd: resurrect
+
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 

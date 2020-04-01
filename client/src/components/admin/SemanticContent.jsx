@@ -138,7 +138,7 @@ class SemanticContent extends React.Component {
     }
   };
 
-  handleMeshConverted = threeFile => {
+  handleMeshConverted = (threeFile) => {  //handleMeshConverted = (threeFile, altMaps) => {
     this.setState({
       threeFileUpload: threeFile,
       threeFileCancel: false,
@@ -180,6 +180,7 @@ class SemanticContent extends React.Component {
     const view = {
       displayName: this.state.displayName,
       threeFile: this.state.threeFileUpload,
+      alternateMaps: this.state.alternateMaps,
       threeThumbnail: this.state.threeThumbnailUpload,
       skybox: { file: this.state.skyboxUpload },
       enableLight: this.state.enableLight,
