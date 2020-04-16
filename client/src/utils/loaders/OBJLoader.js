@@ -643,7 +643,6 @@ export default function initOBJLoader(threeInstance: Object): Promise {
     				var isLine = ( geometry.type === 'Line' );
     				var isPoints = ( geometry.type === 'Points' );
     				var hasVertexColors = false;
-
     				// Skip o/g line declarations that did not follow with any faces
     				if ( geometry.vertices.length === 0 ) continue;
 

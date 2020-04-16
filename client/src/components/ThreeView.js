@@ -1059,7 +1059,7 @@ export default class ThreeView extends Component {
       this.mesh.children.forEach(child => {
         child.receiveShadow = true;
         child.castShadow = true;
-        if (child.material) {
+        /*if (child.material) {
           if (child.material instanceof Array) {
             child.material.forEach(material => {
               if (material.map !== null) {
@@ -1081,12 +1081,12 @@ export default class ThreeView extends Component {
               child.material.side = THREE.DoubleSide;
             }
           }
-        }
+        }*/
       });
     } else if (this.mesh instanceof THREE.Mesh) {
       this.mesh.castShadow = true;
       this.mesh.receiveShadow = true;
-      let material = this.mesh.material;
+      /*let material = this.mesh.material;
       if (material.constructor !== Array) {
         material = [material];
       }
@@ -1098,7 +1098,7 @@ export default class ThreeView extends Component {
           }
           setMicrosurface(currentMaterial);
         }
-      });
+      });*/
     }
 
     this.scene.add(this.mesh);
@@ -1122,6 +1122,7 @@ export default class ThreeView extends Component {
     ); // diameter of sphere =  2 * meshHeight
 
     this.maxDistance = this.environmentRadius * 2;
+    this.camera.far = this.maxDistance * 4;
     this.minDistance = Math.ceil(this.meshDepth - this.bboxMesh.max.z);
     this.minDistance = this.minDistance <= 0 ? 0.1 : this.minDistance;
 
