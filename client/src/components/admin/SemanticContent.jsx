@@ -12,15 +12,12 @@ import { Link } from "react-router-dom";
 
 import {
   Button,
-  Checkbox,
-  Container,
-  Dropdown,
+  Message,
+  Confirm,
   Form,
   Grid,
   Header,
   Icon,
-  Image,
-  Menu,
   Segment,
   Input,
   Select,
@@ -29,11 +26,11 @@ import {
   Label,
   List,
   Visibility,
-  Divider
+  Divider,
 } from "semantic-ui-react";
 
 class SemanticContent extends React.Component {
-  defaultState = {
+  state = {
     calculations: {
       direction: "none",
       height: 0,
@@ -47,7 +44,7 @@ class SemanticContent extends React.Component {
       fits: false,
       passing: false,
       onScreen: false,
-      offScreen: false
+      offScreen: false,
     },
     threeFile: "",
     threeThumbnail: "",
@@ -60,12 +57,13 @@ class SemanticContent extends React.Component {
     skyboxCancel: true,
     measurements: [
       { value: "MM", text: "mm", key: "mm" },
+      { value: "CM", text: "cm", key: "cm" },
+      { value: "IN", text: "in", key: "in" },
       { value: "FT", text: "ft", key: "ft" },
-      { value: "CM", text: "cm", key: "cm" }
     ],
     booleans: [
       { value: false, text: "Disable", key: "disable" },
-      { value: true, text: "Enable", key: "enable" }
+      { value: true, text: "Enable", key: "enable" },
     ],
 
     enableLight: "",
@@ -81,16 +79,20 @@ class SemanticContent extends React.Component {
     setOpen: false,
     isUpdate: false,
     _id: null,
-    showConversionTool: false
+    showConversionTool: false,
+    formError: {
+      status: false,
+      message: "",
+    },
+    modelPendingDelete: null,
   };
   constructor(props: Object) {
     super(props);
-    (this: any).threeFileRef = React.createRef();
-    (this: any).threeThumbnailRef = React.createRef();
-    (this: any).skyboxRef = React.createRef();
-    (this: any).contextRef = React.createRef();
-    (this: any).context = null;
-    (this: any).state = this.defaultState;
+    this.threeFileRef = React.createRef();
+    this.threeThumbnailRef = React.createRef();
+    this.skyboxRef = React.createRef();
+    this.contextRef = React.createRef();
+    this.context = null;
     this.contextRef = createRef();
   }
 
@@ -100,21 +102,99 @@ class SemanticContent extends React.Component {
 
   handleVisablityUpdate = (e, { calculations }) =>
     this.setState({ calculations });
-    
+
   editView(view) {
     const { viewerSettings, __v, skybox, ...rest } = view;
     rest.isUpdate = true;
-    this.setState(prevState => ({ ...prevState, ...rest }));
+    this.setState((prevState) => ({ ...prevState, ...rest }));
   }
 
+  isFormElementSet = (element) => {
+    return element !== "";
+  };
+
+  verifyForm = () => {
+    const {
+      displayName,
+      threeFileUpload,
+      enableLight,
+      enableMaterials,
+      enableShaders,
+      enableMeasurement,
+      enableEmbed,
+      enableDownload,
+      modelUnits,
+      formError,
+    } = this.state;
+    // TODO refactor this
+    const error = { status: false };
+    let fieldName;
+    const checkFields = () => {
+      if (!this.isFormElementSet(displayName)) {
+        error.status = true;
+        fieldName = "Display Name";
+        return;
+      }
+      if (!this.isFormElementSet(threeFileUpload)) {
+        error.status = true;
+        fieldName = "three.js File";
+        return;
+      }
+      if (!this.isFormElementSet(enableLight)) {
+        error.status = true;
+        fieldName = "Enable Light Tools";
+        return;
+      }
+      if (!this.isFormElementSet(enableMaterials)) {
+        error.status = true;
+        fieldName = "Enable Material Tools";
+        return;
+      }
+      if (!this.isFormElementSet(enableShaders)) {
+        error.status = true;
+        fieldName = "Enable Shader Tools";
+        return;
+      }
+      if (!this.isFormElementSet(enableMeasurement)) {
+        error.status = true;
+        fieldName = "Enable Measurement Tools";
+        return;
+      }
+      if (!this.isFormElementSet(enableEmbed)) {
+        error.status = true;
+        fieldName = "Enable User Embed";
+        return;
+      }
+      if (!this.isFormElementSet(enableDownload)) {
+        error.status = true;
+        fieldName = "Enable User Download";
+        return;
+      }
+      if (!this.isFormElementSet(modelUnits)) {
+        error.status = true;
+        fieldName = "Original Model Units";
+        return;
+      }
+    };
+    checkFields();
+    if (error.status) {
+      error.message = `${fieldName} is Required`;
+      this.setState((prevState) => ({
+        formError: error,
+      }));
+      return false;
+    }
+    return true;
+  };
+
   resetAddForm = () => {
-    this.setState(prevState => ({
+    this.setState((prevState) => ({
       ...prevState,
-      ...this.defaultState
+      ...this.defaultState,
     }));
   };
 
-  handleFileUpload = event => {
+  handleFileUpload = (event) => {
     switch (event.target.name) {
       case "threeFile":
         this.setState({ [event.target.name]: event.target.files[0].name });
@@ -125,7 +205,7 @@ class SemanticContent extends React.Component {
         this.setState({ [event.target.name]: event.target.files[0].name });
         this.setState({ threeThumbnailUpload: event.target.files[0] });
         this.setState({
-          threeThumbnailCancel: !this.state.threeThumbnailCancel
+          threeThumbnailCancel: !this.state.threeThumbnailCancel,
         });
         break;
       case "skybox":
@@ -138,11 +218,11 @@ class SemanticContent extends React.Component {
     }
   };
 
-  handleMeshConverted = threeFile => {
+  handleMeshConverted = (threeFile) => {
     this.setState({
       threeFileUpload: threeFile,
       threeFileCancel: false,
-      threeFile: threeFile.name
+      threeFile: threeFile.name,
     });
   };
   // TODO change this
@@ -151,7 +231,7 @@ class SemanticContent extends React.Component {
     this.setState({ [name]: value });
   };
 
-  handleFileDiscard = target => {
+  handleFileDiscard = (target) => {
     switch (target) {
       case "threeFile":
         this.setState({ threeFile: "" });
@@ -162,7 +242,7 @@ class SemanticContent extends React.Component {
         this.setState({ threeThumbnail: "" });
         this.setState({ threeThumbnailUpload: "" });
         this.setState({
-          threeThumbnailCancel: !this.state.threeThumbnailCancel
+          threeThumbnailCancel: !this.state.threeThumbnailCancel,
         });
         break;
       case "skybox":
@@ -177,6 +257,7 @@ class SemanticContent extends React.Component {
   // TODO make a decision whether we bind or use anonymous functions to avoid binding to this
 
   handleSubmit = () => {
+    if (!this.verifyForm()) return;
     const view = {
       displayName: this.state.displayName,
       threeFile: this.state.threeFileUpload,
@@ -191,9 +272,9 @@ class SemanticContent extends React.Component {
       modelUnits: this.state.modelUnits,
     };
     this.props.addView(view);
-    this.setState(prevState => ({
+    this.setState((prevState) => ({
       ...prevState,
-      ...this.defaultState
+      ...this.defaultState,
     }));
   };
 
@@ -217,9 +298,9 @@ class SemanticContent extends React.Component {
   };
 
   toggleConversionTool = () => {
-    this.setState(prevState => ({
+    this.setState((prevState) => ({
       ...prevState,
-      showConversionTool: !prevState.showConversionTool
+      showConversionTool: !prevState.showConversionTool,
     }));
   };
 
@@ -233,26 +314,46 @@ class SemanticContent extends React.Component {
       enableDownload: this.state.enableDownload,
       enableEmbed: this.state.enableEmbed,
       modelUnits: this.state.modelUnits,
-      _id: this.state._id
+      _id: this.state._id,
     };
     const updated = { ...view, ...this.filesNeedUpdate() };
     this.props.updateView(updated);
-    this.setState(prevState => ({
+    this.setState((prevState) => ({
       ...prevState,
-      ...this.defaultState
+      ...this.defaultState,
+    }));
+  };
+
+  handleDelete = (view) => {
+    this.setState((prevState) => ({
+      modelPendingDelete: view,
+    }));
+    // () => this.props.deleteView(obj[1]._id)
+  };
+
+  confirmDelete = () => {
+    const { modelPendingDelete } = this.state;
+    if (modelPendingDelete) {
+      this.props.deleteView(modelPendingDelete._id);
+      this.cancelDelete();
+    }
+  };
+
+  cancelDelete = () => {
+    this.setState((prevState) => ({
+      modelPendingDelete: null,
     }));
   };
 
   render() {
     const { isUpdate, showConversionTool } = this.state;
     const entries = Object.entries(this.props.views);
-    const list = entries.map(obj => (
+    const list = entries.map((obj) => (
       <Segment inverted key={obj[1]._id}>
         <Header as="h5">
-            {obj[1].displayName ? obj[1].displayName : obj[1]._id}
-          </Header>
+          {obj[1].displayName ? obj[1].displayName : obj[1]._id}
+        </Header>
         <Button.Group className="admin-list-button-group">
-          
           <Button
             as={Link}
             to={`/models/${obj[1]._id}`}
@@ -265,11 +366,7 @@ class SemanticContent extends React.Component {
           <Button onClick={() => this.editView(obj[1])} icon color="grey">
             <Icon size="large" name="pencil" />
           </Button>
-          <Button
-            onClick={() => this.props.deleteView(obj[1]._id)}
-            icon
-            color="red"
-          >
+          <Button onClick={() => this.handleDelete(obj[1])} icon color="red">
             <Icon size="large" name="remove circle" />
           </Button>
         </Button.Group>
@@ -357,8 +454,12 @@ class SemanticContent extends React.Component {
                     "Add New Model"
                   )}
                 </Header>
-                <Form fluid className="admin-main-form">
-                <Form.Field
+                <Form
+                  fluid
+                  className="admin-main-form"
+                  error={this.state.formError.status}
+                >
+                  <Form.Field
                     control={Input}
                     className="admin-select-text-input"
                     fluid
@@ -368,7 +469,10 @@ class SemanticContent extends React.Component {
                     onChange={this.handleEnableChange}
                     placeholder="Name"
                   />
-                  <Divider horizontal inverted> Files </Divider>
+                  <Divider horizontal inverted>
+                    {" "}
+                    Files{" "}
+                  </Divider>
                   <Form.Field className="admin-main-form-field">
                     <Header as="h5" className="admin-file-upload-header">
                       {this.state.threeFile != ""
@@ -484,7 +588,10 @@ class SemanticContent extends React.Component {
                       </Button>
                     </Button.Group>
                   </Form.Field>
-                  <Divider horizontal inverted> Settings </Divider>  
+                  <Divider horizontal inverted>
+                    {" "}
+                    Settings{" "}
+                  </Divider>
                   <Form.Field
                     control={Select}
                     className="admin-select-dropdown"
@@ -568,7 +675,14 @@ class SemanticContent extends React.Component {
                     options={this.state.booleans}
                     placeholder="enable/disable"
                   />
-
+                  <Message
+                    icon="exclamation circle"
+                    size="large"
+                    className="admin-form-error-message"
+                    error
+                    header="Cannot Save Model"
+                    content={this.state.formError.message}
+                  />
                   <Form.Button
                     content={isUpdate ? "Update" : "Submit"}
                     onClick={isUpdate ? this.handleUpdate : this.handleSubmit}
@@ -587,15 +701,27 @@ class SemanticContent extends React.Component {
               />
             )}
           </Grid.Column>
+          <Confirm
+            className="admin-form-delete-modal"
+            open={this.state.modelPendingDelete}
+            header="Delete Model"
+            content={`Are you sure you want to delete ${
+              this.state.modelPendingDelete
+                ? this.state.modelPendingDelete.displayName
+                : ""
+            } ? This operation can't be undone.`}
+            onCancel={this.cancelDelete}
+            onConfirm={this.confirmDelete}
+          />
         </Grid>
       </Ref>
     );
   }
 }
 
-function mapStateToProps(state, ownProps): Object {
+function mapStateToProps(state, ownProps) {
   return {
-    views: state.views.views
+    views: state.views.views,
     //userProfile: state.app.userProfile,
     //allBucketsInfo: state.app.allBucketsInfo
   };

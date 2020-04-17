@@ -407,3 +407,21 @@
   position: relative;
   background-color: #66da81 !important;
 }
+
+/****** ADMIN FORM **********/
+
+.admin-form-error-message .content .header {
+  color: red !important;
+}
+
+.admin-form-error-message .content p {
+  font-family: "Source Code Pro", monospace !important;
+}
+
+.admin-form-delete-modal > *, .admin-form-delete-modal .actions .button {
+  font-family: "Source Code Pro", monospace !important;
+}
+
+.admin-form-delete-modal .actions .button.primary {
+  background: red !important;
+}
