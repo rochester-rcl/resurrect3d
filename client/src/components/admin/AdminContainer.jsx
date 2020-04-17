@@ -119,7 +119,6 @@ class AdminContainer extends Component {
 
   render () {
     const {classes, theme, ...rest } = this.props;
-    console.log(this.state);
     return (
       <div>
         <Header

@@ -323,6 +323,11 @@
   background: #000 !important;
 }
 
+.admin-content-container.loading {
+  overflow: hidden;
+  height: 100vh;
+}
+
 .admin-main-form-field {
   padding: 10px;
   border: 1px solid #323232;

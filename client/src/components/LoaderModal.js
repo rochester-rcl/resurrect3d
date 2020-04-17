@@ -41,7 +41,7 @@ class LoaderModalError extends Component {
 }
 
 const LoaderModal = (props: Object) => {
-  let { text, active, className, percent, error } = props;
+  let { text, active, className, percent, error, inline } = props;
   const message = (error === true) ? <LoaderModalError message={text} /> : <h1>{text}</h1>;
   if (percent) {
     return(
@@ -53,7 +53,7 @@ const LoaderModal = (props: Object) => {
   } else {
     return (
       <Dimmer className={className} active={active} as={Segment}>
-        <Loader size="huge">{message}</Loader>
+        <Loader inline={inline} size="huge">{message}</Loader>
       </Dimmer>
     )
   }

@@ -65,6 +65,16 @@ class ThreeContainer extends Component {
     } = this.props;
     // TODO Need to put some logic in here -- if the user is logged in AND they own the mesh
     // TODO Complete needs to be a constant
+    let options = threeAsset;
+    // Admin gets all options
+    if (user.loggedIn) {
+      options = {...threeAsset};
+      for (let key in options) {
+        if (key.includes("enable")) {
+          options[key] = true;
+        }
+      }
+    }
     if (
       mesh.progress === PROGRESS_COMPLETE &&
       texture.progress === PROGRESS_COMPLETE &&
@@ -76,7 +86,7 @@ class ThreeContainer extends Component {
           mesh={mesh}
           renderDoubleSided={true}
           info={metadata}
-          options={threeAsset}
+          options={options}
           onSave={saveViewerSettings}
           saveStatus={saveStatus}
           loggedIn={user.loggedIn}

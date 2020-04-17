@@ -484,6 +484,7 @@ export function* authenticateSaga(): Generator<any, any, any> {
 export function* addThreeViewSaga(addThreeViewAction: Object): Generator<any, any, any> {
   try {
     if (backend.hasAdminBackend) {
+      yield put({ type: ActionConstants.ADD_VIEW_PENDING });
       const result = yield call(backend.adminBackend.addView, addThreeViewAction.viewData);
       yield put({
         type: ActionConstants.VIEW_ADDED,

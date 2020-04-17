@@ -44,6 +44,7 @@ export const GET_VIEWS: string = 'GET_VIEWS';
 export const GET_VIEW: string = 'GET_VIEW';
 export const GET_THREEFILE: string = 'GET_THREEFILE';
 export const ADD_VIEW: string = 'ADD_VIEW';
+export const ADD_VIEW_PENDING = 'ADD_VIEW_PENDING';
 export const DELETE_VIEW: string = 'DELETE_VIEW';
 export const UPDATE_VIEW: string  = 'UPDATE_VIEW';
 

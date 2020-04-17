@@ -520,7 +520,7 @@ export default class ThreeView extends Component {
     const { color, intensity, decay, distance } = this.state.dynamicLightProps;
 
     // init camera
-    this.camera = new THREE.PerspectiveCamera(50, this.width / this.height); // use defaults for fov and near and far frustum;
+    this.camera = new THREE.PerspectiveCamera(50, this.width / this.height, 1, 1000000); // use defaults for fov and near and far frustum;
     this.overlayCamera = new THREE.PerspectiveCamera(
       50,
       this.width / this.height
@@ -583,9 +583,6 @@ export default class ThreeView extends Component {
       depthWrite: false
     });
     this.annotationSprite = new THREE.Sprite(spriteMaterial);
-    const spriteBbox = new THREE.Box3().setFromObject(this.annotationSprite);
-    const centerY = (spriteBbox.max.y - spriteBbox.min.y) / 2;
-    this.annotationSpriteOffset = new THREE.Vector3(0, centerY, 0);
     this.measurement = new THREE.Group();
     this.guiScene.add(this.measurement);
 
@@ -954,7 +951,6 @@ export default class ThreeView extends Component {
         annotationMarker.material = this.annotationSprite.material.clone();
         annotationMarker.position.copy(annotations[i].point);
         annotationMarker.position.add(this.annotationSpriteOffset);
-        annotationMarker.scale.multiplyScalar(this.spriteScaleFactor / 10);
         if (annotations[i].open) {
           annotationMarker.material.color.setHex(annotations[i].pinColor);
           const cssObj = new CSS2DObject(annotations[i].node);
@@ -1108,6 +1104,10 @@ export default class ThreeView extends Component {
     this.meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
     this.meshDepth = this.bboxMesh.max.z - this.bboxMesh.min.z;
     this.computeSpriteScaleFactor();
+    this.annotationSprite.scale.multiplyScalar(this.spriteScaleFactor / 10);
+    const spriteBbox = new THREE.Box3().setFromObject(this.annotationSprite);
+    const centerY = (spriteBbox.max.y - spriteBbox.min.y) / 2;
+    this.annotationSpriteOffset = new THREE.Vector3(0, centerY, 0);
     this.pointLights.addHelpers(this.guiScene, this.spriteScaleFactor);
     this.pointLights.setTarget(this.mesh);
     this.pointLights.setLightPositions(this.bboxMesh);
@@ -1639,9 +1639,9 @@ export default class ThreeView extends Component {
       this.camera.lookAt(this.camera.target);
       yield null;
     }
-    this.camera.position.copy(resetVector);
-    this.lastTarget.copy(zero);
-    this.offset.copy(zero);
+    // this.camera.position.copy(resetVector);
+    // this.lastTarget.copy(zero);
+    // this.offset.copy(zero);
     this.spherical = new THREE.Spherical();
     this.camera.updateProjectionMatrix();
     yield null;
