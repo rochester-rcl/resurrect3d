@@ -84,12 +84,6 @@ function uiReducer(state: Object = defaultState, action: Object): Object {
           image: action.payload.val
         }
       }
-
-    case ActionConstants.ALTERNATE_MAPS_LOADED:
-      return {
-        ...state,
-        alternateMaps: action.payload.maps
-      }
     
     case ActionConstants.LOCAL_TEXTURE_ASSET_LOADED:
       const copiedAssets = {...state.localAssets};

@@ -50,6 +50,7 @@ class SemanticContent extends React.Component {
       offScreen: false
     },
     threeFile: "",
+    alternateMaps: "",
     threeThumbnail: "",
     skybox: "",
     threeFileUpload: "",
@@ -145,6 +146,12 @@ class SemanticContent extends React.Component {
       threeFile: threeFile.name
     });
   };
+
+  addAlternateMaps = (maps) => {
+    this.setState({
+      alternateMaps: maps
+    });
+  }
   // TODO change this
   handleEnableChange = (event, { name, value }) => {
     // We probably don't need a switch here
@@ -156,6 +163,7 @@ class SemanticContent extends React.Component {
       case "threeFile":
         this.setState({ threeFile: "" });
         this.setState({ threeFileUpload: "" });
+        this.setState({ alternateMaps: "" });
         this.setState({ threeFileCancel: !this.state.threeFileCancel });
         break;
       case "threeThumbnail":
@@ -584,6 +592,7 @@ class SemanticContent extends React.Component {
             ) : (
               <ConverterContainer
                 onConversionComplete={this.handleMeshConverted}
+                addAlternateMaps={this.addAlternateMaps}
                 disable
               />
             )}

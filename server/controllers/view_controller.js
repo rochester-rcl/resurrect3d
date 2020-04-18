@@ -23,7 +23,8 @@ exports.get = (app, upload, conn, Grid) => {
   updateAll = this.upload.fields([
     { name: "threeFile", maxcount: 1 },
     { name: "threeThumbnail", maxcount: 1 },
-    { name: "skybox", maxcount: 1 }
+    { name: "skybox", maxcount: 1 },
+    { name: "alternateMaps", maxcount: 10 }
   ]);
 
   mongoose.connection.on("open", () => {
@@ -81,12 +82,15 @@ exports.findAllViews = (req, res) => {
 };
 
 exports.addView = (req, res) => {
+  console.log('add view');
   if (!req.files) {
     console.log("No files to upload.");
     return;
   }
 
-  const { threeFile, threeThumbnail, skybox__file } = req.files;
+  console.log(req.files);
+
+  const { threeFile, threeThumbnail, skybox__file, alternateMaps } = req.files;
 
   const newView = new View({
     displayName: req.body.displayName,
@@ -96,6 +100,7 @@ exports.addView = (req, res) => {
     skybox: {
       file: skybox__file !== undefined ? skybox__file[0].filename : null
     },
+    alternateMaps: alternateMaps !== undefined ? alternateMaps.map(map => map.filename) : null,
     enableLight: req.body.enableLight,
     enableMaterials: req.body.enableMaterials,
     enableShaders: req.body.enableShaders,

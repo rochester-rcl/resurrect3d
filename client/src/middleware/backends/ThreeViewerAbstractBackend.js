@@ -21,6 +21,14 @@ export default class ThreeViewerAbstractBackend {
    */
 
   _post(url: string, body: Object | FormData, params: Object): Promise {
+    if (body instanceof FormData) {
+      let str = 'post\n';
+      for (var pair of body.entries())
+        str += pair[0] + ': ' + pair[1] + '\n';
+
+      console.log(str);
+    }
+
     return new Promise((resolve, reject) => {
       fetch(url, {
         ...{
@@ -32,7 +40,7 @@ export default class ThreeViewerAbstractBackend {
       })
         .then(response => {
           if (response.ok === true) {
-            return response.json().then(json => resolve(json));
+            return response.json().then(json => { resolve(json); });
           } else {
             resolve({ error: true });
           }
@@ -253,6 +261,7 @@ export default class ThreeViewerAbstractBackend {
       }
     };
     formatFormData(obj);
+
     return fd;
   }
 

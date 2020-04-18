@@ -435,6 +435,7 @@ export default class ThreeView extends Component {
   }
 
   render(): Object {
+    console.log(this.props.alternateMaps);
     const {
       loadProgress,
       loadText,

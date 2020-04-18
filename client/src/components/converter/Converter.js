@@ -157,8 +157,8 @@ export default class ConverterForm extends Component {
     event.preventDefault();
     event.stopPropagation();
     this.props.startConversion(this.prepare(this.state));
-    if (this.state.maps.alternateMaps.length > 0)
-      this.props.loadAlternateMaps(this.state.maps.alternateMaps);
+    if (this.state.maps.alternateMaps.files.length > 0)
+      this.props.addAlternateMaps(this.state.maps.alternateMaps.files);
   }
 
   renderGroup(group: Object): Form.Group {

@@ -8,7 +8,7 @@ import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 
 // Actions
-import { startConversion, loadAlternateMaps, restartConverter } from "../../actions/actions";
+import { startConversion, restartConverter } from "../../actions/actions";
 
 // Components
 import ConverterForm from "../../components/converter/Converter";
@@ -25,7 +25,7 @@ class ConverterContainer extends Component {
   render(): Object {
     const {
       startConversion,
-      loadAlternateMaps,
+      addAlternateMaps,
       restartConverter,
       conversionStarted,
       conversionComplete,
@@ -38,7 +38,7 @@ class ConverterContainer extends Component {
     } = this.props;
     if (conversionStarted === false) {
       return conversionType !== CONVERSION_TYPE_RTI ? (
-        <ConverterForm startConversion={startConversion} loadAlternateMaps={loadAlternateMaps}/>
+        <ConverterForm startConversion={startConversion} addAlternateMaps={addAlternateMaps}/>
       ) : (
         <PtmConverterForm startConversion={startConversion} />
       );
@@ -91,6 +91,6 @@ function mapStateToProps(state: Object): Object {
     ...state.converter
   };
 }
-export default connect(mapStateToProps, { startConversion, loadAlternateMaps, restartConverter })(
+export default connect(mapStateToProps, { startConversion, restartConverter })(
   ConverterContainer
 );

@@ -64,13 +64,6 @@ export function startConversion(inputData: Object): Object {
   };
 }
 
-export function loadAlternateMaps(maps) {
-  return {
-    type: ActionConstants.LOAD_ALTERNATE_MAPS,
-    maps: maps
-  }
-}
-
 export function restartConverter(): Object {
   return {
     type: ActionConstants.RESTART_CONVERTER

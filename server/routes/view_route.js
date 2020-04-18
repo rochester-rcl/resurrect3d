@@ -18,7 +18,8 @@ module.exports = (app, upload, conn, Grid, router) => {
       upload.fields([
         { name: "threeFile", maxcount: 1 },
         { name: "threeThumbnail", maxcount: 1 },
-        { name: "skybox__file", maxcount: 1 }
+        { name: "skybox__file", maxcount: 1 },
+        { name: "alternateMaps", maxCount: 10 }
       ]),
       view.addView
     );
