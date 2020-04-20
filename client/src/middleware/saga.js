@@ -542,7 +542,9 @@ export function* getThreeViewSaga(getThreeViewAction: Object): Generator<any, an
 export function* updateThreeViewSaga(updateThreeViewAction: Object): Generator<any, any, any> {
   try {
     if (backend.hasAdminBackend) {
+      yield put({ type: ActionConstants.ADD_VIEW_PENDING });
       const result = yield call(backend.adminBackend.updateView, updateThreeViewAction.viewData);
+      yield put({ type: ActionConstants.VIEW_UPDATED, view: result });
     } else {
       console.warn(genericAPIRouteMessage);
     }

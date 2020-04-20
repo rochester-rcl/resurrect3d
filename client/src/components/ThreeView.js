@@ -1171,10 +1171,10 @@ export default class ThreeView extends Component {
       ].value = this.props.skyboxTexture.image;
     }
 
-    let innerColor;
-    let outerColor;
+    let innerColor = DEFAULT_GRADIENT_COLORS.inner;
+    let outerColor = DEFAULT_GRADIENT_COLORS.outer;
 
-    if (skybox.gradient) {
+    /*if (skybox.gradient) {
       innerColor = skybox.gradient.innerColor
         ? skybox.gradient.innerColor
         : DEFAULT_GRADIENT_COLORS.inner;
@@ -1184,7 +1184,7 @@ export default class ThreeView extends Component {
     } else {
       innerColor = DEFAULT_GRADIENT_COLORS.inner;
       outerColor = DEFAULT_GRADIENT_COLORS.outer;
-    }
+    }*/
 
     // need to clean this up, it's a radial gradient not a linear gradient
     this.skyboxMaterialShader = new LinearGradientShader(

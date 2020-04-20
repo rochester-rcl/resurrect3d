@@ -7,6 +7,14 @@ const initialState = {
   pending: false
 }
 
+function updateViews(old, updated) {
+  const cloned = { ...old };
+  if (cloned[updated._id]) {
+    cloned[updated._id] = updated;
+  }
+  return cloned;
+}
+
 export default function(state = initialState, action){
   switch(action.type){
     case ActionConstants.VIEW_ADDED:
@@ -31,6 +39,13 @@ export default function(state = initialState, action){
       return {
         ...state,
         view: action.view,
+        pending: false,
+      }
+    
+    case ActionConstants.VIEW_UPDATED:
+      return {
+        ...state,
+        views: updateViews(state.views, action.view),
         pending: false,
       }
 

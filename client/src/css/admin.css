@@ -409,7 +409,9 @@
 }
 
 /****** ADMIN FORM **********/
-
+.admin-form-header {
+  color: #fff !important;
+}
 .admin-form-error-message .content .header {
   color: red !important;
 }
@@ -424,4 +426,14 @@
 
 .admin-form-delete-modal .actions .button.primary {
   background: red !important;
+}
+
+/*** Menu ***/
+.admin-menu-link {
+  color: #fff;
+  font-family: "Source Code Pro", monospace !important;
+}
+
+.admin-menu-link:hover {
+  color: #000;
 }

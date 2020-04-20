@@ -30,7 +30,7 @@ import {
 } from "semantic-ui-react";
 
 class SemanticContent extends React.Component {
-  state = {
+  defaultState = {
     calculations: {
       direction: "none",
       height: 0,
@@ -48,7 +48,7 @@ class SemanticContent extends React.Component {
     },
     threeFile: "",
     threeThumbnail: "",
-    skybox: "",
+    skyboxFile: "",
     threeFileUpload: "",
     threeThumbnailUpload: "",
     skyboxUpload: "",
@@ -95,6 +95,7 @@ class SemanticContent extends React.Component {
     this.contextRef = React.createRef();
     this.context = null;
     this.contextRef = createRef();
+    this.state = this.defaultState;
   }
 
   componentDidMount = () => {
@@ -105,7 +106,7 @@ class SemanticContent extends React.Component {
     this.setState({ calculations });
 
   editView(view) {
-    const { viewerSettings, __v, skybox, ...rest } = view;
+    const { viewerSettings, __v, ...rest } = view;
     rest.isUpdate = true;
     this.setState((prevState) => ({ ...prevState, ...rest }));
   }
@@ -215,7 +216,7 @@ class SemanticContent extends React.Component {
           threeThumbnailCancel: !this.state.threeThumbnailCancel,
         });
         break;
-      case "skybox":
+      case "skyboxFile":
         this.setState({ [event.target.name]: event.target.files[0].name });
         this.setState({ skyboxUpload: event.target.files[0] });
         this.setState({ skyboxCancel: !this.state.skyboxCancel });
@@ -252,8 +253,8 @@ class SemanticContent extends React.Component {
           threeThumbnailCancel: !this.state.threeThumbnailCancel,
         });
         break;
-      case "skybox":
-        this.setState({ skybox: "" });
+      case "skyboxFile":
+        this.setState({ skyboxFile: "" });
         this.setState({ skyboxUpload: "" });
         this.setState({ skyboxCancel: !this.state.skyboxCancel });
         break;
@@ -269,7 +270,7 @@ class SemanticContent extends React.Component {
       displayName: this.state.displayName,
       threeFile: this.state.threeFileUpload,
       threeThumbnail: this.state.threeThumbnailUpload,
-      skybox: { file: this.state.skyboxUpload },
+      skyboxFile: this.state.skyboxUpload,
       enableLight: this.state.enableLight,
       enableMaterials: this.state.enableMaterials,
       enableShaders: this.state.enableShaders,
@@ -297,7 +298,7 @@ class SemanticContent extends React.Component {
       needsUpdate.threeFile = threeFileUpload;
     }
     if (this.isUploadFile(skyboxUpload)) {
-      needsUpdate.skybox = { file: skyboxUpload };
+      needsUpdate.skyboxFile = skyboxUpload;
     }
     if (this.isUploadFile(threeThumbnailUpload)) {
       needsUpdate.threeThumbnail = threeThumbnailUpload;
@@ -315,6 +316,9 @@ class SemanticContent extends React.Component {
   handleUpdate = () => {
     const view = {
       displayName: this.state.displayName,
+      threeFile: this.state.threeFile,
+      skyboxFile: this.state.skyboxFile,
+      threeThumbnail: this.state.threeThumbnail,
       enableLight: this.state.enableLight,
       enableMaterials: this.state.enableMaterials,
       enableShaders: this.state.enableShaders,
@@ -396,7 +400,7 @@ class SemanticContent extends React.Component {
             <Label className="admin-list-label" horizontal>
               skybox
             </Label>
-            {obj[1].skybox.file}
+            {obj[1].skyboxFile}
           </List.Item>
           <List.Item>
             <Label className="admin-list-label" horizontal>
@@ -571,8 +575,8 @@ class SemanticContent extends React.Component {
 
                   <Form.Field className="admin-main-form-field">
                     <Header as="h5" className="admin-file-upload-header">
-                      {this.state.skybox != ""
-                        ? this.state.skybox
+                      {this.state.skyboxFile != ""
+                        ? this.state.skyboxFile
                         : "Select Skybox"}
                     </Header>
                     <Button.Group className="admin-button-group">
@@ -586,14 +590,14 @@ class SemanticContent extends React.Component {
                         <input
                           ref={this.skyboxRef}
                           type="file"
-                          name="skybox"
+                          name="skyboxFile"
                           hidden
                           onChange={this.handleFileUpload}
                           accept="image/*"
                         />
                       </Button>
                       <Button
-                        onClick={() => this.handleFileDiscard("skybox")}
+                        onClick={() => this.handleFileDiscard("skyboxFile")}
                         icon
                         title="Discard File"
                         disabled={this.state.skyboxCancel}

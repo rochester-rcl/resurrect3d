@@ -62,10 +62,12 @@ class SemanticBase extends React.Component {
         width="thin"
       >
         <Menu.Item>
-          <Link to="/admin/logout">
-            <Icon name="window close outline" />
-            Logout
-          </Link>
+          <Button inverted size="large">
+            <Link className="admin-menu-link" to="/admin/logout">
+              <Icon name="window close outline" />
+              Logout
+            </Link>
+          </Button>
         </Menu.Item>
       </Sidebar>
     );
@@ -96,7 +98,7 @@ class SemanticBase extends React.Component {
         />
         <LoaderModal
           inline={true}
-          text="Saving New Model ..."
+          text="Saving Model ..."
           active={this.props.pending}
         />
         <Sidebar.Pusher
@@ -122,7 +124,7 @@ class SemanticBase extends React.Component {
               </Menu.Menu>
             </Menu>
             <Divider inverted horizontal>
-              My Models
+              <Header size="huge" className="admin-form-header">My Models</Header>
             </Divider>
             <Segment inverted className="admin-form-content" attached="bottom">
               <SemanticContent />

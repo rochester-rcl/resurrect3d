@@ -18,11 +18,9 @@ var viewSchema = new Schema({
     required: false
   },
 
-  skybox: {
-    file: {
+  skyboxFile: {
       type: String,
       required: false
-    }
   },
 
   enableLight: {
