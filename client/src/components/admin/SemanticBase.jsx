@@ -1,5 +1,6 @@
 import React, { createRef } from "react";
 import PropTypes from "prop-types";
+import { Link } from "react-router-dom";
 // React-redux
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
@@ -60,17 +61,11 @@ class SemanticBase extends React.Component {
         visible={visible}
         width="thin"
       >
-        <Menu.Item as="a">
-          <Icon name="home" />
-          Home
-        </Menu.Item>
-        <Menu.Item as="a">
-          <Icon name="address card outline" />
-          Account
-        </Menu.Item>
-        <Menu.Item as="a">
-          <Icon name="window close outline" />
-          Logout
+        <Menu.Item>
+          <Link to="/admin/logout">
+            <Icon name="window close outline" />
+            Logout
+          </Link>
         </Menu.Item>
       </Sidebar>
     );
@@ -106,7 +101,9 @@ class SemanticBase extends React.Component {
         />
         <Sidebar.Pusher
           dimmed={this.state.dimmed && this.state.visible}
-          className={`admin-content-container ${this.props.pending ? "loading" : ""}`}
+          className={`admin-content-container ${
+            this.props.pending ? "loading" : ""
+          }`}
         >
           <Segment basic inverted className="admin-form-container">
             <Menu

@@ -98,6 +98,7 @@ exports.addView = (req, res) => {
     enableMaterials: req.body.enableMaterials,
     enableShaders: req.body.enableShaders,
     enableMeasurement: req.body.enableMeasurement,
+    enableAnnotations: req.body.enableAnnotations,
     enableDownload: req.body.enableDownload,
     enableEmbed: req.body.enableEmbed,
     modelUnits: req.body.modelUnits,
@@ -137,25 +138,15 @@ exports.updateView = (req, res) => {
         ? utils.flat2nested(req.body)
         : req.body;
     if (isEmpty(req.files)) {
-      new Promise((resolve, reject) => {
-        const newView = new View({
-          _id: req.params.id,
-          ...body
-        });
-
-        resolve(newView);
-      }).then(newView => {
         View.findOneAndUpdate(
           { _id: req.params.id },
-          newView,
-          { new: true },
+          body,
           (err, view) => {
             if (err) res.send(err);
             res.json(view);
             console.log({ update: "View successfully updated" });
           }
         );
-      });
     } else {
       //console.log({isEmpty: 'false'});
 
@@ -224,9 +215,7 @@ exports.updateView = (req, res) => {
 
           resolve(console.log({ update: "all good" }));
         }).then(() => {
-          const newView = new View({
-            _id: req.params.id,
-            displayName: body.displayName,
+          const params = {
             threeFile: threeFileBool
               ? req.files.threeFile[0].filename
               : req.body.threeFile,
@@ -238,21 +227,28 @@ exports.updateView = (req, res) => {
                 ? req.files.skybox[0].filename
                 : req.body.skybox
             },
+            ...req,body
+          }
+          /*const newView = new View({
+            _id: req.params.id,
+            displayName: body.displayName,
+            
             enableLight: body.enableLight,
             enableMaterials: body.enableMaterials,
             enableShaders: body.enableShaders,
             enableMeasurement: body.enableMeasurement,
+            enableAnnotations: body.enableAnnotations,
             enableDownload: body.enableDownload,
             enableEmbed: body.enableEmbed,
             modelUnits: body.modelUnits,
             createdBy: req.user.id
-          });
+          });*/
 
           //console.log(newView);
 
           View.findOneAndUpdate(
             { _id: req.params.id },
-            newView,
+            params,
             { new: true },
             (err, view) => {
               if (err) res.send(err);

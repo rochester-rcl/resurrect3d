@@ -346,12 +346,13 @@ export function* loadTextureSaga(
   // load the texture
   try {
     const textureLoader = new THREE.TextureLoader();
+    const url = yield backend.getImageFileURL(loadTextureAction.url);
     textureLoader.crossOrigin = "anonymous";
     const textureLoaderChannel = yield call(
       createLoadProgressChannel,
       textureLoader,
       "texture",
-      loadTextureAction.url
+      url
     );
     while (true) {
       const payload = yield take(textureLoaderChannel);

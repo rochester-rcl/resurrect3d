@@ -70,6 +70,7 @@ class SemanticContent extends React.Component {
     enableMaterials: "",
     enableShaders: "",
     enableMeasurement: "",
+    enableAnnotations: "",
     enableDownload: "",
     enableEmbed: "",
     modelUnits: "",
@@ -121,6 +122,7 @@ class SemanticContent extends React.Component {
       enableMaterials,
       enableShaders,
       enableMeasurement,
+      enableAnnotations,
       enableEmbed,
       enableDownload,
       modelUnits,
@@ -158,6 +160,11 @@ class SemanticContent extends React.Component {
       if (!this.isFormElementSet(enableMeasurement)) {
         error.status = true;
         fieldName = "Enable Measurement Tools";
+        return;
+      }
+      if (!this.isFormElementSet(enableAnnotations)) {
+        error.status = true;
+        fieldName = "Enable Annotation Tools";
         return;
       }
       if (!this.isFormElementSet(enableEmbed)) {
@@ -214,7 +221,7 @@ class SemanticContent extends React.Component {
         this.setState({ skyboxCancel: !this.state.skyboxCancel });
         break;
       default:
-        console.log(event.target.name);
+        break;
     }
   };
 
@@ -267,6 +274,7 @@ class SemanticContent extends React.Component {
       enableMaterials: this.state.enableMaterials,
       enableShaders: this.state.enableShaders,
       enableMeasurement: this.state.enableMeasurement,
+      enableAnnotations: this.state.enableAnnotations,
       enableDownload: this.state.enableDownload,
       enableEmbed: this.state.enableEmbed,
       modelUnits: this.state.modelUnits,
@@ -311,6 +319,7 @@ class SemanticContent extends React.Component {
       enableMaterials: this.state.enableMaterials,
       enableShaders: this.state.enableShaders,
       enableMeasurement: this.state.enableMeasurement,
+      enableAnnotations: this.state.enableAnnotations,
       enableDownload: this.state.enableDownload,
       enableEmbed: this.state.enableEmbed,
       modelUnits: this.state.modelUnits,
@@ -412,6 +421,12 @@ class SemanticContent extends React.Component {
               measurement tools
             </Label>
             {obj[1].enableMeasurement.toString()}
+          </List.Item>
+          <List.Item>
+            <Label className="admin-list-label" horizontal>
+              annotation tools
+            </Label>
+            {obj[1].enableAnnotations.toString()}
           </List.Item>
           <List.Item>
             <Label className="admin-list-label" horizontal>
@@ -635,6 +650,18 @@ class SemanticContent extends React.Component {
                     label="Enable Measurement Tools"
                     name="enableMeasurement"
                     value={this.state.enableMeasurement}
+                    onChange={this.handleEnableChange}
+                    options={this.state.booleans}
+                    placeholder="enable/disable"
+                  />
+
+<Form.Field
+                    control={Select}
+                    className="admin-select-dropdown"
+                    fluid
+                    label="Enable Annotation Tools"
+                    name="enableAnnotations"
+                    value={this.state.enableAnnotations}
                     onChange={this.handleEnableChange}
                     options={this.state.booleans}
                     placeholder="enable/disable"

@@ -676,7 +676,7 @@ export default class ThreeView extends Component {
       });
     }
 
-    if (enableLight) {
+    
       controls.addComponent("lighting", components.THREE_BUTTON, {
         ...buttonProps,
         content: "lighting: off",
@@ -684,7 +684,7 @@ export default class ThreeView extends Component {
         ref: ref => (this.enableLightButton = ref),
         onClick: () => this.toggleDynamicLighting()
       });
-    }
+    
 
     if (this.props.skyboxTexture.image) {
       controls.addComponent("background", components.THREE_BUTTON, {
@@ -1963,9 +1963,7 @@ export default class ThreeView extends Component {
     //let panelGroup = new ThreeGUIGroup("tools");
 
     /***************** ANNOTATIONS *********************************************/
-
-    if (this.props.enableAnnotations || true) {
-      //Set enableAnnotations in props
+    if (this.props.options.enableAnnotations) {
       const annotationGroup = new ThreeGUIGroup("annotations");
       annotationGroup.addComponent(
         "controller",
