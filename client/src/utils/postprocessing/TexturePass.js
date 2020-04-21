@@ -52,13 +52,13 @@ export default function loadTexturePass(threeInstance: Object): Promise {
           this.uniforms["opacity"].value = this.opacity;
           this.uniforms["tDiffuse"].value = this.map;
           this.material.transparent = this.opacity < 1.0;
-
+          renderer.setRenderTarget(this.renderToScreen ? null : readBuffer);
+          if (this.clear) renderer.clear();
           renderer.render(
             this.scene,
             this.camera,
-            this.renderToScreen ? null : readBuffer,
-            this.clear
           );
+          
 
           renderer.autoClear = oldAutoClear;
         }

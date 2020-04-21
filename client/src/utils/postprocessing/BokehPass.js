@@ -82,21 +82,22 @@ export default function loadBokehPass(threeInstance: Object): typeof Promise {
 				// Render depth into texture
 
 				this.scene.overrideMaterial = this.materialDepth;
-
-				renderer.render( this.scene, this.camera, this.renderTargetDepth, true );
+				renderer.setRenderTarget(this.renderTargetDepth);
+				renderer.clear();
+				renderer.render( this.scene, this.camera);
 
 				// Render bokeh composite
 
 				this.uniforms[ "tColor" ].value = readBuffer.texture;
 
 				if ( this.renderToScreen ) {
-
+					renderer.setRenderTarget(null);
 					renderer.render( this.scene2, this.camera2 );
 
 				} else {
-
-					renderer.render( this.scene2, this.camera2, writeBuffer, this.clear );
-
+					renderer.setRenderTarget(writeBuffer);
+					if (this.clear) renderer.clear();
+					renderer.render( this.scene2, this.camera2);
 				}
 
 				this.scene.overrideMaterial = null;

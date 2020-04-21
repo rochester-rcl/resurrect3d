@@ -11,6 +11,7 @@
     "@material-ui/core": "^4.0.0-rc.0",
     "@material-ui/icons": "^3.0.2",
     "babel-polyfill": "^6.26.0",
+    "chevrotain": "^7.0.0",
     "history": "^4.10.1",
     "interweave": "^8.1.0",
     "jszip": "^3.2.2",
@@ -33,7 +34,7 @@
     "semantic-ui-css": "^2.3.3",
     "semantic-ui-react": "^0.88.2",
     "short-uuid": "^2.3.4",
-    "three": "^0.98.0",
+    "three": "^0.115.0",
     "worker-loader": "^2.0.0",
     "zlibjs": "^0.3.1"
   },

@@ -63,7 +63,7 @@ export default class ConverterForm extends Component {
       },
     },
     mesh: {
-      label: "Mesh File (OBJ)",
+      label: "Mesh File (OBJ, VRML)",
       file: null,
       info: "https://en.wikipedia.org/wiki/Wavefront_.obj_file",
       type: FILE,

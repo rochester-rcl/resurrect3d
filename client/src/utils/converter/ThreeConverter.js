@@ -4,17 +4,6 @@ import * as _THREE from "three";
 // LOADERS
 import initLoaders from "../loaders/InitLoaders";
 
-// Constants
-import {
-  THREE_MESH,
-  THREE_GROUP,
-  THREE_DIFFUSE_MAP,
-  THREE_MESH_STANDARD_MATERIAL
-} from "../../constants/application";
-
-// Pako
-import pako from "pako";
-
 // ConverterProgress
 import ConverterProgress from './ConverterProgress';
 

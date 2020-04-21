@@ -80,19 +80,26 @@ export default function loadVignettePass(threeInstance: Object): typeof Promise 
               // pass 1
               this.horizontalBlurUniforms["tDiffuse"].value = readBuffer.texture;
               this.quad.material = this.horizontalBlurMaterial;
-      	      renderer.render(this.scene, this.camera, this.pass1RenderTarget, true);
+              renderer.setRenderTarget(this.pass1RenderTarget);
+              renderer.clear();
+              renderer.render(this.scene, this.camera);
               // pass 2
               this.verticalBlurUniforms["tDiffuse"].value = this.pass1RenderTarget.texture;
               this.quad.material = this.verticalBlurMaterial;
-              renderer.render(this.scene, this.camera, this.pass2RenderTarget, true);
+              renderer.setRenderTarget(this.pass2RenderTarget);
+              renderer.clear();
+              renderer.render(this.scene, this.camera);
               // pass 3
               this.uniforms["tDiffuse"].value = this.pass2RenderTarget.texture;
               this.quad.material = this.vignetteMaterial;
 
               if (this.renderToScreen) {
+                renderer.setRenderTarget(null);
                 renderer.render(this.scene, this.camera);
               } else {
-                renderer.render(this.scene, this.camera, writeBuffer, this.clear);
+                renderer.setRenderTarget(writeBuffer);
+                if (this.clear) renderer.clear();
+                renderer.render(this.scene, this.camera);
               }
             },
       		});

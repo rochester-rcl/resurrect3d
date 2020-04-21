@@ -10,6 +10,8 @@ import {
   THREE_GROUP,
   THREE_DIFFUSE_MAP,
   THREE_MESH_STANDARD_MATERIAL,
+  OBJ_EXT,
+  VRML_EXT
 } from "../../constants/application";
 
 // Pako
@@ -30,9 +32,13 @@ import ThreeConverter from "./ThreeConverter";
 const THREE = _THREE;
 
 export default class ThreeObjConverter extends ThreeConverter {
-  OPTIONS_MAP: {
+  OPTIONS_MAP = {
     center: centerGeometry,
     createNormalMap: createNormalMap,
+  };
+  MESH_FORMATS = {
+    VRML: VRML_EXT,
+    OBJ: OBJ_EXT
   };
   constructor(
     mesh: File,
@@ -44,6 +50,7 @@ export default class ThreeObjConverter extends ThreeConverter {
     super(mesh, maps, options, progress);
     this.mtlFile = materials;
     this.loadObj = this.loadObj.bind(this);
+    this.loadVRML = this.loadVRML.bind(this);
     this.loadObjCallback = this.loadObjCallback.bind(this);
     this.loadMtl = this.loadMtl.bind(this);
     this.loadMTLCallback = this.loadMTLCallback.bind(this);
@@ -53,9 +60,53 @@ export default class ThreeObjConverter extends ThreeConverter {
     this.setUpMaterials = this.setUpMaterials.bind(this);
     this.rectifyDataURLs = this.rectifyDataURLs.bind(this);
     this.loadedMaps = {};
+    this.LOADER_METHODS = {
+      OBJ: this.loadObj,
+      VRML: this.loadVRML
+    }
   }
 
-  loadObj(material: THREE.MeshStandardMaterial) {
+  getMeshFileFormat() {
+    const splitFilename = this.meshFile.name.split(".");
+    const ext = splitFilename[splitFilename.length-1];
+    for (let key in this.MESH_FORMATS) {
+      const format = this.MESH_FORMATS[key];
+      if (format.includes(ext)) {
+        return key;
+      }
+    }
+  }
+
+  getLoader() {
+    return this.LOADER_METHODS[this.getMeshFileFormat()];
+  }
+
+  loadVRML() {
+    return new Promise((resolve, reject) => {
+      try {
+        if (this.loadersInitialized === false) {
+          reject(
+            "ThreeConverter.init must be called before you can convert this mesh."
+          );
+          return;
+        }
+
+        if (this.meshFile !== null) {
+          this.readASCII(this.meshFile).then((meshData) => {
+            const vrmlLoader = new THREE.VRMLLoader();
+            this.mesh = vrmlLoader.parse(meshData);
+            resolve(this.mesh);
+          });
+        } else {
+          reject(new Error("No Mesh File Attached"));
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  loadObj(material) {
     return new Promise((resolve, reject) => {
       try {
         if (this.loadersInitialized === false) {
@@ -219,11 +270,16 @@ export default class ThreeObjConverter extends ThreeConverter {
   }
 
   convertNoMaterials() {
-    return this.loadObj()
-      .then(this.loadObjCallback)
-      .then(this.handleOptionsCallback)
-      .then((exported) => Promise.resolve(exported))
-      .catch((error) => this.handleError(error));
+    const loader = this.getLoader();
+    if (loader) {
+      return loader()
+        .then(this.loadObjCallback)
+        .then(this.handleOptionsCallback)
+        .then((exported) => Promise.resolve(exported))
+        .catch((error) => this.handleError(error));
+    } else {
+      return this.handleError(new Error("No Loader Initialized for the Current Mesh"));
+    }
   }
 
   convert(): Promise {

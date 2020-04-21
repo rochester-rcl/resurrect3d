@@ -1390,12 +1390,12 @@ export default class ThreeView extends Component {
 
     this.effectComposer.addPass(rawModel);
     this.effectComposer.addPass(chromaKeyPass);
-    this.effectComposer.addPass(SSAOPass);
+    // this.effectComposer.addPass(SSAOPass);
     this.effectComposer.addPass(EDLPass);
-    this.effectComposer.addPass(maskInverse);
-    this.effectComposer.addPass(rawScene);
-    this.effectComposer.addPass(clearMask);
-    this.effectComposer.addPass(modelBloomPass);
+    // this.effectComposer.addPass(maskInverse);
+    // this.effectComposer.addPass(rawScene);
+    // this.effectComposer.addPass(clearMask);
+    // this.effectComposer.addPass(modelBloomPass);
     this.effectComposer.addPass(guiMask);
     this.effectComposer.addPass(rawGui);
     this.effectComposer.addPass(clearMask);
