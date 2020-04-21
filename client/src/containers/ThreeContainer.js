@@ -43,7 +43,7 @@ class ThreeContainer extends Component {
 
   componentDidUpdate(prevProps: Object): void {
     if (!lodash.isEqual(prevProps.threeAsset, this.props.threeAsset)) {
-      if (this.props.threeAsset.skyboxFile !== null) {
+      if (this.props.threeAsset.skyboxFile) {
         this.props.loadTextureAction(this.props.threeAsset.skyboxFile);
         // Need logic for null image for skybox
       } else {
