@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { base64ImageToBlob } from './image';
 
 // constants
-import { MAP_TYPES } from '../constants/application';
+import { MAP_TYPES, THREE_MESH } from '../constants/application';
 
 export function volumeFromBounds(bbox: typeof THREE.Box3): Object {
 
@@ -37,6 +37,17 @@ type Materials = THREE.MeshStandardMaterial | THREE.MeshPhongMaterial | THREE.Me
 export function mapMaterials(materials: Array<Materials> , callback): Array<Materials> {
   if (materials.constructor === Array) return materials.map(material => callback(material));
   return callback(materials);
+}
+
+export function traverseMaterials(mesh, callback) {
+  mesh.traverse((child) => {
+    if (child.constructor.name === THREE_MESH) {
+      if (child.material) {
+        child.material = callback(child.material);
+        child.material.needsUpdate = true;
+      }
+    }
+  });
 }
 
 export function exportMap(material: Materials): Array<Object> {

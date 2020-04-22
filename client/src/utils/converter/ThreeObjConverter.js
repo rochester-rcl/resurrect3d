@@ -86,7 +86,11 @@ export default class ThreeObjConverter extends ThreeConverter {
       let isWindows = true;
       if (matches.length === 0) {
         isWindows = false;
-        matches = vrmlText.matchAll(unix);
+        matches = [...vrmlText.matchAll(unix)];
+      }
+      if (matches.length === 0) {
+        resolve(vrmlText); // no textures
+        return;
       }
       const unique = [...new Set(matches.map((m) => m[0]))];
       const maps = this.vrmlImageTexturesToObjectUrl(unique, isWindows);
@@ -94,7 +98,6 @@ export default class ThreeObjConverter extends ThreeConverter {
       let updated = vrmlText;
       
       maps.forEach((m) => {
-        console.log(m.url);
         const regex = new RegExp(this.escapeRegExp(m.url), 'g');
         updated = updated.replace(regex, `url ${m.objectUrl}\n`);
       });
@@ -127,11 +130,17 @@ export default class ThreeObjConverter extends ThreeConverter {
         // read the file to a data url
         return {
           url: url,
-          objectUrl: URL.createObjectURL(map)
+          objectUrl: '"http://fakeurl.com/image.png"'
         };
       }
     }
     // return Promise.reject(new Error("No matching maps found in file. Do they have the same file name?"));
+  }
+
+  convertToGroup(mesh) {
+    const group = new THREE.Group();
+    mesh.children.forEach((child) => group.add(child));
+    return group;
   }
 
   loadVRML() {
@@ -149,6 +158,13 @@ export default class ThreeObjConverter extends ThreeConverter {
             this.fixVRMLTextures(meshData).then((vrmlData) => {
               const vrmlLoader = new THREE.VRMLLoader();
               this.mesh = vrmlLoader.parse(vrmlData);
+              // convert all materials to standard
+              this.mesh.traverse((child) => {
+                if (child.constructor.name === THREE_MESH) {
+                  child.material = this.convertMaterialToStandard(child.material);
+                }
+              });
+              this.mesh = this.convertToGroup(this.mesh);
               resolve(this.mesh);
             });
           });

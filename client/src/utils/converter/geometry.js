@@ -5,23 +5,25 @@ import * as THREE from "three";
 // Constants
 import {
   THREE_MESH,
+  THREE_SCENE,
   THREE_GROUP,
   THREE_DIFFUSE_MAP,
   THREE_MESH_STANDARD_MATERIAL,
 } from "../../constants/application";
-
+// TODO replace all walk and children functions with traverse
 import initSimplifyModifier from "./SimplifyModifier";
 const simplify = initSimplifyModifier(THREE);
 
 export function getChildren(mesh: THREE.Group | THREE.Mesh): Array<THREE.Mesh> {
-  let children;
-  if (mesh.constructor.name === THREE_MESH) {
-    children = [mesh];
-  } else {
-    children = mesh.children;
-  }
+  const children = [];
+  mesh.traverse((child) => {
+    if (child.constructor.name === THREE_MESH) {
+      children.push(child);
+    }
+  });
   return children;
 }
+
 
 export function centerGeometry(mesh: THREE.Group | THREE.Mesh): Promise {
   return new Promise((resolve, reject) => {

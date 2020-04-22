@@ -2512,7 +2512,6 @@ export default function initVRMLLoader(threeInstance) {
 
           if (lexingResult.errors.length > 0) {
             console.error(lexingResult.errors);
-
             throw Error("threeInstance.VRMLLexer: Lexing errors detected.");
           }
 
