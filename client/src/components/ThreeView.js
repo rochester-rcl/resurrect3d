@@ -1323,7 +1323,7 @@ export default class ThreeView extends Component {
 
     const vignettePass = new THREE.VignettePass(
       new THREE.Vector2(this.width, this.height),
-      0.1,
+      0.3,
       new THREE.Color(0.045, 0.045, 0.045)
     );
 
@@ -1333,6 +1333,7 @@ export default class ThreeView extends Component {
 
     const brightnessShader = THREE.BrightnessContrastShader;
     const brightnessPass = new THREE.ShaderPass(brightnessShader);
+    brightnessPass.renderToScreen = false;
     brightnessPass.uniforms["contrast"].value = 0.15;
 
     const modelBloomPass = new THREE.UnrealBloomPass(
@@ -1382,6 +1383,7 @@ export default class ThreeView extends Component {
     const rawModel = new THREE.TexturePass(
       this.modelComposer.renderTarget2.texture
     );
+    rawModel.clear = false;
     const rawGui = new THREE.TexturePass(
       this.guiComposer.renderTarget2.texture,
       0.8
@@ -1392,9 +1394,9 @@ export default class ThreeView extends Component {
     this.effectComposer.addPass(chromaKeyPass);
     // this.effectComposer.addPass(SSAOPass);
     this.effectComposer.addPass(EDLPass);
-    // this.effectComposer.addPass(maskInverse);
-    // this.effectComposer.addPass(rawScene);
-    // this.effectComposer.addPass(clearMask);
+    this.effectComposer.addPass(maskInverse);
+    this.effectComposer.addPass(rawScene);
+    this.effectComposer.addPass(clearMask);
     // this.effectComposer.addPass(modelBloomPass);
     this.effectComposer.addPass(guiMask);
     this.effectComposer.addPass(rawGui);

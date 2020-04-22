@@ -59,7 +59,7 @@ export default function loadShaderPass(threeInstance: Object): typeof Promise {
 					renderer.render( this.scene, this.camera );
 				} else {
 					renderer.setRenderTarget(writeBuffer);
-					if (this.clear) renderer.clear();
+					if (this.clear) renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
 					renderer.render( this.scene, this.camera);
 				}
 

@@ -50,7 +50,7 @@ export default function loadRenderPass(threeInstance: Object): typeof Promise {
 
 				}
 				renderer.setRenderTarget(this.renderToScreen ? null : readBuffer);
-				if (this.clear) renderer.clear();
+				if (this.clear) renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStenci);
 				renderer.render( this.scene, this.camera);
 
 				if ( this.clearColor ) {

@@ -11,11 +11,8 @@ import {
   THREE_DIFFUSE_MAP,
   THREE_MESH_STANDARD_MATERIAL,
   OBJ_EXT,
-  VRML_EXT
+  VRML_EXT,
 } from "../../constants/application";
-
-// Pako
-import pako from "pako";
 
 // postrprocessing options
 
@@ -38,7 +35,7 @@ export default class ThreeObjConverter extends ThreeConverter {
   };
   MESH_FORMATS = {
     VRML: VRML_EXT,
-    OBJ: OBJ_EXT
+    OBJ: OBJ_EXT,
   };
   constructor(
     mesh: File,
@@ -62,13 +59,13 @@ export default class ThreeObjConverter extends ThreeConverter {
     this.loadedMaps = {};
     this.LOADER_METHODS = {
       OBJ: this.loadObj,
-      VRML: this.loadVRML
-    }
+      VRML: this.loadVRML,
+    };
   }
 
   getMeshFileFormat() {
     const splitFilename = this.meshFile.name.split(".");
-    const ext = splitFilename[splitFilename.length-1];
+    const ext = splitFilename[splitFilename.length - 1];
     for (let key in this.MESH_FORMATS) {
       const format = this.MESH_FORMATS[key];
       if (format.includes(ext)) {
@@ -79,6 +76,62 @@ export default class ThreeObjConverter extends ThreeConverter {
 
   getLoader() {
     return this.LOADER_METHODS[this.getMeshFileFormat()];
+  }
+
+  fixVRMLTextures(vrmlText) {
+    return new Promise((resolve, reject) => {
+      const windows = /(url)(.*?)\r/g;
+      const unix = /(url)(.*?)\r/g;
+      let matches = [...vrmlText.matchAll(windows)];
+      let isWindows = true;
+      if (matches.length === 0) {
+        isWindows = false;
+        matches = vrmlText.matchAll(unix);
+      }
+      const unique = [...new Set(matches.map((m) => m[0]))];
+      const maps = this.vrmlImageTexturesToObjectUrl(unique, isWindows);
+      if (maps.length !== unique.length) reject(new Error(`Not All Maps in ${this.meshFile.name} were uploaded`));
+      let updated = vrmlText;
+      
+      maps.forEach((m) => {
+        console.log(m.url);
+        const regex = new RegExp(this.escapeRegExp(m.url), 'g');
+        updated = updated.replace(regex, `url ${m.objectUrl}\n`);
+      });
+      resolve(updated);
+    });
+  }
+
+  // https://stackoverflow.com/questions/1144783/how-to-replace-all-occurrences-of-a-string
+  escapeRegExp(string) {
+    return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  vrmlImageTexturesToObjectUrl(urls, windows = false) {
+    return urls.map((url) => this.vrmlImageTextureToObjectUrl(url, windows)).filter((m) => m !== undefined);
+  }
+
+  vrmlImageTextureToObjectUrl(url, windows = false) {
+    const splitChar = windows ? "\\" : "/";
+    let basename = url.split(splitChar).pop();
+    if (basename.includes('"')) {
+      basename = basename.replace('"', "");
+    }
+    basename = lodash.trim(basename);
+    for (let key in this.mapFiles) {
+      // TODO could be an array as well
+      const map = this.mapFiles[key];
+      const mapName = lodash.trim(map.name);
+      // for now deal with single as a proof of concept
+      if (basename === mapName) {
+        // read the file to a data url
+        return {
+          url: url,
+          objectUrl: URL.createObjectURL(map)
+        };
+      }
+    }
+    // return Promise.reject(new Error("No matching maps found in file. Do they have the same file name?"));
   }
 
   loadVRML() {
@@ -93,9 +146,11 @@ export default class ThreeObjConverter extends ThreeConverter {
 
         if (this.meshFile !== null) {
           this.readASCII(this.meshFile).then((meshData) => {
-            const vrmlLoader = new THREE.VRMLLoader();
-            this.mesh = vrmlLoader.parse(meshData);
-            resolve(this.mesh);
+            this.fixVRMLTextures(meshData).then((vrmlData) => {
+              const vrmlLoader = new THREE.VRMLLoader();
+              this.mesh = vrmlLoader.parse(vrmlData);
+              resolve(this.mesh);
+            });
           });
         } else {
           reject(new Error("No Mesh File Attached"));
@@ -278,7 +333,9 @@ export default class ThreeObjConverter extends ThreeConverter {
         .then((exported) => Promise.resolve(exported))
         .catch((error) => this.handleError(error));
     } else {
-      return this.handleError(new Error("No Loader Initialized for the Current Mesh"));
+      return this.handleError(
+        new Error("No Loader Initialized for the Current Mesh")
+      );
     }
   }
 

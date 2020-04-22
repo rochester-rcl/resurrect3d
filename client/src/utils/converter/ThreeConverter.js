@@ -61,6 +61,7 @@ export default class ThreeConverter {
       reader.readAsDataURL(map);
     });
   }
+
   // can be used for MTL, OBJ, any ASCII file , doesn't have to be geometry data
   readASCII(dataFile: File) {
     // has to be ASCII for now, can add readMeshBinary
