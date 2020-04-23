@@ -24,6 +24,17 @@ export function getChildren(mesh: THREE.Group | THREE.Mesh): Array<THREE.Mesh> {
   return children;
 }
 
+export function toYUp(mesh) {
+  return new Promise((resolve, reject) => {
+    try {
+      mesh.rotation.x = -(Math.PI / 2);
+      mesh.updateMatrix();
+      resolve(mesh);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
 
 export function centerGeometry(mesh: THREE.Group | THREE.Mesh): Promise {
   return new Promise((resolve, reject) => {

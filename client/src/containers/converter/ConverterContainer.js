@@ -29,6 +29,7 @@ class ConverterContainer extends Component {
       conversionStarted,
       conversionComplete,
       file,
+      externalMaps,
       progress,
       conversionType,
       error,
@@ -54,7 +55,7 @@ class ConverterContainer extends Component {
         );
       } else {
         if (onConversionComplete) {
-          onConversionComplete(ConverterSave.prepareFile(file));
+          onConversionComplete(ConverterSave.prepareFile(file), externalMaps);
         }
         if (enableLocalSave) {
           return (

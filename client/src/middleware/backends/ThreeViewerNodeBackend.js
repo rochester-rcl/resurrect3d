@@ -9,6 +9,7 @@ import React from "react";
 import {
   VIEWS_ENDPOINT,
   FILE_ENDPOINT,
+  TEXTURE_ENDPOINT,
   AUTHENTICATE_ENDPOINT,
   ANNOTATIONS_ENDPOINT
 } from "../../constants/api-endpoints";

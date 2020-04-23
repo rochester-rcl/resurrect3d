@@ -13,6 +13,8 @@ import { getChildren, centerGeometry } from './geometry';
 
 import { createNormalMap } from './normals';
 
+import { TEXTURE_ENDPOINT } from "../../constants/api-endpoints";
+
 // super obnoxious pattern.
 const THREE = _THREE;
 
@@ -165,4 +167,16 @@ export default class ThreeConverter {
   export() {
     return this.mesh.toJSON();
   }
+
+  static generateTextureUrl() {
+    const uuid = THREE.MathUtils.generateUUID().toLowerCase();
+    return {
+      url: `${TEXTURE_ENDPOINT}${uuid}`,
+      id: uuid
+    }
+  }
+}
+
+export function generateTextureUrl() {
+  return ThreeConverter.generateTextureUrl();
 }

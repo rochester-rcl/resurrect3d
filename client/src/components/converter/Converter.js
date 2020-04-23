@@ -79,7 +79,8 @@ export default class ConverterForm extends Component {
     options: {
       center: { label: "Re-Center Geometry", val: false, type: CHECKBOX },
       compress: { label: "Use JPEG Compression on Large Textures", val: false, type: CHECKBOX },
-      zlib: { label: "Use ZLib Compression on the Output Mesh", val: false, type: CHECKBOX },
+      yUp: { label: "Transform Model Orientation from Z Up to Y Up", val: false, type: CHECKBOX},
+      // zlib: { label: "Use ZLib Compression on the Output Mesh", val: false, type: CHECKBOX },
       createNormalMap: {
         label: "Generate Normal Map from Diffuse",
         val: false,
@@ -154,7 +155,6 @@ export default class ConverterForm extends Component {
           let field = group[key];
           return (
             <Form.Input
-             
               className="three-converter-form-field"
               label={field.label}
               type={field.type}

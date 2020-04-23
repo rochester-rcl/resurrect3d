@@ -1,4 +1,4 @@
-/* @flow */
+// TODO move VRML to its own class
 import * as _THREE from "three";
 
 // LOADERS
@@ -16,7 +16,7 @@ import {
 
 // postrprocessing options
 
-import { getChildren, centerGeometry } from "./geometry";
+import { toYUp, centerGeometry } from "./geometry";
 
 import { createNormalMap } from "./normals";
 
@@ -32,11 +32,9 @@ export default class ThreeObjConverter extends ThreeConverter {
   OPTIONS_MAP = {
     center: centerGeometry,
     createNormalMap: createNormalMap,
+    yUp: toYUp,
   };
-  MESH_FORMATS = {
-    VRML: VRML_EXT,
-    OBJ: OBJ_EXT,
-  };
+
   constructor(
     mesh: File,
     materials: File,
@@ -47,7 +45,6 @@ export default class ThreeObjConverter extends ThreeConverter {
     super(mesh, maps, options, progress);
     this.mtlFile = materials;
     this.loadObj = this.loadObj.bind(this);
-    this.loadVRML = this.loadVRML.bind(this);
     this.loadObjCallback = this.loadObjCallback.bind(this);
     this.loadMtl = this.loadMtl.bind(this);
     this.loadMTLCallback = this.loadMTLCallback.bind(this);
@@ -57,124 +54,6 @@ export default class ThreeObjConverter extends ThreeConverter {
     this.setUpMaterials = this.setUpMaterials.bind(this);
     this.rectifyDataURLs = this.rectifyDataURLs.bind(this);
     this.loadedMaps = {};
-    this.LOADER_METHODS = {
-      OBJ: this.loadObj,
-      VRML: this.loadVRML,
-    };
-  }
-
-  getMeshFileFormat() {
-    const splitFilename = this.meshFile.name.split(".");
-    const ext = splitFilename[splitFilename.length - 1];
-    for (let key in this.MESH_FORMATS) {
-      const format = this.MESH_FORMATS[key];
-      if (format.includes(ext)) {
-        return key;
-      }
-    }
-  }
-
-  getLoader() {
-    return this.LOADER_METHODS[this.getMeshFileFormat()];
-  }
-
-  fixVRMLTextures(vrmlText) {
-    return new Promise((resolve, reject) => {
-      const windows = /(url)(.*?)\r/g;
-      const unix = /(url)(.*?)\r/g;
-      let matches = [...vrmlText.matchAll(windows)];
-      let isWindows = true;
-      if (matches.length === 0) {
-        isWindows = false;
-        matches = [...vrmlText.matchAll(unix)];
-      }
-      if (matches.length === 0) {
-        resolve(vrmlText); // no textures
-        return;
-      }
-      const unique = [...new Set(matches.map((m) => m[0]))];
-      const maps = this.vrmlImageTexturesToObjectUrl(unique, isWindows);
-      if (maps.length !== unique.length) reject(new Error(`Not All Maps in ${this.meshFile.name} were uploaded`));
-      let updated = vrmlText;
-      
-      maps.forEach((m) => {
-        const regex = new RegExp(this.escapeRegExp(m.url), 'g');
-        updated = updated.replace(regex, `url ${m.objectUrl}\n`);
-      });
-      resolve(updated);
-    });
-  }
-
-  // https://stackoverflow.com/questions/1144783/how-to-replace-all-occurrences-of-a-string
-  escapeRegExp(string) {
-    return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
-  }
-
-  vrmlImageTexturesToObjectUrl(urls, windows = false) {
-    return urls.map((url) => this.vrmlImageTextureToObjectUrl(url, windows)).filter((m) => m !== undefined);
-  }
-
-  vrmlImageTextureToObjectUrl(url, windows = false) {
-    const splitChar = windows ? "\\" : "/";
-    let basename = url.split(splitChar).pop();
-    if (basename.includes('"')) {
-      basename = basename.replace('"', "");
-    }
-    basename = lodash.trim(basename);
-    for (let key in this.mapFiles) {
-      // TODO could be an array as well
-      const map = this.mapFiles[key];
-      const mapName = lodash.trim(map.name);
-      // for now deal with single as a proof of concept
-      if (basename === mapName) {
-        // read the file to a data url
-        return {
-          url: url,
-          objectUrl: '"http://fakeurl.com/image.png"'
-        };
-      }
-    }
-    // return Promise.reject(new Error("No matching maps found in file. Do they have the same file name?"));
-  }
-
-  convertToGroup(mesh) {
-    const group = new THREE.Group();
-    mesh.children.forEach((child) => group.add(child));
-    return group;
-  }
-
-  loadVRML() {
-    return new Promise((resolve, reject) => {
-      try {
-        if (this.loadersInitialized === false) {
-          reject(
-            "ThreeConverter.init must be called before you can convert this mesh."
-          );
-          return;
-        }
-
-        if (this.meshFile !== null) {
-          this.readASCII(this.meshFile).then((meshData) => {
-            this.fixVRMLTextures(meshData).then((vrmlData) => {
-              const vrmlLoader = new THREE.VRMLLoader();
-              this.mesh = vrmlLoader.parse(vrmlData);
-              // convert all materials to standard
-              this.mesh.traverse((child) => {
-                if (child.constructor.name === THREE_MESH) {
-                  child.material = this.convertMaterialToStandard(child.material);
-                }
-              });
-              this.mesh = this.convertToGroup(this.mesh);
-              resolve(this.mesh);
-            });
-          });
-        } else {
-          reject(new Error("No Mesh File Attached"));
-        }
-      } catch (error) {
-        reject(error);
-      }
-    });
   }
 
   loadObj(material) {
@@ -341,18 +220,11 @@ export default class ThreeObjConverter extends ThreeConverter {
   }
 
   convertNoMaterials() {
-    const loader = this.getLoader();
-    if (loader) {
-      return loader()
-        .then(this.loadObjCallback)
-        .then(this.handleOptionsCallback)
-        .then((exported) => Promise.resolve(exported))
-        .catch((error) => this.handleError(error));
-    } else {
-      return this.handleError(
-        new Error("No Loader Initialized for the Current Mesh")
-      );
-    }
+    return this.loadObj()
+      .then(this.loadObjCallback)
+      .then(this.handleOptionsCallback)
+      .then((exported) => Promise.resolve(exported))
+      .catch((error) => this.handleError(error));
   }
 
   convert(): Promise {

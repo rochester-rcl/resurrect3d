@@ -75,7 +75,7 @@ class SemanticContent extends React.Component {
     enableEmbed: "",
     modelUnits: "",
     displayName: "",
-
+    externalMaps: null,
     open: false,
     setOpen: false,
     isUpdate: false,
@@ -226,11 +226,12 @@ class SemanticContent extends React.Component {
     }
   };
 
-  handleMeshConverted = (threeFile) => {
+  handleMeshConverted = (threeFile, externalMaps) => {
     this.setState({
       threeFileUpload: threeFile,
       threeFileCancel: false,
       threeFile: threeFile.name,
+      externalMaps: externalMaps
     });
   };
   // TODO change this
@@ -279,6 +280,7 @@ class SemanticContent extends React.Component {
       enableDownload: this.state.enableDownload,
       enableEmbed: this.state.enableEmbed,
       modelUnits: this.state.modelUnits,
+      externalMaps: this.state.externalMaps
     };
     this.props.addView(view);
     this.setState((prevState) => ({
