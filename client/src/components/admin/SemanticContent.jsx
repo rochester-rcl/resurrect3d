@@ -231,7 +231,7 @@ class SemanticContent extends React.Component {
       threeFileUpload: threeFile,
       threeFileCancel: false,
       threeFile: threeFile.name,
-      externalMaps: externalMaps
+      externalMaps: externalMaps,
     });
   };
   // TODO change this
@@ -264,7 +264,19 @@ class SemanticContent extends React.Component {
     }
   };
   // TODO make a decision whether we bind or use anonymous functions to avoid binding to this
-
+  formatExternalMaps = () => {
+    const { externalMaps } = this.state;
+    if (externalMaps) {
+      return {
+        externalMapInfo: externalMaps.map((m) => {
+          const { file, ...rest } = m;
+          return rest;
+        }),
+        externalMaps: externalMaps.map((m) => m.file),
+      };
+    }
+    return {};
+  };
   handleSubmit = () => {
     if (!this.verifyForm()) return;
     const view = {
@@ -280,8 +292,9 @@ class SemanticContent extends React.Component {
       enableDownload: this.state.enableDownload,
       enableEmbed: this.state.enableEmbed,
       modelUnits: this.state.modelUnits,
-      externalMaps: this.state.externalMaps
+      ...this.formatExternalMaps(),
     };
+    console.log(view);
     this.props.addView(view);
     this.setState((prevState) => ({
       ...prevState,
@@ -330,6 +343,7 @@ class SemanticContent extends React.Component {
       enableEmbed: this.state.enableEmbed,
       modelUnits: this.state.modelUnits,
       _id: this.state._id,
+      ...this.formatExternalMaps(),
     };
     const updated = { ...view, ...this.filesNeedUpdate() };
     this.props.updateView(updated);
@@ -661,7 +675,7 @@ class SemanticContent extends React.Component {
                     placeholder="enable/disable"
                   />
 
-<Form.Field
+                  <Form.Field
                     control={Select}
                     className="admin-select-dropdown"
                     fluid

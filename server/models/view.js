@@ -78,6 +78,10 @@ var viewSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "User"
   },
+  externalMapInfo: {
+    type: [Object],
+    required: false
+  },
   allowedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }]
 });
 

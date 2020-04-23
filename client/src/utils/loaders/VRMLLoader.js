@@ -1361,7 +1361,6 @@ export default function initVRMLLoader(threeInstance) {
                 texture.wrapS = wrapS;
                 texture.wrapT = wrapT;
               }
-
               return texture;
             }
 

@@ -42,12 +42,19 @@ const storage = new GridFsStorage({
         if (err) {
           return reject(err);
         }
-
         //const filename = buf.toString('hex') + path.extname(file.originalname);
         const filename = buf.toString("hex") + file.originalname;
         const fileInfo = {
           filename: filename,
         };
+        if (file.fieldname.includes("externalMaps")) {
+          let { externalMapInfo } = req.body;
+          externalMapInfo = JSON.parse(externalMapInfo);
+          const map = externalMapInfo.find((m) => file.originalname === m.filename);
+          if (map) {
+            fileInfo.filename = map.id
+          }
+        }
         resolve(fileInfo);
       });
     });
@@ -94,7 +101,7 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(bodyParser.json({ limit: "20mb" }));
-app.use(bodyParser.urlencoded({ limit: "20mb", extended: false }));
+app.use(bodyParser.urlencoded({ limit: "200mb", extended: false }));
 views(app, upload, conn, Grid, router);
 annotationRoute(router);
 app.use(serverConfig.basename, router);

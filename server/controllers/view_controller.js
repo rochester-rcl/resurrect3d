@@ -79,7 +79,6 @@ exports.addView = (req, res) => {
   }
 
   const { threeFile, threeThumbnail, skyboxFile } = req.files;
-
   const newView = new View({
     displayName: req.body.displayName,
     threeFile: threeFile !== undefined ? threeFile[0].filename : null,
@@ -96,6 +95,11 @@ exports.addView = (req, res) => {
     modelUnits: req.body.modelUnits,
     createdBy: req.user.id,
   });
+  let { externalMapInfo } = req.body;
+  if (externalMapInfo) {
+    externalMapInfo = JSON.parse(externalMapInfo);
+    newView.externalMapInfo = externalMapInfo;
+  }
   newView.save((err, view) => {
     if (err) {
       res.send(err);

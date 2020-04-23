@@ -86,7 +86,6 @@ export default class ThreeViewerAdminBackend extends ThreeViewerAbstractBackend 
   }
 
   addView(viewData: Object): Promise {
-    console.log(viewData);
     const fd = ThreeViewerAdminBackend.objToFormData(viewData);
     return this._post(VIEWS_ENDPOINT, fd, {})
       .then(result => result)

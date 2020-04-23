@@ -39,7 +39,10 @@ export default class ThreeVRMLConverter extends ThreeConverter {
     this.loadVRML = this.loadVRML.bind(this);
     this.loadVRMLCallback = this.loadVRMLCallback.bind(this);
     this.handleOptionsCallback = this.handleOptionsCallback.bind(this);
-    this.externalMaps = [];
+    this.totalVRMLMaterials = 0;
+    this.asyncMaterials = [];
+    this.blobs = new Set([]);
+    this.uniqueImageIds = new Set([]);
   }
 
   getMeshFileFormat() {
@@ -71,6 +74,7 @@ export default class ThreeVRMLConverter extends ThreeConverter {
         resolve(vrmlText); // no textures
         return;
       }
+      this.totalVRMLMaterials = matches.length;
       const unique = [...new Set(matches.map((m) => m[0]))];
       const maps = this.vrmlImageTexturesToObjectUrl(unique, isWindows);
       if (maps.length !== unique.length)
@@ -98,15 +102,6 @@ export default class ThreeVRMLConverter extends ThreeConverter {
       .filter((m) => m !== undefined);
   }
 
-  addExternalMap(map) {
-    const { url, id } = generateTextureUrl();
-    this.externalMaps.push({
-      file: map,
-      id: id,
-    });
-    return url;
-  }
-
   vrmlImageTextureToObjectUrl(url, windows = false) {
     const splitChar = windows ? "\\" : "/";
     let basename = url.split(splitChar).pop();
@@ -121,12 +116,15 @@ export default class ThreeVRMLConverter extends ThreeConverter {
       // for now deal with single as a proof of concept
       if (basename === mapName) {
         // read the file to a data url
+        const blob = URL.createObjectURL(map);
+        this.blobs.add(blob);
         return {
           url: url,
-          externalUrl: this.addExternalMap(map),
+          externalUrl: blob,
         };
       }
     }
+
     // return Promise.reject(new Error("No matching maps found in file. Do they have the same file name?"));
   }
 
@@ -143,6 +141,49 @@ export default class ThreeVRMLConverter extends ThreeConverter {
     return group;
   }
 
+  getUniqueImages(materials) {
+   const uniqueImages = lodash.uniqWith(materials, (a, b) => a.map.image.src === b.map.image.src);
+   uniqueImages.forEach((mat) => {
+     const mats = materials.filter((m) => m.map.image.src === mat.map.image.src);
+     mats.forEach((_m) => console.log(_m.map.image.uuid));
+   })
+   materials.map((mat) => {
+     const _mat = uniqueImages.find((m) => m.map.image.src === mat.map.image.src);
+     if (_mat) {
+       mat.userData.uniqueImageId = _mat.map.image.uuid;
+     }
+   });
+  }
+
+  async waitForAllLoadedTextures() {
+    const sleep = async (duration) =>
+      new Promise((resolve, reject) => {
+        setTimeout(resolve, duration);
+      });
+    try {
+      let materialsLoaded = false;
+      let loadedMaterials;
+      while (!materialsLoaded) {
+        loadedMaterials = this.asyncMaterials.filter((m) => m.map !== null);
+        const totalLoadedMaterials = loadedMaterials.length;
+        materialsLoaded = totalLoadedMaterials === this.totalVRMLMaterials;
+        await sleep(1000);
+      }
+      this.getUniqueImages(loadedMaterials);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  processMaterials() {
+    this.mesh.traverse((child) => {
+      if (child.constructor.name === THREE_MESH) {
+        child.material = this.convertMaterialToStandard(child.material);
+        this.asyncMaterials.push(child.material);
+      }
+    });
+  }
+
   loadVRML() {
     return new Promise((resolve, reject) => {
       try {
@@ -152,22 +193,18 @@ export default class ThreeVRMLConverter extends ThreeConverter {
           );
           return;
         }
-
         if (this.meshFile !== null) {
+          this.emitProgress("Reading Mesh File", 10);
           this.readASCII(this.meshFile).then((meshData) => {
             this.fixVRMLTextures(meshData).then((vrmlData) => {
               const vrmlLoader = new THREE.VRMLLoader();
+              this.emitProgress("Parsing Mesh Data", 25);
               this.mesh = vrmlLoader.parse(vrmlData);
               // convert all materials to standard
-              this.mesh.traverse((child) => {
-                if (child.constructor.name === THREE_MESH) {
-                  child.material = this.convertMaterialToStandard(
-                    child.material
-                  );
-                }
-              });
               this.mesh = this.convertToGroup(this.mesh);
-              resolve(this.mesh);
+              this.processMaterials();
+              this.emitProgress("Loading Textures", 50);
+              this.waitForAllLoadedTextures().then(() => resolve(this.mesh));
             });
           });
         } else {
@@ -196,7 +233,8 @@ export default class ThreeVRMLConverter extends ThreeConverter {
 
   handleOptionsCallback(mesh) {
     const exported = mesh.toJSON();
-    this.emitDone({ threeFile: exported, externalMaps: this.externalMaps });
+    console.log(exported);
+    this.emitDone({ threeFile: exported });
   }
 
   loadVRMLCallback(mesh) {
