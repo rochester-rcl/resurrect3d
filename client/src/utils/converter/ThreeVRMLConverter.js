@@ -41,8 +41,8 @@ export default class ThreeVRMLConverter extends ThreeConverter {
     this.handleOptionsCallback = this.handleOptionsCallback.bind(this);
     this.totalVRMLMaterials = 0;
     this.asyncMaterials = [];
-    this.blobs = new Set([]);
-    this.uniqueImageIds = new Set([]);
+    this.blobs = [];
+    this.loadedMaterials = [];
   }
 
   getMeshFileFormat() {
@@ -87,6 +87,7 @@ export default class ThreeVRMLConverter extends ThreeConverter {
         const regex = new RegExp(this.escapeRegExp(m.url), "g");
         updated = updated.replace(regex, `url "${m.externalUrl}"\n`);
       });
+      this.blobs = lodash.uniqBy(this.blobs, "blob");
       resolve(updated);
     });
   }
@@ -117,7 +118,7 @@ export default class ThreeVRMLConverter extends ThreeConverter {
       if (basename === mapName) {
         // read the file to a data url
         const blob = URL.createObjectURL(map);
-        this.blobs.add(blob);
+        this.blobs.push({ type: key, blob: blob});
         return {
           url: url,
           externalUrl: blob,
@@ -140,19 +141,34 @@ export default class ThreeVRMLConverter extends ThreeConverter {
     addChildren(mesh);
     return group;
   }
+  // TODO clean this up
+  removeDuplicateImages(json) {
+    const uniqueImages = lodash.uniqWith(
+      this.loadedMaterials,
+      (a, b) => a.map.image.src === b.map.image.src
+    );
+    this.loadedMaterials.map((material) => {
+      const mat = uniqueImages.find(
+        (m) => m.map.image.src === material.map.image.src
+      );
+      const serializedMat = json.materials.find((m) => m.uuid === material.uuid);
+      if (serializedMat) {
+        const tex = json.textures.find((t) => t.uuid === serializedMat.map);
+        if (tex) {
+          tex.image = mat.map.image.uuid;
+        }
+        const blob = this.blobs.find((b) => mat.map.image.src === b.blob);
+        if (blob) {
+          serializedMat.map = null;
+          serializedMat[blob.type] = tex.uuid
+        }
+      }
+    });
 
-  getUniqueImages(materials) {
-   const uniqueImages = lodash.uniqWith(materials, (a, b) => a.map.image.src === b.map.image.src);
-   uniqueImages.forEach((mat) => {
-     const mats = materials.filter((m) => m.map.image.src === mat.map.image.src);
-     mats.forEach((_m) => console.log(_m.map.image.uuid));
-   })
-   materials.map((mat) => {
-     const _mat = uniqueImages.find((m) => m.map.image.src === mat.map.image.src);
-     if (_mat) {
-       mat.userData.uniqueImageId = _mat.map.image.uuid;
-     }
-   });
+    json.images = json.images.filter((image) =>
+      uniqueImages.some((i) => i.map.image.uuid === image.uuid)
+    );
+    return json;
   }
 
   async waitForAllLoadedTextures() {
@@ -162,14 +178,15 @@ export default class ThreeVRMLConverter extends ThreeConverter {
       });
     try {
       let materialsLoaded = false;
-      let loadedMaterials;
       while (!materialsLoaded) {
-        loadedMaterials = this.asyncMaterials.filter((m) => m.map !== null);
-        const totalLoadedMaterials = loadedMaterials.length;
+        this.loadedMaterials = this.asyncMaterials.filter(
+          (m) => m.map !== null
+        );
+        const totalLoadedMaterials = this.loadedMaterials.length;
         materialsLoaded = totalLoadedMaterials === this.totalVRMLMaterials;
         await sleep(1000);
       }
-      this.getUniqueImages(loadedMaterials);
+      // ready
     } catch (error) {
       throw error;
     }
@@ -221,6 +238,9 @@ export default class ThreeVRMLConverter extends ThreeConverter {
     for (let key in mat) {
       if (material[key] !== undefined) {
         material[key] = mat[key];
+        if (key === "shininess") {
+          material["roughness"] = Math.pow((1.0 - mat[key]), 2);
+        }
       }
     }
     material.type = THREE_MESH_STANDARD_MATERIAL;
@@ -232,7 +252,8 @@ export default class ThreeVRMLConverter extends ThreeConverter {
   }
 
   handleOptionsCallback(mesh) {
-    const exported = mesh.toJSON();
+    let exported = mesh.toJSON();
+    exported = this.removeDuplicateImages(exported);
     console.log(exported);
     this.emitDone({ threeFile: exported });
   }
