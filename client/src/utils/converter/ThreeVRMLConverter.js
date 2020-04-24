@@ -36,6 +36,7 @@ export default class ThreeVRMLConverter extends ThreeConverter {
   };
   constructor(mesh, maps, options, progress) {
     super(mesh, maps, options, progress);
+    console.log(maps);
     this.loadVRML = this.loadVRML.bind(this);
     this.loadVRMLCallback = this.loadVRMLCallback.bind(this);
     this.handleOptionsCallback = this.handleOptionsCallback.bind(this);
@@ -64,22 +65,18 @@ export default class ThreeVRMLConverter extends ThreeConverter {
     return new Promise((resolve, reject) => {
       const windows = /(url)(.*?)\r/g;
       const unix = /(url)(.*?)\r/g;
-      let matches = [...vrmlText.matchAll(windows)];
-      let isWindows = true;
-      if (matches.length === 0) {
-        isWindows = false;
-        matches = [...vrmlText.matchAll(unix)];
-      }
-      if (matches.length === 0) {
-        resolve(vrmlText); // no textures
-        return;
-      }
+      const { matches, isWindows } = this.findLineInFile(vrmlText, windows, unix);
       this.totalVRMLMaterials = matches.length;
       const unique = [...new Set(matches.map((m) => m[0]))];
       const maps = this.vrmlImageTexturesToObjectUrl(unique, isWindows);
       if (maps.length !== unique.length)
         reject(
-          new Error(`Not All Maps in ${this.meshFile.name} were uploaded`)
+          new Error(`Not All Texture Maps in ${
+            this.meshFile.name
+          } were uploaded.\n
+            The following maps were detected in the file:\n
+            ${unique.map((url) => this.getBasename(url, isWindows)).join("\n")}
+          `)
         );
       let updated = vrmlText;
 
@@ -104,12 +101,7 @@ export default class ThreeVRMLConverter extends ThreeConverter {
   }
 
   vrmlImageTextureToObjectUrl(url, windows = false) {
-    const splitChar = windows ? "\\" : "/";
-    let basename = url.split(splitChar).pop();
-    if (basename.includes('"')) {
-      basename = basename.replace('"', "");
-    }
-    basename = lodash.trim(basename);
+    const basename = this.getBasename(url, windows);
     for (let key in this.mapFiles) {
       // TODO could be an array as well
       const map = this.mapFiles[key];
@@ -118,15 +110,13 @@ export default class ThreeVRMLConverter extends ThreeConverter {
       if (basename === mapName) {
         // read the file to a data url
         const blob = URL.createObjectURL(map);
-        this.blobs.push({ type: key, blob: blob});
+        this.blobs.push({ type: key, blob: blob });
         return {
           url: url,
           externalUrl: blob,
         };
       }
     }
-
-    // return Promise.reject(new Error("No matching maps found in file. Do they have the same file name?"));
   }
 
   convertToGroup(mesh) {
@@ -151,7 +141,9 @@ export default class ThreeVRMLConverter extends ThreeConverter {
       const mat = uniqueImages.find(
         (m) => m.map.image.src === material.map.image.src
       );
-      const serializedMat = json.materials.find((m) => m.uuid === material.uuid);
+      const serializedMat = json.materials.find(
+        (m) => m.uuid === material.uuid
+      );
       if (serializedMat) {
         const tex = json.textures.find((t) => t.uuid === serializedMat.map);
         if (tex) {
@@ -160,7 +152,7 @@ export default class ThreeVRMLConverter extends ThreeConverter {
         const blob = this.blobs.find((b) => mat.map.image.src === b.blob);
         if (blob) {
           serializedMat.map = null;
-          serializedMat[blob.type] = tex.uuid
+          serializedMat[blob.type] = tex.uuid;
         }
       }
     });
@@ -239,7 +231,7 @@ export default class ThreeVRMLConverter extends ThreeConverter {
       if (material[key] !== undefined) {
         material[key] = mat[key];
         if (key === "shininess") {
-          material["roughness"] = Math.pow((1.0 - mat[key]), 2);
+          material["roughness"] = Math.pow(1.0 - mat[key], 2);
         }
       }
     }

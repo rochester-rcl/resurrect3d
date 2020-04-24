@@ -551,9 +551,8 @@ export default function initMTLLoader(threeInstance: Object): Promise {
     	loadTexture: function ( url, mapping, onLoad, onProgress, onError ) {
 
     		var texture;
-    		var loader = threeInstance.Loader.Handlers.get( url );
     		var manager = ( this.manager !== undefined ) ? this.manager : threeInstance.DefaultLoadingManager;
-
+			var loader = manager.getHandler( url );
     		if ( loader === null ) {
 
     			loader = new threeInstance.TextureLoader( manager );

@@ -5,15 +5,17 @@ import * as _THREE from "three";
 import initLoaders from "../loaders/InitLoaders";
 
 // ConverterProgress
-import ConverterProgress from './ConverterProgress';
+import ConverterProgress from "./ConverterProgress";
 
 // postrprocessing options
 
-import { getChildren, centerGeometry } from './geometry';
+import { getChildren, centerGeometry } from "./geometry";
 
-import { createNormalMap } from './normals';
+import { createNormalMap } from "./normals";
 
 import { FILE_ENDPOINT } from "../../constants/api-endpoints";
+
+import lodash from "lodash";
 
 // super obnoxious pattern.
 const THREE = _THREE;
@@ -24,7 +26,12 @@ export default class ThreeConverter {
     center: centerGeometry,
     createNormalMap: createNormalMap,
   };
-  constructor(mesh: File, maps: Object, options: Object, progress: ConverterProgress) {
+  constructor(
+    mesh: File,
+    maps: Object,
+    options: Object,
+    progress: ConverterProgress
+  ) {
     this.meshFile = mesh;
     this.mapFiles = maps;
     this.options = options;
@@ -43,11 +50,32 @@ export default class ThreeConverter {
     });
   }
 
+  getBasename(url, windows = false) {
+    const splitChar = windows ? "\\" : "/";
+    let basename = url.split(splitChar).pop();
+    if (basename.includes('"')) {
+      basename = basename.replace('"', "");
+    }
+    basename = lodash.trim(basename);
+    return basename;
+  }
+
+  findLineInFile(fileData, windowsQuery, unixQuery) {
+    let matches = [...fileData.matchAll(windowsQuery)];
+    let isWindows = true;
+    if (matches.length === 0) {
+      isWindows = false;
+      matches = [...fileData.matchAll(unixQuery)];
+    }
+    return { matches: matches, isWindows: isWindows };
+  }
+
   readMaps() {
     const toFetch = [];
     for (let key in this.mapFiles) {
       let val = this.mapFiles[key];
-      toFetch.push(this.readMap(key, val));
+      const tasks = val.map((m) => this.readMap(key, m));
+      toFetch.push(...tasks.reduce((a, b) => a.concat(b), []));
     }
     return Promise.all(toFetch);
   }
@@ -57,9 +85,9 @@ export default class ThreeConverter {
       const reader = new FileReader();
       reader.onloadend = () => {
         const { result } = reader;
-        resolve({ type: type, dataURL: result });
+        resolve({ type: type, dataURL: result, filename: map.name });
       };
-      reader.onerror = error => reject(error);
+      reader.onerror = (error) => reject(error);
       reader.readAsDataURL(map);
     });
   }
@@ -73,7 +101,7 @@ export default class ThreeConverter {
         const { result } = reader;
         resolve(result);
       };
-      reader.onerror = error => reject(error);
+      reader.onerror = (error) => reject(error);
       reader.readAsText(dataFile);
     });
   }
@@ -84,23 +112,23 @@ export default class ThreeConverter {
       reader.onloadend = () => {
         const { result } = reader;
         resolve(result);
-      }
-      reader.onerror = error => reject(error);
+      };
+      reader.onerror = (error) => reject(error);
       reader.readAsArrayBuffer(dataFile);
     });
   }
 
   loadTexture(url: string, onLoad, onErr): Promise {
-    return new Promise((resolve, reject) =>{
+    return new Promise((resolve, reject) => {
       const tex = this.textureLoader;
       const _onLoad = (_tex) => {
         if (onLoad !== undefined) onLoad(_tex);
         resolve(_tex);
-      }
+      };
       const _onErr = (err) => {
         if (onErr !== undefined) onErr(err);
         reject(err);
-      }
+      };
       tex.load(url, _onLoad, undefined, _onErr);
     });
   }
@@ -122,7 +150,7 @@ export default class ThreeConverter {
         }
       }
       if (tasks.length > 0) {
-        Promise.all(tasks).then(results => resolve(results.pop()));
+        Promise.all(tasks).then((results) => resolve(results.pop()));
       } else {
         resolve(this.mesh);
       }
@@ -141,10 +169,13 @@ export default class ThreeConverter {
 
   emitProgress(label: string, percent: Number) {
     if (this.progress !== undefined) {
-      this.progress.dispatch(this.progress.EVENT_TYPES.UPDATE_CONVERSION_PROGRESS, {
-        val: label,
-        percent: percent,
-      });
+      this.progress.dispatch(
+        this.progress.EVENT_TYPES.UPDATE_CONVERSION_PROGRESS,
+        {
+          val: label,
+          percent: percent,
+        }
+      );
     }
   }
 
@@ -173,7 +204,7 @@ export default class ThreeConverter {
     return {
       url: `${FILE_ENDPOINT}${uuid}`,
       id: uuid,
-    }
+    };
   }
 }
 

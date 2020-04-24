@@ -54,6 +54,7 @@ export default class ThreeObjConverter extends ThreeConverter {
     this.setUpMaterials = this.setUpMaterials.bind(this);
     this.rectifyDataURLs = this.rectifyDataURLs.bind(this);
     this.loadedMaps = {};
+    this.materialNames = [];
   }
 
   loadObj(material) {
@@ -88,12 +89,16 @@ export default class ThreeObjConverter extends ThreeConverter {
     _materials: THREE.MTLLoader.MaterialCreator,
     maps: Array<Object>
   ) {
-    const diffuse = maps.find((map) => map.type === THREE_DIFFUSE_MAP);
+    const diffuse = maps.filter((map) => map.type === THREE_DIFFUSE_MAP);
     for (let key in _materials.materialsInfo) {
-      let val = _materials.materialsInfo[key];
-      if (val.map_kd !== undefined) {
-        if (diffuse) {
-          val.map_kd = diffuse.dataURL;
+      const material = _materials.materialsInfo[key];
+      const materialName = this.materialNames.find(
+        (mat) => mat.materialName === material.name
+      );
+      if (materialName) {
+        const dm = diffuse.find((d) => d.filename === materialName.filename);
+        if (dm) {
+          material.map_kd = dm.dataURL;
         }
       }
     }
@@ -101,13 +106,12 @@ export default class ThreeObjConverter extends ThreeConverter {
 
   rectifyDataURLs(serialized: object) {
     serialized.images.forEach((image) => {
-      let mapKey = Object.keys(this.loadedMaps).find((key) => {
-        const _map = this.loadedMaps[key];
-        return _map.image.uuid === image.uuid;
-      });
-      const map = this.loadedMaps[mapKey];
-      if (map !== undefined) {
-        image.url = map.image.currentSrc;
+      for (let key in this.loadedMaps) {
+        const maps = this.loadedMaps[key];
+        const map = maps.find((m) => m.image.uuid === image.uuid);
+        if (map !== undefined) {
+          image.url = map.image.currentSrc;
+        }
       }
     });
   }
@@ -143,16 +147,45 @@ export default class ThreeObjConverter extends ThreeConverter {
         child.material = this.convertMaterialToStandard(child.material);
       }
       for (let key in this.maps) {
-        let map = this.maps[key];
+        const maps =
+          this.maps[key].constructor === Array
+            ? this.maps[key]
+            : [this.maps[key]];
+
         // because diffuse is handled in the loader via map_kd
-        let task = this.loadTexture(map.dataURL, (tex) => {
-          child.material[map.type] = tex;
-          this.loadedMaps[map.type] = tex;
-        });
+        const task = maps.map((map) =>
+          this.loadTexture(map.dataURL, (tex) => {
+            if (child.material.constructor === Array) {
+              // TODO need to handle multi materials here
+            } else {
+              child.material[map.type] = tex;
+              if (this.loadedMaps[map.type] === undefined) {
+                this.loadedMaps[map.type] = [tex];
+              } else {
+                this.loadedMaps[map.type].push(tex);
+              }
+            }
+          })
+        );
         tasks.push(task);
       }
     });
-    return Promise.all(tasks);
+    return Promise.all(tasks.reduce((a, b) => a.concat(b), []));
+  }
+
+  getMaterialNames(mtlData) {
+    // https://stackoverflow.com/questions/24375462/how-to-match-all-text-between-two-strings-multiline
+    const unix = /newmtl([\S\s]*?)map_Kd.*/g;
+    const { matches } = this.findLineInFile(mtlData, unix, unix);
+    return matches.map((match) => {
+      const block = match[0];
+      const mapKd = block.match(/map_Kd.*/g)[0];
+      const isWindows = mapKd.includes("\\");
+      return {
+        materialName: block.match(/newmtl.*/g)[0].replace("newmtl ", ""),
+        filename: this.getBasename(mapKd, isWindows),
+      };
+    });
   }
 
   loadMtl() {
@@ -166,6 +199,7 @@ export default class ThreeObjConverter extends ThreeConverter {
           if (this.mtlFile !== null) {
             this.readASCII(this.mtlFile)
               .then((mtlData) => {
+                this.materialNames = this.getMaterialNames(mtlData);
                 const mtlLoader = new THREE.MTLLoader();
                 mtlLoader.setPath("");
                 this.materials = mtlLoader.parse(mtlData);
