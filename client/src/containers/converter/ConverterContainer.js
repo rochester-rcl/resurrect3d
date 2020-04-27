@@ -34,7 +34,7 @@ class ConverterContainer extends Component {
       conversionType,
       error,
       onConversionComplete,
-      enableLocalSave
+      enableLocalSave,
     } = this.props;
     if (conversionStarted === false) {
       return conversionType !== CONVERSION_TYPE_RTI ? (
@@ -45,13 +45,24 @@ class ConverterContainer extends Component {
     } else {
       if (conversionComplete === false) {
         return (
-          <LoaderModal
-            className="three-loader-dimmer"
-            text={progress.label}
-            percent={progress.percent}
-            active={true}
-            error={error}
-          />
+          <div className="three-converter-container-no-save">
+            <LoaderModal
+              className="three-loader-dimmer"
+              text={progress.label}
+              percent={progress.percent}
+              active={true}
+              error={error}
+              cancelButton={
+                <Button
+                  className="three-converter-restart-button"
+                  onClick={restartConverter}
+                  color="green"
+                >
+                  convert another
+                </Button>
+              }
+            />
+          </div>
         );
       } else {
         if (onConversionComplete) {
@@ -64,19 +75,21 @@ class ConverterContainer extends Component {
         } else {
           return (
             <div className="three-converter-container-no-save">
-              <Button
-                className="three-converter-restart-button"
-                onClick={restartConverter}
-                color="green"
-              >
-                convert another
-              </Button>
               <LoaderModal
                 className="three-loader-dimmer"
                 text={"Conversion Completed"}
                 percent={100}
                 active={true}
                 error={error}
+                cancelButton={
+                  <Button
+                    className="three-converter-restart-button"
+                    onClick={restartConverter}
+                    color="green"
+                  >
+                    convert another
+                  </Button>
+                }
               />
             </div>
           );
@@ -88,7 +101,7 @@ class ConverterContainer extends Component {
 
 function mapStateToProps(state: Object): Object {
   return {
-    ...state.converter
+    ...state.converter,
   };
 }
 export default connect(mapStateToProps, { startConversion, restartConverter })(

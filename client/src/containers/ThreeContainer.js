@@ -17,6 +17,7 @@ import { changeAnnotationFocus } from "../actions/AnnotationActions";
 // Components
 import ThreeView from "../components/ThreeView";
 import LoaderModal from "../components/LoaderModal";
+import EmbedModePlayButton from "../components/EmbedModePlayButton";
 
 // Constants
 import { WEBGL_SUPPORT, PROGRESS_COMPLETE } from "../constants/application";
@@ -25,21 +26,38 @@ import { WEBGL_SUPPORT, PROGRESS_COMPLETE } from "../constants/application";
 import mapPin from "../images/map-pin.png";
 
 class ThreeContainer extends Component {
+  state = {
+    loadModel: false,
+  };
+
   componentDidMount(): void {
     const {
       embedded,
       viewerId,
       url,
       getThreeAssetAction,
-      loadLocalTextureAsset
+      loadLocalTextureAsset,
     } = this.props;
     if (!embedded) {
+      this.setState({
+        loadModel: true,
+      });
       getThreeAssetAction(viewerId, url);
-    } else {
-      getThreeAssetAction(viewerId, url, embedded);
     }
     loadLocalTextureAsset(mapPin, "annotationSpriteTexture");
   }
+
+  startLoadingModel = () => {
+    const { embedded, viewerId, url, getThreeAssetAction } = this.props;
+    this.setState(
+      {
+        loadModel: true,
+      },
+      () => {
+        getThreeAssetAction(viewerId, url, embedded);
+      }
+    );
+  };
 
   componentDidUpdate(prevProps: Object): void {
     if (!lodash.isEqual(prevProps.threeAsset, this.props.threeAsset)) {
@@ -54,6 +72,7 @@ class ThreeContainer extends Component {
 
   render(): Object {
     const {
+      embedded,
       mesh,
       texture,
       metadata,
@@ -61,19 +80,29 @@ class ThreeContainer extends Component {
       saveViewerSettings,
       user,
       saveStatus,
-      viewerId
+      viewerId,
     } = this.props;
+    const { loadModel } = this.state;
     // TODO Need to put some logic in here -- if the user is logged in AND they own the mesh
     // TODO Complete needs to be a constant
     let options = threeAsset;
     // Admin gets all options
     if (user.loggedIn) {
-      options = {...threeAsset};
+      options = { ...threeAsset };
       for (let key in options) {
         if (key.includes("enable")) {
           options[key] = true;
         }
       }
+    }
+    if (embedded && !loadModel) {
+      return (
+        <EmbedModePlayButton
+          onClick={this.startLoadingModel}
+          thumbnail={threeAsset.threeThumbnail}
+          message="Load Model"
+        />
+      );
     }
     if (
       mesh.progress === PROGRESS_COMPLETE &&
@@ -125,7 +154,7 @@ function mapStateToProps(state: Object): Object {
     threeAsset: state.ui.threeAsset,
     user: state.user,
     saveStatus: state.ui.saveStatus,
-    localAssets: state.ui.localAssets
+    localAssets: state.ui.localAssets,
   };
 }
 
@@ -133,7 +162,7 @@ function mapActionCreatorsToProps(dispatch: Object) {
   return bindActionCreators(
     {
       ...AppActionCreators,
-      ...{ changeAnnotationFocus: changeAnnotationFocus }
+      ...{ changeAnnotationFocus: changeAnnotationFocus },
     },
     dispatch
   );

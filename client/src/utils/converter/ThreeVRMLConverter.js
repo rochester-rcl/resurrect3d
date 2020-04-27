@@ -36,7 +36,6 @@ export default class ThreeVRMLConverter extends ThreeConverter {
   };
   constructor(mesh, maps, options, progress) {
     super(mesh, maps, options, progress);
-    console.log(maps);
     this.loadVRML = this.loadVRML.bind(this);
     this.loadVRMLCallback = this.loadVRMLCallback.bind(this);
     this.handleOptionsCallback = this.handleOptionsCallback.bind(this);
@@ -65,21 +64,29 @@ export default class ThreeVRMLConverter extends ThreeConverter {
     return new Promise((resolve, reject) => {
       const windows = /(url)(.*?)\r/g;
       const unix = /(url)(.*?)\r/g;
-      const { matches, isWindows } = this.findLineInFile(vrmlText, windows, unix);
+      const { matches, isWindows } = this.findLineInFile(
+        vrmlText,
+        windows,
+        unix
+      );
       this.totalVRMLMaterials = matches.length;
       const unique = [...new Set(matches.map((m) => m[0]))];
       const maps = this.vrmlImageTexturesToObjectUrl(unique, isWindows);
-      if (maps.length !== unique.length)
+      if (maps.length !== unique.length) {
+        const missing = unique.filter(
+          (url) => maps.findIndex((map) => url === map.url) < 0
+        );
         reject(
           new Error(`Not All Texture Maps in ${
             this.meshFile.name
           } were uploaded.\n
-            The following maps were detected in the file:\n
-            ${unique.map((url) => this.getBasename(url, isWindows)).join("\n")}
+            The following maps are missing:\n
+            ${missing.map((url) => this.getBasename(url, isWindows)).join("\n")}
           `)
         );
+        return;
+      }
       let updated = vrmlText;
-
       maps.forEach((m) => {
         const regex = new RegExp(this.escapeRegExp(m.url), "g");
         updated = updated.replace(regex, `url "${m.externalUrl}"\n`);
@@ -97,18 +104,19 @@ export default class ThreeVRMLConverter extends ThreeConverter {
   vrmlImageTexturesToObjectUrl(urls, windows = false) {
     return urls
       .map((url) => this.vrmlImageTextureToObjectUrl(url, windows))
+      .reduce((a, b) => a.concat(b), [])
       .filter((m) => m !== undefined);
   }
 
   vrmlImageTextureToObjectUrl(url, windows = false) {
     const basename = this.getBasename(url, windows);
     for (let key in this.mapFiles) {
-      // TODO could be an array as well
-      const map = this.mapFiles[key];
-      const mapName = lodash.trim(map.name);
-      // for now deal with single as a proof of concept
-      if (basename === mapName) {
-        // read the file to a data url
+      const maps = this.mapFiles[key];
+      const map = maps.find((m) => {
+        const mapName = lodash.trim(m.name);
+        return mapName === basename;
+      });
+      if (map) {
         const blob = URL.createObjectURL(map);
         this.blobs.push({ type: key, blob: blob });
         return {
@@ -204,18 +212,24 @@ export default class ThreeVRMLConverter extends ThreeConverter {
         }
         if (this.meshFile !== null) {
           this.emitProgress("Reading Mesh File", 10);
-          this.readASCII(this.meshFile).then((meshData) => {
-            this.fixVRMLTextures(meshData).then((vrmlData) => {
-              const vrmlLoader = new THREE.VRMLLoader();
-              this.emitProgress("Parsing Mesh Data", 25);
-              this.mesh = vrmlLoader.parse(vrmlData);
-              // convert all materials to standard
-              this.mesh = this.convertToGroup(this.mesh);
-              this.processMaterials();
-              this.emitProgress("Loading Textures", 50);
-              this.waitForAllLoadedTextures().then(() => resolve(this.mesh));
-            });
-          });
+          this.readASCII(this.meshFile)
+            .then((meshData) => {
+              this.fixVRMLTextures(meshData)
+                .then((vrmlData) => {
+                  const vrmlLoader = new THREE.VRMLLoader();
+                  this.emitProgress("Parsing Mesh Data", 25);
+                  this.mesh = vrmlLoader.parse(vrmlData);
+                  // convert all materials to standard
+                  this.mesh = this.convertToGroup(this.mesh);
+                  this.processMaterials();
+                  this.emitProgress("Loading Textures", 50);
+                  this.waitForAllLoadedTextures().then(() =>
+                    resolve(this.mesh)
+                  );
+                })
+                .catch((error) => reject(error));
+            })
+            .catch((error) => reject(error));
         } else {
           reject(new Error("No Mesh File Attached"));
         }

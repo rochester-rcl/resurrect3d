@@ -403,7 +403,7 @@ export default class ThreeView extends Component {
     if (prevProps.saveStatus !== this.props.saveStatus) {
       this.updateButtonLabel(
         this.saveToolSettingsButton,
-        "save tool settings",
+        "save settings",
         "settings saved",
         "settings save failed"
       );
@@ -725,7 +725,7 @@ export default class ThreeView extends Component {
       if (this.props.loggedIn === true) {
         controls.addComponent("save", components.THREE_BUTTON, {
           ...buttonProps,
-          content: "save tool settings",
+          content: "save settings",
           icon: "setting",
           ref: (ref) => (this.saveToolSettingsButton = ref),
           onClick: () => this.saveSettings(),

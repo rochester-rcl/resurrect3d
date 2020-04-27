@@ -11,7 +11,7 @@ import {
   VALID_MATERIAL_FORMATS,
   CHECKBOX,
   MAP,
-  FILE
+  FILE,
 } from "../../constants/application";
 
 export default class ConverterForm extends Component {
@@ -73,26 +73,34 @@ export default class ConverterForm extends Component {
       file: null,
       info: "https://en.wikipedia.org/wiki/Wavefront_.obj_file",
       type: FILE,
-      accept: VALID_MESH_FORMATS
+      accept: VALID_MESH_FORMATS,
     },
     material: {
       label: "Materials File (MTL)",
       file: null,
       info: "https://en.wikipedia.org/wiki/Wavefront_.obj_file",
       type: FILE,
-      accept: VALID_MATERIAL_FORMATS
+      accept: VALID_MATERIAL_FORMATS,
     },
     options: {
       center: { label: "Re-Center Geometry", val: false, type: CHECKBOX },
-      compress: { label: "Use JPEG Compression on Large Textures", val: false, type: CHECKBOX },
-      yUp: { label: "Transform Model Orientation from Z Up to Y Up", val: false, type: CHECKBOX},
+      compress: {
+        label: "Use JPEG Compression on Large Textures",
+        val: false,
+        type: CHECKBOX,
+      },
+      yUp: {
+        label: "Transform Model Orientation from Z Up to Y Up",
+        val: false,
+        type: CHECKBOX,
+      },
       // zlib: { label: "Use ZLib Compression on the Output Mesh", val: false, type: CHECKBOX },
       createNormalMap: {
         label: "Generate Normal Map from Diffuse",
         val: false,
-        type: CHECKBOX
-      }
-    }
+        type: CHECKBOX,
+      },
+    },
   };
 
   constructor(props: Object) {
@@ -112,7 +120,6 @@ export default class ConverterForm extends Component {
 
   handleFileUpload(event: SynteticEvent, { name, value }): void {
     const type = this.checkFileUploadType(name);
-    console.log(name, type);
     const shallowCopy = { ...this.state };
     if (type === MAP) {
       shallowCopy.maps[name].files = event.target.files;
@@ -139,7 +146,6 @@ export default class ConverterForm extends Component {
     for (let key in maps) {
       let val = maps[key];
       if (val.files !== null) {
-        console.log(val.files);
         toSubmit.maps[key] = [...val.files];
       }
     }

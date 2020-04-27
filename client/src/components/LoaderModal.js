@@ -1,14 +1,22 @@
 /* @flow */
 
 // React
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
 // Semantic UI
-import { Dimmer, Loader, Segment, Progress, Accordion, Label, Icon, Message } from 'semantic-ui-react';
-
+import {
+  Dimmer,
+  Loader,
+  Segment,
+  Progress,
+  Accordion,
+  Label,
+  Icon,
+  Message,
+} from "semantic-ui-react";
 
 class LoaderModalError extends Component {
-  state = { active: false }
+  state = { active: false };
   constructor(props: Object) {
     super(props);
     this.toggleActive = this.toggleActive.bind(this);
@@ -23,16 +31,22 @@ class LoaderModalError extends Component {
   render() {
     const { message } = this.props;
     const { active } = this.state;
-    return(
+    return (
       <Accordion inverted className="loader-modal-error-container">
         <Accordion.Title active={active} onClick={this.toggleActive}>
           <h1>There was an error!</h1>
           <Label className="loader-modal-error-label">
-            <Icon className="loader-modal-error-icon" name="exclamation triangle"/>
+            <Icon
+              className="loader-modal-error-icon"
+              name="exclamation triangle"
+            />
             show error message
           </Label>
         </Accordion.Title>
-        <Accordion.Content className="loader-modal-error-message" active={active}>
+        <Accordion.Content
+          className="loader-modal-error-message"
+          active={active}
+        >
           <Message negative>{message}</Message>
         </Accordion.Content>
       </Accordion>
@@ -41,22 +55,33 @@ class LoaderModalError extends Component {
 }
 
 const LoaderModal = (props: Object) => {
-  let { text, active, className, percent, error, inline } = props;
-  const message = (error === true) ? <LoaderModalError message={text} /> : <h1>{text}</h1>;
+  let { text, active, className, percent, error, inline, cancelButton } = props;
+  const message =
+    error === true ? <LoaderModalError message={text} /> : <h1>{text}</h1>;
   if (percent) {
-    return(
+    return (
       <Dimmer className={className} active={active} as={Segment}>
-        <Progress error={error} percent={percent} indicating progress color='green' />
+        <Progress
+          error={error}
+          percent={percent}
+          indicating
+          progress
+          color="green"
+        />
         {message}
+        {cancelButton ? cancelButton : null}
       </Dimmer>
-    )
+    );
   } else {
     return (
       <Dimmer className={className} active={active} as={Segment}>
-        <Loader inline={inline} size="huge">{message}</Loader>
+        <Loader inline={inline} size="huge">
+          {message}
+        </Loader>
+        {cancelButton ? cancelButton : null}
       </Dimmer>
-    )
+    );
   }
-}
+};
 
 export default LoaderModal;
