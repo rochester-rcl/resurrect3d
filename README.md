@@ -164,7 +164,7 @@ Resurrect3D uses a caching system with Web Workers, and as of right now it needs
 A model's owner can save any of the tool settings (lights, shaders, materials) from the main viewer interface by clicking the *save tool settings* option on the toolbar. Once saved, all of these settings will be loaded when a user views the model.
 
 #### Sharing the Model
-A model's owner (or any user if *Enable User Embed* is turned on) can generate an iframe to embed the viewer in another webpage via the *share* button on the toolbar.
+A model's owner (or any user if *Enable User Embed* is turned on) can generate an iframe to embed the viewer in another webpage via the *share* button ![View Model Button](doc/images/share-button.png) on the toolbar.
 
 #### Adding Annotations
 To add annotations to a model, a user must a) be logged in and b) own the model they wish to annotate. When logged in, there will be an additional button under tools -- annotations:
