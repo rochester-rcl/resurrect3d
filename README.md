@@ -89,6 +89,7 @@ Supported Formats
 
 Mesh Import Formats (Conversion Tools Only)
 - [x] OBJ / MTL
+- [x] VRML 2.0
 - [ ] FBX
 - [ ] COLLADA
 - [ ] STL
@@ -105,9 +106,13 @@ Texture Import Formats
 Mesh conversion is integrated into the admin interface, but can also be accessed at the */converter* route.
 
 ![Mesh Conversion Interface](doc/images/admin-conversion-interface.png)
-Mesh -- the mesh input files (OBJ and MTL)
+Mesh -- the mesh input files (OBJ / VRML and MTL)
 
-Maps -- where you can upload all of your PBR maps. [Click here](https://threejs.org/docs/#api/en/materials/MeshStandardMaterial) for the full details on supported maps
+Thumbnail (Optional) -- an image of the model to be displayed in an embedded view when generating an iframe via the *share* button.
+
+Skybox (Optional) -- an equirectangular map that can be used as a skybox within the viewer. If an image is uploaded, the user has the option to toggle between the skybox and the default background gradient.
+
+Maps -- where you can upload all of your PBR maps. [Click here](https://threejs.org/docs/#api/en/materials/MeshStandardMaterial) for the full details on supported maps. Note, you can upload multiple maps in each field by selecting multiple files from the file browser.
 
 ##### Mesh Converter Options
 
@@ -115,18 +120,20 @@ Maps -- where you can upload all of your PBR maps. [Click here](https://threejs.
 |----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
 | Re-Center Geometry (recommended) | Centers the model in the viewer                                                                                                   |
 | Use JPEG Compression ...         | Any maps > 2048x2048 are transcoded to jpegs regardless of their original format                                                  |
-| Use zlib Compression ...         | Compresses the mesh and texture data using the deflate algorithm. Results in a .gz file. If unchecked, the output is a JSON file  |
+| Transform Model Orientation ...         | Will transform the model's up direction to the Y-axis (use this if coming from a CAD program that uses Z-Up) |
 | Normal Map from Diffuse          | A normal map is estimated based on the horizontal and vertical gradients of the diffuse texture. Can help to add detail to simplified meshes |
 
 ##### Settings Options
-
 | Option                   | Description                                                                                                                                                                                                                                                            |
 |--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Enable Light Tools       | Allows users to move a dynamic point light around the scene. In addition to xyz properties, they can also control the intensity and color of the point light.                                                                                                          |
 | Enable Shader Tools      | Allows users to control custom shaders to aid in viewing the object. For now these include [Eye-Dome Lighting](https://blog.kitware.com/eye-dome-lighting-a-non-photorealistic-shading-technique/) and [Chroma Key](https://en.wikipedia.org/wiki/Chroma_key) shaders. |
-| Enable Material Tools   | Allows users to manipulate various material properties including metalness, roughness, and normal scale.                                                                                                                                                               |
-| Enable Measurement Tools | Allows users to take interactive measurements of the object. Note, the object must be properly scaled in order for this to work correctly. For more info, see the "Original Model Units" option below.                                                                                |
-| Original Model Units                    | The original unit of measurement the object was captured / scaled to. Please see the MeshLab tutorial ["Scaling to Real Measures"](https://www.youtube.com/watch?v=6psAppbOOXM) for more info.                                                                         |
+| Enable Material Tools    | Allows users to manipulate various material properties including metalness, roughness, and normal scale.                                                                                                                                                               |
+| Enable Measurement Tools | Allows users to take interactive measurements of the object. Note, the object must be properly scaled in order for this to work correctly. For more info, see the "Original Model Units" option below.                                                                 |
+| Enable Annotation Tools  | Allows users to view annotations created by the model's owner                                                                                                                                                                                                          |
+| Original Model Units     | The original unit of measurement the object was captured / scaled to. Please see the MeshLab tutorial ["Scaling to Real Measures"](https://www.youtube.com/watch?v=6psAppbOOXM) for more info.                                                                         |
+| Enable User Download     | Allows users to download the model as an OBJ (w/ textures) or an STL file                                                                                                                                                                                              |
+| Enable User Embed        | Allows users to embed the viewer into another webpage                                                                                                                                                                                                                  |
 
 #### PTM Conversion
 Resurrect3D also supports [Polynomial Texture Mapping](https://en.wikipedia.org/wiki/Polynomial_texture_mapping) files. To convert a PTM file to JSON Model Format, use the PTM converter located at */ptm-converter*.
@@ -155,6 +162,9 @@ Resurrect3D uses a caching system with Web Workers, and as of right now it needs
 
 #### Saving Tools Settings
 A model's owner can save any of the tool settings (lights, shaders, materials) from the main viewer interface by clicking the *save tool settings* option on the toolbar. Once saved, all of these settings will be loaded when a user views the model.
+
+#### Sharing the Model
+A model's owner (or any user if *Enable User Embed* is turned on) can generate an iframe to embed the viewer in another webpage via the *share* button on the toolbar.
 
 #### Adding Annotations
 To add annotations to a model, a user must a) be logged in and b) own the model they wish to annotate. When logged in, there will be an additional button under tools -- annotations:
