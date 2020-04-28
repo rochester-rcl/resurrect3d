@@ -70,6 +70,7 @@ export default class ThreeVRMLConverter extends ThreeConverter {
         unix
       );
       this.totalVRMLMaterials = matches.length;
+      console.log(this.totalVRMLMaterials);
       const unique = [...new Set(matches.map((m) => m[0]))];
       const maps = this.vrmlImageTexturesToObjectUrl(unique, isWindows);
       if (maps.length !== unique.length) {
@@ -81,7 +82,7 @@ export default class ThreeVRMLConverter extends ThreeConverter {
             this.meshFile.name
           } were uploaded.\n
             The following maps are missing:\n
-            ${missing.map((url) => this.getBasename(url, isWindows)).join("\n")}
+            ${missing.join("\n")}
           `)
         );
         return;

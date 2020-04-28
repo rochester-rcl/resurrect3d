@@ -66,14 +66,14 @@ class SemanticContent extends React.Component {
       { value: true, text: "Enable", key: "enable" },
     ],
 
-    enableLight: "",
-    enableMaterials: "",
-    enableShaders: "",
-    enableMeasurement: "",
-    enableAnnotations: "",
-    enableDownload: "",
-    enableEmbed: "",
-    modelUnits: "",
+    enableLight: true,
+    enableMaterials: true,
+    enableShaders: true,
+    enableMeasurement: true,
+    enableAnnotations: true,
+    enableDownload: true,
+    enableEmbed: true,
+    modelUnits: "MM",
     displayName: "",
     externalMaps: null,
     open: false,
@@ -294,7 +294,6 @@ class SemanticContent extends React.Component {
       modelUnits: this.state.modelUnits,
       ...this.formatExternalMaps(),
     };
-    console.log(view);
     this.props.addView(view);
     this.setState((prevState) => ({
       ...prevState,
