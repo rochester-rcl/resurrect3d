@@ -1,9 +1,6 @@
 // TODO move VRML to its own class
 import * as _THREE from "three";
 
-// LOADERS
-import initLoaders from "../loaders/InitLoaders";
-
 // Constants
 import {
   THREE_MESH,
@@ -14,8 +11,10 @@ import {
   VRML_EXT,
 } from "../../constants/application";
 
+import initBufferGeometryUtils from "../BufferGeometryUtils";
+
 // postrprocessing options
-import { toYUp, centerGeometry } from "./geometry";
+import { toYUp, centerGeometry, getChildren } from "./geometry";
 
 import { createNormalMap } from "./normals";
 
@@ -27,6 +26,8 @@ import ThreeConverter, { generateTextureUrl } from "./ThreeConverter";
 
 // super obnoxious pattern.
 const THREE = _THREE;
+
+initBufferGeometryUtils(THREE);
 
 export default class ThreeVRMLConverter extends ThreeConverter {
   OPTIONS_MAP = {
@@ -69,8 +70,6 @@ export default class ThreeVRMLConverter extends ThreeConverter {
         windows,
         unix
       );
-      this.totalVRMLMaterials = matches.length;
-      console.log(this.totalVRMLMaterials);
       const unique = [...new Set(matches.map((m) => m[0]))];
       const maps = this.vrmlImageTexturesToObjectUrl(unique, isWindows);
       if (maps.length !== unique.length) {
@@ -129,16 +128,55 @@ export default class ThreeVRMLConverter extends ThreeConverter {
   }
 
   convertToGroup(mesh) {
-    const group = new THREE.Group();
-    const addChildren = (obj3d) => {
-      if (obj3d.children) {
-        obj3d.children.forEach((child) => {
-          group.add(child.clone());
+    const root = new THREE.Group();
+    const groups = mesh.children.filter(
+      (child) => child.constructor.name === THREE_GROUP
+    );
+    if (groups.length > 0) {
+      groups.forEach((group) => {
+        const merged = new THREE.Mesh();
+        const materials = [];
+        const geometries = [];
+        const children = getChildren(group);
+        children.forEach((child) => {
+          materials.push(this.convertMaterialToStandard(child.material));
+          geometries.push(child.geometry);
         });
+        const geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(
+          geometries,
+          true
+        );
+        const unique = lodash.uniqWith(
+          materials,
+          (a, b) => a.userData.src === b.userData.src
+        );
+        geometry.groups.forEach((group) => {
+          const mat = materials[group.materialIndex];
+          const uniqueIdx = unique.findIndex((material) => material.userData.src === mat.src);
+          if (uniqueIdx > -1) {
+            group.materialIndex = uniqueIdx;
+          }
+        });
+        merged.geometry = geometry;
+        merged.material = unique;
+        root.add(merged);
+      });
+    } else {
+      /*const children = getChildren(mesh);
+      const merged = children.shift();
+      children.forEach((child) => {
+        geom = geom.fromBufferGeometry(child.geometry);
+        child.geometry = geom;
+        geometry.mergeMesh(child);
+      });
+      merged.geometry = new THREE.BufferGeometry().fromGeometry(geometry);
+      if (merged.material.map) {
+        this.asyncMaterials.push(merged.material);
+        this.totalVRMLMaterials++
       }
-    };
-    addChildren(mesh);
-    return group;
+      root.add(merged);*/
+    }
+    return root;
   }
   // TODO clean this up
   removeDuplicateImages(json) {
@@ -197,7 +235,6 @@ export default class ThreeVRMLConverter extends ThreeConverter {
     this.mesh.traverse((child) => {
       if (child.constructor.name === THREE_MESH) {
         child.material = this.convertMaterialToStandard(child.material);
-        this.asyncMaterials.push(child.material);
       }
     });
   }
@@ -222,7 +259,7 @@ export default class ThreeVRMLConverter extends ThreeConverter {
                   this.mesh = vrmlLoader.parse(vrmlData);
                   // convert all materials to standard
                   this.mesh = this.convertToGroup(this.mesh);
-                  this.processMaterials();
+                  // this.processMaterials();
                   this.emitProgress("Loading Textures", 50);
                   this.waitForAllLoadedTextures().then(() =>
                     resolve(this.mesh)
@@ -260,8 +297,8 @@ export default class ThreeVRMLConverter extends ThreeConverter {
 
   handleOptionsCallback(mesh) {
     let exported = mesh.toJSON();
-    exported = this.removeDuplicateImages(exported);
-    console.log(exported);
+    // exported = this.removeDuplicateImages(exported);
+    // console.log(exported);
     this.emitDone({ threeFile: exported });
   }
 

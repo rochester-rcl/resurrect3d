@@ -1049,7 +1049,10 @@ export default function initVRMLLoader(threeInstance) {
                         textureNode.name === "ImageTexture" ||
                         textureNode.name === "PixelTexture"
                       ) {
-                        material.map = getNode(textureNode);
+                        // NOTE - WE ADDED THIS
+                        const [ tex, url ] = getNode(textureNode);
+                        material.map = tex;
+                        material.userData.src = url;
                       } else {
                         // MovieTexture not supported yet
                       }
@@ -1360,6 +1363,8 @@ export default function initVRMLLoader(threeInstance) {
               if (texture) {
                 texture.wrapS = wrapS;
                 texture.wrapT = wrapT;
+                // NOTE - WE ADDED THIS
+                return [texture, url];
               }
               return texture;
             }
