@@ -39,6 +39,16 @@ export function mapMaterials(materials: Array<Materials> , callback): Array<Mate
   return callback(materials);
 }
 
+export function getMaterials(mesh) {
+  const materials = [];
+  mesh.traverse((m) => {
+    if (m.constructor.name === THREE_MESH) {
+      materials.push(m.material)
+    }
+  });
+  return materials.reduce((a, b) => a.concat(b), []);
+}
+
 export function traverseMaterials(mesh, callback) {
   mesh.traverse((child) => {
     if (child.constructor.name === THREE_MESH) {

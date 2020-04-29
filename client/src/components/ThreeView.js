@@ -29,7 +29,12 @@ import loadPostProcessor from "../utils/postprocessing";
 
 // Utils
 import { panLeft, panUp, rotateLeft, rotateUp } from "../utils/camera";
-import { fitBoxes, traverseMaterials, mapMaterials} from "../utils/mesh";
+import {
+  fitBoxes,
+  traverseMaterials,
+  mapMaterials,
+  getMaterials,
+} from "../utils/mesh";
 import { getChildren } from "../utils/converter/geometry";
 import { LabelSprite } from "../utils/image";
 import { LinearGradientShader, RadialGradientCanvas } from "../utils/image";
@@ -50,7 +55,7 @@ import {
   THREE_VECTOR3,
   THREE_MESH_STANDARD_MATERIAL,
   DISPLAY_DEVICE,
-  THREE_MESH
+  THREE_MESH,
 } from "../constants/application";
 
 // Controls
@@ -553,7 +558,7 @@ export default class ThreeView extends Component {
 
     // Lights
     this.ambientLight = new THREE.AmbientLight(0xffffff, 1);
-
+    this.ambientLight.intensity = 0.8;
     this.dynamicLight = new THREE.PointLight(color, intensity, distance, decay);
     this.dynamicLight.target = new THREE.Vector3();
 
@@ -1055,6 +1060,8 @@ export default class ThreeView extends Component {
   initMesh(): void {
     this.mesh = this.props.mesh.object3D;
     this.meshChildren = getChildren(this.mesh);
+    this.materialRefs = getMaterials(this.mesh);
+    console.log(this.materialRefs.length);
     const setMicrosurface = (material) => {
       if (material.type === THREE_MESH_STANDARD_MATERIAL) {
         material.metalness = 0.0;
@@ -1110,7 +1117,6 @@ export default class ThreeView extends Component {
     }
 
     this.scene.add(this.mesh);
-
     this.bboxMesh = new THREE.Box3().setFromObject(this.mesh);
     this.meshHeight = this.bboxMesh.max.y - this.bboxMesh.min.y;
     this.meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
@@ -1214,7 +1220,8 @@ export default class ThreeView extends Component {
     );
     this.envScene.add(this.skyboxMesh);
     this.bboxSkybox = new THREE.Box3().setFromObject(this.skyboxMesh);
-    this.setEnvMap();
+    // this.setEnvMap();
+
     loadPostProcessor(THREE).then((values) => {
       this.setState((prevState, props) => {
         return {
@@ -1279,12 +1286,9 @@ export default class ThreeView extends Component {
       material.needsUpdate = true;
       return material;
     };
-    if (this.mesh.constructor.name === THREE_MESH) {
-      this.mesh.material = mapMaterials(this.mesh.material, setEnv);
-    } else {
-      this.meshChildren.forEach((child) => {
-        child.material = mapMaterials(child.material, setEnv);
-      })
+    for (let i = 0; i < this.materialRefs.length; i++) {
+      const mat = this.materialRefs[i];
+      setEnv(mat);
     }
   }
 
@@ -1754,20 +1758,16 @@ export default class ThreeView extends Component {
   }
 
   deepUpdateThreeMaterial(obj: Object): void {
-    let children = this.meshChildren;
-    if (children.length === 0) {
-      children = [this.mesh];
-    }
+    
     for (let key in obj) {
       const val = obj[key];
       if (val.constructor === Object) {
         this.deepUpdateThreeMaterial(val);
       } else {
-        for (let i = 0; i < children.length; i++) {
-          const mesh = children[i];
-          mesh.material = mapMaterials(mesh.material, (_material) =>
-            this.updateThreeMaterial(_material, key, val)
-          );
+        for (let i = 0; i < this.materialRefs.length; i++) {
+          const material = this.materialRefs[i];
+          console.log(key, material, val);
+          this.updateThreeMaterial(material, key, val);
         }
       }
     }

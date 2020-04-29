@@ -167,6 +167,8 @@ export default class ThreeVRMLConverter extends ThreeConverter {
       mesh.material = group.material.map((m) =>
         unique.find((mat) => mat.userData.src === m.userData.src)
       );
+      console.log(group.material);
+      console.log(unique);
       unique.forEach((uniq) => {
         if (uniq.src && uniq.src.userData) {
           const hasMaterial = this.asyncMaterials.some(
@@ -200,17 +202,18 @@ export default class ThreeVRMLConverter extends ThreeConverter {
       groups.forEach((group) => {
         const { merged, materials } = this.mergeMeshes(getChildren(group));
         globalMaterials.push(...materials);
-        tempRoot.add(merged);
+        root.add(merged);
       });
       const globalUnique = lodash.uniqWith(
         globalMaterials,
         (a, b) => a.color.getHexString() === b.color.getHexString()
       );
-      if (tempRoot.children.length > 1) {
+      /*if (tempRoot.children.length > 1) {
         const { merged } = this.mergeMeshes(getChildren(tempRoot));
+        root.add(merged);
       } else {
         root = tempRoot;
-      }
+      }*/
     } else {
       const { merged } = this.mergeMeshes(getChildren(mesh));
       root.add(merged);
