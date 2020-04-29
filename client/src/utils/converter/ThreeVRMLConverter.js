@@ -40,7 +40,6 @@ export default class ThreeVRMLConverter extends ThreeConverter {
     this.loadVRML = this.loadVRML.bind(this);
     this.loadVRMLCallback = this.loadVRMLCallback.bind(this);
     this.handleOptionsCallback = this.handleOptionsCallback.bind(this);
-    this.totalVRMLMaterials = 0;
     this.asyncMaterials = [];
     this.blobs = [];
     this.loadedMaterials = [];
@@ -127,57 +126,98 @@ export default class ThreeVRMLConverter extends ThreeConverter {
     }
   }
 
+  mergeMeshes(children, useGroups = true) {
+    const globalMaterials = [];
+    const attributeGroups = {};
+    children.forEach((child) => {
+      const attributesKey = Object.keys(child.geometry.attributes).join("_");
+      if (!attributeGroups[attributesKey]) {
+        attributeGroups[attributesKey] = {
+          geometry: [],
+          material: [],
+        };
+      }
+      const ab = attributeGroups[attributesKey];
+      ab.geometry.push(child.geometry);
+      const materials =
+        child.material.constructor === Array
+          ? this.convertMultiMaterial(child.material)
+          : [this.convertMaterialToStandard(child.material)];
+      ab.material.push(...materials);
+    });
+    let merged;
+    if (Object.keys(attributeGroups).length > 1) {
+      merged = new THREE.Group();
+    } else {
+      merged = new THREE.Mesh();
+    }
+    for (let key in attributeGroups) {
+      const mesh = new THREE.Mesh();
+      const group = attributeGroups[key];
+      mesh.geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(
+        group.geometry,
+        useGroups
+      );
+      const unique = lodash.uniqWith(
+        group.material,
+        (a, b) =>
+          a.userData.src === b.userData.src &&
+          a.color.getHexString() === b.color.getHexString()
+      );
+      mesh.material = group.material.map((m) =>
+        unique.find((mat) => mat.userData.src === m.userData.src)
+      );
+      unique.forEach((uniq) => {
+        if (uniq.src && uniq.src.userData) {
+          const hasMaterial = this.asyncMaterials.some(
+            (mat) => mat.userData && uniq.userData.src === mat.userData.src
+          );
+          if (!hasMaterial) {
+            this.asyncMaterials.push(uniq);
+          }
+        }
+      });
+      if (merged.constructor.name === THREE_GROUP) {
+        merged.add(mesh);
+      } else {
+        merged = mesh;
+      }
+    }
+    return {
+      merged: merged,
+      materials: globalMaterials,
+    };
+  }
+
   convertToGroup(mesh) {
-    const root = new THREE.Group();
+    let root = new THREE.Group();
     const groups = mesh.children.filter(
       (child) => child.constructor.name === THREE_GROUP
     );
     if (groups.length > 0) {
+      const tempRoot = new THREE.Group();
+      const globalMaterials = [];
       groups.forEach((group) => {
-        const merged = new THREE.Mesh();
-        const materials = [];
-        const geometries = [];
-        const children = getChildren(group);
-        children.forEach((child) => {
-          materials.push(this.convertMaterialToStandard(child.material));
-          geometries.push(child.geometry);
-        });
-        const geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(
-          geometries,
-          true
-        );
-        const unique = lodash.uniqWith(
-          materials,
-          (a, b) => a.userData.src === b.userData.src
-        );
-        geometry.groups.forEach((group) => {
-          const mat = materials[group.materialIndex];
-          const uniqueIdx = unique.findIndex((material) => material.userData.src === mat.src);
-          if (uniqueIdx > -1) {
-            group.materialIndex = uniqueIdx;
-          }
-        });
-        merged.geometry = geometry;
-        merged.material = unique;
-        root.add(merged);
+        const { merged, materials } = this.mergeMeshes(getChildren(group));
+        globalMaterials.push(...materials);
+        tempRoot.add(merged);
       });
-    } else {
-      /*const children = getChildren(mesh);
-      const merged = children.shift();
-      children.forEach((child) => {
-        geom = geom.fromBufferGeometry(child.geometry);
-        child.geometry = geom;
-        geometry.mergeMesh(child);
-      });
-      merged.geometry = new THREE.BufferGeometry().fromGeometry(geometry);
-      if (merged.material.map) {
-        this.asyncMaterials.push(merged.material);
-        this.totalVRMLMaterials++
+      const globalUnique = lodash.uniqWith(
+        globalMaterials,
+        (a, b) => a.color.getHexString() === b.color.getHexString()
+      );
+      if (tempRoot.children.length > 1) {
+        const { merged } = this.mergeMeshes(getChildren(tempRoot));
+      } else {
+        root = tempRoot;
       }
-      root.add(merged);*/
+    } else {
+      const { merged } = this.mergeMeshes(getChildren(mesh));
+      root.add(merged);
     }
     return root;
   }
+
   // TODO clean this up
   removeDuplicateImages(json) {
     const uniqueImages = lodash.uniqWith(
@@ -221,8 +261,8 @@ export default class ThreeVRMLConverter extends ThreeConverter {
         this.loadedMaterials = this.asyncMaterials.filter(
           (m) => m.map !== null
         );
-        const totalLoadedMaterials = this.loadedMaterials.length;
-        materialsLoaded = totalLoadedMaterials === this.totalVRMLMaterials;
+        materialsLoaded =
+          this.loadedMaterials.length === this.asyncMaterials.length;
         await sleep(1000);
       }
       // ready
@@ -297,6 +337,7 @@ export default class ThreeVRMLConverter extends ThreeConverter {
 
   handleOptionsCallback(mesh) {
     let exported = mesh.toJSON();
+    console.log(exported);
     // exported = this.removeDuplicateImages(exported);
     // console.log(exported);
     this.emitDone({ threeFile: exported });

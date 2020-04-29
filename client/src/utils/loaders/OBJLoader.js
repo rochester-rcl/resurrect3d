@@ -661,8 +661,7 @@ export default function initOBJLoader(threeInstance: Object): Promise {
     				}
 
     				if ( geometry.colors.length > 0 ) {
-
-    					hasVertexColors = true;
+						hasVertexColors = true;
     					buffergeometry.setAttribute( 'color', new threeInstance.Float32BufferAttribute( geometry.colors, 3 ) );
 
     				}

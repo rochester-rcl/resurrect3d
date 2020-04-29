@@ -52,6 +52,11 @@ export default class ThreeConverter {
 
   getBasename(url, windows = false) {
     const splitChar = windows ? "\\" : "/";
+    const splitPath = url.split(splitChar);
+    if (splitPath.length === 0) {
+      // try spaces 
+      return url;
+    }
     let basename = url.split(splitChar).pop();
     if (basename.includes('"')) {
       basename = basename.replace('"', "");

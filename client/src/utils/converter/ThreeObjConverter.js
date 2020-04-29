@@ -92,6 +92,8 @@ export default class ThreeObjConverter extends ThreeConverter {
     const diffuse = maps.filter((map) => map.type === THREE_DIFFUSE_MAP);
     for (let key in _materials.materialsInfo) {
       const material = _materials.materialsInfo[key];
+      console.log(material);
+      console.log(this.materialNames);
       const materialName = this.materialNames.find(
         (mat) => mat.materialName === material.name
       );
@@ -182,8 +184,8 @@ export default class ThreeObjConverter extends ThreeConverter {
       const mapKd = block.match(/map_Kd.*/g)[0];
       const isWindows = mapKd.includes("\\");
       return {
-        materialName: block.match(/newmtl.*/g)[0].replace("newmtl ", ""),
-        filename: this.getBasename(mapKd, isWindows),
+        materialName: block.match(/newmtl.*/g)[0].replace("newmtl ", "").trim(),
+        filename: this.getBasename(mapKd.replace("map_Kd", "").trim(), isWindows),
       };
     });
   }
@@ -237,10 +239,12 @@ export default class ThreeObjConverter extends ThreeConverter {
   }
 
   handleOptionsCallback(mesh) {
+    console.log(mesh);
     const exported = mesh.toJSON();
     if (!this.options.compress && this.maps !== undefined) {
       this.rectifyDataURLs(exported);
     }
+    console.log(exported);
     this.emitDone(exported);
   }
 
