@@ -1061,7 +1061,7 @@ export default class ThreeView extends Component {
     this.mesh = this.props.mesh.object3D;
     this.meshChildren = getChildren(this.mesh);
     this.materialRefs = getMaterials(this.mesh);
-    console.log(this.materialRefs.length);
+    console.log(this.materialRefs);
     const setMicrosurface = (material) => {
       if (material.type === THREE_MESH_STANDARD_MATERIAL) {
         material.metalness = 0.0;
@@ -1220,7 +1220,7 @@ export default class ThreeView extends Component {
     );
     this.envScene.add(this.skyboxMesh);
     this.bboxSkybox = new THREE.Box3().setFromObject(this.skyboxMesh);
-    // this.setEnvMap();
+    this.setEnvMap();
 
     loadPostProcessor(THREE).then((values) => {
       this.setState((prevState, props) => {
@@ -1766,7 +1766,6 @@ export default class ThreeView extends Component {
       } else {
         for (let i = 0; i < this.materialRefs.length; i++) {
           const material = this.materialRefs[i];
-          console.log(key, material, val);
           this.updateThreeMaterial(material, key, val);
         }
       }

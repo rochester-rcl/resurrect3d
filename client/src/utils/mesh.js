@@ -9,6 +9,8 @@ import { base64ImageToBlob } from './image';
 // constants
 import { MAP_TYPES, THREE_MESH } from '../constants/application';
 
+import lodash from "lodash";
+
 export function volumeFromBounds(bbox: typeof THREE.Box3): Object {
 
   let { min, max } = bbox;
@@ -46,7 +48,7 @@ export function getMaterials(mesh) {
       materials.push(m.material)
     }
   });
-  return materials.reduce((a, b) => a.concat(b), []);
+  return lodash.uniqBy(materials.reduce((a, b) => a.concat(b), []), "uuid");
 }
 
 export function traverseMaterials(mesh, callback) {
