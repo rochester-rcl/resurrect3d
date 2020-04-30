@@ -555,7 +555,7 @@ class SemanticContent extends React.Component {
                   </Form.Field>
                   <Form.Field className="admin-main-form-field">
                     <Header as="h5" className="admin-file-upload-header">
-                      {this.state.threeThumbnail != ""
+                      {this.state.threeThumbnail
                         ? this.state.threeThumbnail
                         : "Select Thumbnail"}
                     </Header>
@@ -590,7 +590,7 @@ class SemanticContent extends React.Component {
 
                   <Form.Field className="admin-main-form-field">
                     <Header as="h5" className="admin-file-upload-header">
-                      {this.state.skyboxFile != ""
+                      {this.state.skyboxFile 
                         ? this.state.skyboxFile
                         : "Select Skybox"}
                     </Header>

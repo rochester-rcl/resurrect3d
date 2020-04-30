@@ -12,7 +12,7 @@ import {
 } from "../../constants/application";
 
 import initBufferGeometryUtils from "../BufferGeometryUtils";
-
+import { cloneTexture } from "./normals";
 // postrprocessing options
 import { toYUp, centerGeometry, getChildren } from "./geometry";
 
@@ -167,8 +167,6 @@ export default class ThreeVRMLConverter extends ThreeConverter {
       mesh.material = group.material.map((m) =>
         unique.find((mat) => mat.userData.src === m.userData.src)
       );
-      console.log(group.material);
-      console.log(unique);
       unique.forEach((uniq) => {
         if (uniq.src && uniq.src.userData) {
           const hasMaterial = this.asyncMaterials.some(
@@ -197,23 +195,12 @@ export default class ThreeVRMLConverter extends ThreeConverter {
       (child) => child.constructor.name === THREE_GROUP
     );
     if (groups.length > 0) {
-      const tempRoot = new THREE.Group();
       const globalMaterials = [];
       groups.forEach((group) => {
         const { merged, materials } = this.mergeMeshes(getChildren(group));
         globalMaterials.push(...materials);
         root.add(merged);
       });
-      const globalUnique = lodash.uniqWith(
-        globalMaterials,
-        (a, b) => a.color.getHexString() === b.color.getHexString()
-      );
-      /*if (tempRoot.children.length > 1) {
-        const { merged } = this.mergeMeshes(getChildren(tempRoot));
-        root.add(merged);
-      } else {
-        root = tempRoot;
-      }*/
     } else {
       const { merged } = this.mergeMeshes(getChildren(mesh));
       root.add(merged);
@@ -222,7 +209,7 @@ export default class ThreeVRMLConverter extends ThreeConverter {
   }
 
   // TODO clean this up
-  removeDuplicateImages(json) {
+  rectifyMaps(json) {
     const uniqueImages = lodash.uniqWith(
       this.loadedMaterials,
       (a, b) => a.map.image.src === b.map.image.src
@@ -246,10 +233,6 @@ export default class ThreeVRMLConverter extends ThreeConverter {
         }
       }
     });
-
-    json.images = json.images.filter((image) =>
-      uniqueImages.some((i) => i.map.image.uuid === image.uuid)
-    );
     return json;
   }
 
@@ -274,14 +257,6 @@ export default class ThreeVRMLConverter extends ThreeConverter {
     }
   }
 
-  processMaterials() {
-    this.mesh.traverse((child) => {
-      if (child.constructor.name === THREE_MESH) {
-        child.material = this.convertMaterialToStandard(child.material);
-      }
-    });
-  }
-
   loadVRML() {
     return new Promise((resolve, reject) => {
       try {
@@ -302,7 +277,6 @@ export default class ThreeVRMLConverter extends ThreeConverter {
                   this.mesh = vrmlLoader.parse(vrmlData);
                   // convert all materials to standard
                   this.mesh = this.convertToGroup(this.mesh);
-                  // this.processMaterials();
                   this.emitProgress("Loading Textures", 50);
                   this.waitForAllLoadedTextures().then(() =>
                     resolve(this.mesh)
@@ -331,6 +305,12 @@ export default class ThreeVRMLConverter extends ThreeConverter {
       }
     }
     material.type = THREE_MESH_STANDARD_MATERIAL;
+    const blob = this.blobs.find((b) => b.blob === mat.userData.src);
+    if (blob) {
+      if (blob.type !== "map") {
+        material[blob.type] = material.map;
+      }
+    }
     return material;
   }
 
@@ -339,10 +319,8 @@ export default class ThreeVRMLConverter extends ThreeConverter {
   }
 
   handleOptionsCallback(mesh) {
-    let exported = mesh.toJSON();
+    const exported = mesh.toJSON();
     console.log(exported);
-    // exported = this.removeDuplicateImages(exported);
-    // console.log(exported);
     this.emitDone({ threeFile: exported });
   }
 
