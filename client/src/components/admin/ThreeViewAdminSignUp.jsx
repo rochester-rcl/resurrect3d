@@ -105,7 +105,7 @@ export default class AdminSignUpModal extends Component {
                 icon="user circle"
                 iconPosition="left"
                 onChange={this.handleUsernameChange}
-                placeholder="username (optional)"
+                placeholder="username"
                 name="username"
                 value={username}
                 type="text"

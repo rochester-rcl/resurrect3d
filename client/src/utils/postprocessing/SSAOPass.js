@@ -110,8 +110,9 @@ export default function loadSSAOPass(threeInstance: Object): Promise {
 
     	//Render depth into depthRenderTarget
     	this.scene2.overrideMaterial = this.depthMaterial;
-
-    	renderer.render( this.scene2, this.camera2, this.depthRenderTarget, true );
+		renderer.setRenderTarget(this.depthRenderTarget);
+		renderer.clear();
+		renderer.render( this.scene2, this.camera2);
 
     	this.scene2.overrideMaterial = null;
 

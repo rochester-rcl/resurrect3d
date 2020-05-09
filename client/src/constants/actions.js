@@ -44,13 +44,14 @@ export const GET_VIEWS: string = 'GET_VIEWS';
 export const GET_VIEW: string = 'GET_VIEW';
 export const GET_THREEFILE: string = 'GET_THREEFILE';
 export const ADD_VIEW: string = 'ADD_VIEW';
+export const ADD_VIEW_PENDING = 'ADD_VIEW_PENDING';
 export const DELETE_VIEW: string = 'DELETE_VIEW';
 export const UPDATE_VIEW: string  = 'UPDATE_VIEW';
 
 export const VIEW_ADDED: string = 'VIEW_ADDED';
 export const VIEWS_LOADED: string = 'VIEWS_LOADED';
 export const VIEW_LOADED: string = 'VIEW_LOADED';
-
+export const VIEW_UPDATED = 'VIEW_UPDATED';
 // Settings
 export const SAVE_VIEWER_SETTINGS: string = 'SAVE_VIEWER_SETTINGS';
 export const LOAD_VIEWER_SETTINGS: string = 'LOAD_VIEWER_SETTINGS';

@@ -96,6 +96,7 @@ export const MAP_TYPES = {
 
 export const OBJ_EXT = ".obj";
 export const STL_EXT = ".stl";
+export const VRML_EXT = ".wrl";
 export const MTL_EXT = ".mtl";
 export const ZIP_EXT = ".zip";
 export const GZIP_EXT = ".gz";
@@ -123,6 +124,7 @@ export const THREE_VECTOR2 = "Vector2";
 export const THREE_VECTOR3 = "Vector3";
 export const THREE_GROUP = "Group";
 export const THREE_MESH = "Mesh";
+export const THREE_SCENE = "Scene";
 export const THREE_DIFFUSE_MAP = "map";
 export const THREE_TYPES = new Set([
   THREE_COLOR,
@@ -137,7 +139,7 @@ export const THREE_MESH_STANDARD_MATERIAL = "MeshStandardMaterial";
 export const CONVERSION_TYPE_MESH = "CONVERSION_TYPE_MESH";
 export const CONVERSION_TYPE_RTI = "CONVERSION_TYPE_RTI";
 export const VALID_IMAGE_FORMATS = ".jpg,.png,.bmp,.gif,.jpeg";
-export const VALID_MESH_FORMATS = ".obj";
+export const VALID_MESH_FORMATS = ".obj,.wrl";
 export const VALID_RTI_FORMATS = ".ptm";
 export const VALID_MATERIAL_FORMATS = ".mtl";
 export const CHECKBOX = "checkbox";

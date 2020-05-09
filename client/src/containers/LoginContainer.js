@@ -32,7 +32,7 @@ class LoginContainer extends Component {
       <div className="hp-body-container">
         <div className="hp-overlay">
           <div className="hp-content">
-            <p className="hp-tagline">Some great tagline about 3D stuff</p>
+            <p className="hp-tagline"><Icon name="cube" size="big"></Icon>Resurrect3D</p>
             <div className="hp-login-container">
               <Login
                 loginError={loginError}

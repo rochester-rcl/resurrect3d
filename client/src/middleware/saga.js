@@ -13,7 +13,12 @@ import * as ActionConstants from "../constants/actions";
 import * as THREE from "three";
 
 // constants
-import { WORKER_PROGRESS, GZIP_EXT } from "../constants/application";
+import {
+  WORKER_PROGRESS,
+  GZIP_EXT,
+  OBJ_EXT,
+  VRML_EXT,
+} from "../constants/application";
 import {
   USER_LOGGED_IN,
   LOGIN_ERROR,
@@ -21,7 +26,7 @@ import {
   AUTHENTICATE_ATTEMPTED,
   LOGOUT_USER,
   USER_LOGGED_OUT,
-  USER_DELETED
+  USER_DELETED,
 } from "../constants/actions";
 
 import threeViewerBackendFactory from "./backends/threeViewerBackendFactory";
@@ -37,8 +42,9 @@ import { deserializeThreeTypes } from "../utils/serialization";
 
 // Converter
 import { convertObjToThreeWithProgress } from "../utils/converter/objToThree";
+import { convertVRMLToThreeWithProgress } from "../utils/converter/VRMLToThree";
 import convertPtmToThree from "../utils/converter/ptmToThree";
-
+import ConverterProgress from "../utils/converter/ConverterProgress";
 // other utils
 import { getExtension } from "../utils/mesh";
 
@@ -61,14 +67,12 @@ const sleep = (duration: Number): Promise => {
   });
 };
 
-function arrayToObject (array) {
-
+function arrayToObject(array) {
   return array.reduce((obj, item) => {
-     obj[item._id] = item
-     return obj
-   }, {});
+    obj[item._id] = item;
+    return obj;
+  }, {});
 }
-
 
 function* getThreeAssetSaga(
   getThreeAssetAction: Object
@@ -88,7 +92,7 @@ function* getThreeAssetSaga(
       if (metadata) {
         yield put({
           type: ActionConstants.THREE_METADATA_LOADED,
-          metadata: metadata
+          metadata: metadata,
         });
       }
     } else {
@@ -101,7 +105,7 @@ function* getThreeAssetSaga(
       ext: ext,
       fileId: asset.threeFile,
       id: id,
-      embedded: getThreeAssetAction.embedded
+      embedded: getThreeAssetAction.embedded,
     });
     yield put({ type: ActionConstants.THREE_ASSET_LOADED, threeAsset: asset });
   } catch (error) {
@@ -158,20 +162,20 @@ function getActionType(payload: Object): string {
 }
 
 function createWorkerProgressChannel(worker: Object, loaderType: string) {
-  return eventChannel(emit => {
+  return eventChannel((emit) => {
     worker.onmessage = (event: MessageEvent) => {
       const { data } = event;
       if (data.type === WORKER_PROGRESS) {
         emit({
           eventType: "progress",
           val: data.payload,
-          loaderType: loaderType
+          loaderType: loaderType,
         });
       } else {
         emit({
           eventType: "loaded",
           val: data.payload,
-          loaderType: loaderType
+          loaderType: loaderType,
         });
         emit(END);
       }
@@ -188,7 +192,7 @@ function createLoadProgressChannel(
   loaderType: string,
   url
 ): void {
-  return eventChannel(emit => {
+  return eventChannel((emit) => {
     loader.load(
       url,
       (payload: Object) => {
@@ -199,7 +203,7 @@ function createLoadProgressChannel(
         emit({
           eventType: "loaded",
           val: payload,
-          loaderType: loaderType
+          loaderType: loaderType,
         });
         emit(END);
       },
@@ -208,14 +212,14 @@ function createLoadProgressChannel(
         emit({
           eventType: "progress",
           val: update,
-          loaderType: loaderType
+          loaderType: loaderType,
         });
       },
       (error: Error) => {
         emit({
           eventType: "error",
           val: error,
-          loaderType: loaderType
+          loaderType: loaderType,
         });
       }
     );
@@ -232,28 +236,30 @@ function* parseJSONMesh(meshData: Object) {
   const object3D = loader.parse(meshData);
   yield put({
     type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
-    payload: { val: "Building Scene", percent: null }
+    payload: { val: "Building Scene", percent: null },
   });
   yield put({
     type: ActionConstants.MESH_LOADED,
-    payload: { val: object3D }
+    payload: { val: object3D },
   });
 }
 
 function* loadJSONMesh(loadMeshAction) {
   const { payload, id, fileId, embedded } = loadMeshAction;
-  let result = embedded ? false : yield ThreeViewerAbstractBackend.checkCache(id, fileId);
+  let result = embedded
+    ? false
+    : yield ThreeViewerAbstractBackend.checkCache(id, fileId);
   let data;
   if (result) {
     yield put({
       type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
-      payload: { val: "Loading Mesh From Cache", percent: null }
+      payload: { val: "Loading Mesh From Cache", percent: null },
     });
     data = result.data.model.raw;
   } else {
     yield put({
       type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
-      payload: { val: "Fetching Mesh From Server", percent: null }
+      payload: { val: "Fetching Mesh From Server", percent: null },
     });
     data = yield ThreeViewerAbstractBackend.fetchJSONAssetSaga(
       id,
@@ -264,7 +270,7 @@ function* loadJSONMesh(loadMeshAction) {
   }
   yield put({
     type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
-    payload: { val: "Parsing Mesh Data", percent: null }
+    payload: { val: "Parsing Mesh Data", percent: null },
   });
   yield parseJSONMesh(data);
 }
@@ -280,7 +286,7 @@ function* loadGzippedMesh(loadMeshAction) {
   if (result) {
     yield put({
       type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
-      payload: { val: "Loading Mesh From Cache", percent: null }
+      payload: { val: "Loading Mesh From Cache", percent: null },
     });
     progressChannel = yield ThreeViewerAbstractBackend.gunzipAssetSaga(
       result.data.model.raw,
@@ -289,7 +295,7 @@ function* loadGzippedMesh(loadMeshAction) {
   } else {
     yield put({
       type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
-      payload: { val: "Fetching Mesh From Server", percent: null }
+      payload: { val: "Fetching Mesh From Server", percent: null },
     });
     progressChannel = yield ThreeViewerAbstractBackend.fetchGZippedAssetSaga(
       id,
@@ -304,7 +310,7 @@ function* loadGzippedMesh(loadMeshAction) {
     if (payload.eventType === "loaded") {
       yield put({
         type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
-        payload: { val: "Building Scene", percent: null }
+        payload: { val: "Building Scene", percent: null },
       });
       /*
         This isn't too much of a bottleneck - it's unfortunate that ObjectLoader relies on <img> tags as we could off-load
@@ -319,8 +325,8 @@ function* loadGzippedMesh(loadMeshAction) {
         type: getActionType(payload),
         payload: {
           val: "Decompressing Mesh Data",
-          percent: payload.val
-        }
+          percent: payload.val,
+        },
       });
     }
   }
@@ -346,18 +352,19 @@ export function* loadTextureSaga(
   // load the texture
   try {
     const textureLoader = new THREE.TextureLoader();
+    const url = yield backend.getImageFileURL(loadTextureAction.url);
     textureLoader.crossOrigin = "anonymous";
     const textureLoaderChannel = yield call(
       createLoadProgressChannel,
       textureLoader,
       "texture",
-      loadTextureAction.url
+      url
     );
     while (true) {
       const payload = yield take(textureLoaderChannel);
       yield put({
         type: getActionType(payload),
-        payload
+        payload,
       });
     }
   } catch (error) {
@@ -370,16 +377,21 @@ function* loadLocalTextureSaga(action) {
     const textureLoader = new THREE.TextureLoader();
     // set up image here
     textureLoader.crossOrigin = "anonymous";
-    const textureLoaderChannel = yield call(createLoadProgressChannel, textureLoader, "localtexture", action.asset);
+    const textureLoaderChannel = yield call(
+      createLoadProgressChannel,
+      textureLoader,
+      "localtexture",
+      action.asset
+    );
     while (true) {
       const payload = yield take(textureLoaderChannel);
       yield put({
         type: getActionType(payload),
         payload: payload,
-        key: action.key
+        key: action.key,
       });
     }
-  } catch(error) {
+  } catch (error) {
     console.log(error);
   }
 }
@@ -440,12 +452,12 @@ function* loginSaga(loginAction: Object): Generator<any, any, any> {
       const user = yield backend.adminBackend.login(loginAction.loginInfo);
       if (user.error) {
         yield put({
-          type: LOGIN_ERROR
+          type: LOGIN_ERROR,
         });
       } else {
         yield put({
           type: USER_LOGGED_IN,
-          user: { ...user, loginError: false }
+          user: { ...user, loginError: false },
         });
       }
     } else {
@@ -481,10 +493,16 @@ export function* authenticateSaga(): Generator<any, any, any> {
   }
 }
 
-export function* addThreeViewSaga(addThreeViewAction: Object): Generator<any, any, any> {
+export function* addThreeViewSaga(
+  addThreeViewAction: Object
+): Generator<any, any, any> {
   try {
     if (backend.hasAdminBackend) {
-      const result = yield call(backend.adminBackend.addView, addThreeViewAction.viewData);
+      yield put({ type: ActionConstants.ADD_VIEW_PENDING });
+      const result = yield call(
+        backend.adminBackend.addView,
+        addThreeViewAction.viewData
+      );
       yield put({
         type: ActionConstants.VIEW_ADDED,
       });
@@ -492,7 +510,7 @@ export function* addThreeViewSaga(addThreeViewAction: Object): Generator<any, an
       const objConvertedResults = yield call(arrayToObject, results.views);
       yield put({
         type: ActionConstants.VIEWS_LOADED,
-        views: objConvertedResults
+        views: objConvertedResults,
       });
       // TODO add this to "views"
     } else {
@@ -501,17 +519,18 @@ export function* addThreeViewSaga(addThreeViewAction: Object): Generator<any, an
   } catch (error) {
     console.log(error);
   }
-
 }
 
-export function* getThreeViewsSaga(getThreeViewsAction: Object): Generator<any, any, any> {
+export function* getThreeViewsSaga(
+  getThreeViewsAction: Object
+): Generator<any, any, any> {
   try {
     if (backend.hasAdminBackend) {
       const results = yield call(backend.adminBackend.getViews);
       const objConvertedResults = yield call(arrayToObject, results.views);
       yield put({
         type: ActionConstants.VIEWS_LOADED,
-        views: objConvertedResults
+        views: objConvertedResults,
       });
     } else {
       console.warn(genericAPIRouteMessage);
@@ -521,13 +540,18 @@ export function* getThreeViewsSaga(getThreeViewsAction: Object): Generator<any, 
   }
 }
 
-export function* getThreeViewSaga(getThreeViewAction: Object): Generator<any, any, any> {
+export function* getThreeViewSaga(
+  getThreeViewAction: Object
+): Generator<any, any, any> {
   try {
     if (backend.hasAdminBackend) {
-      const result = yield call(backend.adminBackend.getView, getThreeViewAction.id);
+      const result = yield call(
+        backend.adminBackend.getView,
+        getThreeViewAction.id
+      );
       yield put({
         type: ActionConstants.VIEW_LOADED,
-        view: result
+        view: result,
       });
     } else {
       console.warn(genericAPIRouteMessage);
@@ -537,10 +561,17 @@ export function* getThreeViewSaga(getThreeViewAction: Object): Generator<any, an
   }
 }
 
-export function* updateThreeViewSaga(updateThreeViewAction: Object): Generator<any, any, any> {
+export function* updateThreeViewSaga(
+  updateThreeViewAction: Object
+): Generator<any, any, any> {
   try {
     if (backend.hasAdminBackend) {
-      const result = yield call(backend.adminBackend.updateView, updateThreeViewAction.viewData);
+      yield put({ type: ActionConstants.ADD_VIEW_PENDING });
+      const result = yield call(
+        backend.adminBackend.updateView,
+        updateThreeViewAction.viewData
+      );
+      yield put({ type: ActionConstants.VIEW_UPDATED, view: result });
     } else {
       console.warn(genericAPIRouteMessage);
     }
@@ -549,17 +580,22 @@ export function* updateThreeViewSaga(updateThreeViewAction: Object): Generator<a
   }
 }
 
-export function* deleteThreeViewSaga(deleteThreeViewAction: Object): Generator<any, any, any> {
+export function* deleteThreeViewSaga(
+  deleteThreeViewAction: Object
+): Generator<any, any, any> {
   try {
     if (backend.hasAdminBackend) {
-      const result = yield call(backend.adminBackend.deleteView, deleteThreeViewAction.id);
-      
+      const result = yield call(
+        backend.adminBackend.deleteView,
+        deleteThreeViewAction.id
+      );
+
       const results = yield call(backend.adminBackend.getViews);
       const objConvertedResults = yield call(arrayToObject, results.views);
 
       yield put({
         type: ActionConstants.VIEWS_LOADED,
-        views: objConvertedResults
+        views: objConvertedResults,
       });
     } else {
       console.warn(genericAPIRouteMessage);
@@ -583,7 +619,8 @@ function* compressConvertedFile(data: Object): void {
     if (payload.eventType === "loaded") {
       yield put({
         type: getActionType(payload),
-        file: payload.val
+        file: payload.val,
+        externalMaps: data.externalMaps
       });
       progressChannel.close();
     } else {
@@ -591,16 +628,14 @@ function* compressConvertedFile(data: Object): void {
         type: getActionType(payload),
         payload: {
           val: "Compressing Mesh Data",
-          percent: payload.val
-        }
+          percent: payload.val,
+        },
       });
     }
   }
 }
 
-export function* runConversionSaga(
-  conversionAction: Object
-): Generator<any, any, any> {
+export function* runConversionSaga(conversionAction) {
   try {
     yield put({ type: ActionConstants.CONVERSION_STARTED });
     const { inputData } = conversionAction;
@@ -608,21 +643,42 @@ export function* runConversionSaga(
     if (inputData.mesh === undefined) {
       converted = yield convertPtmToThree(inputData);
     } else {
-      converted = yield convertObjToThreeWithProgress(inputData);
+      const ext = getExtension(inputData.mesh.name);
+      switch (ext) {
+        case OBJ_EXT:
+          converted = yield convertObjToThreeWithProgress(inputData);
+          break;
+        case VRML_EXT:
+          converted = yield convertVRMLToThreeWithProgress(inputData);
+          break;
+        default:
+          yield put({
+            type: ConverterProgress.EVENT_TYPES.CONVERSION_ERROR,
+            message: new Error(`No Converter Available for ${ext} format`)
+              .stack,
+          });
+          break;
+      }
     }
     const { options } = inputData;
+    // TODO change this later but it should always be true
+    options.zlib = true;
     if (converted !== undefined) {
       if (options.zlib === true) {
         yield compressConvertedFile(converted);
       } else {
         yield put({
           type: ActionConstants.CONVERSION_COMPLETE,
-          file: JSON.stringify(converted.threeFile)
+          file: JSON.stringify(converted.threeFile),
         });
       }
     }
   } catch (error) {
     console.log(error);
+    yield put({
+      type: ConverterProgress.EVENT_TYPES.CONVERSION_ERROR,
+      message: error.stack,
+    });
   }
 }
 
@@ -644,7 +700,10 @@ export function* watchForLoadTexture(): Generator<any, any, any> {
 }
 
 function* watchForLoadLocalTexture() {
-  yield takeEvery(ActionConstants.LOAD_LOCAL_TEXTURE_ASSET, loadLocalTextureSaga);
+  yield takeEvery(
+    ActionConstants.LOAD_LOCAL_TEXTURE_ASSET,
+    loadLocalTextureSaga
+  );
 }
 
 export function* watchForAddUser(): Generator<any, any, any> {
@@ -715,6 +774,6 @@ export default function* rootSaga(): Generator<any, any, any> {
     watchForUpdateThreeView(),
     watchForDeleteThreeView(),
     watchForConversion(),
-    fork(AnnotationSaga)
+    fork(AnnotationSaga),
   ];
 }

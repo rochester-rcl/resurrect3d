@@ -55,13 +55,12 @@ export default function loadShaderPass(threeInstance: Object): typeof Promise {
 				this.quad.material = this.material;
 
 				if ( this.renderToScreen ) {
-
+					renderer.setRenderTarget(null);
 					renderer.render( this.scene, this.camera );
-
 				} else {
-
-					renderer.render( this.scene, this.camera, writeBuffer, this.clear );
-
+					renderer.setRenderTarget(writeBuffer);
+					if (this.clear) renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
+					renderer.render( this.scene, this.camera);
 				}
 
 			}

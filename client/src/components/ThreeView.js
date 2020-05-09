@@ -18,7 +18,7 @@ import ThreeGUI, {
   ThreeGUIPanelLayout,
   ThreeGUILayout,
   ThreeGUIGroup,
-  ThreeGUINestedGroup
+  ThreeGUINestedGroup,
 } from "./ThreeGUI";
 
 // Touch
@@ -29,7 +29,13 @@ import loadPostProcessor from "../utils/postprocessing";
 
 // Utils
 import { panLeft, panUp, rotateLeft, rotateUp } from "../utils/camera";
-import { fitBoxes, mapMaterials } from "../utils/mesh";
+import {
+  fitBoxes,
+  traverseMaterials,
+  mapMaterials,
+  getMaterials,
+} from "../utils/mesh";
+import { getChildren } from "../utils/converter/geometry";
 import { LabelSprite } from "../utils/image";
 import { LinearGradientShader, RadialGradientCanvas } from "../utils/image";
 import ThreePointLights from "../utils/lights";
@@ -48,7 +54,8 @@ import {
   FT,
   THREE_VECTOR3,
   THREE_MESH_STANDARD_MATERIAL,
-  DISPLAY_DEVICE
+  DISPLAY_DEVICE,
+  THREE_MESH,
 } from "../constants/application";
 
 // Controls
@@ -58,7 +65,7 @@ import ThreeRangeSlider from "./ThreeRangeSlider";
 import ThreeToggle, { ThreeToggleMulti } from "./ThreeToggle";
 import ThreeColorPicker, {
   ThreeMicroColorPicker,
-  ThreeEyeDropperColorPicker
+  ThreeEyeDropperColorPicker,
 } from "./ThreeColorPicker";
 import ThreeButton from "./ThreeButton";
 import ThreeTools from "./ThreeTools";
@@ -147,7 +154,7 @@ export default class ThreeView extends Component {
   settingsMask = {
     materials: new Set([]),
     lights: new Set([]),
-    shaders: new Set([])
+    shaders: new Set([]),
   };
   state = {
     // interaction
@@ -196,42 +203,42 @@ export default class ThreeView extends Component {
       distance: 0,
       decay: 2,
       offset: new THREE.Vector3(),
-      lock: false
+      lock: false,
     },
     materialsInfo: {
       normalScale: 1,
       bumpScale: 1,
       pbr: {
         metalness: 0,
-        roughness: 1
-      }
+        roughness: 1,
+      },
     },
     shaderPasses: {
-      EDL: {}
+      EDL: {},
     },
     quality: {
       options: [
         {
           label: "best",
-          value: 1
+          value: 1,
         },
         {
           label: "good",
-          value: 1.325
+          value: 1.325,
         },
         {
           label: "medium",
-          value: 2
+          value: 2,
         },
         {
           label: "low",
-          value: 4
-        }
+          value: 4,
+        },
       ],
       current: {
         label: "good",
-        value: 1.325
-      }
+        value: 1.325,
+      },
     },
     isRaycasting: false,
     //newContentToggle: false,
@@ -240,7 +247,7 @@ export default class ThreeView extends Component {
     cameraTargetTransitionRequired: false,
     cameraControlPaused: false,
     lastCameraPosition: new THREE.Vector3(),
-    presentationMode: false
+    presentationMode: false,
   };
   ROTATION_STEP = 0.0174533; // 1 degree in radians
   clock: THREE.Clock;
@@ -372,7 +379,7 @@ export default class ThreeView extends Component {
 
     // VR
     // TODO disable until we see what the new plan is for WebXR
-    this.vrSupported = false //checkVR();
+    this.vrSupported = false; //checkVR();
 
     //Updatable UI
     this.panelGroup = new ThreeGUIGroup("tools");
@@ -401,7 +408,7 @@ export default class ThreeView extends Component {
     if (prevProps.saveStatus !== this.props.saveStatus) {
       this.updateButtonLabel(
         this.saveToolSettingsButton,
-        "save tool settings",
+        "save settings",
         "settings saved",
         "settings save failed"
       );
@@ -440,7 +447,7 @@ export default class ThreeView extends Component {
       toolsActive,
       dragging,
       isRaycasting,
-      annotations
+      annotations,
     } = this.state;
     const { info } = this.props;
     let threeViewClassName = "three-view";
@@ -472,7 +479,7 @@ export default class ThreeView extends Component {
             onPinchMoveCallback={this.handlePinchMove}
           >
             <div
-              ref={ref => {
+              ref={(ref) => {
                 this.threeView = ref;
               }}
               className={threeViewClassName}
@@ -481,7 +488,7 @@ export default class ThreeView extends Component {
               onMouseUp={this.handleMouseUp}
               onKeyDown={this.handleKeyDown}
               onKeyUp={this.handleKeyUp}
-              onContextMenu={event => event.preventDefault()}
+              onContextMenu={(event) => event.preventDefault()}
             />
           </ThreeTouchControls>
         </div>
@@ -520,7 +527,13 @@ export default class ThreeView extends Component {
     const { color, intensity, decay, distance } = this.state.dynamicLightProps;
 
     // init camera
-    this.camera = new THREE.PerspectiveCamera(50, this.width / this.height); // use defaults for fov and near and far frustum;
+    this.camera = new THREE.PerspectiveCamera(
+      50,
+      this.width / this.height,
+      1,
+      1000000
+    ); // use defaults for fov and near and far frustum;
+
     this.overlayCamera = new THREE.PerspectiveCamera(
       50,
       this.width / this.height
@@ -545,7 +558,7 @@ export default class ThreeView extends Component {
 
     // Lights
     this.ambientLight = new THREE.AmbientLight(0xffffff, 1);
-
+    this.ambientLight.intensity = 0.8;
     this.dynamicLight = new THREE.PointLight(color, intensity, distance, decay);
     this.dynamicLight.target = new THREE.Vector3();
 
@@ -580,12 +593,9 @@ export default class ThreeView extends Component {
       transparent: true,
       alphaTest: 0.5,
       depthTest: false,
-      depthWrite: false
+      depthWrite: false,
     });
     this.annotationSprite = new THREE.Sprite(spriteMaterial);
-    const spriteBbox = new THREE.Box3().setFromObject(this.annotationSprite);
-    const centerY = (spriteBbox.max.y - spriteBbox.min.y) / 2;
-    this.annotationSpriteOffset = new THREE.Vector3(0, centerY, 0);
     this.measurement = new THREE.Group();
     this.guiScene.add(this.measurement);
 
@@ -602,7 +612,7 @@ export default class ThreeView extends Component {
       antialias: true,
       gammaInput: true,
       gammaOutput: true,
-      preserveDrawingBuffer: true
+      preserveDrawingBuffer: true,
     });
 
     // Renderer and DOM
@@ -625,7 +635,7 @@ export default class ThreeView extends Component {
     this.setState((prevState, props) => {
       return {
         loadProgress: prevState.loadProgress + 25,
-        loadText: "Loading Mesh"
+        loadText: "Loading Mesh",
       };
     }, this.initMesh());
   }
@@ -634,7 +644,12 @@ export default class ThreeView extends Component {
     let components = this.GUI.components;
     let layouts = this.GUI.layouts;
     let controls = new ThreeGUIGroup("controls");
-    const { enableEmbed, enableAnnotations, enableLight, enableDownload } = this.props.options;
+    const {
+      enableEmbed,
+      enableAnnotations,
+      enableLight,
+      enableDownload,
+    } = this.props.options;
     const checkTools = () => {
       for (let key in this.props.options) {
         if (key.includes("enable")) {
@@ -651,50 +666,48 @@ export default class ThreeView extends Component {
       icon: "crosshairs",
       onClick: () => this.centerCamera(),
       labelPosition: "right",
-      color: "grey"
+      color: "grey",
     };
 
     controls.addComponent("resetCamera", components.THREE_BUTTON, {
-      ...buttonProps
+      ...buttonProps,
     });
 
     controls.addComponent("quality", components.THREE_BUTTON, {
       ...buttonProps,
       content: "quality: " + this.state.quality.current.label,
       icon: "signal",
-      ref: ref => (this.toggleQualityButton = ref),
-      onClick: () => this.toggleQuality()
+      ref: (ref) => (this.toggleQualityButton = ref),
+      onClick: () => this.toggleQuality(),
     });
 
     controls.addComponent("screenshot", components.THREE_SCREENSHOT, {
       extension: "jpg",
       mime: "image/jpeg",
-      renderer: this.webGLRenderer
+      renderer: this.webGLRenderer,
     });
 
     if (enableDownload) {
       controls.addComponent("mesh-export", components.THREE_MESH_EXPORTER, {
         threeInstance: THREE,
-        mesh: this.mesh
+        mesh: this.mesh,
       });
     }
 
-    if (enableLight) {
-      controls.addComponent("lighting", components.THREE_BUTTON, {
-        ...buttonProps,
-        content: "lighting: off",
-        icon: "lightbulb",
-        ref: ref => (this.enableLightButton = ref),
-        onClick: () => this.toggleDynamicLighting()
-      });
-    }
+    controls.addComponent("lighting", components.THREE_BUTTON, {
+      ...buttonProps,
+      content: "lighting: off",
+      icon: "lightbulb",
+      ref: (ref) => (this.enableLightButton = ref),
+      onClick: () => this.toggleDynamicLighting(),
+    });
 
     if (this.props.skyboxTexture.image) {
       controls.addComponent("background", components.THREE_BUTTON, {
         ...buttonProps,
         content: "background",
         icon: "image",
-        onClick: () => this.toggleBackground()
+        onClick: () => this.toggleBackground(),
       });
     }
 
@@ -712,15 +725,15 @@ export default class ThreeView extends Component {
         ...buttonProps,
         content: "tools",
         icon: "wrench",
-        onClick: () => this.toggleTools()
+        onClick: () => this.toggleTools(),
       });
       if (this.props.loggedIn === true) {
         controls.addComponent("save", components.THREE_BUTTON, {
           ...buttonProps,
-          content: "save tool settings",
+          content: "save settings",
           icon: "setting",
-          ref: ref => (this.saveToolSettingsButton = ref),
-          onClick: () => this.saveSettings()
+          ref: (ref) => (this.saveToolSettingsButton = ref),
+          onClick: () => this.saveSettings(),
         });
       }
     }
@@ -738,7 +751,7 @@ export default class ThreeView extends Component {
       ...buttonProps,
       className: "three-embed-button",
       embedded: this.props.embedded,
-      readOnly: !enableEmbed
+      readOnly: !enableEmbed,
     });
 
     this.controls = (
@@ -806,7 +819,7 @@ export default class ThreeView extends Component {
         color: colors[index],
         linewidth: 4,
         dashSize: 1,
-        gapSize: 1
+        gapSize: 1,
       });
       let geometry = new THREE.Geometry();
       geometry.vertices.push(startVec, endVec);
@@ -816,7 +829,7 @@ export default class ThreeView extends Component {
       line.userData = {
         start: startVec.clone(),
         end: endVec.clone(),
-        axis: axis
+        axis: axis,
       };
       return line;
     });
@@ -853,7 +866,7 @@ export default class ThreeView extends Component {
   drawAxisGuides(showLabels: boolean): void {
     if (showLabels) this.addAxisLabels();
     if (this.axisGuides.length > 0) {
-      this.axisGuides.forEach(axisGuide => {
+      this.axisGuides.forEach((axisGuide) => {
         this.guiScene.add(axisGuide);
       });
     } else {
@@ -900,7 +913,7 @@ export default class ThreeView extends Component {
             opacity: 0.3,
             transparent: true,
             depthWrite: false,
-            depthTest: false
+            depthTest: false,
           });
           let geometry = new THREE.Geometry();
           geometry.vertices.push(a, b);
@@ -934,7 +947,7 @@ export default class ThreeView extends Component {
   drawAnnotations(annotations?: Object): void {
     const {
       currentAnnotationCSSObj,
-      currentAnnotationCSSReadOnlyBodyObj
+      currentAnnotationCSSReadOnlyBodyObj,
     } = this.state;
     for (let i = 0; i < this.annotationMarkers.children.length; i++) {
       this.annotationMarkers.children[i].remove(
@@ -954,7 +967,6 @@ export default class ThreeView extends Component {
         annotationMarker.material = this.annotationSprite.material.clone();
         annotationMarker.position.copy(annotations[i].point);
         annotationMarker.position.add(this.annotationSpriteOffset);
-        annotationMarker.scale.multiplyScalar(this.spriteScaleFactor / 10);
         if (annotations[i].open) {
           annotationMarker.material.color.setHex(annotations[i].pinColor);
           const cssObj = new CSS2DObject(annotations[i].node);
@@ -969,7 +981,7 @@ export default class ThreeView extends Component {
           this.setState({
             currentAnnotationIndex: i,
             currentAnnotationCSSObj: cssObj,
-            currentAnnotationCSSReadOnlyBodyObj: cssBodyObj
+            currentAnnotationCSSReadOnlyBodyObj: cssBodyObj,
           });
         } else {
           annotationMarker.material.color.setHex(0x000000);
@@ -984,7 +996,7 @@ export default class ThreeView extends Component {
     this.setState({
       controllable: !val,
       cameraControlPaused: val,
-      annotationPresentationMode: val
+      annotationPresentationMode: val,
     });
   }
 
@@ -992,7 +1004,7 @@ export default class ThreeView extends Component {
     const {
       currentAnnotationIndex,
       currentAnnotationCSSObj,
-      currentAnnotationCSSReadOnlyBodyObj
+      currentAnnotationCSSReadOnlyBodyObj,
     } = this.state;
     const annotation = this.annotationMarkers.children[currentAnnotationIndex];
     if (annotation) {
@@ -1012,7 +1024,7 @@ export default class ThreeView extends Component {
     const {
       currentAnnotationIndex,
       currentAnnotationCSSObj,
-      currentAnnotationCSSReadOnlyBodyObj
+      currentAnnotationCSSReadOnlyBodyObj,
     } = this.state;
     const annotation = this.annotationMarkers.children[currentAnnotationIndex];
     if (annotation) {
@@ -1047,7 +1059,10 @@ export default class ThreeView extends Component {
 
   initMesh(): void {
     this.mesh = this.props.mesh.object3D;
-    const setMicrosurface = material => {
+    this.meshChildren = getChildren(this.mesh);
+    this.materialRefs = getMaterials(this.mesh);
+    console.log(this.materialRefs);
+    const setMicrosurface = (material) => {
       if (material.type === THREE_MESH_STANDARD_MATERIAL) {
         material.metalness = 0.0;
         material.roughness = 1.0;
@@ -1056,10 +1071,10 @@ export default class ThreeView extends Component {
     };
     // rewrite this to a function to abstract  out a lot of this boilerplate
     if (this.mesh instanceof THREE.Group) {
-      this.mesh.children.forEach(child => {
+      this.meshChildren.forEach((child) => {
         child.receiveShadow = true;
         child.castShadow = true;
-        if (child.material) {
+        /*if (child.material) {
           if (child.material instanceof Array) {
             child.material.forEach(material => {
               if (material.map !== null) {
@@ -1081,12 +1096,12 @@ export default class ThreeView extends Component {
               child.material.side = THREE.DoubleSide;
             }
           }
-        }
+        }*/
       });
     } else if (this.mesh instanceof THREE.Mesh) {
       this.mesh.castShadow = true;
       this.mesh.receiveShadow = true;
-      let material = this.mesh.material;
+      /*let material = this.mesh.material;
       if (material.constructor !== Array) {
         material = [material];
       }
@@ -1098,16 +1113,19 @@ export default class ThreeView extends Component {
           }
           setMicrosurface(currentMaterial);
         }
-      });
+      });*/
     }
 
     this.scene.add(this.mesh);
-
     this.bboxMesh = new THREE.Box3().setFromObject(this.mesh);
     this.meshHeight = this.bboxMesh.max.y - this.bboxMesh.min.y;
     this.meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
     this.meshDepth = this.bboxMesh.max.z - this.bboxMesh.min.z;
     this.computeSpriteScaleFactor();
+    this.annotationSprite.scale.multiplyScalar(this.spriteScaleFactor / 10);
+    const spriteBbox = new THREE.Box3().setFromObject(this.annotationSprite);
+    const centerY = (spriteBbox.max.y - spriteBbox.min.y) / 2;
+    this.annotationSpriteOffset = new THREE.Vector3(0, centerY, 0);
     this.pointLights.addHelpers(this.guiScene, this.spriteScaleFactor);
     this.pointLights.setTarget(this.mesh);
     this.pointLights.setLightPositions(this.bboxMesh);
@@ -1122,6 +1140,8 @@ export default class ThreeView extends Component {
     ); // diameter of sphere =  2 * meshHeight
 
     this.maxDistance = this.environmentRadius * 2;
+    this.camera.far = this.maxDistance * 4;
+    this.dynamicLight.shadow.camera.far = this.camera.far;
     this.minDistance = Math.ceil(this.meshDepth - this.bboxMesh.max.z);
     this.minDistance = this.minDistance <= 0 ? 0.1 : this.minDistance;
 
@@ -1130,7 +1150,7 @@ export default class ThreeView extends Component {
       depthTest: false,
       depthWrite: false,
       opacity: 0.8,
-      transparent: true
+      transparent: true,
     });
 
     let labelSphereGeometry = new THREE.SphereGeometry(
@@ -1144,7 +1164,7 @@ export default class ThreeView extends Component {
     this.setState((prevState, props) => {
       return {
         loadProgress: prevState.loadProgress + 25,
-        loadText: "Loading Environment"
+        loadText: "Loading Environment",
       };
     }, this.initEnvironment());
   }
@@ -1163,17 +1183,17 @@ export default class ThreeView extends Component {
         vertexShader: equirectShader.vertexShader,
         uniforms: equirectShader.uniforms,
         depthWrite: false,
-        side: THREE.BackSide
+        side: THREE.BackSide,
       });
       this.skyboxMaterial.uniforms[
         "tEquirect"
       ].value = this.props.skyboxTexture.image;
     }
 
-    let innerColor;
-    let outerColor;
+    let innerColor = DEFAULT_GRADIENT_COLORS.inner;
+    let outerColor = DEFAULT_GRADIENT_COLORS.outer;
 
-    if (skybox.gradient) {
+    /*if (skybox.gradient) {
       innerColor = skybox.gradient.innerColor
         ? skybox.gradient.innerColor
         : DEFAULT_GRADIENT_COLORS.inner;
@@ -1183,7 +1203,7 @@ export default class ThreeView extends Component {
     } else {
       innerColor = DEFAULT_GRADIENT_COLORS.inner;
       outerColor = DEFAULT_GRADIENT_COLORS.outer;
-    }
+    }*/
 
     // need to clean this up, it's a radial gradient not a linear gradient
     this.skyboxMaterialShader = new LinearGradientShader(
@@ -1201,11 +1221,12 @@ export default class ThreeView extends Component {
     this.envScene.add(this.skyboxMesh);
     this.bboxSkybox = new THREE.Box3().setFromObject(this.skyboxMesh);
     this.setEnvMap();
-    loadPostProcessor(THREE).then(values => {
+
+    loadPostProcessor(THREE).then((values) => {
       this.setState((prevState, props) => {
         return {
           loadProgress: prevState.loadProgress + 15,
-          loadText: "Loading Shaders"
+          loadText: "Loading Shaders",
         };
       }, this.initPostprocessing());
     });
@@ -1241,12 +1262,7 @@ export default class ThreeView extends Component {
   }
 
   setEnvMap(): void {
-    let mesh = this.mesh;
-    if (mesh.constructor === THREE.Group) {
-      mesh = mesh.children[0];
-    }
-
-    const setEnv = material => {
+    const setEnv = (material) => {
       if (material.type === THREE_MESH_STANDARD_MATERIAL) {
         if (this.props.skyboxTexture.image) {
           material.envMap = this.props.skyboxTexture.image;
@@ -1270,7 +1286,10 @@ export default class ThreeView extends Component {
       material.needsUpdate = true;
       return material;
     };
-    mesh.material = mapMaterials(mesh.material, setEnv);
+    for (let i = 0; i < this.materialRefs.length; i++) {
+      const mat = this.materialRefs[i];
+      setEnv(mat);
+    }
   }
 
   initPostprocessing(): void {
@@ -1278,7 +1297,7 @@ export default class ThreeView extends Component {
       minFilter: THREE.LinearFilter,
       magFilter: THREE.LinearFilter,
       format: THREE.RGBFormat,
-      stencilBuffer: true
+      stencilBuffer: true,
     };
 
     this.effectComposer = new THREE.EffectComposer(
@@ -1322,7 +1341,7 @@ export default class ThreeView extends Component {
 
     const vignettePass = new THREE.VignettePass(
       new THREE.Vector2(this.width, this.height),
-      0.1,
+      0.3,
       new THREE.Color(0.045, 0.045, 0.045)
     );
 
@@ -1332,6 +1351,7 @@ export default class ThreeView extends Component {
 
     const brightnessShader = THREE.BrightnessContrastShader;
     const brightnessPass = new THREE.ShaderPass(brightnessShader);
+    brightnessPass.renderToScreen = false;
     brightnessPass.uniforms["contrast"].value = 0.15;
 
     const modelBloomPass = new THREE.UnrealBloomPass(
@@ -1349,7 +1369,7 @@ export default class ThreeView extends Component {
       edlStrength: 0,
       enableEDL: false,
       onlyEDL: false,
-      radius: 0
+      radius: 0,
     };
 
     const EDLPass = new THREE.EDLPass(this.scene, this.camera, EDLParams);
@@ -1391,6 +1411,7 @@ export default class ThreeView extends Component {
     const rawModel = new THREE.TexturePass(
       this.modelComposer.renderTarget2.texture
     );
+    rawModel.clear = false;
     const rawGui = new THREE.TexturePass(
       this.guiComposer.renderTarget2.texture,
       0.8
@@ -1400,12 +1421,12 @@ export default class ThreeView extends Component {
     this.effectComposer.addPass(rawModel);
     this.effectComposer.addPass(quadDiffusePass);
     this.effectComposer.addPass(chromaKeyPass);
-    this.effectComposer.addPass(SSAOPass);
+    // this.effectComposer.addPass(SSAOPass);
     this.effectComposer.addPass(EDLPass);
     this.effectComposer.addPass(maskInverse);
     this.effectComposer.addPass(rawScene);
     this.effectComposer.addPass(clearMask);
-    this.effectComposer.addPass(modelBloomPass);
+    // this.effectComposer.addPass(modelBloomPass);
     this.effectComposer.addPass(guiMask);
     this.effectComposer.addPass(rawGui);
     this.effectComposer.addPass(clearMask);
@@ -1421,7 +1442,7 @@ export default class ThreeView extends Component {
       (prevState, props) => {
         return {
           loadProgress: prevState.loadProgress + 25,
-          loadText: "Loading Tools"
+          loadText: "Loading Tools",
         };
       },
       () => {
@@ -1542,7 +1563,7 @@ export default class ThreeView extends Component {
     }
     this.setState({
       cameraTargetTransitionRequired: true,
-      cameraControlPaused: true
+      cameraControlPaused: true,
     });
     yield null;
   }
@@ -1579,7 +1600,7 @@ export default class ThreeView extends Component {
           this.setState({
             controllable: annotationPresentationMode ? false : true,
             target: undefined,
-            animator: null
+            animator: null,
           });
         }
       }
@@ -1600,7 +1621,7 @@ export default class ThreeView extends Component {
     scale = (1 - Math.pow(0.95, this.zoomSpeed)) * sign;
     this.setState({
       scale: scale,
-      cameraControlPaused: false
+      cameraControlPaused: false,
     });
   }
 
@@ -1614,7 +1635,7 @@ export default class ThreeView extends Component {
         this.setState({
           panEnd: panEnd,
           panDelta: panDelta,
-          panStart: panStart.copy(panEnd)
+          panStart: panStart.copy(panEnd),
         });
       } else {
         const { rotateStart, rotateEnd, rotateDelta } = this.state;
@@ -1624,7 +1645,7 @@ export default class ThreeView extends Component {
         this.setState({
           rotateEnd: rotateEnd,
           rotateDelta: rotateDelta,
-          rotateStart: rotateStart.copy(rotateEnd)
+          rotateStart: rotateStart.copy(rotateEnd),
         });
       }
     }
@@ -1634,7 +1655,7 @@ export default class ThreeView extends Component {
     this.setState({
       controllable: false,
       animator: this.center(2),
-      cameraControlPaused: true
+      cameraControlPaused: true,
     });
   }
 
@@ -1653,9 +1674,9 @@ export default class ThreeView extends Component {
       this.camera.lookAt(this.camera.target);
       yield null;
     }
-    this.camera.position.copy(resetVector);
-    this.lastTarget.copy(zero);
-    this.offset.copy(zero);
+    // this.camera.position.copy(resetVector);
+    // this.lastTarget.copy(zero);
+    // this.offset.copy(zero);
     this.spherical = new THREE.Spherical();
     this.camera.updateProjectionMatrix();
     yield null;
@@ -1675,7 +1696,7 @@ export default class ThreeView extends Component {
       scale,
       cameraTargetTransitionRequired,
       animator,
-      lastScale
+      lastScale,
     } = this.state;
 
     if (cameraTargetTransitionRequired) {
@@ -1683,7 +1704,7 @@ export default class ThreeView extends Component {
         if (!animator) {
           this.setState({
             animator: this.cameraTargetTransition(1),
-            controllable: false
+            controllable: false,
           });
           return;
         }
@@ -1734,7 +1755,7 @@ export default class ThreeView extends Component {
     }
     scale *= 1.0 - this.dampingFactor;
     this.setState({
-      scale: scale
+      scale: scale,
     });
     this.positionAnnotations();
   }
@@ -1752,20 +1773,15 @@ export default class ThreeView extends Component {
   }
 
   deepUpdateThreeMaterial(obj: Object): void {
-    let children = this.mesh.children;
-    if (children.length === 0) {
-      children = [this.mesh];
-    }
+    
     for (let key in obj) {
       const val = obj[key];
       if (val.constructor === Object) {
         this.deepUpdateThreeMaterial(val);
       } else {
-        for (let i = 0; i < children.length; i++) {
-          const mesh = children[i];
-          mesh.material = mapMaterials(mesh.material, _material =>
-            this.updateThreeMaterial(_material, key, val)
-          );
+        for (let i = 0; i < this.materialRefs.length; i++) {
+          const material = this.materialRefs[i];
+          this.updateThreeMaterial(material, key, val);
         }
       }
     }
@@ -1776,7 +1792,7 @@ export default class ThreeView extends Component {
     const updated = { ...materialsInfo, ...obj };
     this.setState(
       {
-        materialsInfo: updated
+        materialsInfo: updated,
       },
       () => {
         this.deepUpdateThreeMaterial(obj);
@@ -1806,7 +1822,7 @@ export default class ThreeView extends Component {
   }
 
   updateRenderSize(resolution: Array<number>, updateCSSRenderer = true): void {
-    const [width, height] = resolution.map(val =>
+    const [width, height] = resolution.map((val) =>
       Math.floor(val / this.state.quality.current.value)
     );
     this.webGLRenderer.setSize(width, height, false);
@@ -1842,7 +1858,7 @@ export default class ThreeView extends Component {
     const { shaderPasses } = this.state;
     this.setState(
       {
-        shaderPasses: { ...shaderPasses, ...obj }
+        shaderPasses: { ...shaderPasses, ...obj },
       },
       () => {
         if (callback !== undefined) {
@@ -1911,7 +1927,7 @@ export default class ThreeView extends Component {
     const { dynamicLightProps } = this.state;
     this.setState(
       {
-        dynamicLightProps: { ...dynamicLightProps, ...obj }
+        dynamicLightProps: { ...dynamicLightProps, ...obj },
       },
       () => {
         if (!this.state.dynamicLightProps.lock) {
@@ -1979,9 +1995,7 @@ export default class ThreeView extends Component {
     //let panelGroup = new ThreeGUIGroup("tools");
 
     /***************** ANNOTATIONS *********************************************/
-
-    if (this.props.enableAnnotations || true) {
-      //Set enableAnnotations in props
+    if (this.props.options.enableAnnotations) {
       const annotationGroup = new ThreeGUIGroup("annotations");
       annotationGroup.addComponent(
         "controller",
@@ -1990,7 +2004,7 @@ export default class ThreeView extends Component {
           drawCallback: this.drawAnnotations,
           updateCallback: this.updateAnnotationShortcuts,
           cameraCallback: this.viewAnnotation,
-          onActiveCallback: val => this.toggleRaycasting(val),
+          onActiveCallback: (val) => this.toggleRaycasting(val),
           camera: this.camera,
           mesh: this.mesh,
           annotations: this.annotations,
@@ -1998,7 +2012,7 @@ export default class ThreeView extends Component {
           css: this.css2DRenderer.domElement,
           threeViewId: this.props.threeViewId,
           onTogglePresentationMode: this.onAnnotationPresentationToggle,
-          presentationRef: this.threeView
+          presentationRef: this.threeView,
         }
       );
 
@@ -2011,16 +2025,16 @@ export default class ThreeView extends Component {
 
       measurementGroup.addComponent("measure", components.THREE_MEASURE, {
         updateCallback: this.drawMeasurement,
-        onActiveCallback: val => this.toggleRaycasting(val),
+        onActiveCallback: (val) => this.toggleRaycasting(val),
         camera: this.camera,
         mesh: this.mesh,
-        target: this.webGLRenderer.domElement
+        target: this.webGLRenderer.domElement,
       });
 
       measurementGroup.addComponent("show axes", components.THREE_TOGGLE, {
         callback: this.showAxes,
         defaultVal: this.state.showAxes,
-        title: "show axes"
+        title: "show axes",
       });
 
       const unitButtons = [
@@ -2028,30 +2042,30 @@ export default class ThreeView extends Component {
           label: "mm",
           defaultVal: true,
           toggle: false,
-          callback: () => this.setState({ units: MM })
+          callback: () => this.setState({ units: MM }),
         },
         {
           label: "cm",
           defaultVal: true,
           toggle: false,
-          callback: () => this.setState({ units: CM })
+          callback: () => this.setState({ units: CM }),
         },
         {
           label: "in",
           defaultVal: false,
           toggle: false,
-          callback: () => this.setState({ units: IN })
+          callback: () => this.setState({ units: IN }),
         },
         {
           label: "ft",
           defaultVal: false,
           toggle: false,
-          callback: () => this.setState({ units: FT })
-        }
+          callback: () => this.setState({ units: FT }),
+        },
       ];
       measurementGroup.addComponent("units", components.THREE_TOGGLE_MULTI, {
         buttons: unitButtons,
-        title: "units"
+        title: "units",
       });
 
       this.panelGroup.addGroup("measurement", measurementGroup);
@@ -2066,7 +2080,7 @@ export default class ThreeView extends Component {
       lightGroup.addComponent("helper", components.THREE_TOGGLE, {
         callback: this.showLightHelper,
         defaultVal: this.state.showLightHelper,
-        title: "show light helper"
+        title: "show light helper",
       });
       lightGroup.addComponent("intensity", components.THREE_RANGE_SLIDER, {
         min: 0.0,
@@ -2074,18 +2088,18 @@ export default class ThreeView extends Component {
         step: 0.1,
         title: "intensity",
         defaultVal: dynamicLightProps.intensity,
-        callback: value => this.updateDynamicLighting(value, "intensity")
+        callback: (value) => this.updateDynamicLighting(value, "intensity"),
       });
       lightGroup.addComponent("color", components.THREE_COLOR_PICKER, {
         title: "color",
         color: "#" + dynamicLightProps.color.getHexString(),
-        callback: color => this.updateDynamicLighting(color, "color")
+        callback: (color) => this.updateDynamicLighting(color, "color"),
       });
       let offsetGroup = new ThreeGUIGroup("three-tool-group");
       offsetGroup.addComponent("lock", components.THREE_TOGGLE, {
         title: "lock",
         defaultVal: dynamicLightProps.lock,
-        callback: value => this.updateDynamicLighting(value, "lock")
+        callback: (value) => this.updateDynamicLighting(value, "lock"),
       });
       let offsetProps = {
         key: 0,
@@ -2094,24 +2108,24 @@ export default class ThreeView extends Component {
         step: step,
         title: "x-axis",
         defaultVal: dynamicLightProps.offset.x,
-        callback: value => this.updateDynamicLighting(value, "offsetX")
+        callback: (value) => this.updateDynamicLighting(value, "offsetX"),
       };
       offsetGroup.addComponent("x-axis", components.THREE_RANGE_SLIDER, {
-        ...offsetProps
+        ...offsetProps,
       });
       offsetGroup.addComponent("y-axis", components.THREE_RANGE_SLIDER, {
         ...offsetProps,
         key: 1,
         title: "y-axis",
         defaultVal: dynamicLightProps.offset.y,
-        callback: value => this.updateDynamicLighting(value, "offsetY")
+        callback: (value) => this.updateDynamicLighting(value, "offsetY"),
       });
       offsetGroup.addComponent("z-axis", components.THREE_RANGE_SLIDER, {
         ...offsetProps,
         key: 2,
         title: "z-axis",
         defaultVal: dynamicLightProps.offset.z,
-        callback: value => this.updateDynamicLighting(value, "offsetZ")
+        callback: (value) => this.updateDynamicLighting(value, "offsetZ"),
       });
       lightGroup.addGroup("offset", offsetGroup);
       this.panelGroup.addGroup("lights", lightGroup);
@@ -2127,8 +2141,9 @@ export default class ThreeView extends Component {
       edlGroup.addComponent("enable", components.THREE_TOGGLE, {
         key: 0,
         title: "enable",
-        callback: value => this.updateDynamicShaders(value, "EDL", "enableEDL"),
-        defaultVal: EDL.uniforms.enableEDL.value
+        callback: (value) =>
+          this.updateDynamicShaders(value, "EDL", "enableEDL"),
+        defaultVal: EDL.uniforms.enableEDL.value,
       });
 
       this.settingsMask.shaders.add("enableEDL");
@@ -2137,9 +2152,9 @@ export default class ThreeView extends Component {
 
       edlShadingGroup.addComponent("edlOnly", components.THREE_TOGGLE, {
         key: 10,
-        callback: value => this.updateDynamicShaders(value, "EDL", "onlyEDL"),
+        callback: (value) => this.updateDynamicShaders(value, "EDL", "onlyEDL"),
         defaultVal: EDL.uniforms.onlyEDL.value,
-        title: "edl only"
+        title: "edl only",
       });
 
       this.settingsMask.shaders.add("onlyEDL");
@@ -2149,10 +2164,10 @@ export default class ThreeView extends Component {
         components.THREE_TOGGLE,
         {
           key: 11,
-          callback: value =>
+          callback: (value) =>
             this.updateDynamicShaders(value, "EDL", "useTexture"),
           defaultVal: EDL.uniforms.useTexture.value,
-          title: "geometry + texture"
+          title: "geometry + texture",
         }
       );
 
@@ -2163,8 +2178,8 @@ export default class ThreeView extends Component {
         {
           title: "color",
           color: "#" + EDL.uniforms.onlyEDLColor.value.getHexString(),
-          callback: color =>
-            this.updateDynamicShaders(color, "EDL", "onlyEDLColor")
+          callback: (color) =>
+            this.updateDynamicShaders(color, "EDL", "onlyEDLColor"),
         }
       );
 
@@ -2177,9 +2192,9 @@ export default class ThreeView extends Component {
         step: 0.01,
         title: "strength",
         defaultVal: EDL.uniforms.edlStrength.value,
-        ref: ref => (this.EDLStrengthRangeSlider = ref),
-        callback: value =>
-          this.updateDynamicShaders(value, "EDL", "edlStrength")
+        ref: (ref) => (this.EDLStrengthRangeSlider = ref),
+        callback: (value) =>
+          this.updateDynamicShaders(value, "EDL", "edlStrength"),
       });
 
       this.settingsMask.shaders.add("edlStrength");
@@ -2191,8 +2206,8 @@ export default class ThreeView extends Component {
         step: 0.01,
         title: "radius",
         defaultVal: EDL.uniforms.radius.value,
-        ref: ref => (this.EDLRadiusRangeSlider = ref),
-        callback: value => this.updateDynamicShaders(value, "EDL", "radius")
+        ref: (ref) => (this.EDLRadiusRangeSlider = ref),
+        callback: (value) => this.updateDynamicShaders(value, "EDL", "radius"),
       });
       this.settingsMask.shaders.add("radius");
 
@@ -2204,10 +2219,10 @@ export default class ThreeView extends Component {
 
       chromaKeyGroup.addComponent("enable", components.THREE_TOGGLE, {
         key: 1,
-        callback: value =>
+        callback: (value) =>
           this.updateDynamicShaders(value, "ChromaKey", "enable"),
         defaultVal: ChromaKey.uniforms.enable.value,
-        title: "enable"
+        title: "enable",
       });
       this.settingsMask.shaders.add("enable");
       chromaKeyGroup.addComponent(
@@ -2220,9 +2235,9 @@ export default class ThreeView extends Component {
           threeRef: this.threeView,
           title: "chroma",
           color: "#" + ChromaKey.uniforms.chroma.value.getHexString(),
-          onActiveCallback: val => this.toggleRaycasting(val),
-          callback: color =>
-            this.updateDynamicShaders(color, "ChromaKey", "chroma")
+          onActiveCallback: (val) => this.toggleRaycasting(val),
+          callback: (color) =>
+            this.updateDynamicShaders(color, "ChromaKey", "chroma"),
         }
       );
       this.settingsMask.shaders.add("chroma");
@@ -2233,19 +2248,19 @@ export default class ThreeView extends Component {
         {
           title: "replacement color",
           // add this to state somehow
-          callback: color => {
+          callback: (color) => {
             this.updateDynamicShaders(color, "ChromaKey", "replacementColor");
-          }
+          },
         }
       );
       this.settingsMask.shaders.add("replacementColor");
       // TODO Figure something out for replacement color
       chromaKeyGroup.addComponent("invert", components.THREE_TOGGLE, {
         key: 1,
-        callback: value =>
+        callback: (value) =>
           this.updateDynamicShaders(value, "ChromaKey", "invert"),
         defaultVal: ChromaKey.uniforms.invert.value,
-        title: "invert"
+        title: "invert",
       });
       this.settingsMask.shaders.add("invert");
       chromaKeyGroup.addComponent("threshold", components.THREE_RANGE_SLIDER, {
@@ -2255,8 +2270,8 @@ export default class ThreeView extends Component {
         step: 0.01,
         title: "threshold",
         defaultVal: ChromaKey.uniforms.threshold.value,
-        callback: value =>
-          this.updateDynamicShaders(value, "ChromaKey", "threshold")
+        callback: (value) =>
+          this.updateDynamicShaders(value, "ChromaKey", "threshold"),
       });
       this.settingsMask.shaders.add("threshold");
 
@@ -2287,9 +2302,9 @@ export default class ThreeView extends Component {
         max: 1,
         step: 0.01,
         defaultVal: 1.0,
-        title: "normal scale"
+        title: "normal scale",
       };
-      let children = this.mesh.children;
+      let children = this.meshChildren;
       if (children.length === 0) {
         children = [this.mesh];
       }
@@ -2312,8 +2327,8 @@ export default class ThreeView extends Component {
                 ...materialsProps,
                 defaultVal: materialsInfo.normalScale,
                 title: "normal scale",
-                callback: value =>
-                  this.updateDynamicMaterials(value, "normalScale")
+                callback: (value) =>
+                  this.updateDynamicMaterials(value, "normalScale"),
               }
             );
           }
@@ -2324,8 +2339,8 @@ export default class ThreeView extends Component {
               {
                 ...materialsProps,
                 title: "bump scale",
-                callback: value =>
-                  this.updateDynamicMaterials(value, "bumpScale")
+                callback: (value) =>
+                  this.updateDynamicMaterials(value, "bumpScale"),
               }
             );
           }
@@ -2338,13 +2353,15 @@ export default class ThreeView extends Component {
               ...materialsProps,
               title: "metalness",
               defaultVal: materialsInfo.pbr.metalness,
-              callback: value => this.updateDynamicMaterials(value, "metalness")
+              callback: (value) =>
+                this.updateDynamicMaterials(value, "metalness"),
             });
             pbrGroup.addComponent("roughness", components.THREE_RANGE_SLIDER, {
               ...materialsProps,
               title: "roughness",
               defaultVal: materialsInfo.pbr.roughness,
-              callback: value => this.updateDynamicMaterials(value, "roughness")
+              callback: (value) =>
+                this.updateDynamicMaterials(value, "roughness"),
             });
             materialsGroup.addGroup("microsurface", pbrGroup);
           }
@@ -2360,7 +2377,7 @@ export default class ThreeView extends Component {
         groupClass="three-tool-container"
         menuClass="three-tool-menu"
         dropdownClass="three-tool-menu-dropdown"
-        ref={ref => (this.toolsMenu = ref)}
+        ref={(ref) => (this.toolsMenu = ref)}
         innerRef={toolsRef}
       />
     );
@@ -2368,7 +2385,7 @@ export default class ThreeView extends Component {
       (prevState, props) => {
         return {
           loadProgress: prevState.loadProgress + 10,
-          loadText: "Updating Scene"
+          loadText: "Updating Scene",
         };
       },
       () => {
@@ -2385,7 +2402,7 @@ export default class ThreeView extends Component {
     this.setState({
       controllable: false,
       target: point,
-      animator: this.animateZoom(point, 3, cameraPos, storeLastPosition)
+      animator: this.animateZoom(point, 3, cameraPos, storeLastPosition),
     });
   }
 
@@ -2409,7 +2426,7 @@ export default class ThreeView extends Component {
   handleToolMenuTransition(duration) {
     this.setState({
       controllable: false,
-      animator: this.animateAnnotationTransition(duration)
+      animator: this.animateAnnotationTransition(duration),
     });
   }
 
@@ -2426,7 +2443,7 @@ export default class ThreeView extends Component {
 
   toggleQuality(): void {
     let { options, current } = this.state.quality;
-    let currentIndex = options.findIndex(option => {
+    let currentIndex = options.findIndex((option) => {
       return option.label === current.label;
     });
     let nextIndex = currentIndex + 1 < options.length ? currentIndex + 1 : 0;
@@ -2434,8 +2451,8 @@ export default class ThreeView extends Component {
       {
         quality: {
           options: options,
-          current: options[nextIndex]
-        }
+          current: options[nextIndex],
+        },
       },
       () => {
         this.updateRenderSize([this.width, this.height]);
@@ -2453,15 +2470,15 @@ export default class ThreeView extends Component {
     if (!detailMode) {
       this.skyboxMesh.material = this.skyboxMaterialShader.shaderMaterial;
       this.setState({
-        detailMode: true
+        detailMode: true,
       });
     } else {
       this.skyboxMesh.material = this.skyboxMaterial;
-      this.axisGuides.forEach(axisGuide => {
+      this.axisGuides.forEach((axisGuide) => {
         axisGuide.visible = false;
       });
       this.setState({
-        detailMode: false
+        detailMode: false,
       });
     }
   }
@@ -2470,7 +2487,7 @@ export default class ThreeView extends Component {
 
   showAxes(show: boolean): void {
     this.setState({ showAxes: show }, () =>
-      this.axisGuides.forEach(axisGuide => {
+      this.axisGuides.forEach((axisGuide) => {
         axisGuide.visible = show;
       })
     );
@@ -2486,18 +2503,18 @@ export default class ThreeView extends Component {
   toggleDynamicLighting(): void {
     this.setState(
       {
-        dynamicLighting: !this.state.dynamicLighting
+        dynamicLighting: !this.state.dynamicLighting,
       },
       () => {
         const { dynamicLighting } = this.state;
         this.dynamicLight.visible = dynamicLighting;
         if (dynamicLighting) {
-          this.pointLights.traverse(light => (light.intensity = 0.0));
+          this.pointLights.traverse((light) => (light.intensity = 0.0));
           this.ambientLight.intensity = 0.8;
           this.enableLightButton.updateLabel("lighting: on");
         } else {
           this.pointLights.traverse(
-            light => (light.intensity = this.pointLights.DEFAULT_INTENSITY)
+            (light) => (light.intensity = this.pointLights.DEFAULT_INTENSITY)
           );
           this.ambientLight.intensity = 1.0;
           this.enableLightButton.updateLabel("lighting: off");
@@ -2563,19 +2580,19 @@ export default class ThreeView extends Component {
 
   toggleRaycasting(val): void {
     this.setState({
-      isRaycasting: val
+      isRaycasting: val,
     });
   }
 
   enterVR(): void {
     this.setState({
-      vrActive: true
+      vrActive: true,
     });
   }
 
   exitVR(): void {
     this.setState({
-      vrActive: false
+      vrActive: false,
     });
     this.centerCamera();
   }
@@ -2588,7 +2605,7 @@ export default class ThreeView extends Component {
     if (this.state.shiftDown) {
       this.setState({
         dragging: true,
-        panStart: this.state.panStart.set(event.clientX, event.clientY)
+        panStart: this.state.panStart.set(event.clientX, event.clientY),
       });
     }
 
@@ -2598,14 +2615,14 @@ export default class ThreeView extends Component {
           dragging: true,
           rmbDown: true,
           panStart: this.state.panStart.set(event.clientX, event.clientY),
-          cameraControlPaused: false
+          cameraControlPaused: false,
         });
       } else {
         this.setState({
           dragging: true,
           rmbDown: false,
           rotateStart: this.state.rotateStart.set(event.clientX, event.clientY),
-          cameraControlPaused: false
+          cameraControlPaused: false,
         });
       }
     }
@@ -2681,13 +2698,13 @@ export default class ThreeView extends Component {
           panStart: this.state.panStart.set(
             pinchInfo.clientCenter.x,
             pinchInfo.clientCenter.y
-          )
+          ),
         });
         break;
 
       case "pinchend":
         this.setState({
-          pinching: false
+          pinching: false,
         });
         break;
 
@@ -2710,13 +2727,13 @@ export default class ThreeView extends Component {
       case "touchstart":
         this.setState({
           dragging: true,
-          rotateStart: this.state.rotateStart.set(touch.clientX, touch.clientY)
+          rotateStart: this.state.rotateStart.set(touch.clientX, touch.clientY),
         });
         break;
 
       case "touchend":
         this.setState({
-          dragging: false
+          dragging: false,
         });
         break;
 

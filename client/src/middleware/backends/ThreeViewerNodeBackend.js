@@ -9,6 +9,7 @@ import React from "react";
 import {
   VIEWS_ENDPOINT,
   FILE_ENDPOINT,
+  TEXTURE_ENDPOINT,
   AUTHENTICATE_ENDPOINT,
   ANNOTATIONS_ENDPOINT
 } from "../../constants/api-endpoints";
@@ -52,6 +53,10 @@ export default class ThreeViewerNodeBackend extends ThreeViewerAbstractBackend {
 
   getThreeFileURL(id: string): Promise {
     return new Promise((resolve, reject) => resolve(FILE_ENDPOINT + id));
+  }
+
+  getImageFileURL(id: string): Promise {
+    return this.getThreeFileURL(id);
   }
 
   formatAsset(asset: Object): Object {

@@ -5,7 +5,7 @@ var app, upload, conn, Grid;
 var updateAll;
 let gfs;
 
-isEmpty = obj => {
+isEmpty = (obj) => {
   for (var key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
       return false;
@@ -20,12 +20,6 @@ exports.get = (app, upload, conn, Grid) => {
   this.conn = conn;
   this.Grid = Grid;
 
-  updateAll = this.upload.fields([
-    { name: "threeFile", maxcount: 1 },
-    { name: "threeThumbnail", maxcount: 1 },
-    { name: "skybox", maxcount: 1 }
-  ]);
-
   mongoose.connection.on("open", () => {
     gfs = Grid(mongoose.connection.db, mongoose.mongo);
   });
@@ -35,7 +29,7 @@ exports.getFiles = (req, res) => {
   gfs.files.find().toArray((err, files) => {
     if (!files || files.length === 0) {
       return res.status(404).json({
-        err: "No files exist"
+        err: "No files exist",
       });
     }
     return res.json(files);
@@ -46,7 +40,7 @@ exports.getFile = (req, res) => {
   gfs.files.findOne({ filename: req.params.filename }, (err, file) => {
     if (!file || file.length === 0) {
       return res.status(404).json({
-        err: "No files exist"
+        err: "No files exist",
       });
     }
 
@@ -55,7 +49,7 @@ exports.getFile = (req, res) => {
       readstream.pipe(res);
     } else {
       res.status(404).json({
-        err: "Not proper mimetype"
+        err: "Not proper mimetype",
       });
     }
   });
@@ -70,7 +64,7 @@ exports.findAllViews = (req, res) => {
   View.find(query).exec((err, views) => {
     if (err) {
       return res.status(500).json({
-        message: "Could not find views: Error[ " + err + " ]"
+        message: "Could not find views: Error[ " + err + " ]",
       });
     }
     return res.status(200).json({ views: views });
@@ -84,25 +78,28 @@ exports.addView = (req, res) => {
     return;
   }
 
-  const { threeFile, threeThumbnail, skybox__file } = req.files;
-
+  const { threeFile, threeThumbnail, skyboxFile } = req.files;
   const newView = new View({
     displayName: req.body.displayName,
     threeFile: threeFile !== undefined ? threeFile[0].filename : null,
     threeThumbnail:
       threeThumbnail !== undefined ? threeThumbnail[0].filename : null,
-    skybox: {
-      file: skybox__file !== undefined ? skybox__file[0].filename : null
-    },
+    skyboxFile: skyboxFile !== undefined ? skyboxFile[0].filename : null,
     enableLight: req.body.enableLight,
     enableMaterials: req.body.enableMaterials,
     enableShaders: req.body.enableShaders,
     enableMeasurement: req.body.enableMeasurement,
+    enableAnnotations: req.body.enableAnnotations,
     enableDownload: req.body.enableDownload,
     enableEmbed: req.body.enableEmbed,
     modelUnits: req.body.modelUnits,
-    createdBy: req.user.id
+    createdBy: req.user.id,
   });
+  let { externalMapInfo } = req.body;
+  if (externalMapInfo) {
+    externalMapInfo = JSON.parse(externalMapInfo);
+    newView.externalMapInfo = externalMapInfo;
+  }
   newView.save((err, view) => {
     if (err) {
       res.send(err);
@@ -122,160 +119,138 @@ exports.getView = (req, res) => {
 };
 
 exports.updateView = (req, res) => {
-  var threeFileBool,
+  let threeFileBool,
     threeThumbnailBool,
     skyboxFileBool = false;
+  const contentType = req.headers["content-type"].split(";")[0];
+  const body =
+    contentType === utils.APP_CONSTANTS.MULTIPART_FORMDATA
+      ? utils.flat2nested(req.body)
+      : req.body;
+  if (isEmpty(req.files)) {
+    View.findOneAndUpdate({ _id: req.params.id }, body, { new: true }, (err, view) => {
+      if (err) res.send(err);
+      res.json(view);
+      console.log({ update: "View successfully updated" });
+    });
+  } else {
+    //console.log({isEmpty: 'false'});
 
-  updateAll(req, res, err => {
-    if (err) {
-      console.log(err);
-      return console.log({ update: "something happened" });
-    }
-    const contentType = req.headers["content-type"].split(";")[0];
-    const body =
-      contentType === utils.APP_CONSTANTS.MULTIPART_FORMDATA
-        ? utils.flat2nested(req.body)
-        : req.body;
-    if (isEmpty(req.files)) {
-      new Promise((resolve, reject) => {
-        const newView = new View({
-          _id: req.params.id,
-          ...body
-        });
+    new Promise((resolve, reject) => {
+      View.findOne({ _id: req.params.id }, (err, view) => {
+        if (err) reject(console.log({ err: "View could not be found" }));
 
-        resolve(newView);
-      }).then(newView => {
-        View.findOneAndUpdate(
-          { _id: req.params.id },
-          newView,
-          { new: true },
-          (err, view) => {
-            if (err) res.send(err);
-            res.json(view);
-            console.log({ update: "View successfully updated" });
-          }
-        );
-      });
-    } else {
-      //console.log({isEmpty: 'false'});
+        if (!isEmpty(req.files.threeFile)) {
+          threeFileBool = true;
+          gfs.exist({ filename: view.threeFile }, (err, found) => {
+            if (err)
+              reject(console.log({ exsists: "Three File does not exsist" }));
 
-      new Promise((resolve, reject) => {
-        View.findOne({ _id: req.params.id }, (err, view) => {
-          if (err) reject(console.log({ err: "View could not be found" }));
+            if (found && found !== req.body.threeFile) {
+              gfs.remove({ filename: view.threeFile }, (err) => {
+                if (err)
+                  reject(
+                    console.log({
+                      delete: `delete of ${view.threeFile} - failed`,
+                    })
+                  );
+              });
+            }
+          });
+        }
 
-          if (!isEmpty(req.files.threeFile)) {
-            threeFileBool = true;
-            gfs.exist({ filename: view.threeFile }, (err, found) => {
-              if (err)
-                reject(console.log({ exsists: "Three File does not exsist" }));
+        if (!isEmpty(req.files.threeThumbnail)) {
+          threeThumbnailBool = true;
+          gfs.exist({ filename: view.threeThumbnail }, (err, found) => {
+            if (err)
+              reject(
+                console.log({ exsists: "Thumbnail File does not exsist" })
+              );
 
-              if (found !== req.body.threeFile) {
-                gfs.remove({ filename: view.threeFile }, err => {
-                  if (err)
-                    reject(
-                      console.log({
-                        delete: `delete of ${view.threeFile} - failed`
-                      })
-                    );
-                });
-              }
-            });
-          }
+            if (found && found !== req.body.threeThumbnail) {
+              gfs.remove({ filename: view.threeThumbnail }, (err) => {
+                if (err)
+                  reject(
+                    console.log({
+                      delete: `delete of ${view.threeThumbnail} - failed`,
+                    })
+                  );
+              });
+            }
+          });
+        }
 
-          if (!isEmpty(req.files.threeThumbnail)) {
-            threeThumbnailBool = true;
-            gfs.exist({ filename: view.threeThumbnail }, (err, found) => {
-              if (err)
-                reject(
-                  console.log({ exsists: "Thumbnail File does not exsist" })
-                );
+        if (!isEmpty(req.files.skyboxFile)) {
+          skyboxFileBool = true;
+          gfs.exist({ filename: view.skyboxFile }, (err, found) => {
+            if (err)
+              reject(console.log({ exsists: "Skybox File does not exsist" }));
 
-              if (found !== req.body.threeThumbnail) {
-                gfs.remove({ filename: view.threeThumbnail }, err => {
-                  if (err)
-                    reject(
-                      console.log({
-                        delete: `delete of ${view.threeThumbnail} - failed`
-                      })
-                    );
-                });
-              }
-            });
-          }
+            if (found && found !== req.body.skyboxFile) {
+              gfs.remove({ filename: view.skyboxFile }, (err) => {
+                if (err)
+                  reject(
+                    console.log({
+                      delete: `delete of ${view.skyboxFile } - failed`,
+                    })
+                  );
+              });
+            }
+          });
+        }
 
-          if (!isEmpty(req.files.skybox)) {
-            skyboxFileBool = true;
-            gfs.exist({ filename: view.skybox.file }, (err, found) => {
-              if (err)
-                reject(console.log({ exsists: "Skybox File does not exsist" }));
-
-              if (found !== req.body.skybox) {
-                gfs.remove({ filename: view.skybox.file }, err => {
-                  if (err)
-                    reject(
-                      console.log({
-                        delete: `delete of ${view.skybox.file} - failed`
-                      })
-                    );
-                });
-              }
-            });
-          }
-
-          resolve(console.log({ update: "all good" }));
-        }).then(() => {
-          const newView = new View({
+        resolve(console.log({ update: "all good" }));
+      }).then(() => {
+        const { threeFile, threeThumbnail, skyboxFile, ...rest } = body;
+        const params = {
+          threeFile: threeFileBool
+            ? req.files.threeFile[0].filename
+            : threeFile,
+          threeThumbnail: threeThumbnailBool
+            ? req.files.threeThumbnail[0].filename
+            : threeThumbnail,
+          skyboxFile: skyboxFileBool
+              ? req.files.skyboxFile[0].filename
+              : skyboxFile,
+          ...rest,
+        };
+        /*const newView = new View({
             _id: req.params.id,
             displayName: body.displayName,
-            threeFile: threeFileBool
-              ? req.files.threeFile[0].filename
-              : req.body.threeFile,
-            threeThumbnail: threeThumbnailBool
-              ? req.files.threeThumbnail[0].filename
-              : req.body.threeThumbnail,
-            skybox: {
-              file: skyboxFileBool
-                ? req.files.skybox[0].filename
-                : req.body.skybox
-            },
+            
             enableLight: body.enableLight,
             enableMaterials: body.enableMaterials,
             enableShaders: body.enableShaders,
             enableMeasurement: body.enableMeasurement,
+            enableAnnotations: body.enableAnnotations,
             enableDownload: body.enableDownload,
             enableEmbed: body.enableEmbed,
             modelUnits: body.modelUnits,
             createdBy: req.user.id
-          });
+          });*/
 
-          //console.log(newView);
+        //console.log(newView);
 
-          View.findOneAndUpdate(
-            { _id: req.params.id },
-            newView,
-            { new: true },
-            (err, view) => {
-              if (err) res.send(err);
-              res.json(view);
-              console.log({ update: "View successfully updated" });
-            }
-          );
+        View.findOneAndUpdate({ _id: req.params.id }, params, { new: true }, (err, view) => {
+          if (err) res.send(err);
+          res.json(view);
+          console.log({ update: "View successfully updated" });
         });
       });
-    }
-  });
+    });
+  }
 };
 
 exports.deleteFile = (req, res) => {
   gfs.files.findOne({ filename: req.params.filename }, (err, file) => {
     if (!file || file.length === 0) {
       return res.status(404).json({
-        err: "No file to remove"
+        err: "No file to remove",
       });
     }
 
     if (file.contentType === "image/jpeg" || "image/png") {
-      gfs.remove({ _id: file._id }, err => {
+      gfs.remove({ _id: file._id }, (err) => {
         if (err) {
           return res.send({ delete: `delete of ${file.filename} - failed` });
         } else {
@@ -285,7 +260,7 @@ exports.deleteFile = (req, res) => {
       });
     } else {
       res.status(404).json({
-        err: "Not proper mimetype"
+        err: "Not proper mimetype",
       });
     }
   });
@@ -297,10 +272,10 @@ exports.deleteView = (req, res) => {
     gfs.exist({ filename: view.threeFile }, (err, found) => {
       if (err) return console.log({ exists: "Three File does not exsist" });
       found
-        ? gfs.remove({ filename: view.threeFile }, err => {
+        ? gfs.remove({ filename: view.threeFile }, (err) => {
             if (err)
               return console.log({
-                delete: `delete of ${view.threeFile} - failed`
+                delete: `delete of ${view.threeFile} - failed`,
               });
           })
         : console.log("Three File does not exsist");
@@ -310,22 +285,22 @@ exports.deleteView = (req, res) => {
       if (err)
         return console.log({ exsists: "Thumbnail File does not exsist" });
       found
-        ? gfs.remove({ filename: view.threeThumbnail }, err => {
+        ? gfs.remove({ filename: view.threeThumbnail }, (err) => {
             if (err)
               return console.log({
-                delete: `delete of ${view.threeThumbnail} - failed`
+                delete: `delete of ${view.threeThumbnail} - failed`,
               });
           })
         : console.log("Thumbnail File does not exsist");
     });
 
-    gfs.exist({ filename: view.skybox.file }, (err, found) => {
+    gfs.exist({ filename: view.skyboxFile }, (err, found) => {
       if (err) return console.log({ exsists: "Skybox File does not exsist" });
       found
-        ? gfs.remove({ filename: view.skybox.file }, err => {
+        ? gfs.remove({ filename: view.skyboxFile }, (err) => {
             if (err)
               return console.log({
-                delete: `delete of ${view.skybox.file} - failed`
+                delete: `delete of ${view.skyboxFile } - failed`,
               });
           })
         : console.log("Skybox File does not exsist");

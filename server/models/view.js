@@ -18,31 +18,39 @@ var viewSchema = new Schema({
     required: false
   },
 
-  skybox: {
-    file: {
+  skyboxFile: {
       type: String,
       required: false
-    }
   },
 
   enableLight: {
     type: Boolean,
-    required: true
+    required: true,
+    default: false,
   },
 
   enableMaterials: {
     type: Boolean,
-    required: true
+    required: true,
+    default: false,
   },
 
   enableShaders: {
     type: Boolean,
-    required: true
+    required: true,
+    default: false,
   },
 
   enableMeasurement: {
     type: Boolean,
-    required: true
+    required: true,
+    default: false,
+  },
+
+  enableAnnotations: {
+    type: Boolean,
+    required: true,
+    default: false,
   },
 
   enableDownload: {
@@ -69,6 +77,10 @@ var viewSchema = new Schema({
   createdBy: {
     type: Schema.Types.ObjectId,
     ref: "User"
+  },
+  externalMapInfo: {
+    type: [Object],
+    required: false
   },
   allowedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }]
 });

@@ -643,17 +643,16 @@ export default function initOBJLoader(threeInstance: Object): Promise {
     				var isLine = ( geometry.type === 'Line' );
     				var isPoints = ( geometry.type === 'Points' );
     				var hasVertexColors = false;
-
     				// Skip o/g line declarations that did not follow with any faces
     				if ( geometry.vertices.length === 0 ) continue;
 
     				var buffergeometry = new threeInstance.BufferGeometry();
 
-    				buffergeometry.addAttribute( 'position', new threeInstance.Float32BufferAttribute( geometry.vertices, 3 ) );
+    				buffergeometry.setAttribute( 'position', new threeInstance.Float32BufferAttribute( geometry.vertices, 3 ) );
 
     				if ( geometry.normals.length > 0 ) {
 
-    					buffergeometry.addAttribute( 'normal', new threeInstance.Float32BufferAttribute( geometry.normals, 3 ) );
+    					buffergeometry.setAttribute( 'normal', new threeInstance.Float32BufferAttribute( geometry.normals, 3 ) );
 
     				} else {
 
@@ -662,15 +661,14 @@ export default function initOBJLoader(threeInstance: Object): Promise {
     				}
 
     				if ( geometry.colors.length > 0 ) {
-
-    					hasVertexColors = true;
-    					buffergeometry.addAttribute( 'color', new threeInstance.Float32BufferAttribute( geometry.colors, 3 ) );
+						hasVertexColors = true;
+    					buffergeometry.setAttribute( 'color', new threeInstance.Float32BufferAttribute( geometry.colors, 3 ) );
 
     				}
 
     				if ( geometry.uvs.length > 0 ) {
 
-    					buffergeometry.addAttribute( 'uv', new threeInstance.Float32BufferAttribute( geometry.uvs, 2 ) );
+    					buffergeometry.setAttribute( 'uv', new threeInstance.Float32BufferAttribute( geometry.uvs, 2 ) );
 
     				}
 

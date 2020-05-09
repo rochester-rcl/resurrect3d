@@ -20,7 +20,7 @@ export default function createConverterProgressChannel(
     converterProgress.on(CONVERSION_ERROR, payload => {
       emit({
         type: CONVERSION_ERROR,
-        message: payload.error.stack,
+        message: payload.error.message,
       });
       emit(END);
     });

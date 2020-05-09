@@ -12,15 +12,12 @@ import { Link } from "react-router-dom";
 
 import {
   Button,
-  Checkbox,
-  Container,
-  Dropdown,
+  Message,
+  Confirm,
   Form,
   Grid,
   Header,
   Icon,
-  Image,
-  Menu,
   Segment,
   Input,
   Select,
@@ -29,7 +26,7 @@ import {
   Label,
   List,
   Visibility,
-  Divider
+  Divider,
 } from "semantic-ui-react";
 
 class SemanticContent extends React.Component {
@@ -47,11 +44,11 @@ class SemanticContent extends React.Component {
       fits: false,
       passing: false,
       onScreen: false,
-      offScreen: false
+      offScreen: false,
     },
     threeFile: "",
     threeThumbnail: "",
-    skybox: "",
+    skyboxFile: "",
     threeFileUpload: "",
     threeThumbnailUpload: "",
     skyboxUpload: "",
@@ -60,38 +57,45 @@ class SemanticContent extends React.Component {
     skyboxCancel: true,
     measurements: [
       { value: "MM", text: "mm", key: "mm" },
+      { value: "CM", text: "cm", key: "cm" },
+      { value: "IN", text: "in", key: "in" },
       { value: "FT", text: "ft", key: "ft" },
-      { value: "CM", text: "cm", key: "cm" }
     ],
     booleans: [
       { value: false, text: "Disable", key: "disable" },
-      { value: true, text: "Enable", key: "enable" }
+      { value: true, text: "Enable", key: "enable" },
     ],
 
-    enableLight: "",
-    enableMaterials: "",
-    enableShaders: "",
-    enableMeasurement: "",
-    enableDownload: "",
-    enableEmbed: "",
-    modelUnits: "",
+    enableLight: true,
+    enableMaterials: true,
+    enableShaders: true,
+    enableMeasurement: true,
+    enableAnnotations: true,
+    enableDownload: true,
+    enableEmbed: true,
+    modelUnits: "MM",
     displayName: "",
-
+    externalMaps: null,
     open: false,
     setOpen: false,
     isUpdate: false,
     _id: null,
-    showConversionTool: false
+    showConversionTool: false,
+    formError: {
+      status: false,
+      message: "",
+    },
+    modelPendingDelete: null,
   };
   constructor(props: Object) {
     super(props);
-    (this: any).threeFileRef = React.createRef();
-    (this: any).threeThumbnailRef = React.createRef();
-    (this: any).skyboxRef = React.createRef();
-    (this: any).contextRef = React.createRef();
-    (this: any).context = null;
-    (this: any).state = this.defaultState;
+    this.threeFileRef = React.createRef();
+    this.threeThumbnailRef = React.createRef();
+    this.skyboxRef = React.createRef();
+    this.contextRef = React.createRef();
+    this.context = null;
     this.contextRef = createRef();
+    this.state = this.defaultState;
   }
 
   componentDidMount = () => {
@@ -100,21 +104,105 @@ class SemanticContent extends React.Component {
 
   handleVisablityUpdate = (e, { calculations }) =>
     this.setState({ calculations });
-    
+
   editView(view) {
-    const { viewerSettings, __v, skybox, ...rest } = view;
+    const { viewerSettings, __v, ...rest } = view;
     rest.isUpdate = true;
-    this.setState(prevState => ({ ...prevState, ...rest }));
+    this.setState((prevState) => ({ ...prevState, ...rest }));
   }
 
+  isFormElementSet = (element) => {
+    return element !== "";
+  };
+
+  verifyForm = () => {
+    const {
+      displayName,
+      threeFileUpload,
+      enableLight,
+      enableMaterials,
+      enableShaders,
+      enableMeasurement,
+      enableAnnotations,
+      enableEmbed,
+      enableDownload,
+      modelUnits,
+      formError,
+    } = this.state;
+    // TODO refactor this
+    const error = { status: false };
+    let fieldName;
+    const checkFields = () => {
+      if (!this.isFormElementSet(displayName)) {
+        error.status = true;
+        fieldName = "Display Name";
+        return;
+      }
+      if (!this.isFormElementSet(threeFileUpload)) {
+        error.status = true;
+        fieldName = "three.js File";
+        return;
+      }
+      if (!this.isFormElementSet(enableLight)) {
+        error.status = true;
+        fieldName = "Enable Light Tools";
+        return;
+      }
+      if (!this.isFormElementSet(enableMaterials)) {
+        error.status = true;
+        fieldName = "Enable Material Tools";
+        return;
+      }
+      if (!this.isFormElementSet(enableShaders)) {
+        error.status = true;
+        fieldName = "Enable Shader Tools";
+        return;
+      }
+      if (!this.isFormElementSet(enableMeasurement)) {
+        error.status = true;
+        fieldName = "Enable Measurement Tools";
+        return;
+      }
+      if (!this.isFormElementSet(enableAnnotations)) {
+        error.status = true;
+        fieldName = "Enable Annotation Tools";
+        return;
+      }
+      if (!this.isFormElementSet(enableEmbed)) {
+        error.status = true;
+        fieldName = "Enable User Embed";
+        return;
+      }
+      if (!this.isFormElementSet(enableDownload)) {
+        error.status = true;
+        fieldName = "Enable User Download";
+        return;
+      }
+      if (!this.isFormElementSet(modelUnits)) {
+        error.status = true;
+        fieldName = "Original Model Units";
+        return;
+      }
+    };
+    checkFields();
+    if (error.status) {
+      error.message = `${fieldName} is Required`;
+      this.setState((prevState) => ({
+        formError: error,
+      }));
+      return false;
+    }
+    return true;
+  };
+
   resetAddForm = () => {
-    this.setState(prevState => ({
+    this.setState((prevState) => ({
       ...prevState,
-      ...this.defaultState
+      ...this.defaultState,
     }));
   };
 
-  handleFileUpload = event => {
+  handleFileUpload = (event) => {
     switch (event.target.name) {
       case "threeFile":
         this.setState({ [event.target.name]: event.target.files[0].name });
@@ -125,24 +213,25 @@ class SemanticContent extends React.Component {
         this.setState({ [event.target.name]: event.target.files[0].name });
         this.setState({ threeThumbnailUpload: event.target.files[0] });
         this.setState({
-          threeThumbnailCancel: !this.state.threeThumbnailCancel
+          threeThumbnailCancel: !this.state.threeThumbnailCancel,
         });
         break;
-      case "skybox":
+      case "skyboxFile":
         this.setState({ [event.target.name]: event.target.files[0].name });
         this.setState({ skyboxUpload: event.target.files[0] });
         this.setState({ skyboxCancel: !this.state.skyboxCancel });
         break;
       default:
-        console.log(event.target.name);
+        break;
     }
   };
 
-  handleMeshConverted = threeFile => {
+  handleMeshConverted = (threeFile, externalMaps) => {
     this.setState({
       threeFileUpload: threeFile,
       threeFileCancel: false,
-      threeFile: threeFile.name
+      threeFile: threeFile.name,
+      externalMaps: externalMaps,
     });
   };
   // TODO change this
@@ -151,7 +240,7 @@ class SemanticContent extends React.Component {
     this.setState({ [name]: value });
   };
 
-  handleFileDiscard = target => {
+  handleFileDiscard = (target) => {
     switch (target) {
       case "threeFile":
         this.setState({ threeFile: "" });
@@ -162,11 +251,11 @@ class SemanticContent extends React.Component {
         this.setState({ threeThumbnail: "" });
         this.setState({ threeThumbnailUpload: "" });
         this.setState({
-          threeThumbnailCancel: !this.state.threeThumbnailCancel
+          threeThumbnailCancel: !this.state.threeThumbnailCancel,
         });
         break;
-      case "skybox":
-        this.setState({ skybox: "" });
+      case "skyboxFile":
+        this.setState({ skyboxFile: "" });
         this.setState({ skyboxUpload: "" });
         this.setState({ skyboxCancel: !this.state.skyboxCancel });
         break;
@@ -175,25 +264,40 @@ class SemanticContent extends React.Component {
     }
   };
   // TODO make a decision whether we bind or use anonymous functions to avoid binding to this
-
+  formatExternalMaps = () => {
+    const { externalMaps } = this.state;
+    if (externalMaps) {
+      return {
+        externalMapInfo: externalMaps.map((m) => {
+          const { file, ...rest } = m;
+          return rest;
+        }),
+        externalMaps: externalMaps.map((m) => m.file),
+      };
+    }
+    return {};
+  };
   handleSubmit = () => {
+    if (!this.verifyForm()) return;
     const view = {
       displayName: this.state.displayName,
       threeFile: this.state.threeFileUpload,
       threeThumbnail: this.state.threeThumbnailUpload,
-      skybox: { file: this.state.skyboxUpload },
+      skyboxFile: this.state.skyboxUpload,
       enableLight: this.state.enableLight,
       enableMaterials: this.state.enableMaterials,
       enableShaders: this.state.enableShaders,
       enableMeasurement: this.state.enableMeasurement,
+      enableAnnotations: this.state.enableAnnotations,
       enableDownload: this.state.enableDownload,
       enableEmbed: this.state.enableEmbed,
       modelUnits: this.state.modelUnits,
+      ...this.formatExternalMaps(),
     };
     this.props.addView(view);
-    this.setState(prevState => ({
+    this.setState((prevState) => ({
       ...prevState,
-      ...this.defaultState
+      ...this.defaultState,
     }));
   };
 
@@ -208,7 +312,7 @@ class SemanticContent extends React.Component {
       needsUpdate.threeFile = threeFileUpload;
     }
     if (this.isUploadFile(skyboxUpload)) {
-      needsUpdate.skybox = { file: skyboxUpload };
+      needsUpdate.skyboxFile = skyboxUpload;
     }
     if (this.isUploadFile(threeThumbnailUpload)) {
       needsUpdate.threeThumbnail = threeThumbnailUpload;
@@ -217,42 +321,67 @@ class SemanticContent extends React.Component {
   };
 
   toggleConversionTool = () => {
-    this.setState(prevState => ({
+    this.setState((prevState) => ({
       ...prevState,
-      showConversionTool: !prevState.showConversionTool
+      showConversionTool: !prevState.showConversionTool,
     }));
   };
 
   handleUpdate = () => {
     const view = {
       displayName: this.state.displayName,
+      threeFile: this.state.threeFile,
+      skyboxFile: this.state.skyboxFile,
+      threeThumbnail: this.state.threeThumbnail,
       enableLight: this.state.enableLight,
       enableMaterials: this.state.enableMaterials,
       enableShaders: this.state.enableShaders,
       enableMeasurement: this.state.enableMeasurement,
+      enableAnnotations: this.state.enableAnnotations,
       enableDownload: this.state.enableDownload,
       enableEmbed: this.state.enableEmbed,
       modelUnits: this.state.modelUnits,
-      _id: this.state._id
+      _id: this.state._id,
+      ...this.formatExternalMaps(),
     };
     const updated = { ...view, ...this.filesNeedUpdate() };
     this.props.updateView(updated);
-    this.setState(prevState => ({
+    this.setState((prevState) => ({
       ...prevState,
-      ...this.defaultState
+      ...this.defaultState,
+    }));
+  };
+
+  handleDelete = (view) => {
+    this.setState((prevState) => ({
+      modelPendingDelete: view,
+    }));
+    // () => this.props.deleteView(obj[1]._id)
+  };
+
+  confirmDelete = () => {
+    const { modelPendingDelete } = this.state;
+    if (modelPendingDelete) {
+      this.props.deleteView(modelPendingDelete._id);
+      this.cancelDelete();
+    }
+  };
+
+  cancelDelete = () => {
+    this.setState((prevState) => ({
+      modelPendingDelete: null,
     }));
   };
 
   render() {
     const { isUpdate, showConversionTool } = this.state;
     const entries = Object.entries(this.props.views);
-    const list = entries.map(obj => (
+    const list = entries.map((obj) => (
       <Segment inverted key={obj[1]._id}>
         <Header as="h5">
-            {obj[1].displayName ? obj[1].displayName : obj[1]._id}
-          </Header>
+          {obj[1].displayName ? obj[1].displayName : obj[1]._id}
+        </Header>
         <Button.Group className="admin-list-button-group">
-          
           <Button
             as={Link}
             to={`/models/${obj[1]._id}`}
@@ -265,11 +394,7 @@ class SemanticContent extends React.Component {
           <Button onClick={() => this.editView(obj[1])} icon color="grey">
             <Icon size="large" name="pencil" />
           </Button>
-          <Button
-            onClick={() => this.props.deleteView(obj[1]._id)}
-            icon
-            color="red"
-          >
+          <Button onClick={() => this.handleDelete(obj[1])} icon color="red">
             <Icon size="large" name="remove circle" />
           </Button>
         </Button.Group>
@@ -290,7 +415,7 @@ class SemanticContent extends React.Component {
             <Label className="admin-list-label" horizontal>
               skybox
             </Label>
-            {obj[1].skybox.file}
+            {obj[1].skyboxFile}
           </List.Item>
           <List.Item>
             <Label className="admin-list-label" horizontal>
@@ -315,6 +440,12 @@ class SemanticContent extends React.Component {
               measurement tools
             </Label>
             {obj[1].enableMeasurement.toString()}
+          </List.Item>
+          <List.Item>
+            <Label className="admin-list-label" horizontal>
+              annotation tools
+            </Label>
+            {obj[1].enableAnnotations.toString()}
           </List.Item>
           <List.Item>
             <Label className="admin-list-label" horizontal>
@@ -357,8 +488,12 @@ class SemanticContent extends React.Component {
                     "Add New Model"
                   )}
                 </Header>
-                <Form fluid className="admin-main-form">
-                <Form.Field
+                <Form
+                  fluid
+                  className="admin-main-form"
+                  error={this.state.formError.status}
+                >
+                  <Form.Field
                     control={Input}
                     className="admin-select-text-input"
                     fluid
@@ -368,7 +503,10 @@ class SemanticContent extends React.Component {
                     onChange={this.handleEnableChange}
                     placeholder="Name"
                   />
-                  <Divider horizontal inverted> Files </Divider>
+                  <Divider horizontal inverted>
+                    {" "}
+                    Files{" "}
+                  </Divider>
                   <Form.Field className="admin-main-form-field">
                     <Header as="h5" className="admin-file-upload-header">
                       {this.state.threeFile != ""
@@ -417,7 +555,7 @@ class SemanticContent extends React.Component {
                   </Form.Field>
                   <Form.Field className="admin-main-form-field">
                     <Header as="h5" className="admin-file-upload-header">
-                      {this.state.threeThumbnail != ""
+                      {this.state.threeThumbnail
                         ? this.state.threeThumbnail
                         : "Select Thumbnail"}
                     </Header>
@@ -452,8 +590,8 @@ class SemanticContent extends React.Component {
 
                   <Form.Field className="admin-main-form-field">
                     <Header as="h5" className="admin-file-upload-header">
-                      {this.state.skybox != ""
-                        ? this.state.skybox
+                      {this.state.skyboxFile 
+                        ? this.state.skyboxFile
                         : "Select Skybox"}
                     </Header>
                     <Button.Group className="admin-button-group">
@@ -467,14 +605,14 @@ class SemanticContent extends React.Component {
                         <input
                           ref={this.skyboxRef}
                           type="file"
-                          name="skybox"
+                          name="skyboxFile"
                           hidden
                           onChange={this.handleFileUpload}
                           accept="image/*"
                         />
                       </Button>
                       <Button
-                        onClick={() => this.handleFileDiscard("skybox")}
+                        onClick={() => this.handleFileDiscard("skyboxFile")}
                         icon
                         title="Discard File"
                         disabled={this.state.skyboxCancel}
@@ -484,7 +622,10 @@ class SemanticContent extends React.Component {
                       </Button>
                     </Button.Group>
                   </Form.Field>
-                  <Divider horizontal inverted> Settings </Divider>  
+                  <Divider horizontal inverted>
+                    {" "}
+                    Settings{" "}
+                  </Divider>
                   <Form.Field
                     control={Select}
                     className="admin-select-dropdown"
@@ -537,6 +678,18 @@ class SemanticContent extends React.Component {
                     control={Select}
                     className="admin-select-dropdown"
                     fluid
+                    label="Enable Annotation Tools"
+                    name="enableAnnotations"
+                    value={this.state.enableAnnotations}
+                    onChange={this.handleEnableChange}
+                    options={this.state.booleans}
+                    placeholder="enable/disable"
+                  />
+
+                  <Form.Field
+                    control={Select}
+                    className="admin-select-dropdown"
+                    fluid
                     label="Original Model Units"
                     name="modelUnits"
                     value={this.state.modelUnits}
@@ -568,7 +721,14 @@ class SemanticContent extends React.Component {
                     options={this.state.booleans}
                     placeholder="enable/disable"
                   />
-
+                  <Message
+                    icon="exclamation circle"
+                    size="large"
+                    className="admin-form-error-message"
+                    error
+                    header="Cannot Save Model"
+                    content={this.state.formError.message}
+                  />
                   <Form.Button
                     content={isUpdate ? "Update" : "Submit"}
                     onClick={isUpdate ? this.handleUpdate : this.handleSubmit}
@@ -587,15 +747,27 @@ class SemanticContent extends React.Component {
               />
             )}
           </Grid.Column>
+          <Confirm
+            className="admin-form-delete-modal"
+            open={this.state.modelPendingDelete}
+            header="Delete Model"
+            content={`Are you sure you want to delete ${
+              this.state.modelPendingDelete
+                ? this.state.modelPendingDelete.displayName
+                : ""
+            } ? This operation can't be undone.`}
+            onCancel={this.cancelDelete}
+            onConfirm={this.confirmDelete}
+          />
         </Grid>
       </Ref>
     );
   }
 }
 
-function mapStateToProps(state, ownProps): Object {
+function mapStateToProps(state, ownProps) {
   return {
-    views: state.views.views
+    views: state.views.views,
     //userProfile: state.app.userProfile,
     //allBucketsInfo: state.app.allBucketsInfo
   };
