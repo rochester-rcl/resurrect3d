@@ -255,6 +255,10 @@ export default class ThreeViewerAbstractBackend {
         let newKey = rootKey !== undefined ? rootKey + "__" + key : key;
         if (obj[key] !== null && obj[key].constructor === Object) {
           formatFormData(obj[key], newKey);
+        } else if (obj[key] !== null && obj[key].constructor === Array) {
+          console.log('array');
+          fd.append(newKey, obj[key][0]);
+          //obj[key].map(item => fd.append(newKey, item));
         } else {
           fd.append(newKey, obj[key]);
         }

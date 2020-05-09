@@ -19,7 +19,7 @@ module.exports = (app, upload, conn, Grid, router) => {
         { name: "threeFile", maxcount: 1 },
         { name: "threeThumbnail", maxcount: 1 },
         { name: "skybox__file", maxcount: 1 },
-        { name: "alternateMaps", maxCount: 10 }
+        { name: "alternateMaps", maxcount: 1 }
       ]),
       view.addView
     );

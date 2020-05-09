@@ -134,6 +134,8 @@ function getActionType(payload: Object): string {
     case "progress":
       if (payload.loaderType === "texture")
         return ActionConstants.UPDATE_TEXTURE_LOAD_PROGRESS;
+      if (payload.loaderType === "alternatemap")
+        return ActionConstants.UPDATE_ALTERNATE_MAP_LOAD_PROGRESS;
       if (payload.loaderType === "converter")
         return ActionConstants.UPDATE_CONVERSION_PROGRESS;
       return ActionConstants.UPDATE_MESH_LOAD_PROGRESS;
@@ -141,6 +143,8 @@ function getActionType(payload: Object): string {
     case "loaded":
       if (payload.loaderType === "texture")
         return ActionConstants.TEXTURE_LOADED;
+      if (payload.loaderType === "alternatemap")
+        return ActionConstants.ALTERNATE_MAP_LOADED;
       if (payload.loaderType === "converter")
         return ActionConstants.CONVERSION_COMPLETE;
       if (payload.loaderType === "localtexture")
@@ -153,6 +157,8 @@ function getActionType(payload: Object): string {
         return ActionConstants.TEXTURE_LOAD_ERROR;
       if (payload.loaderType === "converter")
         return ActionConstants.CONVERSION_ERROR;
+      if (payload.loaderType === "alternatemap")
+        return ActionConstants.ALTERNATE_MAP_LOAD_ERROR;
       return ActionConstants.MESH_LOAD_ERROR;
   }
 }
@@ -364,6 +370,29 @@ export function* loadTextureSaga(
     console.log(error);
   }
 }
+
+function* loadAlternateMapSaga(loadAlternateMapAction) {
+  try {
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.crossOrigin = "anonymous";
+    const textureLoaderChannel = yield call(
+      createLoadProgressChannel,
+      textureLoader,
+      "alternatemap",
+      loadAlternateMapAction.url
+    );
+    while (true) {
+      const payload = yield take(textureLoaderChannel);
+      yield put({
+        type: getActionType(payload),
+        payload
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 // TODO make loaderType constants
 function* loadLocalTextureSaga(action) {
   try {
@@ -645,6 +674,10 @@ export function* watchForLoadTexture(): Generator<any, any, any> {
   yield takeEvery(ActionConstants.LOAD_TEXTURE, loadTextureSaga);
 }
 
+export function* watchForLoadAlternateMap(): Generator<any, any, any> {
+  yield takeEvery(ActionConstants.LOAD_ALTERNATE_MAP, loadAlternateMapSaga);
+}
+
 function* watchForLoadLocalTexture() {
   yield takeEvery(ActionConstants.LOAD_LOCAL_TEXTURE_ASSET, loadLocalTextureSaga);
 }
@@ -704,6 +737,7 @@ export default function* rootSaga(): Generator<any, any, any> {
     watchForSaveSettings(),
     watchForLoadMesh(),
     watchForLoadTexture(),
+    watchForLoadAlternateMap(),
     watchForLoadLocalTexture(),
     watchForAddUser(),
     watchForVerifyUser(),

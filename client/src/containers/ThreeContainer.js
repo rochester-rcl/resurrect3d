@@ -49,6 +49,12 @@ class ThreeContainer extends Component {
       } else {
         this.props.noSkyboxTexture();
       }
+
+      if (this.props.threeAsset.alternateMaps !== null) {
+        for (let i = 0; i < this.props.threeAsset.alternateMaps.length; i++) {
+          this.props.loadAlternateMapAction(this.props.threeAsset.alternateMaps[i])
+        }
+      }
     }
   }
 
@@ -110,11 +116,9 @@ class ThreeContainer extends Component {
 }
 
 function mapStateToProps(state: Object): Object {
-  console.log(state.ui);
   return {
     mesh: state.ui.mesh,
     texture: state.ui.texture,
-    alternateMaps: state.ui.alternateMaps,
     metadata: state.ui.metadata,
     threeAsset: state.ui.threeAsset,
     user: state.user,
