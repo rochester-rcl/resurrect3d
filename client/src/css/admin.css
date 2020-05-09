@@ -333,6 +333,17 @@
   flex-wrap: wrap;
 }
 
+.admin-main-form-field-container {
+  padding: 10px;
+  border: 1px solid #323232;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
 .admin-select-text-input > .input input {
   background: none !important;
   border: 1px solid #323232 !important;
