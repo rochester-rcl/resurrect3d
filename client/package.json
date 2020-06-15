@@ -5,7 +5,8 @@
   "devDependencies": {
     "flow-bin": "^0.39.0",
     "react-app-rewired": "^2.1.5",
-    "react-scripts": "^3.4.1"
+    "react-scripts": "^3.4.1",
+    "webxr-polyfill": "^2.0.3"
   },
   "dependencies": {
     "@material-ui/core": "^4.0.0-rc.0",
@@ -39,7 +40,7 @@
     "zlibjs": "^0.3.1"
   },
   "scripts": {
-    "start": "react-app-rewired start",
+    "start": "HTTPS=true react-app-rewired start",
     "build": "react-app-rewired build && node scripts/patch-fonts.js",
     "test": "react-app-rewired test --env=jsdom",
     "eject": "react-scripts eject"

@@ -34,6 +34,7 @@ import screenfull from "screenfull";
 
 import { ANNOTATION_SAVE_STATUS, KEYCODES } from "../../constants/application";
 
+
 // TODO add editing capabilities to the body and make it editable
 
 class ThreeAnnotationController extends Component {
@@ -313,10 +314,10 @@ class ThreeAnnotationController extends Component {
       }
 
     if (!clickedExisting && this.state.editable)
-      this.makeAnnotation(intersection.point);
+      this.makeAnnotation(intersection.point, intersection.face);
   }
 
-  makeAnnotation(point) {
+  makeAnnotation(point, face) {
     const { annotations, pinColor } = this.state;
     for (let i = 0; i < annotations.length; i++) {
       annotations[i].open = false;

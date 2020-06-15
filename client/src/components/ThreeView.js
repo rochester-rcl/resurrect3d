@@ -74,7 +74,7 @@ import ThreeMeshExporter from "./ThreeMeshExporter";
 import ThreeEmbed from "./ThreeEmbed";
 
 // Components
-// import ThreeWebVR, { checkVR } from "./webvr/ThreeWebVR";
+import ThreeWebVR, { checkVR } from "./webvr/ThreeWebVR";
 
 // Because of all of the THREE examples' global namespace pollu
 const THREE = _THREE;
@@ -530,7 +530,7 @@ export default class ThreeView extends Component {
     this.camera = new THREE.PerspectiveCamera(
       50,
       this.width / this.height,
-      1,
+      0.0001,
       1000000
     ); // use defaults for fov and near and far frustum;
 
@@ -538,7 +538,7 @@ export default class ThreeView extends Component {
       50,
       this.width / this.height
     );
-    this.vrCamera = new THREE.PerspectiveCamera();
+    this.vrCamera = this.camera.clone();
     this.camera.add(this.vrCamera);
     this.spherical = new THREE.Spherical();
     this.offset = new THREE.Vector3();
@@ -590,19 +590,28 @@ export default class ThreeView extends Component {
     // annotation sprite that we can also clone
     const spriteMaterial = new THREE.SpriteMaterial({
       map: annotationSpriteTexture,
-      transparent: true,
       alphaTest: 0.5,
-      depthTest: false,
       depthWrite: false,
     });
-    this.annotationSprite = new THREE.Sprite(spriteMaterial);
+    const spriteMaterialTransparent = new THREE.SpriteMaterial({
+      map: annotationSpriteTexture,
+      transparent: true,
+      color: 0x000000,
+      alphaTest: 0.1,
+      depthTest: false,
+      depthWrite: false,
+      opacity: 0.2,
+    });
+    this.annotationSpriteContainer = new THREE.Group();
+    this.annotationSpriteContainer.add(new THREE.Sprite(spriteMaterial));
+    this.annotationSpriteContainer.add(new THREE.Sprite(spriteMaterialTransparent));
     this.measurement = new THREE.Group();
     this.guiScene.add(this.measurement);
 
     this.annotationMarkers = new THREE.Group();
     this.annotationLines = new THREE.Group();
 
-    this.guiScene.add(this.annotationMarkers);
+    this.scene.add(this.annotationMarkers);
     this.overlayScene.add(this.annotationLines);
 
     // WebGL Renderer
@@ -738,15 +747,15 @@ export default class ThreeView extends Component {
       }
     }
 
-    /*controls.addComponent("webvr", ThreeWebVR, {
+    controls.addComponent("webvr", ThreeWebVR, {
       ...buttonProps,
       renderer: this.webGLRenderer,
       hideOnUnsupported: true,
       onExitCallback: this.exitVR,
       onEnterCallback: this.enterVR,
-      frameOfReference: "stage",
+      frameOfReference: "local",
       className: "three-controls-button"
-    });*/
+    });
     controls.addComponent("embed", ThreeEmbed, {
       ...buttonProps,
       className: "three-embed-button",
@@ -879,7 +888,7 @@ export default class ThreeView extends Component {
       /* assuming sprite is 1x1 plane as per constructor, we want it no more
         than 1/4 of the mesh. A divisor of 4 seems to work best */
       this.spriteScaleFactor = Math.ceil(
-        this.bboxMesh.max.distanceTo(this.bboxMesh.min) / 4
+        this.bboxMesh.max.distanceTo(this.bboxMesh.min) / 2
       );
     } else {
       console.warn(
@@ -963,12 +972,12 @@ export default class ThreeView extends Component {
     }
     if (annotations) {
       for (let i = 0; i < annotations.length; i++) {
-        const annotationMarker = this.annotationSprite.clone();
-        annotationMarker.material = this.annotationSprite.material.clone();
+        const annotationMarker = this.annotationSpriteContainer.clone(true);
+        annotationMarker.children[0].material = this.annotationSpriteContainer.children[0].material.clone();
         annotationMarker.position.copy(annotations[i].point);
         annotationMarker.position.add(this.annotationSpriteOffset);
         if (annotations[i].open) {
-          annotationMarker.material.color.setHex(annotations[i].pinColor);
+          annotationMarker.children[0].material.color.setHex(annotations[i].pinColor);
           const cssObj = new CSS2DObject(annotations[i].node);
           const bodyNode = annotations[i].bodyNode;
           const cssBodyObj = bodyNode
@@ -984,7 +993,7 @@ export default class ThreeView extends Component {
             currentAnnotationCSSReadOnlyBodyObj: cssBodyObj,
           });
         } else {
-          annotationMarker.material.color.setHex(0x000000);
+          annotationMarker.children[0].material.color.setHex(0x000000);
         }
         annotationMarker.needsUpdate = true;
         this.annotationMarkers.add(annotationMarker);
@@ -1061,7 +1070,6 @@ export default class ThreeView extends Component {
     this.mesh = this.props.mesh.object3D;
     this.meshChildren = getChildren(this.mesh);
     this.materialRefs = getMaterials(this.mesh);
-    console.log(this.materialRefs);
     const setMicrosurface = (material) => {
       if (material.type === THREE_MESH_STANDARD_MATERIAL) {
         material.metalness = 0.0;
@@ -1122,8 +1130,8 @@ export default class ThreeView extends Component {
     this.meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
     this.meshDepth = this.bboxMesh.max.z - this.bboxMesh.min.z;
     this.computeSpriteScaleFactor();
-    this.annotationSprite.scale.multiplyScalar(this.spriteScaleFactor / 10);
-    const spriteBbox = new THREE.Box3().setFromObject(this.annotationSprite);
+    this.annotationSpriteContainer.scale.multiplyScalar(this.spriteScaleFactor / 5);
+    const spriteBbox = new THREE.Box3().setFromObject(this.annotationSpriteContainer);
     const centerY = (spriteBbox.max.y - spriteBbox.min.y) / 2;
     this.annotationSpriteOffset = new THREE.Vector3(0, centerY, 0);
     this.pointLights.addHelpers(this.guiScene, this.spriteScaleFactor);
@@ -1228,7 +1236,8 @@ export default class ThreeView extends Component {
           loadProgress: prevState.loadProgress + 15,
           loadText: "Loading Shaders",
         };
-      }, this.initPostprocessing());
+      });
+      this.initPostprocessing();
     });
   }
 

@@ -7,11 +7,15 @@ import {
   WEBVR_EXIT,
   WEBVR_NOT_SUPPORTED,
   WEBVR_DEVICE_NOT_FOUND,
-  WEBVR_SUPPORT
+  WEBVR_SUPPORT,
 } from "../../constants/application";
 
 // button
 import ThreeButton from "../ThreeButton";
+
+// polyfill
+import WebXRPolyfill from 'webxr-polyfill';
+const polyfill = new WebXRPolyfill();
 
 export function checkVR() {
   if ("xr" in navigator && "requestDevice" in navigator.xr) return true;
@@ -23,7 +27,7 @@ export default class ThreeWebVR extends Component {
   state = {
     vrActive: false,
     currentSession: null,
-    displayStatus: WEBVR_SUPPORT.NOT_SUPPORTED
+    displayStatus: WEBVR_SUPPORT.NOT_SUPPORTED,
   };
 
   constructor(props: Object) {
@@ -31,76 +35,31 @@ export default class ThreeWebVR extends Component {
     this.handleSessionStarted = this.handleSessionStarted.bind(this);
     this.handleSessionEnded = this.handleSessionEnded.bind(this);
     this.handleVRNotFound = this.handleVRNotFound.bind(this);
-    this.handlePresentActivate = this.handlePresentActivate.bind(this);
     this.init = this.init.bind(this);
     this.setRendererSession = this.setRendererSession.bind(this);
     this.setRendererFrameOfReference = this.setRendererFrameOfReference.bind(
       this
     );
-    this.enterVR = this.enterVR.bind(this);
     this.enterXR = this.enterXR.bind(this);
     this.createButton = this.createButton.bind(this);
     this.enterCallback = null;
   }
 
   componentDidMount() {
-    window.addEventListener("vrdisplayconnect", this.enterVR, false);
-    window.addEventListener(
-      "vrdisplaydisconnect",
-      this.handleVRNotFound,
-      false
-    );
-    window.addEventListener(
-      "vrdisplayactivate",
-      this.handlePresentActivate,
-      false
-    );
     this.init();
     const { frameOfReference } = this.props;
     if (frameOfReference !== undefined) {
-      this.setRendererFrameOfReference(frameOfReference);
+     this.setRendererFrameOfReference(frameOfReference);
     }
-    // window.addEventListener('vrdisplaypresentchange', )
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener("vrdisplayconnect", this.enterVR, false);
-    window.removeEventListener(
-      "vrdisplaydisconnect",
-      this.handleVRNotFound,
-      false
-    );
-    window.removeEventListener(
-      "vrdisplayactivate",
-      this.handlePresentActivate,
-      false
-    );
   }
 
   init() {
-    if ("xr" in navigator && "requestDevice" in navigator.xr) {
-      navigator.xr.requestDevice().then(device => {
-        device
-          .supportsSession({ immersive: true, exclusive: true })
-          .then(() => {
-            this.enterCallback = this.enterXR(device);
-          })
-          .catch(this.handleVRNotFound);
-      });
-    } else if ("getVRDisplays" in navigator) {
-      navigator
-        .getVRDisplays()
-        .then(displays => {
-          if (displays.length > 0) {
-            this.enterCallback = this.enterVR(displays[0]);
-          } else {
-            this.handleVRNotFound();
-          }
-        })
-        .catch(error => console.log(error));
+    if ("xr" in navigator && navigator.xr.isSessionSupported("immersive-vr")) {
+      const init = { optionalFeatures: ["local"] };
+      this.enterCallback = this.enterXR(init);
     } else {
       this.setState({
-        displayStatus: WEBVR_SUPPORT.NOT_SUPPORTED
+        displayStatus: WEBVR_SUPPORT.NOT_SUPPORTED,
       });
       this.enterCallback = () => this.infoLink.click();
     }
@@ -111,7 +70,7 @@ export default class ThreeWebVR extends Component {
     this.setState(
       {
         currentSession: session,
-        vrActive: true
+        vrActive: true,
       },
       this.setRendererSession
     );
@@ -123,7 +82,7 @@ export default class ThreeWebVR extends Component {
     this.setState(
       {
         currentSession: null,
-        vrActive: false
+        vrActive: false,
       },
       this.setRendererSession
     );
@@ -131,56 +90,21 @@ export default class ThreeWebVR extends Component {
 
   handleVRNotFound(event) {
     this.setState({
-      displayStatus: WEBVR_SUPPORT.DEVICE_NOT_FOUND
+      displayStatus: WEBVR_SUPPORT.DEVICE_NOT_FOUND,
     });
   }
 
-  handlePresentActivate(event) {}
-
-  enterVR(device) {
-    const { renderer, onEnterCallback, onExitCallback } = this.props;
-    renderer.vr.setDevice(device);
+  enterXR(options) {
     this.setState({
-      displayStatus: WEBVR_SUPPORT.DEVICE_FOUND
-    });
-    return () => {
-      if (device.isPresenting === true) {
-        device.exitPresent();
-        renderer.vr.enabled = false;
-        this.setState(
-          {
-            vrActive: false
-          },
-          () => {
-            if (onExitCallback !== undefined) onExitCallback();
-          }
-        );
-      } else {
-        renderer.vr.enabled = true;
-        device.requestPresent([{ source: renderer.domElement }]);
-        this.setState(
-          {
-            vrActive: true
-          },
-          () => {
-            if (onEnterCallback !== undefined) onEnterCallback();
-          }
-        );
-      }
-    };
-  }
-
-  enterXR(device) {
-    this.props.renderer.vr.setDevice(device);
-    this.setState({
-      displayStatus: WEBVR_SUPPORT.DEVICE_FOUND
+      displayStatus: WEBVR_SUPPORT.DEVICE_FOUND,
     });
     return () => {
       const { currentSession } = this.state;
       if (currentSession === null) {
-        device
-          .requestSession({ immersive: true, exclusive: true })
-          .then(this.handleSessionStarted);
+        navigator.xr
+          .requestSession("immersive-vr", options)
+          .then(this.handleSessionStarted)
+          .catch(this.handleVRNotFound);
       } else {
         currentSession.end();
       }
@@ -191,17 +115,17 @@ export default class ThreeWebVR extends Component {
     const { currentSession } = this.state;
     const { onEnterCallback, onExitCallback, renderer } = this.props;
     if (currentSession === null) {
-      renderer.vr.enabled = false;
+      renderer.xr.enabled = false;
       if (onExitCallback !== undefined) onExitCallback();
     } else {
-      renderer.vr.enabled = true;
+      renderer.xr.enabled = true;
       if (onEnterCallback !== undefined) onEnterCallback();
     }
-    this.props.renderer.vr.setSession(currentSession);
+    this.props.renderer.xr.setSession(currentSession);
   }
 
   setRendererFrameOfReference(val) {
-    this.props.renderer.vr.setFrameOfReferenceType(val);
+    this.props.renderer.xr.setReferenceSpaceType(val);
   }
 
   createButton() {
@@ -234,7 +158,7 @@ export default class ThreeWebVR extends Component {
     return (
       <div className="three-webvr-button-container">
         <ThreeButton
-          ref={ref => (this.vrButton = ref)}
+          ref={(ref) => (this.vrButton = ref)}
           className={"three-webvr-button " + className}
           color={color}
           icon={icon}
@@ -243,7 +167,7 @@ export default class ThreeWebVR extends Component {
           onClick={() => this.enterCallback()}
         />
         <a
-          ref={ref => (this.infoLink = ref)}
+          ref={(ref) => (this.infoLink = ref)}
           className="three-webvr-info"
           href="https://webvr.info"
           target="_blank"
