@@ -1156,7 +1156,7 @@ export default class ThreeView extends Component {
     ); // diameter of sphere =  2 * meshHeight
 
     this.maxDistance = this.environmentRadius * 2;
-    this.camera.far = this.maxDistance * 4;
+    this.camera.far = this.maxDistance * 8;
     this.dynamicLight.shadow.camera.far = this.camera.far;
     this.minDistance = Math.ceil(this.meshDepth - this.bboxMesh.max.z);
     this.minDistance = this.minDistance <= 0 ? 0.1 : this.minDistance;

@@ -48,7 +48,6 @@ export class LinearGradientShader {
   bottomColor: string;
   uniforms: Object;
   vertexShader = [
- 
     "varying vec2 vUv;",
     "void main() {",
       "vUv = uv;",
