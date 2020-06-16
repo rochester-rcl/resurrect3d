@@ -1135,7 +1135,7 @@ export default class ThreeView extends Component {
     this.meshDepth = this.bboxMesh.max.z - this.bboxMesh.min.z;
     this.computeSpriteScaleFactor();
     this.annotationSpriteContainer.scale.multiplyScalar(
-      this.spriteScaleFactor / 6
+      this.spriteScaleFactor / 8
     );
     const spriteBbox = new THREE.Box3().setFromObject(
       this.annotationSpriteContainer
