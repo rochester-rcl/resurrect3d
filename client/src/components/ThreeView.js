@@ -1313,7 +1313,7 @@ export default class ThreeView extends Component {
     const rtParams = {
       minFilter: THREE.LinearFilter,
       magFilter: THREE.LinearFilter,
-      format: THREE.RGBFormat,
+      format: THREE.RGBAFormat,
       stencilBuffer: true,
     };
 
