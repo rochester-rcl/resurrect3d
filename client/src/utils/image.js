@@ -47,13 +47,6 @@ export class LinearGradientShader {
   topColor: string;
   bottomColor: string;
   uniforms: Object;
-  vertexShader = [
-    "varying vec2 vUv;",
-    "void main() {",
-      "vUv = uv;",
-      "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
-    "}"
-  ].join( "\n" );
   fragmentShader: string = [
     'uniform vec3 topColor;',
     'uniform vec3 bottomColor;',

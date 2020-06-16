@@ -532,7 +532,7 @@ export default class ThreeView extends Component {
     this.camera = new THREE.PerspectiveCamera(
       50,
       this.width / this.height,
-      0.0001,
+      1,
       1000000
     ); // use defaults for fov and near and far frustum;
 
