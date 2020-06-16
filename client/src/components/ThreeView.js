@@ -615,7 +615,7 @@ export default class ThreeView extends Component {
     this.annotationMarkers = new THREE.Group();
     this.annotationLines = new THREE.Group();
 
-    this.scene.add(this.annotationMarkers);
+    this.guiScene.add(this.annotationMarkers);
     this.overlayScene.add(this.annotationLines);
 
     // WebGL Renderer
