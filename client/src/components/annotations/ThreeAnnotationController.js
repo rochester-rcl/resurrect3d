@@ -364,7 +364,7 @@ class ThreeAnnotationController extends Component {
       get bodyNode() {
         return this.bodyComponent.props.innerRef.current;
       },
-      point: point,
+      point: point.add(face.normal.normalize().multiplyScalar(0.1)),
       pinColor: pinColor.hex,
       text: "",
       title: component.props.title,

@@ -14,7 +14,7 @@ import {
 import ThreeButton from "../ThreeButton";
 
 // polyfill
-import WebXRPolyfill from 'webxr-polyfill';
+import WebXRPolyfill from "webxr-polyfill";
 const polyfill = new WebXRPolyfill();
 
 export function checkVR() {
@@ -49,19 +49,24 @@ export default class ThreeWebVR extends Component {
     this.init();
     const { frameOfReference } = this.props;
     if (frameOfReference !== undefined) {
-     this.setRendererFrameOfReference(frameOfReference);
+      this.setRendererFrameOfReference(frameOfReference);
     }
   }
 
   init() {
-    if ("xr" in navigator && navigator.xr.isSessionSupported("immersive-vr")) {
-      const init = { optionalFeatures: ["local"] };
-      this.enterCallback = this.enterXR(init);
-    } else {
-      this.setState({
-        displayStatus: WEBVR_SUPPORT.NOT_SUPPORTED,
+    if ("xr" in navigator) {
+      this.props.renderer.xr.enabled = true;
+      navigator.xr.isSessionSupported("immersive-vr").then((supported) => {
+        if (supported) {
+          const init = {};
+          this.enterCallback = this.enterXR(init);
+        } else {
+          this.setState({
+            displayStatus: WEBVR_SUPPORT.NOT_SUPPORTED,
+          });
+          this.enterCallback = () => this.infoLink.click();
+        }
       });
-      this.enterCallback = () => this.infoLink.click();
     }
   }
 
@@ -115,10 +120,8 @@ export default class ThreeWebVR extends Component {
     const { currentSession } = this.state;
     const { onEnterCallback, onExitCallback, renderer } = this.props;
     if (currentSession === null) {
-      renderer.xr.enabled = false;
       if (onExitCallback !== undefined) onExitCallback();
     } else {
-      renderer.xr.enabled = true;
       if (onEnterCallback !== undefined) onEnterCallback();
     }
     this.props.renderer.xr.setSession(currentSession);

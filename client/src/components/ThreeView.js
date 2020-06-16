@@ -361,6 +361,8 @@ export default class ThreeView extends Component {
     this.annotationOffsetPlaceholder = 0;
     this.positionAnnotations = this.positionAnnotations.bind(this);
     this.hideAnnotations = this.hideAnnotations.bind(this);
+    this.prepareSceneForVR = this.prepareSceneForVR.bind(this);
+    this.tearDownSceneForVR = this.tearDownSceneForVR.bind(this);
     // event handlers
 
     (this: any).handleMouseDown = this.handleMouseDown.bind(this);
@@ -379,7 +381,6 @@ export default class ThreeView extends Component {
 
     // VR
     // TODO disable until we see what the new plan is for WebXR
-    this.vrSupported = false; //checkVR();
 
     //Updatable UI
     this.panelGroup = new ThreeGUIGroup("tools");
@@ -482,6 +483,7 @@ export default class ThreeView extends Component {
               ref={(ref) => {
                 this.threeView = ref;
               }}
+              tabIndex="0"
               className={threeViewClassName}
               onMouseDown={this.handleMouseDown}
               onMouseMove={this.handleMouseMove}
@@ -604,7 +606,9 @@ export default class ThreeView extends Component {
     });
     this.annotationSpriteContainer = new THREE.Group();
     this.annotationSpriteContainer.add(new THREE.Sprite(spriteMaterial));
-    this.annotationSpriteContainer.add(new THREE.Sprite(spriteMaterialTransparent));
+    this.annotationSpriteContainer.add(
+      new THREE.Sprite(spriteMaterialTransparent)
+    );
     this.measurement = new THREE.Group();
     this.guiScene.add(this.measurement);
 
@@ -754,7 +758,7 @@ export default class ThreeView extends Component {
       onExitCallback: this.exitVR,
       onEnterCallback: this.enterVR,
       frameOfReference: "local",
-      className: "three-controls-button"
+      className: "three-controls-button",
     });
     controls.addComponent("embed", ThreeEmbed, {
       ...buttonProps,
@@ -806,12 +810,10 @@ export default class ThreeView extends Component {
   }
 
   animate(): void {
-    if (this.vrSupported) {
-      this.webGLRenderer.setAnimationLoop(this.animate);
-    } else {
+    if (!this.state.vrActive) {
       window.requestAnimationFrame(this.animate);
+      this.update();
     }
-    this.update();
   }
 
   computeAxisGuides(): void {
@@ -977,7 +979,9 @@ export default class ThreeView extends Component {
         annotationMarker.position.copy(annotations[i].point);
         annotationMarker.position.add(this.annotationSpriteOffset);
         if (annotations[i].open) {
-          annotationMarker.children[0].material.color.setHex(annotations[i].pinColor);
+          annotationMarker.children[0].material.color.setHex(
+            annotations[i].pinColor
+          );
           const cssObj = new CSS2DObject(annotations[i].node);
           const bodyNode = annotations[i].bodyNode;
           const cssBodyObj = bodyNode
@@ -1130,8 +1134,12 @@ export default class ThreeView extends Component {
     this.meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
     this.meshDepth = this.bboxMesh.max.z - this.bboxMesh.min.z;
     this.computeSpriteScaleFactor();
-    this.annotationSpriteContainer.scale.multiplyScalar(this.spriteScaleFactor / 5);
-    const spriteBbox = new THREE.Box3().setFromObject(this.annotationSpriteContainer);
+    this.annotationSpriteContainer.scale.multiplyScalar(
+      this.spriteScaleFactor / 6
+    );
+    const spriteBbox = new THREE.Box3().setFromObject(
+      this.annotationSpriteContainer
+    );
     const centerY = (spriteBbox.max.y - spriteBbox.min.y) / 2;
     this.annotationSpriteOffset = new THREE.Vector3(0, centerY, 0);
     this.pointLights.addHelpers(this.guiScene, this.spriteScaleFactor);
@@ -1767,7 +1775,6 @@ export default class ThreeView extends Component {
   }
 
   deepUpdateThreeMaterial(obj: Object): void {
-    
     for (let key in obj) {
       const val = obj[key];
       if (val.constructor === Object) {
@@ -2563,18 +2570,38 @@ export default class ThreeView extends Component {
   }
 
   enterVR(): void {
-    this.setState({
-      vrActive: true,
-    });
+    this.setState(
+      {
+        vrActive: true,
+      },
+      () => {
+        this.prepareSceneForVR();
+        this.webGLRenderer.setAnimationLoop(this.update);
+      }
+    );
   }
 
   exitVR(): void {
-    this.setState({
-      vrActive: false,
-    });
+    this.setState(
+      {
+        vrActive: false,
+      },
+      () => {
+        this.tearDownSceneForVR();
+        this.webGLRenderer.setAnimationLoop(null);
+      }
+    );
     this.centerCamera();
   }
-  //}
+
+  prepareSceneForVR() {
+    this.scene.add(this.skyboxMesh);
+  }
+
+  tearDownSceneForVR() {
+    this.scene.remove(this.skyboxMesh);
+    this.envScene.add(this.skyboxMesh);
+  }
 
   /** EVENT HANDLERS
    *****************************************************************************/

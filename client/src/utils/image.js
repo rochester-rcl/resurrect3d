@@ -47,6 +47,14 @@ export class LinearGradientShader {
   topColor: string;
   bottomColor: string;
   uniforms: Object;
+  vertexShader = [
+ 
+    "varying vec2 vUv;",
+    "void main() {",
+      "vUv = uv;",
+      "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
+    "}"
+  ].join( "\n" );
   fragmentShader: string = [
     'uniform vec3 topColor;',
     'uniform vec3 bottomColor;',
@@ -80,6 +88,7 @@ export class LinearGradientShader {
   generateShaderMaterial(): THREE.ShaderMaterial {
     return new THREE.ShaderMaterial({
       uniforms: this.uniforms,
+      vertexShader: this.vertexShader,
       fragmentShader: this.fragmentShader,
       dithering: true,
       side: THREE.DoubleSide
