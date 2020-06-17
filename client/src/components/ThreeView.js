@@ -276,6 +276,7 @@ export default class ThreeView extends Component {
     (this: any).EDL_TEXTURE_RADIUS = 1.0;
     (this: any).EDL_TEXTURE_STEP = 0.01;
     (this: any).clock = new THREE.Clock();
+    this.spriteAlphaTest = 0.5;
     this.lastTarget = new THREE.Vector3();
     this.cameraTargetAlpha = 0;
     // TODO needs serious refactoring for VR to work
@@ -332,6 +333,7 @@ export default class ThreeView extends Component {
     this.onAnnotationPresentationToggle = this.onAnnotationPresentationToggle.bind(
       this
     );
+    this.updateAnnotations = this.updateAnnotations.bind(this);  
     (this: any).drawSpriteTarget = this.drawSpriteTarget.bind(this);
     (this: any).computeSpriteScaleFactor = this.computeSpriteScaleFactor.bind(
       this
@@ -592,30 +594,18 @@ export default class ThreeView extends Component {
     // annotation sprite that we can also clone
     const spriteMaterial = new THREE.SpriteMaterial({
       map: annotationSpriteTexture,
-      alphaTest: 0.5,
+      alphaTest: this.spriteAlphaTest,
       depthWrite: false,
+      depthTest: false
     });
-    const spriteMaterialTransparent = new THREE.SpriteMaterial({
-      map: annotationSpriteTexture,
-      transparent: true,
-      color: 0x000000,
-      alphaTest: 0.1,
-      depthTest: false,
-      depthWrite: false,
-      opacity: 0.2,
-    });
-    this.annotationSpriteContainer = new THREE.Group();
-    this.annotationSpriteContainer.add(new THREE.Sprite(spriteMaterial));
-    this.annotationSpriteContainer.add(
-      new THREE.Sprite(spriteMaterialTransparent)
-    );
+    this.annotationSprite = new THREE.Sprite(spriteMaterial);
     this.measurement = new THREE.Group();
     this.guiScene.add(this.measurement);
 
     this.annotationMarkers = new THREE.Group();
     this.annotationLines = new THREE.Group();
-
-    this.guiScene.add(this.annotationMarkers);
+    // TODO need to add title sprites to scene for VR mode
+    this.scene.add(this.annotationMarkers);
     this.overlayScene.add(this.annotationLines);
 
     // WebGL Renderer
@@ -778,6 +768,7 @@ export default class ThreeView extends Component {
   update(): void {
     this.updateCamera();
     this.renderWebGL();
+    this.updateAnnotations();
     this.renderCSS();
   }
 
@@ -974,12 +965,13 @@ export default class ThreeView extends Component {
     }
     if (annotations) {
       for (let i = 0; i < annotations.length; i++) {
-        const annotationMarker = this.annotationSpriteContainer.clone(true);
-        annotationMarker.children[0].material = this.annotationSpriteContainer.children[0].material.clone();
+        const annotationMarker = this.annotationSprite.clone();
+        annotationMarker.userData.normal = annotations[i].normal;
+        annotationMarker.material = this.annotationSprite.material.clone();
         annotationMarker.position.copy(annotations[i].point);
         annotationMarker.position.add(this.annotationSpriteOffset);
         if (annotations[i].open) {
-          annotationMarker.children[0].material.color.setHex(
+          annotationMarker.material.color.setHex(
             annotations[i].pinColor
           );
           const cssObj = new CSS2DObject(annotations[i].node);
@@ -997,7 +989,7 @@ export default class ThreeView extends Component {
             currentAnnotationCSSReadOnlyBodyObj: cssBodyObj,
           });
         } else {
-          annotationMarker.children[0].material.color.setHex(0x000000);
+          annotationMarker.material.color.setHex(0x000000);
         }
         annotationMarker.needsUpdate = true;
         this.annotationMarkers.add(annotationMarker);
@@ -1134,11 +1126,11 @@ export default class ThreeView extends Component {
     this.meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
     this.meshDepth = this.bboxMesh.max.z - this.bboxMesh.min.z;
     this.computeSpriteScaleFactor();
-    this.annotationSpriteContainer.scale.multiplyScalar(
+    this.annotationSprite.scale.multiplyScalar(
       this.spriteScaleFactor / 8
     );
     const spriteBbox = new THREE.Box3().setFromObject(
-      this.annotationSpriteContainer
+      this.annotationSprite
     );
     const centerY = (spriteBbox.max.y - spriteBbox.min.y) / 2;
     this.annotationSpriteOffset = new THREE.Vector3(0, centerY, 0);
@@ -1688,6 +1680,20 @@ export default class ThreeView extends Component {
     if (this.state.controllable) this.controlCamera();
     else this.controlAnimation();
     this.setState({ deltaTime: this.clock.getDelta() });
+  }
+
+  updateAnnotations() {
+    if (this.annotationMarkers.children.length > 0) {
+      const clonedPos = this.camera.position.clone();
+      for (let i = 0; i < this.annotationMarkers.children.length; i++) {
+        const marker = this.annotationMarkers.children[i];
+        const { normal } = marker.userData;
+        if (normal) {
+          const dot = clonedPos.dot(normal);
+          marker.material.opacity = THREE.MathUtils.clamp(dot, this.spriteAlphaTest - 0.005, 1.0);
+        }
+      }
+    }
   }
 
   controlCamera(): void {

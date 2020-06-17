@@ -18,6 +18,10 @@ const annotationSchema = new Schema({
     type: String, // serialized Vector3
     required: true
   },
+  normal: {
+    type: String, // serialized Vector3
+    required: true,
+  },
   settings: {
     type: Object,
     required: true
