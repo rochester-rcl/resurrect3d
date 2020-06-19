@@ -27,17 +27,22 @@ import {
   resetLocalStateUpdateStatus,
   changeAnnotationFocus,
   updateAnnotationsMergedStatus,
-  updateAnnotationsOrder
+  updateAnnotationsOrder,
 } from "../../actions/AnnotationActions";
 
 import screenfull from "screenfull";
 
 import { ANNOTATION_SAVE_STATUS, KEYCODES } from "../../constants/application";
 
+import { Label, Icon } from "semantic-ui-react";
 
 // TODO add editing capabilities to the body and make it editable
 
 class ThreeAnnotationController extends Component {
+  EDIT_MODES = {
+    ADD: "ADD",
+    EDIT_EXISTING: "EDIT_EXISTING",
+  };
   raycaster: THREE.RayCaster;
   state = {
     mousedown: false,
@@ -45,12 +50,13 @@ class ThreeAnnotationController extends Component {
     active: false,
     open: false,
     editable: false,
+    editMode: this.EDIT_MODES.ADD,
     annotations: [],
     updatingAnnotations: false,
     presentationMode: false,
     currentIndex: -1,
     shortcutsNeedUpdate: false,
-    pinColor: { hex: 0x21ba45, str: "#21ba45" }
+    pinColor: { hex: 0x21ba45, str: "#21ba45" },
   };
 
   constructor(props: Object) {
@@ -63,10 +69,12 @@ class ThreeAnnotationController extends Component {
     (this: any).makeAnnotation = this.makeAnnotation.bind(this);
     (this: any).updateAnnotation = this.updateAnnotation.bind(this);
     (this: any).viewAnnotation = this.viewAnnotation.bind(this);
+    this.focusShortcut = this.focusShortcut.bind(this);
     (this: any).deleteAnnotation = this.deleteAnnotation.bind(this);
     this.handleColorPick = this.handleColorPick.bind(this);
     (this: any).toggle = this.toggle.bind(this);
     (this: any).toggleEdit = this.toggleEdit.bind(this);
+    this.setEditMode = this.setEditMode.bind(this);
     (this: any).raycaster = new THREE.Raycaster();
     this.saveAnnotation = this.saveAnnotation.bind(this);
     this.requestAnnotationsUpdate = this.requestAnnotationsUpdate.bind(this);
@@ -90,6 +98,7 @@ class ThreeAnnotationController extends Component {
     this.currentShortcutRef = React.createRef();
     this.shortcuts = [];
     this.renderShortcuts = this.renderShortcuts.bind(this);
+    this.getCurrentAnnotation = this.getCurrentAnnotation.bind(this);
   }
 
   componentDidMount(): void {
@@ -121,7 +130,7 @@ class ThreeAnnotationController extends Component {
     const { active } = this.state;
     this.setState(
       {
-        active: !active
+        active: !active,
       },
       () => {
         if (!this.state.active) {
@@ -134,10 +143,17 @@ class ThreeAnnotationController extends Component {
   toggleEdit(): void {
     this.setState(
       {
-        editable: !this.state.editable
+        editable: !this.state.editable,
       },
       this.updateEditableAnnotations
     );
+  }
+
+  setEditMode(mode, idx = null) {
+    this.setState({
+      editMode: mode,
+      currentIndex: idx !== null ? idx : this.state.currentIndex,
+    });
   }
 
   togglePresentationMode() {
@@ -146,7 +162,7 @@ class ThreeAnnotationController extends Component {
     this.setState(
       {
         presentationMode: !presentationMode,
-        currentIndex: -1
+        currentIndex: -1,
       },
       () => {
         this.toggleKeydownListeners();
@@ -162,7 +178,7 @@ class ThreeAnnotationController extends Component {
     if (!screenfull.isFullscreen && presentationMode) {
       this.setState(
         {
-          presentationMode: false
+          presentationMode: false,
         },
         () => onTogglePresentationMode(this.state.presentationMode)
       );
@@ -197,7 +213,7 @@ class ThreeAnnotationController extends Component {
   handleColorPick(rgb) {
     const color = new THREE.Color(...Object.values(rgb));
     this.setState({
-      pinColor: { hex: color.getHex(), str: color.getHexString() }
+      pinColor: { hex: color.getHex(), str: color.getHexString() },
     });
   }
 
@@ -251,14 +267,14 @@ class ThreeAnnotationController extends Component {
 
   handleDown(event: MouseEvent): void {
     this.setState({
-      mousedown: true
+      mousedown: true,
     });
   }
 
   handleMove(event: MouseEvent): void {
     if (this.state.mousedown)
       this.setState({
-        dragging: true
+        dragging: true,
       });
   }
 
@@ -284,7 +300,7 @@ class ThreeAnnotationController extends Component {
     }
     this.setState({
       mousedown: false,
-      dragging: false
+      dragging: false,
     });
   }
 
@@ -309,7 +325,7 @@ class ThreeAnnotationController extends Component {
           }
         }
         this.setState({
-          annotations: annotations
+          annotations: annotations,
         });
       }
 
@@ -318,18 +334,18 @@ class ThreeAnnotationController extends Component {
   }
 
   makeAnnotation(point, face) {
-    const { annotations, pinColor } = this.state;
+    const { annotations, pinColor, currentIndex } = this.state;
     for (let i = 0; i < annotations.length; i++) {
       annotations[i].open = false;
       const component = annotations[i].component;
       const bodyComponent = annotations[i].bodyComponent;
       annotations[i].component = React.cloneElement(component, {
         ...component.props,
-        ...{ visible: false }
+        ...{ visible: false },
       });
       annotations[i].bodyComponent = React.cloneElement(bodyComponent, {
         ...bodyComponent.props,
-        ...{ visible: false }
+        ...{ visible: false },
       });
     }
     const ref = React.createRef();
@@ -371,13 +387,14 @@ class ThreeAnnotationController extends Component {
       title: component.props.title,
       settings: { cameraPosition: { val: null, enabled: false } },
       saveStatus: ANNOTATION_SAVE_STATUS.UNSAVED,
-      open: true
+      open: true,
     };
     annotations.push(annotation);
     this.setState(
       {
         annotations: annotations,
-        shortcutsNeedUpdate: true
+        shortcutsNeedUpdate: true,
+        currentIndex: currentIndex + 1,
       },
       () => {
         this.props.drawCallback(this.state.annotations);
@@ -394,7 +411,7 @@ class ThreeAnnotationController extends Component {
     this.setState(
       {
         updatingAnnotations: true,
-        shortcutsNeedUpdate: true
+        shortcutsNeedUpdate: true,
       },
       this.updateAnnotations
     );
@@ -412,7 +429,7 @@ class ThreeAnnotationController extends Component {
       annotation.saveStatus = ANNOTATION_SAVE_STATUS.NEEDS_UPDATE;
       this.setState({
         annotations: cloned,
-        shortcutsNeedUpdate: true
+        shortcutsNeedUpdate: true,
       });
     }
   }
@@ -428,7 +445,7 @@ class ThreeAnnotationController extends Component {
       {
         annotations: merged,
         updatingAnnotations: false,
-        shortcutsNeedUpdate: true
+        shortcutsNeedUpdate: true,
       },
       () => {
         this.props.resetLocalStateUpdateStatus();
@@ -442,20 +459,25 @@ class ThreeAnnotationController extends Component {
   updateEditableAnnotations() {
     const { annotations, editable } = this.state;
     const cloned = [...annotations];
-    const openIndex = cloned.findIndex(a => a.open === true);
+    const openIndex = cloned.findIndex((a) => a.open === true);
     if (openIndex > -1) {
       const oa = cloned[openIndex];
       const { component, bodyComponent } = oa;
       oa.component = React.cloneElement(component, {
         ...component.props,
-        ...{ editable: editable }
+        ...{ editable: editable },
       });
       oa.bodyComponent = React.cloneElement(bodyComponent, {
         ...bodyComponent.props,
-        ...{ visible: !editable }
+        ...{ visible: !editable },
       });
       this.setState({ annotations: cloned });
     }
+  }
+
+  getCurrentAnnotation() {
+    const { currentIndex, annotations } = this.state;
+    return annotations[currentIndex];
   }
 
   updateIndex(currentIndex, newIndex) {
@@ -476,11 +498,11 @@ class ThreeAnnotationController extends Component {
       {
         annotations: updated,
         currentIndex: newIndex,
-        shortcutsNeedUpdate: true
+        shortcutsNeedUpdate: true,
       },
       () => {
         drawCallback(this.state.annotations);
-        updateAnnotationsOrder(updated.map(a => a._id));
+        updateAnnotationsOrder(updated.map((a) => a._id));
         this.scrollShortcut(this.currentShortcutRef.current);
       }
     );
@@ -513,7 +535,7 @@ class ThreeAnnotationController extends Component {
       settings,
       saveStatus,
       needsMerge,
-      _id
+      _id,
     } = annotation;
     const ref = React.createRef();
     const bodyRef = React.createRef();
@@ -557,7 +579,7 @@ class ThreeAnnotationController extends Component {
       pinColor: pinColor,
       _id: _id,
       open: false,
-      saveStatus: saveStatus
+      saveStatus: saveStatus,
     };
     return a;
   }
@@ -568,7 +590,7 @@ class ThreeAnnotationController extends Component {
     annotations[index] = { ...annotations[index], ...data };
 
     this.setState({
-      annotations: annotations
+      annotations: annotations,
     });
   }
 
@@ -582,7 +604,7 @@ class ThreeAnnotationController extends Component {
     if (updated.length > 0) updated.splice(index, 1);
     this.setState(
       {
-        annotations: updated
+        annotations: updated,
       },
       () => this.props.drawCallback(this.state.annotations)
     );
@@ -623,12 +645,23 @@ class ThreeAnnotationController extends Component {
     }
   }
 
+  focusShortcut(idx) {
+    if (idx !== this.state.currentIndex) {
+      this.setState(
+        {
+          currentIndex: idx,
+        },
+        () => this.scrollShortcut(this.currentShortcutRef.current)
+      );
+    }
+  }
+  // TODO add onclick to focus shortcut without changing view in admin, doesnt make sense in readonly
   viewAnnotation(index) {
     const {
       changeAnnotationFocus,
       cameraCallback,
       drawCallback,
-      annotationData
+      annotationData,
     } = this.props;
     const { annotations, editable } = this.state;
     annotations.forEach((annotation, idx) => {
@@ -637,16 +670,16 @@ class ThreeAnnotationController extends Component {
         annotation.open = true;
         const color = new THREE.Color(annotation.pinColor);
         this.setState({
-          pinColor: { hex: color.getHex(), str: color.getHexString() }
+          pinColor: { hex: color.getHex(), str: color.getHexString() },
         });
         if (!component.props.visible) {
           annotation.component = React.cloneElement(component, {
             ...component.props,
-            ...{ visible: true, editable: editable }
+            ...{ visible: true, editable: editable },
           });
           annotation.bodyComponent = React.cloneElement(bodyComponent, {
             ...bodyComponent.props,
-            ...{ visible: !editable }
+            ...{ visible: !editable },
           });
         }
       } else {
@@ -654,11 +687,11 @@ class ThreeAnnotationController extends Component {
         if (component.props.visible) {
           annotation.component = React.cloneElement(component, {
             ...component.props,
-            ...{ visible: false }
+            ...{ visible: false },
           });
           annotation.bodyComponent = React.cloneElement(bodyComponent, {
             ...bodyComponent.props,
-            ...{ visible: false }
+            ...{ visible: false },
           });
         }
       }
@@ -672,7 +705,7 @@ class ThreeAnnotationController extends Component {
       {
         annotations: annotations,
         currentIndex: index,
-        shortcutsNeedUpdate: true
+        shortcutsNeedUpdate: true,
       },
       () => {
         drawCallback(this.state.annotations);
@@ -682,9 +715,9 @@ class ThreeAnnotationController extends Component {
   }
 
   onAnnotationBlur() {
-    this.setState({
+    /*this.setState({
       currentIndex: -1
-    });
+    });*/
   }
 
   updateAnnotationSettings(index, settingsKey, value) {
@@ -699,7 +732,7 @@ class ThreeAnnotationController extends Component {
     }
     this.setState({
       annotations: cloned,
-      shortcutsNeedUpdate: false
+      shortcutsNeedUpdate: false,
     });
   }
 
@@ -707,22 +740,27 @@ class ThreeAnnotationController extends Component {
     const { user } = this.props;
     const { annotations, currentIndex, shortcutsNeedUpdate } = this.state;
     const render = () =>
-      annotations.map((annotation, index) => (
-        <ThreeAnnotationShortcut
-          key={THREE.Math.generateUUID()}
-          title={annotation.title}
-          index={index}
-          total={annotations.length}
-          focus={this.viewAnnotation}
-          delete={this.deleteAnnotation}
-          save={this.saveAnnotation}
-          saveStatus={annotation.saveStatus}
-          onSettingsUpdate={this.updateAnnotationSettings}
-          onUpdateIndex={this.updateIndex}
-          innerRef={index === currentIndex ? this.currentShortcutRef : null}
-          readOnly={!user.loggedIn}
-        />
-      ));
+      annotations.map((annotation, index) => {
+        const selected = index === currentIndex;
+        return (
+          <ThreeAnnotationShortcut
+            onClick={() => this.focusShortcut(index)}
+            key={THREE.Math.generateUUID()}
+            title={annotation.title}
+            index={index}
+            total={annotations.length}
+            focus={this.viewAnnotation}
+            delete={this.deleteAnnotation}
+            save={this.saveAnnotation}
+            saveStatus={annotation.saveStatus}
+            onSettingsUpdate={this.updateAnnotationSettings}
+            onUpdateIndex={this.updateIndex}
+            innerRef={selected ? this.currentShortcutRef : null}
+            selected={selected}
+            readOnly={!user.loggedIn}
+          />
+        );
+      });
 
     if (
       (annotations.length > 0 && this.shortcuts.length === 0) ||
@@ -740,14 +778,15 @@ class ThreeAnnotationController extends Component {
       presentationMode,
       currentIndex,
       editable,
-      pinColor
+      pinColor,
+      editMode,
     } = this.state;
     const currentAnnotation =
       currentIndex > -1 ? annotations[currentIndex] : null;
-    const renderedAnnotations = annotations.map(annotation => {
+    const renderedAnnotations = annotations.map((annotation) => {
       return <div key={annotation.component.key}>{annotation.component}</div>;
     });
-    const renderedBodyAnnotations = annotations.map(annotation => {
+    const renderedBodyAnnotations = annotations.map((annotation) => {
       return (
         <div key={annotation.bodyComponent.key}>{annotation.bodyComponent}</div>
       );
@@ -755,6 +794,8 @@ class ThreeAnnotationController extends Component {
     let editToggle = null;
     let colorPicker = null;
     let togglePresentationMode = null;
+    let editModeLabel = null;
+    // TODO check ownership of model and just use readOnly property
     if (this.state.active) {
       if (user.loggedIn) {
         editToggle = (
@@ -771,6 +812,22 @@ class ThreeAnnotationController extends Component {
               color={pinColor.str}
               callback={this.handleColorPick}
             />
+          );
+          const editModeMessage =
+            editMode === this.EDIT_MODES.ADD
+              ? "Pick a point on the mesh to add a new annotation"
+              : `Pick a point on the mesh to update the current annotation (${
+                  this.getCurrentAnnotation()
+                    ? this.getCurrentAnnotation().title
+                    : ""
+                })`;
+          const editModeIcon =
+            editMode === this.EDIT_MODES.ADD ? "add" : "edit";
+          editModeLabel = (
+            <Label icon className="annotation-edit-mode-label">
+              <Icon name={editModeIcon} />
+              <Label.Detail>{editModeMessage}</Label.Detail>
+            </Label>
           );
         }
       }
@@ -801,6 +858,7 @@ class ThreeAnnotationController extends Component {
       <div className="three-annotation-tool-container">
         <ThreeToggle title="annotations" callback={this.toggle} />
         {editToggle}
+        {editModeLabel}
         {togglePresentationMode}
         {colorPicker}
         {shortcutContainer}
@@ -814,7 +872,7 @@ class ThreeAnnotationController extends Component {
 function mapStateToProps(state) {
   return {
     annotationData: state.annotationData,
-    user: state.user
+    user: state.user,
   };
 }
 
@@ -825,5 +883,5 @@ export default connect(mapStateToProps, {
   resetLocalStateUpdateStatus,
   changeAnnotationFocus,
   updateAnnotationsMergedStatus,
-  updateAnnotationsOrder
+  updateAnnotationsOrder,
 })(ThreeAnnotationController);

@@ -40,7 +40,7 @@
     "zlibjs": "^0.3.1"
   },
   "scripts": {
-    "start": "HTTPS=true react-app-rewired start",
+    "start": "react-app-rewired start",
     "build": "react-app-rewired build && node scripts/patch-fonts.js",
     "test": "react-app-rewired test --env=jsdom",
     "eject": "react-scripts eject"

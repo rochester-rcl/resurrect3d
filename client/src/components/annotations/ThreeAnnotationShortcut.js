@@ -9,16 +9,17 @@ import ThreeToggle from "../ThreeToggle";
 
 import {
   ANNOTATION_SAVE_STATUS,
-  ANNOTATION_SETTINGS_OPTIONS
+  ANNOTATION_SETTINGS_OPTIONS,
 } from "../../constants/application";
 
 export default class ThreeAnnotationShortcut extends Component {
-  state = { settings: { useCamera: false, useLights: false } };
+  state = { settings: { useCamera: false, useSettings: false } };
   constructor(props) {
     super(props);
     this.focus = this.focus.bind(this);
     this.del = this.del.bind(this);
     this.save = this.save.bind(this);
+    this.edit = this.edit.bind(this);
     this.saveStatusLabel = this.saveStatusLabel.bind(this);
     this.handleSettingsChange = this.handleSettingsChange.bind(this);
     this.updateIndex = this.updateIndex.bind(this);
@@ -36,6 +37,10 @@ export default class ThreeAnnotationShortcut extends Component {
 
   save() {
     this.props.save(this.props.index);
+  }
+
+  edit() {
+    this.props.edit(this.props.index);
   }
 
   handleSettingsChange(settingsKey, value) {
@@ -57,7 +62,7 @@ export default class ThreeAnnotationShortcut extends Component {
       }
     }
     if (canUpdate) {
-      onUpdateIndex(index, dst, this.scrollToShortcut);
+      onUpdateIndex(index, dst);
     }
   }
 
@@ -86,15 +91,20 @@ export default class ThreeAnnotationShortcut extends Component {
   }
 
   renderReadOnly() {
-    const { title, innerRef } = this.props;
+    const { title, innerRef, selected, onClick } = this.props;
+    const selectedClass = selected ? "selected" : "";
     return (
-      <div ref={innerRef} className="annotation-shortcut-container">
+      <div
+        onClick={onClick}
+        ref={innerRef}
+        className={`annotation-shortcut-container ${selectedClass}`}
+      >
         <span className="annotation-shortcut-label-container">
           <Label className="annotation-shortcut-title">{title}</Label>
           <Button
             icon
             onClick={this.focus}
-            className="annotation-shortcut-button"
+            className={`annotation-shortcut-button ${selectedClass}`}
             size="mini"
           >
             <Icon
@@ -110,9 +120,19 @@ export default class ThreeAnnotationShortcut extends Component {
   }
 
   renderAdminMode() {
-    const { title, innerRef, total, index } = this.props;
+    const { title, innerRef, total, index, selected, onClick } = this.props;
+    const selectedClass = selected ? "selected" : "";
     return (
-      <div ref={innerRef} className="annotation-shortcut-container">
+      <div
+        onClick={onClick}
+        ref={innerRef}
+        className={`annotation-shortcut-container ${selectedClass}`}
+      >
+        <div
+          className={`annotation-shortcut-container-overlay ${
+            selected ? "enabled" : "disabled"
+          }`}
+        ></div>
         <span className="annotation-shortcut-label-container">
           <Label className="annotation-shortcut-title">{title}</Label>
           {this.saveStatusLabel()}
@@ -128,6 +148,19 @@ export default class ThreeAnnotationShortcut extends Component {
               color="grey"
               className="annotation-shortcut-icon"
               name="eye"
+              size="large"
+            />
+          </Button>
+          <Button
+            icon
+            onClick={() => console.log("this is where edit point would go")}
+            className="annotation-shortcut-button"
+            size="mini"
+          >
+            <Icon
+              color="grey"
+              className="annotation-shortcut-icon"
+              name="edit"
               size="large"
             />
           </Button>
@@ -186,20 +219,20 @@ export default class ThreeAnnotationShortcut extends Component {
         </div>
         <div className="annotation-shortcut-settings-container">
           <ThreeToggle
-            callback={val =>
+            callback={(val) =>
               this.handleSettingsChange(
                 ANNOTATION_SETTINGS_OPTIONS.CAMERA_POSITION,
                 val
               )
             }
             defaultVal={false}
-            title="save camera data"
+            title="save camera"
             size="mini"
           />
           <ThreeToggle
-            callback={val => console.log(val)}
+            callback={(val) => console.log(val)}
             defaultVal={false}
-            title="save light data"
+            title="save settings"
             size="mini"
           />
         </div>
