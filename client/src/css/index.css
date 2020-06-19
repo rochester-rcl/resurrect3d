@@ -760,8 +760,8 @@ body {
   color: #000 !important;
 }
 
-.annotation-shortcut-icon {
-  /*color: #ccc !important;*/
+.annotation-shortcut-icon.enabled {
+  color: rgb(0, 180, 0) !important;
 }
 
 .annotation-shortcut-settings-container {

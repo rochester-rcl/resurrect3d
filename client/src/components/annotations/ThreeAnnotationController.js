@@ -77,6 +77,7 @@ class ThreeAnnotationController extends Component {
     this.setEditMode = this.setEditMode.bind(this);
     (this: any).raycaster = new THREE.Raycaster();
     this.saveAnnotation = this.saveAnnotation.bind(this);
+    this.editAnnotation = this.editAnnotation.bind(this);
     this.requestAnnotationsUpdate = this.requestAnnotationsUpdate.bind(this);
     this.updateAnnotations = this.updateAnnotations.bind(this);
     this.mergeAnnotations = this.mergeAnnotations.bind(this);
@@ -99,6 +100,7 @@ class ThreeAnnotationController extends Component {
     this.shortcuts = [];
     this.renderShortcuts = this.renderShortcuts.bind(this);
     this.getCurrentAnnotation = this.getCurrentAnnotation.bind(this);
+    this.updateAnnotationPosition = this.updateAnnotationPosition.bind(this);
   }
 
   componentDidMount(): void {
@@ -305,7 +307,8 @@ class ThreeAnnotationController extends Component {
   }
 
   handleIntersection(intersection: Object): void {
-    var clickedExisting = false;
+    const { editMode } = this.state;
+    let clickedExisting = false;
     for (
       let i = 0;
       i < this.state.annotations.length && !clickedExisting;
@@ -329,8 +332,37 @@ class ThreeAnnotationController extends Component {
         });
       }
 
-    if (!clickedExisting && this.state.editable)
-      this.makeAnnotation(intersection.point, intersection.face);
+    if (!clickedExisting && this.state.editable) {
+      if (editMode === this.EDIT_MODES.EDIT_EXISTING) {
+        this.updateAnnotationPosition(intersection.point, intersection.face);
+      } else {
+        this.makeAnnotation(intersection.point, intersection.face);
+      }
+    }
+  }
+
+  updateAnnotationPosition(point, face) {
+    const { currentIndex, annotations } = this.state;
+    const annotation = {
+      ...this.getCurrentAnnotation(),
+      ...{
+        point: point,
+        normal: face.normal,
+        saveStatus: ANNOTATION_SAVE_STATUS.NEEDS_UPDATE
+      },
+    };
+    // where should we replace pin color? Add a new button?
+    const updated = [...annotations];
+    updated.splice(currentIndex, 1, annotation);
+    this.setState(
+      {
+        annotations: updated,
+        shortcutsNeedUpdate: true,
+      },
+      () => {
+        this.props.drawCallback(this.state.annotations);
+      }
+    );
   }
 
   makeAnnotation(point, face) {
@@ -610,6 +642,17 @@ class ThreeAnnotationController extends Component {
     );
   }
 
+  editAnnotation(index) {
+    const { editMode } = this.state;
+    this.setState({
+      currentIndex: index,
+      editMode:
+        editMode === this.EDIT_MODES.ADD
+          ? this.EDIT_MODES.EDIT_EXISTING
+          : this.EDIT_MODES.ADD,
+    });
+  }
+
   saveAnnotation(index) {
     const { saveAnnotation, threeViewId } = this.props;
     const annotation = this.state.annotations[index];
@@ -752,6 +795,7 @@ class ThreeAnnotationController extends Component {
             focus={this.viewAnnotation}
             delete={this.deleteAnnotation}
             save={this.saveAnnotation}
+            edit={this.editAnnotation}
             saveStatus={annotation.saveStatus}
             onSettingsUpdate={this.updateAnnotationSettings}
             onUpdateIndex={this.updateIndex}
@@ -781,8 +825,6 @@ class ThreeAnnotationController extends Component {
       pinColor,
       editMode,
     } = this.state;
-    const currentAnnotation =
-      currentIndex > -1 ? annotations[currentIndex] : null;
     const renderedAnnotations = annotations.map((annotation) => {
       return <div key={annotation.component.key}>{annotation.component}</div>;
     });
@@ -791,6 +833,8 @@ class ThreeAnnotationController extends Component {
         <div key={annotation.bodyComponent.key}>{annotation.bodyComponent}</div>
       );
     });
+    console.log(renderedAnnotations);
+    console.log(renderedBodyAnnotations);
     let editToggle = null;
     let colorPicker = null;
     let togglePresentationMode = null;

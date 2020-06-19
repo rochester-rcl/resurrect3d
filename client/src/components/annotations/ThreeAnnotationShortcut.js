@@ -13,7 +13,9 @@ import {
 } from "../../constants/application";
 
 export default class ThreeAnnotationShortcut extends Component {
-  state = { settings: { useCamera: false, useSettings: false } };
+  state = {
+    settings: { useCamera: false, useSettings: false },
+  };
   constructor(props) {
     super(props);
     this.focus = this.focus.bind(this);
@@ -153,7 +155,7 @@ export default class ThreeAnnotationShortcut extends Component {
           </Button>
           <Button
             icon
-            onClick={() => console.log("this is where edit point would go")}
+            onClick={this.edit}
             className="annotation-shortcut-button"
             size="mini"
           >

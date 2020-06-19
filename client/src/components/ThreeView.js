@@ -974,12 +974,14 @@ export default class ThreeView extends Component {
           annotationMarker.material.color.setHex(
             annotations[i].pinColor
           );
-          const cssObj = new CSS2DObject(annotations[i].node);
-          const bodyNode = annotations[i].bodyNode;
+          const { bodyNode, node } = annotations[i];
+          const cssObj = node ? new CSS2DObject(node) : null;
           const cssBodyObj = bodyNode
-            ? new CSS2DObject(annotations[i].bodyNode)
+            ? new CSS2DObject(bodyNode)
             : null;
-          this.overlayScene.add(cssObj);
+          if (cssObj) {
+            this.overlayScene.add(cssObj);
+          }  
           if (cssBodyObj) {
             this.overlayScene.add(cssBodyObj);
           }
