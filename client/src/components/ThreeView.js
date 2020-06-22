@@ -362,7 +362,6 @@ export default class ThreeView extends Component {
     this.annotationThrottleTime = 0;
     this.annotationOffsetPlaceholder = 0;
     this.positionAnnotations = this.positionAnnotations.bind(this);
-    this.hideAnnotations = this.hideAnnotations.bind(this);
     this.prepareSceneForVR = this.prepareSceneForVR.bind(this);
     this.tearDownSceneForVR = this.tearDownSceneForVR.bind(this);
     // event handlers
@@ -1006,9 +1005,12 @@ export default class ThreeView extends Component {
       annotationPresentationMode: val,
     });
   }
-
-  hideAnnotations() {
-    const {
+  // TODO should probably change this, it's not the "React" way. We should force a re-render 
+  /*hideAnnotations() {
+    if (this.annotationController.current) {
+      this.annotationController.current.hideAnnotations();
+    }
+    /*const {
       currentAnnotationIndex,
       currentAnnotationCSSObj,
       currentAnnotationCSSReadOnlyBodyObj,
@@ -1023,10 +1025,9 @@ export default class ThreeView extends Component {
         currentAnnotationCSSReadOnlyBodyObj.element.style.opacity = 0;
       }
     }
-  }
+  }*/
 
-  positionAnnotations(alpha = 0): void {
-    //Make annotations position smartly to stay in camera -- use raycaster prob
+  positionAnnotations(alpha = 0) {
     const distance = 0.3;
     const {
       currentAnnotationIndex,
@@ -1045,7 +1046,7 @@ export default class ThreeView extends Component {
           this.state.deltaTime / this.dampingFactor
         );
         offset = this.annotationOffsetPlaceholder;
-        if (alpha > 0) {
+        /*if (alpha > 0) {
           cssDiv.element.style.opacity = THREE.Math.lerp(0, 1, alpha);
           if (currentAnnotationCSSReadOnlyBodyObj) {
             currentAnnotationCSSReadOnlyBodyObj.element.style.opacity = THREE.Math.lerp(
@@ -1054,7 +1055,7 @@ export default class ThreeView extends Component {
               alpha
             );
           }
-        }
+        }*/
         // If we run into any performance issues we can change this
         annotationPos.add(new THREE.Vector3(offset, 0, 0));
         annotationPos.unproject(this.overlayCamera);
@@ -1492,7 +1493,6 @@ export default class ThreeView extends Component {
     if (storeLastPosition) {
       this.setState({ lastCameraPosition: this.camera.position.clone() });
     }
-    this.hideAnnotations();
     const distance = 10;
     let dest;
     if (!cameraPos) {
@@ -1565,7 +1565,6 @@ export default class ThreeView extends Component {
   }
 
   *cameraTargetTransition(duration) {
-    this.hideAnnotations();
     const { lastCameraPosition } = this.state;
     const end = this.camera.target.toArray();
     const start = this.lastTarget.toArray();
@@ -2004,13 +2003,16 @@ export default class ThreeView extends Component {
     /***************** ANNOTATIONS *********************************************/
     if (this.props.options.enableAnnotations) {
       const annotationGroup = new ThreeGUIGroup("annotations");
+      this.annotationController = React.createRef(null);
       annotationGroup.addComponent(
         "controller",
         components.THREE_ANNOTATION_CONTROLLER,
         {
+          setHide: (hide) => this.hideAnnotations = hide,
+          setShow: (show) => this.showAnnotations = show,
           drawCallback: this.drawAnnotations,
           updateCallback: this.updateAnnotationShortcuts,
-          cameraCallback: this.viewAnnotation,
+          cameraCallback: (point, cameraPos, storeLast) => this.hideAnnotations(this.viewAnnotation(point, cameraPos, storeLast)),
           onActiveCallback: (val) => this.toggleRaycasting(val),
           camera: this.camera,
           mesh: this.mesh,
@@ -2391,7 +2393,7 @@ export default class ThreeView extends Component {
     point: THREE.Vector3,
     cameraPos: THREE.Vector3,
     storeLastPosition = false
-  ): void {
+  ) {
     this.setState({
       controllable: false,
       target: point,

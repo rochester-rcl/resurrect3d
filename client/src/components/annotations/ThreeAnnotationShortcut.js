@@ -21,7 +21,6 @@ export default class ThreeAnnotationShortcut extends Component {
     this.focus = this.focus.bind(this);
     this.del = this.del.bind(this);
     this.save = this.save.bind(this);
-    this.edit = this.edit.bind(this);
     this.saveStatusLabel = this.saveStatusLabel.bind(this);
     this.handleSettingsChange = this.handleSettingsChange.bind(this);
     this.updateIndex = this.updateIndex.bind(this);
@@ -39,10 +38,6 @@ export default class ThreeAnnotationShortcut extends Component {
 
   save() {
     this.props.save(this.props.index);
-  }
-
-  edit() {
-    this.props.edit(this.props.index);
   }
 
   handleSettingsChange(settingsKey, value) {
@@ -150,19 +145,6 @@ export default class ThreeAnnotationShortcut extends Component {
               color="grey"
               className="annotation-shortcut-icon"
               name="eye"
-              size="large"
-            />
-          </Button>
-          <Button
-            icon
-            onClick={this.edit}
-            className="annotation-shortcut-button"
-            size="mini"
-          >
-            <Icon
-              color="grey"
-              className="annotation-shortcut-icon"
-              name="edit"
               size="large"
             />
           </Button>

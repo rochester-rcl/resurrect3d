@@ -87,8 +87,8 @@ export default class ThreeToggle extends Component {
     this.setState({ checked: this.props.defaultVal });
   }
 
-  updateChecked(): void {
-    let newVal = !this.state.checked;
+  updateChecked(val = null) {
+    const newVal = val !== null ? val : !this.state.checked;
     this.setState(
       {
         checked: newVal
@@ -98,9 +98,12 @@ export default class ThreeToggle extends Component {
   }
 
   render() {
-    const { title, toggle, size } = this.props;
+    const { title, size } = this.props;
     const { checked } = this.state;
-    const toggleVal = (toggle !== true || toggle !== false) ? true : toggle;
+    let controlledChecked = null;
+    if (this.props.checked !== undefined) {
+      controlledChecked = this.props.checked;
+    }
     const buttonSize = size ? size : "medium"
     return (
       <Segment className="three-tool-component-container">
@@ -110,9 +113,9 @@ export default class ThreeToggle extends Component {
         <div className="three-tool-toggle-container">
           <Button
             toggle
-            active={checked}
+            active={controlledChecked !== undefined ? controlledChecked : checked}
             size={buttonSize}
-            onClick={this.updateChecked}
+            onClick={() => this.updateChecked(controlledChecked)}
           >
             {checked ? "on" : "off"}
           </Button>
