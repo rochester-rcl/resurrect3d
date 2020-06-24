@@ -26,10 +26,13 @@ export default class ThreeAnnotationShortcut extends Component {
     this.updateIndex = this.updateIndex.bind(this);
     this.renderReadOnly = this.renderReadOnly.bind(this);
     this.renderAdminMode = this.renderAdminMode.bind(this);
+    this.handleClick = this.handleClick.bind(this);
   }
 
-  focus() {
-    this.props.focus(this.props.index);
+  focus(event) {
+    event.stopPropagation();
+    const { focus, index } = this.props;
+    if (focus) focus(index);
   }
 
   del() {
@@ -87,12 +90,17 @@ export default class ThreeAnnotationShortcut extends Component {
     }
   }
 
+  handleClick() {
+    const { onClick } = this.props;
+    if (onClick) onClick();
+  }
+
   renderReadOnly() {
     const { title, innerRef, selected, onClick } = this.props;
     const selectedClass = selected ? "selected" : "";
     return (
       <div
-        onClick={onClick}
+        onClick={this.handleClick}
         ref={innerRef}
         className={`annotation-shortcut-container ${selectedClass}`}
       >

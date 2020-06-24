@@ -1,7 +1,5 @@
 import React from "react";
-import ThreeAnnotationHeader from "./ThreeAnnotationHeader";
-import ThreeAnnotationBody from "./ThreeAnnotationBody";
-import GrowingTextArea from "./GrowingTextArea";
+import { Transition } from "semantic-ui-react";
 
 export default class ThreeAnnotation extends React.Component {
   constructor(props) {
@@ -13,6 +11,7 @@ export default class ThreeAnnotation extends React.Component {
       text: props.text,
       textStyle: {},
       needsUpdate: false,
+      children: [],
     };
 
     (this: any).updateTitle = this.updateTitle.bind(this);
@@ -56,19 +55,17 @@ export default class ThreeAnnotation extends React.Component {
   renderText() {
     const { editable } = this.props;
     const { text, textStyle } = this.state;
-    if (editable) {
-      return (
-        <div className="annotation-body" style={textStyle}>
-          <textarea
-            defaultValue={text}
-            type="text"
-            onChange={this.updateText}
-            className="text-area"
-            readOnly={!editable}
-          />
-        </div>
-      );
-    }
+    return (
+      <div className="annotation-body" style={textStyle}>
+        <textarea
+          defaultValue={text}
+          type="text"
+          onChange={this.updateText}
+          className="text-area"
+          readOnly={!editable}
+        />
+      </div>
+    );
   }
 
   renderTitle() {
@@ -88,15 +85,15 @@ export default class ThreeAnnotation extends React.Component {
   }
 
   render() {
-    const { innerRef, visible, className } = this.props;
-    const cName = `annotation ${className ? className : ""} ${
-      visible ? "show" : "hide"
-    }`;
+    const { visible, innerRef, className, editable } = this.props;
+    const cName = `annotation ${className ? className : ""}`;
     return (
-      <div ref={innerRef} className={cName}>
-        {this.renderTitle()}
-        {this.renderText()}
-      </div>
+      <Transition duration={1000} visible={visible} mountOnShow={false}>
+        <div ref={innerRef} className={cName}>
+          {this.renderTitle()}
+          {editable ? this.renderText() : null}
+        </div>
+      </Transition>
     );
   }
 }
