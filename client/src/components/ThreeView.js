@@ -968,6 +968,7 @@ export default class ThreeView extends Component {
         annotationMarker.material = this.annotationSprite.material.clone();
         annotationMarker.position.copy(annotations[i].point);
         annotationMarker.position.add(this.annotationSpriteOffset);
+        this.annotationMarkers.add(annotationMarker);
         if (annotations[i].open) {
           annotationMarker.material.color.setHex(annotations[i].pinColor);
           const { bodyNode, node } = annotations[i];
@@ -983,12 +984,11 @@ export default class ThreeView extends Component {
             currentAnnotationIndex: i,
             currentAnnotationCSSObj: cssObj,
             currentAnnotationCSSReadOnlyBodyObj: cssBodyObj,
-          });
+          }, () => this.positionAnnotations());
         } else {
           annotationMarker.material.color.setHex(0x000000);
         }
         annotationMarker.needsUpdate = true;
-        this.annotationMarkers.add(annotationMarker);
       }
     }
   }
@@ -1041,16 +1041,6 @@ export default class ThreeView extends Component {
           this.state.deltaTime / this.dampingFactor
         );
         offset = this.annotationOffsetPlaceholder;
-        /*if (alpha > 0) {
-          cssDiv.element.style.opacity = THREE.Math.lerp(0, 1, alpha);
-          if (currentAnnotationCSSReadOnlyBodyObj) {
-            currentAnnotationCSSReadOnlyBodyObj.element.style.opacity = THREE.Math.lerp(
-              0,
-              1,
-              alpha
-            );
-          }
-        }*/
         // If we run into any performance issues we can change this
         annotationPos.add(new THREE.Vector3(offset, 0, 0));
         annotationPos.unproject(this.overlayCamera);
@@ -1548,10 +1538,7 @@ export default class ThreeView extends Component {
           .add(this.state.dynamicLightProps.offset);
         this.dynamicLight.needsUpdate = true;
       }
-      yield null;
-    }
-    for (let i = 0; i < duration / 2; i += this.state.deltaTime) {
-      this.positionAnnotations(i / (duration / 2));
+      this.updateAnnotations(false)
       yield null;
     }
     this.setState({
@@ -1562,9 +1549,14 @@ export default class ThreeView extends Component {
   }
 
   *cameraTargetTransition(duration) {
-    const { lastCameraPosition } = this.state;
+    const { lastCameraPosition, currentAnnotationIndex } = this.state;
     const end = this.camera.target.toArray();
     const start = this.lastTarget.toArray();
+    const hasAnnotations = this.annotationMarkers.children.length > 0;
+    // hide annotations if there are any
+    if (hasAnnotations) {
+      yield this.hideAnnotations();
+    }
     const posAnimation = this.animateZoom(
       this.camera.target,
       duration,
@@ -1579,6 +1571,9 @@ export default class ThreeView extends Component {
     // wait for the animation to finish if things go out of sync
     while (!posAnimation.next().done) {
       yield null;
+    }
+    if (hasAnnotations) {
+      yield this.showAnnotations(currentAnnotationIndex);
     }
     this.camera.target.copy(this.lastTarget);
     this.setState({ cameraTargetTransitionRequired: false });
@@ -1675,32 +1670,43 @@ export default class ThreeView extends Component {
   }
 
   updateCamera(): void {
-    if (this.state.controllable) this.controlCamera();
-    else this.controlAnimation();
+    if (this.state.controllable) {
+      this.controlCamera();
+    } else { 
+      this.controlAnimation();
+    }
     this.setState({ deltaTime: this.clock.getDelta() });
   }
 
-  updateAnnotations() {
+  updateAnnotations(updateCSS = true) {
     if (this.annotationMarkers.children.length > 0) {
       const clonedPos = this.camera.position.clone();
       for (let i = 0; i < this.annotationMarkers.children.length; i++) {
         const marker = this.annotationMarkers.children[i];
         const { normal } = marker.userData;
         if (normal) {
-          const {
-            currentAnnotationIndex,
-            currentAnnotationCSSObj,
-            currentAnnotationCSSReadOnlyBodyObj,
-          } = this.state;
           const dot = clonedPos.dot(normal);
           const opacity = THREE.MathUtils.clamp(dot, 0, 1.0);
           marker.material.opacity = opacity + (this.spriteAlphaTest - 0.005);
-          // Doing this the "react" way won't work, it's too memory intensive - maybe if we can debounce hideAnnotations or showAnnotations it'll work
-          if (currentAnnotationIndex === i) {
-            currentAnnotationCSSObj.element.style.opacity = opacity;
-            if (currentAnnotationCSSReadOnlyBodyObj) {
-              currentAnnotationCSSReadOnlyBodyObj.element.style.opacity = opacity;
+          // This is still too slow - can see how it does in production
+          if (updateCSS) {
+            const {
+              currentAnnotationIndex,
+              currentAnnotationCSSObj,
+              currentAnnotationCSSReadOnlyBodyObj
+            } = this.state;
+            if (currentAnnotationIndex === i) {
+              if (dot < 0) {
+                this.hideAnnotations(i);
+              } else {
+                this.showAnnotations(i);
+              }
             }
+            // if above is too slow we'll have to manipulate the DOM directly
+            /*
+              currentAnnotationCSSObj.element.style.opacity = opacity;
+              currentAnnotationCSSReadOnlyBodyObj.element.style.opacity = opacity;
+            */
           }
         }
       }
@@ -1729,7 +1735,6 @@ export default class ThreeView extends Component {
         }
       }
     }
-
     this.offset.copy(this.camera.position).sub(this.camera.target);
     this.offset.applyQuaternion(this.quat);
     spherical.setFromVector3(this.offset);
@@ -1759,7 +1764,6 @@ export default class ThreeView extends Component {
       sphericalDelta.theta *= 1 - this.dampingFactor;
       sphericalDelta.phi *= 1 - this.dampingFactor;
       panOffset.multiplyScalar(1 - this.dampingFactor);
-      this.updateAnnotations();
     } else {
       sphericalDelta.set(0, 0, 0);
       panOffset.set(0, 0, 0);
@@ -1777,7 +1781,10 @@ export default class ThreeView extends Component {
     this.setState({
       scale: scale,
     });
-    this.positionAnnotations();
+    if (this.annotationMarkers.children.length > 0) {
+      this.positionAnnotations();
+      this.updateAnnotations();
+    }
   }
 
   updateThreeMaterial(material: THREE.Material, prop: string, scale: Number) {
@@ -2406,6 +2413,7 @@ export default class ThreeView extends Component {
     storeLastPosition = false,
     onComplete
   ) {
+    console.log(storeLastPosition);
     this.setState({
       controllable: false,
       target: point,

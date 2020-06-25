@@ -88,7 +88,7 @@ export default class ThreeAnnotation extends React.Component {
     const { visible, innerRef, className, editable } = this.props;
     const cName = `annotation ${className ? className : ""}`;
     return (
-      <Transition duration={1000} visible={visible} mountOnShow={false}>
+      <Transition duration={500} visible={visible} mountOnShow={false}>
         <div ref={innerRef} className={cName}>
           {this.renderTitle()}
           {editable ? this.renderText() : null}

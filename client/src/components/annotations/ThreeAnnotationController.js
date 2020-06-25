@@ -40,6 +40,8 @@ import { ANNOTATION_SAVE_STATUS, KEYCODES } from "../../constants/application";
 
 import { Label, Icon } from "semantic-ui-react";
 
+import { debounce } from "lodash";
+
 // TODO add editing capabilities to the body and make it editable
 
 class ThreeAnnotationController extends Component {
@@ -58,6 +60,7 @@ class ThreeAnnotationController extends Component {
     annotations: [],
     updatingAnnotations: false,
     presentationMode: false,
+    storeLastCameraPosition: false,
     currentIndex: -1,
     shortcutsNeedUpdate: false,
     pinColor: { hex: 0x21ba45, str: "#21ba45" },
@@ -99,7 +102,6 @@ class ThreeAnnotationController extends Component {
     this.handleKeyDown = this.handleKeyDown.bind(this);
     this.goToAnnotation = this.goToAnnotation.bind(this);
     this.updateEditableAnnotations = this.updateEditableAnnotations.bind(this);
-    this.onAnnotationBlur = this.onAnnotationBlur.bind(this);
     this.updateIndex = this.updateIndex.bind(this);
     this.shortcutContainerRef = React.createRef();
     this.currentShortcutRef = React.createRef();
@@ -108,6 +110,7 @@ class ThreeAnnotationController extends Component {
     this.getCurrentAnnotation = this.getCurrentAnnotation.bind(this);
     this.updateAnnotationPosition = this.updateAnnotationPosition.bind(this);
     this.toggleAnnotations = this.toggleAnnotations.bind(this);
+    this._toggleAnnotations = this._toggleAnnotations.bind(this);
   }
 
   componentDidMount(): void {
@@ -211,6 +214,7 @@ class ThreeAnnotationController extends Component {
 
   handleKeyDown(event) {
     const { presentationMode, currentIndex } = this.state;
+    console.log(currentIndex);
     if (presentationMode) {
       switch (event.keyCode) {
         case KEYCODES.LEFT:
@@ -251,13 +255,16 @@ class ThreeAnnotationController extends Component {
       this.props.onActiveCallback(this.state.active);
   }
 
-  componentDidUpdate(prevProps) {
-    const { editable, updatingAnnotations, active, currentIndex } = this.state;
+  componentDidUpdate(prevProps, prevState) {
+    const {
+      editable,
+      updatingAnnotations,
+      active,
+      storeLastCameraPosition,
+      presentationMode,
+    } = this.state;
     const { css, annotationData } = this.props;
     const { localStateNeedsUpdate, focused } = annotationData;
-    if (currentIndex < 0 && annotationData.annotations.length > 0) {
-      this.setState({ currentIndex: 0 });
-    }
     if (this.props.open != prevProps.open) {
       this.setState({ open: this.props.open });
     }
@@ -272,8 +279,10 @@ class ThreeAnnotationController extends Component {
     if (localStateNeedsUpdate && !updatingAnnotations) {
       this.requestAnnotationsUpdate();
     }
-    if (prevProps.annotationData.focused && !focused) {
-      this.onAnnotationBlur();
+    if (presentationMode && !prevState.presentationMode) {
+      this.setState({
+        storeLastCameraPosition: true,
+      });
     }
   }
 
@@ -384,14 +393,12 @@ class ThreeAnnotationController extends Component {
     const { annotations, pinColor, currentIndex } = this.state;
     for (let i = 0; i < annotations.length; i++) {
       annotations[i].open = false;
-      const component = annotations[i].component;
+      /*const component = annotations[i].component;
       const bodyComponent = annotations[i].bodyComponent;
-      annotations[i].component = React.cloneElement(component, {
-        ...component.props,
-      });
+      annotations[i].component = React.cloneElement(component);
       annotations[i].bodyComponent = React.cloneElement(bodyComponent, {
         ...bodyComponent.props,
-      });
+      });*/
     }
     const ref = React.createRef();
     const bodyRef = React.createRef();
@@ -509,12 +516,11 @@ class ThreeAnnotationController extends Component {
       const oa = cloned[openIndex];
       const { component, bodyComponent } = oa;
       oa.component = React.cloneElement(component, {
-        ...component.props,
-        ...{ editable: editable, visible: oa.visible },
+        editable: editable,
+        visible: oa.visible,
       });
       oa.bodyComponent = React.cloneElement(bodyComponent, {
-        ...bodyComponent.props,
-        ...{ visible: !editable },
+        visible: !editable,
       });
       this.setState({ annotations: cloned });
     }
@@ -673,7 +679,10 @@ class ThreeAnnotationController extends Component {
     if (annotation) {
       const {
         component,
+        bodyComponent,
         node,
+        bodyNode,
+        visible,
         titleStyle,
         textStyle,
         needsMerge,
@@ -713,7 +722,7 @@ class ThreeAnnotationController extends Component {
       }
     );
   }
-
+  // TODO needs to be optimized
   cloneAnnotation(
     annotations,
     index,
@@ -722,7 +731,7 @@ class ThreeAnnotationController extends Component {
     bodyProps = {}
   ) {
     const annotation = {
-      ...annotations.slice(index, index + 1)[0],
+      ...annotations[index],
       ...newFields,
     };
     const { component, bodyComponent } = annotation;
@@ -730,107 +739,101 @@ class ThreeAnnotationController extends Component {
     this.setState({
       pinColor: { hex: color.getHex(), str: color.getHexString() },
     });
-    annotation.component = React.cloneElement(component, {
-      ...component.props,
-      ...props,
-    });
-    annotation.bodyComponent = React.cloneElement(bodyComponent, {
-      ...bodyComponent.props,
-      ...bodyProps,
-    });
+    annotation.component = React.cloneElement(component, props);
+    annotation.bodyComponent = React.cloneElement(bodyComponent, bodyProps);
     return annotation;
   }
 
-  toggleAnnotations(val) {
-    return (index = null) => {
-      return new Promise((resolve, reject) => {
-        try {
-          const { annotations, annotationsVisible, editable } = this.state;
-          if (annotationsVisible === val) {
-            resolve();
-            return;
-          }
-          let updated;
-          if (index !== null) {
-            updated = [...annotations];
-            const annotation = this.cloneAnnotation(
-              updated,
+  _toggleAnnotations(val, index) {
+    return new Promise((resolve, reject) => {
+      try {
+        const { annotations, annotationsVisible, editable } = this.state;
+        if (annotationsVisible === val) {
+          resolve();
+          return;
+        }
+        let updated;
+        if (index !== null) {
+          updated = [...annotations];
+          const annotation = this.cloneAnnotation(
+            updated,
+            index,
+            { open: val, visible: val },
+            {
+              visible: val,
+              editable: editable,
+            },
+            { visible: editable !== true && val !== false }
+          );
+          updated.splice(index, 1, annotation);
+        } else {
+          updated = annotations.map((annotation, index) => {
+            return this.cloneAnnotation(
+              annotations,
               index,
-              { open: val, visible: val },
-              {
-                visible: val,
-                editable: editable,
-              },
+              { visible: val, open: val },
+              { visible: val },
               { visible: editable !== true && val !== false }
             );
-            updated.splice(index, 1, annotation);
-          } else {
-            updated = annotations.map((annotation, index) => {
-              return this.cloneAnnotation(
-                annotations,
-                index,
-                { visible: val, open: val },
-                { visible: val },
-                { visible: editable !== true && val !== false }
-              );
-            });
-          }
-          this.setState(
-            {
-              annotations: updated,
-              annotationsVisible: val,
-            },
-            () => {
-              resolve();
-            }
-          );
-        } catch (error) {
-          reject(error);
+          });
         }
-      });
-    };
+        this.setState(
+          {
+            annotations: updated,
+            annotationsVisible: val,
+          },
+          () => {
+            resolve();
+          }
+        );
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 
-  // TODO add onclick to focus shortcut without changing view in admin, doesnt make sense in readonly
+  toggleAnnotations(val) {
+    return debounce(
+      (index = null) => this._toggleAnnotations(val, index),
+      750,
+      { leading: true, trailing: false, maxWait: 1000 }
+    );
+  }
+
   viewAnnotation(index, moveCamera = true) {
-    const {
-      annotationData,
-    } = this.props;
     const { annotations } = this.state;
     const { settings, point } = annotations[index];
     const { cameraPosition } = settings;
     this.toggleAnnotations(false)().then(() => {
       if (moveCamera) {
-        this.startCameraCallback(
-          index,
-          point,
-          cameraPosition.val,
-          !annotationData.focused
-        );
+        this.startCameraCallback(index, point, cameraPosition.val);
       } else {
         this.onCameraCallbackComplete(index);
       }
     });
   }
 
-  startCameraCallback(index, point, cameraPosition, storeLast) {
+  startCameraCallback(index, point, cameraPosition) {
     const { cameraCallback } = this.props;
     if (cameraCallback) {
+      const { storeLastCameraPosition, presentationMode } = this.state;
+      const storeLast = presentationMode ? storeLastCameraPosition : true;
       cameraCallback(point, cameraPosition, storeLast, () =>
         this.onCameraCallbackComplete(index)
       );
     }
   }
-
+  // always store last camera position outside of presentation mode, only store it on the first animation in presentation mode
   onCameraCallbackComplete(index) {
     const { changeAnnotationFocus, drawCallback } = this.props;
+    const { presentationMode, storeLastCameraPosition } = this.state;
     this.scrollShortcut(this.currentShortcutRef.current);
-    changeAnnotationFocus(true);
     this.toggleAnnotations(true)(index).then(() => {
       this.setState(
         {
           currentIndex: index,
           shortcutsNeedUpdate: true,
+          storeLastCameraPosition: false,
         },
         () => {
           drawCallback(this.state.annotations);
@@ -838,12 +841,6 @@ class ThreeAnnotationController extends Component {
         }
       );
     });
-  }
-
-  onAnnotationBlur() {
-    /*this.setState({
-      currentIndex: -1
-    });*/
   }
 
   updateAnnotationSettings(index, settingsKey, value) {

@@ -36,7 +36,7 @@ function* saveAnnotationSaga(action) {
     const { annotation, threeViewId } = action;
     let result;
     if (annotation.saveStatus === ANNOTATION_SAVE_STATUS.NEEDS_UPDATE) {
-      const { saveStatus, visible, ...rest } = annotation;
+      const { saveStatus, ...rest } = annotation;
       result = yield backend.updateAnnotation(rest, threeViewId);
     } else {
       result = yield backend.saveAnnotation(annotation, threeViewId);

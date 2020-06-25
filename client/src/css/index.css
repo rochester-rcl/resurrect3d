@@ -530,15 +530,6 @@ body {
   flex-direction: column;
   pointer-events: auto;
   opacity: 1;
-  transition: opacity 500ms ease-in-out;
-}
-
-.annotation.hide {
-  opacity: 0;
-}
-
-.annotation.show {
-  opacity: 1;
 }
 
 .annotation-head
