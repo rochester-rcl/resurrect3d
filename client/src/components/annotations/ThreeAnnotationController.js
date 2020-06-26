@@ -367,12 +367,13 @@ class ThreeAnnotationController extends Component {
   }
 
   updateAnnotationPosition(point, face) {
-    const { currentIndex, annotations } = this.state;
+    const { currentIndex, annotations, pinColor } = this.state;
     const annotation = {
       ...this.getCurrentAnnotation(),
       ...{
         point: point,
         normal: face.normal,
+        pinColor: pinColor.hex,
         saveStatus: ANNOTATION_SAVE_STATUS.NEEDS_UPDATE,
       },
     };

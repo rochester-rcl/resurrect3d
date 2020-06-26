@@ -14,7 +14,7 @@ import {
 
 export default class ThreeAnnotationShortcut extends Component {
   state = {
-    settings: { useCamera: false, useSettings: false },
+    settings: { focused: false },
   };
   constructor(props) {
     super(props);
@@ -35,11 +35,13 @@ export default class ThreeAnnotationShortcut extends Component {
     if (focus) focus(index);
   }
 
-  del() {
+  del(event) {
+    event.stopPropagation();
     this.props.delete(this.props.index);
   }
 
-  save() {
+  save(event) {
+    event.stopPropagation();
     this.props.save(this.props.index);
   }
 
@@ -89,7 +91,7 @@ export default class ThreeAnnotationShortcut extends Component {
         );
     }
   }
-
+  // onClick forces a re-render every time - need to fix that in shouldcomponentupdate
   handleClick() {
     const { onClick } = this.props;
     if (onClick) onClick();
@@ -129,7 +131,7 @@ export default class ThreeAnnotationShortcut extends Component {
     const selectedClass = selected ? "selected" : "";
     return (
       <div
-        onClick={onClick}
+        onClick={this.handleClick}
         ref={innerRef}
         className={`annotation-shortcut-container ${selectedClass}`}
       >

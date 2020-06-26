@@ -21,13 +21,13 @@ export class ThreeToggleMulti extends Component {
   updateChecked(index: number): void {
     const { toggleButtons } = this.state;
     let cloned = toggleButtons.slice(0);
-    cloned.forEach(button => {
+    cloned.forEach((button) => {
       button.checked = false;
     });
     cloned[index].checked = !toggleButtons[index].checked;
     this.setState(
       {
-        toggleButtons: cloned
+        toggleButtons: cloned,
       },
       () => {
         const { toggleButtons } = this.state;
@@ -48,10 +48,13 @@ export class ThreeToggleMulti extends Component {
           <div className="three-toggle-multi-container">
             {toggleButtons.map((button, index) => {
               const { toggle } = button;
-              const toggleVal = (toggle === true || toggle === false) ? toggle : true;
-              return(
+              const toggleVal =
+                toggle === true || toggle === false ? toggle : true;
+              return (
                 <div className="three-toggle-multi">
-                  <span className="three-toggle-multi-label">{button.label}</span>
+                  <span className="three-toggle-multi-label">
+                    {button.label}
+                  </span>
                   <Checkbox
                     className="three-tool-toggle"
                     checked={button.checked}
@@ -59,14 +62,13 @@ export class ThreeToggleMulti extends Component {
                     radio={!toggleVal}
                     onClick={() => this.updateChecked(index)}
                   />
-                  {(toggleVal === true) ?
+                  {toggleVal === true ? (
                     <span className="three-toggle-status">
                       {button.checked ? "on" : "off"}
                     </span>
-                    : null }
-
+                  ) : null}
                 </div>
-              )
+              );
             })}
           </div>
         </div>
@@ -91,9 +93,11 @@ export default class ThreeToggle extends Component {
     const newVal = val !== null ? val : !this.state.checked;
     this.setState(
       {
-        checked: newVal
+        checked: newVal,
       },
-      () => { if (this.props.callback !== undefined) this.props.callback(newVal) }
+      () => {
+        if (this.props.callback !== undefined) this.props.callback(newVal);
+      }
     );
   }
 
@@ -104,7 +108,8 @@ export default class ThreeToggle extends Component {
     if (this.props.checked !== undefined) {
       controlledChecked = this.props.checked;
     }
-    const buttonSize = size ? size : "medium"
+    const buttonSize = size ? size : "medium";
+    const active = controlledChecked !== null ? controlledChecked : checked;
     return (
       <Segment className="three-tool-component-container">
         <Label className="three-tool-component-label" attached="top left">
@@ -113,11 +118,14 @@ export default class ThreeToggle extends Component {
         <div className="three-tool-toggle-container">
           <Button
             toggle
-            active={controlledChecked !== undefined ? controlledChecked : checked}
+            active={active}
             size={buttonSize}
-            onClick={() => this.updateChecked(controlledChecked)}
+            onClick={(event) => {
+              event.stopPropagation();
+              this.updateChecked(controlledChecked);
+            }}
           >
-            {checked ? "on" : "off"}
+            {active ? "on" : "off"}
           </Button>
         </div>
       </Segment>
