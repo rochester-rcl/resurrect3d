@@ -80,6 +80,7 @@ export class LinearGradientShader {
   generateShaderMaterial(): THREE.ShaderMaterial {
     return new THREE.ShaderMaterial({
       uniforms: this.uniforms,
+      vertexShader: this.vertexShader,
       fragmentShader: this.fragmentShader,
       dithering: true,
       side: THREE.DoubleSide

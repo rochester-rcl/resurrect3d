@@ -513,6 +513,7 @@ body {
 
 .annotation
 {
+  position: absolute;
   width: auto;
   height: auto;
   max-height: 50%;
@@ -528,6 +529,7 @@ body {
   display: flex;
   flex-direction: column;
   pointer-events: auto;
+  opacity: 1;
 }
 
 .annotation-head
@@ -663,6 +665,38 @@ body {
   overflow-y: auto;
   flex-direction: column;
   justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.5s ease-in-out;
+}
+
+.annotation-shortcut-container-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.8);
+  transition: opacity 500ms ease-in-out;
+}
+
+.annotation-shortcut-container-overlay.enabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.annotation-shortcut-container-overlay.disabled {
+  opacity: 1;
+}
+
+.annotation-shortcut-container-overlay:hover {
+  opacity: 0.5;
+}
+
+.annotation-shortcut-container:hover {
+  background-color: rgba(0,0,0,0.5) !important;
+}
+
+.annotation-shortcut-container.selected {
+  border: 2px solid rgb(0, 180, 0) !important;
 }
 
 .annotation-shortcut-title {
@@ -676,6 +710,18 @@ body {
   white-space: nowrap;
   text-overflow: ellipsis;
   font-size: 14px !important;
+}
+
+.annotation-edit-mode-label {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  margin: 20px!important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: #fff !important;
+  font-family: 'Source Code Pro', monospace !important;
+  pointer-events: none;
 }
 
 .annotation-status-label {
@@ -716,8 +762,8 @@ body {
   color: #000 !important;
 }
 
-.annotation-shortcut-icon {
-  /*color: #ccc !important;*/
+.annotation-shortcut-icon.enabled {
+  color: rgb(0, 180, 0) !important;
 }
 
 .annotation-shortcut-settings-container {
@@ -735,6 +781,11 @@ body {
 
 .toggle-annotations-presentation-button:hover {
   background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.annotation-body-read-only {
+  transition: opacity 500ms ease-in-out;
+  opacity: 1;
 }
 
 /*** EMBED MODE ***/

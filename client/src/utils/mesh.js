@@ -82,3 +82,23 @@ export function exportMap(material: Materials): Array<Object> {
 export function getExtension(path: string): string {
   return '.' + path.split('.').pop();
 }
+
+function getVertex(arr, idx) {
+  const vertex = new THREE.Vector3();
+  vertex.x = arr[idx];
+  vertex.y = arr[idx+1];
+  vertex.z = arr[idx+2];
+  return vertex;
+}
+
+export function getFaceCentroid(geometry, face) {
+  const vertices = geometry.attributes.position.array;
+  const a = getVertex(vertices, face.a);
+  const b = getVertex(vertices, face.b);
+  const c = getVertex(vertices, face.c);
+  const centroid = new THREE.Vector3();
+  centroid.x = (a.x + b.x + c.x) / 3;
+  centroid.y = (a.y + b.y + c.y) / 3;
+  centroid.x = (a.z + b.z + c.z) / 3;
+  return centroid;
+}
