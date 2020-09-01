@@ -3,11 +3,11 @@
  */
 
 export default function loadEffectComposer(threeInstance: Object): typeof Promise {
+	const _size = new threeInstance.Vector2();
 	return new Promise((resolve, reject) => {
 		threeInstance.EffectComposer = function ( renderer, renderTarget ) {
 
 			this.renderer = renderer;
-
 			if ( renderTarget === undefined ) {
 
 				var parameters = {
@@ -16,7 +16,7 @@ export default function loadEffectComposer(threeInstance: Object): typeof Promis
 					format: threeInstance.RGBAFormat,
 					stencilBuffer: false
 				};
-				var size = renderer.getSize();
+				var size = renderer.getSize(_size);
 				renderTarget = new threeInstance.WebGLRenderTarget( size.width, size.height, parameters );
 				renderTarget.texture.name = "EffectComposer.rt1";
 			}
@@ -52,7 +52,7 @@ export default function loadEffectComposer(threeInstance: Object): typeof Promis
 
 				this.passes.push( pass );
 
-				var size = this.renderer.getSize();
+				var size = this.renderer.getSize(_size);
 				pass.setSize( size.width, size.height );
 
 			},
@@ -81,7 +81,7 @@ export default function loadEffectComposer(threeInstance: Object): typeof Promis
 
 						if ( maskActive ) {
 
-							var context = this.renderer.context;
+							var context = this.renderer.getContext();
 
 							context.stencilFunc( context.NOTEQUAL, 1, 0xffffffff );
 
@@ -117,7 +117,7 @@ export default function loadEffectComposer(threeInstance: Object): typeof Promis
 
 				if ( renderTarget === undefined ) {
 
-					var size = this.renderer.getSize();
+					var size = this.renderer.getSize(_size);
 
 					renderTarget = this.renderTarget1.clone();
 					renderTarget.setSize( size.width, size.height );

@@ -7,6 +7,7 @@ export const API_ENDPOINT: string = API_URL + '/api';
 export const VIEWS_ENDPOINT: string = API_ENDPOINT + '/views/';
 export const ADMIN_CONTAINER_ENDPOINT: string = API_ENDPOINT + '/container/';
 export const FILE_ENDPOINT: string = API_ENDPOINT + '/file/';
+export const TEXTURE_ENDPOINT: string = API_ENDPOINT + '/texture/';
 export const USERS_ENDPOINT: string = API_ENDPOINT + '/users/';
 export const LOGIN_ENDPOINT: string = USERS_ENDPOINT + 'login';
 export const LOGOUT_ENDPOINT: string = USERS_ENDPOINT + 'logout';

@@ -60,8 +60,8 @@ export default function loadVignettePass(threeInstance: Object): typeof Promise 
             this.uniforms["resolution"].value = rtResolution;
             this.uniforms["color"].value = color ? color : new threeInstance.Color(0.5);
 
-            this.horizontalBlurUniforms["h"].value = 2 / (rtResolution.x / 2);
-            this.verticalBlurUniforms["v"].value = 2 / (rtResolution.y / 2);
+            this.horizontalBlurUniforms["h"].value = 1 / (rtResolution.x / 2);
+            this.verticalBlurUniforms["v"].value = 1 / (rtResolution.y / 2);
 
             this.camera = new threeInstance.OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
 	          this.scene  = new threeInstance.Scene();
@@ -80,19 +80,26 @@ export default function loadVignettePass(threeInstance: Object): typeof Promise 
               // pass 1
               this.horizontalBlurUniforms["tDiffuse"].value = readBuffer.texture;
               this.quad.material = this.horizontalBlurMaterial;
-      	      renderer.render(this.scene, this.camera, this.pass1RenderTarget, true);
+              renderer.setRenderTarget(this.pass1RenderTarget);
+              renderer.clear();
+              renderer.render(this.scene, this.camera);
               // pass 2
               this.verticalBlurUniforms["tDiffuse"].value = this.pass1RenderTarget.texture;
               this.quad.material = this.verticalBlurMaterial;
-              renderer.render(this.scene, this.camera, this.pass2RenderTarget, true);
+              renderer.setRenderTarget(this.pass2RenderTarget);
+              renderer.clear();
+              renderer.render(this.scene, this.camera);
               // pass 3
               this.uniforms["tDiffuse"].value = this.pass2RenderTarget.texture;
               this.quad.material = this.vignetteMaterial;
 
               if (this.renderToScreen) {
+                renderer.setRenderTarget(null);
                 renderer.render(this.scene, this.camera);
               } else {
-                renderer.render(this.scene, this.camera, writeBuffer, this.clear);
+                renderer.setRenderTarget(writeBuffer);
+                if (this.clear) renderer.clear();
+                renderer.render(this.scene, this.camera);
               }
             },
       		});

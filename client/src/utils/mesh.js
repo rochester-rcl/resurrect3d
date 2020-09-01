@@ -7,7 +7,9 @@ import * as THREE from 'three';
 import { base64ImageToBlob } from './image';
 
 // constants
-import { MAP_TYPES } from '../constants/application';
+import { MAP_TYPES, THREE_MESH } from '../constants/application';
+
+import lodash from "lodash";
 
 export function volumeFromBounds(bbox: typeof THREE.Box3): Object {
 
@@ -39,6 +41,27 @@ export function mapMaterials(materials: Array<Materials> , callback): Array<Mate
   return callback(materials);
 }
 
+export function getMaterials(mesh) {
+  const materials = [];
+  mesh.traverse((m) => {
+    if (m.constructor.name === THREE_MESH) {
+      materials.push(m.material)
+    }
+  });
+  return lodash.uniqBy(materials.reduce((a, b) => a.concat(b), []), "uuid");
+}
+
+export function traverseMaterials(mesh, callback) {
+  mesh.traverse((child) => {
+    if (child.constructor.name === THREE_MESH) {
+      if (child.material) {
+        child.material = callback(child.material);
+        child.material.needsUpdate = true;
+      }
+    }
+  });
+}
+
 export function exportMap(material: Materials): Array<Object> {
   let images = [];
   if (material.map !== null) {
@@ -58,4 +81,24 @@ export function exportMap(material: Materials): Array<Object> {
 
 export function getExtension(path: string): string {
   return '.' + path.split('.').pop();
+}
+
+function getVertex(arr, idx) {
+  const vertex = new THREE.Vector3();
+  vertex.x = arr[idx];
+  vertex.y = arr[idx+1];
+  vertex.z = arr[idx+2];
+  return vertex;
+}
+
+export function getFaceCentroid(geometry, face) {
+  const vertices = geometry.attributes.position.array;
+  const a = getVertex(vertices, face.a);
+  const b = getVertex(vertices, face.b);
+  const c = getVertex(vertices, face.c);
+  const centroid = new THREE.Vector3();
+  centroid.x = (a.x + b.x + c.x) / 3;
+  centroid.y = (a.y + b.y + c.y) / 3;
+  centroid.x = (a.z + b.z + c.z) / 3;
+  return centroid;
 }

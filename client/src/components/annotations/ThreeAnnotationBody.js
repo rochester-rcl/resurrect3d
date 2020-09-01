@@ -1,21 +1,20 @@
 import React from "react";
+import { Transition } from "semantic-ui-react";
 
-const ThreeAnnotationReadOnlyBody = props => {
-  const { visible, text, innerRef } = props;
-  const display = text.length > 0 ? "flex" : "none";
-  if (visible) {
-    return (
-      <div
-        ref={innerRef}
-        style={{ display: display }}
-        className="annotation-body-read-only"
-      >
-        <div className="text-area-read-only">{text}</div>
-      </div>
-    );
-  } else {
-    return <div style={{ display: "none" }}></div>;
-  }
+const ThreeAnnotationReadOnlyBody = (props) => {
+  const { visible, text, className, innerRef } = props;
+  const cName = `annotation-body-read-only ${className ? className : ""}`;
+  return (
+    <Transition duration={500} visible={visible} mountOnShow={false}>
+      {text.length > 0 ? (
+        <div ref={innerRef} className={cName}>
+          <div className="text-area-read-only">{text}</div>
+        </div>
+      ) : (
+        <div></div>
+      )}
+    </Transition>
+  );
 };
 
 export default ThreeAnnotationReadOnlyBody;

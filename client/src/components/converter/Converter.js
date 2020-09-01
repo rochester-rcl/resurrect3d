@@ -11,7 +11,7 @@ import {
   VALID_MATERIAL_FORMATS,
   CHECKBOX,
   MAP,
-  FILE
+  FILE,
 } from "../../constants/application";
 
 export default class ConverterForm extends Component {
@@ -19,73 +19,88 @@ export default class ConverterForm extends Component {
     maps: {
       map: {
         label: "Diffuse Map",
-        file: null,
+        files: null,
         info: "http://docs.cryengine.com/display/SDKDOC2/Diffuse+Maps",
         type: FILE,
-        accept: VALID_IMAGE_FORMATS
+        accept: VALID_IMAGE_FORMATS,
+        multiple: true,
       },
       normalMap: {
         label: "Normal Map",
-        file: null,
+        files: null,
         info: "https://en.wikipedia.org/wiki/Normal_mapping",
         type: FILE,
-        accept: VALID_IMAGE_FORMATS
+        accept: VALID_IMAGE_FORMATS,
+        multiple: true,
       },
       displacementMap: {
         label: "Displacement Map",
-        file: null,
+        files: null,
         info: "https://en.wikipedia.org/wiki/Displacement_mapping",
         type: FILE,
-        accept: VALID_IMAGE_FORMATS
+        accept: VALID_IMAGE_FORMATS,
+        multiple: true,
       },
       aoMap: {
         label: "Ambient Occlusion Map",
-        file: null,
+        files: null,
         info: "https://en.wikipedia.org/wiki/Ambient_occlusion",
         type: FILE,
-        accept: VALID_IMAGE_FORMATS
+        accept: VALID_IMAGE_FORMATS,
+        multiple: true,
       },
       roughnessMap: {
         label: "Roughness Map",
-        file: null,
+        files: null,
         info:
           "https://marmoset.co/posts/physically-based-rendering-and-you-can-too/",
         type: FILE,
-        accept: VALID_IMAGE_FORMATS
+        accept: VALID_IMAGE_FORMATS,
+        multiple: true,
       },
       metalnessMap: {
         label: "Metalness Map",
-        file: null,
+        files: null,
         info:
           "https://marmoset.co/posts/physically-based-rendering-and-you-can-too/",
         type: FILE,
-        accept: VALID_IMAGE_FORMATS
+        accept: VALID_IMAGE_FORMATS,
+        multiple: true,
       },
     },
     mesh: {
-      label: "Mesh File (OBJ)",
+      label: "Mesh File (OBJ, VRML)",
       file: null,
       info: "https://en.wikipedia.org/wiki/Wavefront_.obj_file",
       type: FILE,
-      accept: VALID_MESH_FORMATS
+      accept: VALID_MESH_FORMATS,
     },
     material: {
       label: "Materials File (MTL)",
       file: null,
       info: "https://en.wikipedia.org/wiki/Wavefront_.obj_file",
       type: FILE,
-      accept: VALID_MATERIAL_FORMATS
+      accept: VALID_MATERIAL_FORMATS,
     },
     options: {
       center: { label: "Re-Center Geometry", val: false, type: CHECKBOX },
-      compress: { label: "Use JPEG Compression on Large Textures", val: false, type: CHECKBOX },
-      zlib: { label: "Use ZLib Compression on the Output Mesh", val: false, type: CHECKBOX },
+      compress: {
+        label: "Use JPEG Compression on Large Textures",
+        val: false,
+        type: CHECKBOX,
+      },
+      yUp: {
+        label: "Transform Model Orientation from Z Up to Y Up",
+        val: false,
+        type: CHECKBOX,
+      },
+      // zlib: { label: "Use ZLib Compression on the Output Mesh", val: false, type: CHECKBOX },
       createNormalMap: {
         label: "Generate Normal Map from Diffuse",
         val: false,
-        type: CHECKBOX
-      }
-    }
+        type: CHECKBOX,
+      },
+    },
   };
 
   constructor(props: Object) {
@@ -107,7 +122,7 @@ export default class ConverterForm extends Component {
     const type = this.checkFileUploadType(name);
     const shallowCopy = { ...this.state };
     if (type === MAP) {
-      shallowCopy.maps[name].file = event.target.files[0];
+      shallowCopy.maps[name].files = event.target.files;
     } else {
       shallowCopy[name].file = event.target.files[0];
     }
@@ -118,7 +133,7 @@ export default class ConverterForm extends Component {
     const val = type === CHECKBOX ? event.target.checked : value;
     const shallowCopy = { ...this.state.options };
     shallowCopy[name].val = val;
-    this.setState({ options: shallowCopy }, () => console.log(this.state));
+    this.setState({ options: shallowCopy });
   }
 
   prepare(data: Object): Object {
@@ -130,14 +145,15 @@ export default class ConverterForm extends Component {
     toSubmit.options = {};
     for (let key in maps) {
       let val = maps[key];
-      if (val.file !== null) {
-        toSubmit.maps[key] = val.file;
+      if (val.files !== null) {
+        toSubmit.maps[key] = [...val.files];
       }
     }
     for (let key in options) {
       let option = options[key];
       toSubmit.options[key] = option.val;
     }
+    console.log(toSubmit);
     return toSubmit;
   }
 
@@ -154,11 +170,11 @@ export default class ConverterForm extends Component {
           let field = group[key];
           return (
             <Form.Input
-             
               className="three-converter-form-field"
               label={field.label}
               type={field.type}
               accept={field.accept}
+              multiple={field.multiple}
               name={key}
               key={index}
               onChange={

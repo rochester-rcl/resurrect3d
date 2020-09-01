@@ -1,12 +1,15 @@
 import {
   LOAD_ANNOTATIONS,
   SAVE_ANNOTATION,
-  UPDATE_ANNOTATION,
+  UPDATE_LOCAL_ANNOTATION,
   DELETE_ANNOTATION,
   RESET_ANNOTATIONS_UPDATE_STATUS,
   ANNOTATION_FOCUS_CHANGED,
   ANNOTATIONS_MERGED,
-  UPDATE_ANNOTATIONS_ORDER
+  UPDATE_ANNOTATIONS_ORDER,
+  UPDATE_LOCAL_ANNOTATIONS,
+  HIDE_ANNOTATIONS,
+  SHOW_ANNOTATIONS,
 } from "../constants/actions";
 
 export function loadAnnotations(threeViewId) {
@@ -57,4 +60,32 @@ export function changeAnnotationFocus(val) {
     type: ANNOTATION_FOCUS_CHANGED,
     val: val
   };
+}
+
+export function updateLocalAnnotations(annotations, indices) {
+  return {
+    type: UPDATE_LOCAL_ANNOTATIONS,
+    indices: indices,
+    annotations: annotations
+  }
+}
+
+export function updateLocalAnnotation(annotation, index) {
+  return {
+    type: UPDATE_LOCAL_ANNOTATION,
+    index: index,
+    annotation: annotation
+  }
+}
+
+export function hideAnnotations() {
+  return {
+    type: HIDE_ANNOTATIONS
+  }
+}
+
+export function showAnnotations() {
+  return {
+    type: SHOW_ANNOTATIONS
+  }
 }

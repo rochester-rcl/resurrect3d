@@ -1,7 +1,5 @@
 import React from "react";
-import ThreeAnnotationHeader from "./ThreeAnnotationHeader";
-import ThreeAnnotationBody from "./ThreeAnnotationBody";
-import GrowingTextArea from "./GrowingTextArea";
+import { Transition } from "semantic-ui-react";
 
 export default class ThreeAnnotation extends React.Component {
   constructor(props) {
@@ -12,7 +10,8 @@ export default class ThreeAnnotation extends React.Component {
       titleStyle: {},
       text: props.text,
       textStyle: {},
-      needsUpdate: false
+      needsUpdate: false,
+      children: [],
     };
 
     (this: any).updateTitle = this.updateTitle.bind(this);
@@ -26,7 +25,7 @@ export default class ThreeAnnotation extends React.Component {
     const { needsUpdate } = this.state;
     this.setState(
       {
-        title: event.target.value
+        title: event.target.value,
       },
       () => {
         this.props.callback(index, this.state);
@@ -42,7 +41,7 @@ export default class ThreeAnnotation extends React.Component {
     const { needsUpdate } = this.state;
     this.setState(
       {
-        text: event.target.value
+        text: event.target.value,
       },
       () => {
         this.props.callback(this.props.index, this.state);
@@ -56,19 +55,17 @@ export default class ThreeAnnotation extends React.Component {
   renderText() {
     const { editable } = this.props;
     const { text, textStyle } = this.state;
-    if (editable) {
-      return (
-        <div className="annotation-body" style={textStyle}>
-          <textarea
-            defaultValue={text}
-            type="text"
-            onChange={this.updateText}
-            className="text-area"
-            readOnly={!editable}
-          />
-        </div>
-      );
-    }
+    return (
+      <div className="annotation-body" style={textStyle}>
+        <textarea
+          defaultValue={text}
+          type="text"
+          onChange={this.updateText}
+          className="text-area"
+          readOnly={!editable}
+        />
+      </div>
+    );
   }
 
   renderTitle() {
@@ -88,16 +85,15 @@ export default class ThreeAnnotation extends React.Component {
   }
 
   render() {
-    const { innerRef, visible, editable } = this.props;
-    if (visible) {
-      return (
-        <div ref={innerRef} className="annotation">
+    const { visible, innerRef, className, editable } = this.props;
+    const cName = `annotation ${className ? className : ""}`;
+    return (
+      <Transition duration={500} visible={visible} mountOnShow={false}>
+        <div ref={innerRef} className={cName}>
           {this.renderTitle()}
-          {this.renderText()}
+          {editable ? this.renderText() : null}
         </div>
-      );
-    } else {
-      return <div></div>;
-    }
+      </Transition>
+    );
   }
 }

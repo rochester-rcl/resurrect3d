@@ -9,11 +9,13 @@ import ThreeToggle from "../ThreeToggle";
 
 import {
   ANNOTATION_SAVE_STATUS,
-  ANNOTATION_SETTINGS_OPTIONS
+  ANNOTATION_SETTINGS_OPTIONS,
 } from "../../constants/application";
 
 export default class ThreeAnnotationShortcut extends Component {
-  state = { settings: { useCamera: false, useLights: false } };
+  state = {
+    settings: { focused: false },
+  };
   constructor(props) {
     super(props);
     this.focus = this.focus.bind(this);
@@ -24,17 +26,22 @@ export default class ThreeAnnotationShortcut extends Component {
     this.updateIndex = this.updateIndex.bind(this);
     this.renderReadOnly = this.renderReadOnly.bind(this);
     this.renderAdminMode = this.renderAdminMode.bind(this);
+    this.handleClick = this.handleClick.bind(this);
   }
 
-  focus() {
-    this.props.focus(this.props.index);
+  focus(event) {
+    event.stopPropagation();
+    const { focus, index } = this.props;
+    if (focus) focus(index);
   }
 
-  del() {
+  del(event) {
+    event.stopPropagation();
     this.props.delete(this.props.index);
   }
 
-  save() {
+  save(event) {
+    event.stopPropagation();
     this.props.save(this.props.index);
   }
 
@@ -57,7 +64,7 @@ export default class ThreeAnnotationShortcut extends Component {
       }
     }
     if (canUpdate) {
-      onUpdateIndex(index, dst, this.scrollToShortcut);
+      onUpdateIndex(index, dst);
     }
   }
 
@@ -84,17 +91,27 @@ export default class ThreeAnnotationShortcut extends Component {
         );
     }
   }
+  // onClick forces a re-render every time - need to fix that in shouldcomponentupdate
+  handleClick() {
+    const { onClick } = this.props;
+    if (onClick) onClick();
+  }
 
   renderReadOnly() {
-    const { title, innerRef } = this.props;
+    const { title, innerRef, selected, onClick } = this.props;
+    const selectedClass = selected ? "selected" : "";
     return (
-      <div ref={innerRef} className="annotation-shortcut-container">
+      <div
+        onClick={this.handleClick}
+        ref={innerRef}
+        className={`annotation-shortcut-container ${selectedClass}`}
+      >
         <span className="annotation-shortcut-label-container">
           <Label className="annotation-shortcut-title">{title}</Label>
           <Button
             icon
             onClick={this.focus}
-            className="annotation-shortcut-button"
+            className={`annotation-shortcut-button ${selectedClass}`}
             size="mini"
           >
             <Icon
@@ -110,9 +127,19 @@ export default class ThreeAnnotationShortcut extends Component {
   }
 
   renderAdminMode() {
-    const { title, innerRef, total, index } = this.props;
+    const { title, innerRef, total, index, selected, onClick } = this.props;
+    const selectedClass = selected ? "selected" : "";
     return (
-      <div ref={innerRef} className="annotation-shortcut-container">
+      <div
+        onClick={this.handleClick}
+        ref={innerRef}
+        className={`annotation-shortcut-container ${selectedClass}`}
+      >
+        <div
+          className={`annotation-shortcut-container-overlay ${
+            selected ? "enabled" : "disabled"
+          }`}
+        ></div>
         <span className="annotation-shortcut-label-container">
           <Label className="annotation-shortcut-title">{title}</Label>
           {this.saveStatusLabel()}
@@ -186,20 +213,20 @@ export default class ThreeAnnotationShortcut extends Component {
         </div>
         <div className="annotation-shortcut-settings-container">
           <ThreeToggle
-            callback={val =>
+            callback={(val) =>
               this.handleSettingsChange(
                 ANNOTATION_SETTINGS_OPTIONS.CAMERA_POSITION,
                 val
               )
             }
             defaultVal={false}
-            title="save camera data"
+            title="save camera"
             size="mini"
           />
           <ThreeToggle
-            callback={val => console.log(val)}
+            callback={(val) => console.log(val)}
             defaultVal={false}
-            title="save light data"
+            title="save settings"
             size="mini"
           />
         </div>
