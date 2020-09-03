@@ -444,7 +444,6 @@ export default class ThreeView extends Component {
   }
 
   render(): Object {
-    console.log(this.props.alternateMaps);
     const {
       loadProgress,
       loadText,
@@ -1385,8 +1384,6 @@ export default class ThreeView extends Component {
 
     quadDiffusePass.renderToScreen = false;
 
-    console.log(quadDiffusePass);
-
     this.addShaderPass({ EDL: EDLPass });
     this.addShaderPass({ ChromaKey: chromaKeyPass });
     this.addShaderPass({ QuadDiffuse: quadDiffusePass });
@@ -1429,10 +1426,6 @@ export default class ThreeView extends Component {
     this.effectComposer.addPass(rawGui);
     this.effectComposer.addPass(clearMask);
     this.effectComposer.addPass(copyPass);
-
-    console.log(this.effectComposer);
-
-    console.log(this.scene);
 
     this.updateCamera();
     this.centerCamera();
@@ -2325,6 +2318,20 @@ export default class ThreeView extends Component {
       this.settingsMask.shaders.add("threshold");
 
       const quadDiffuseGroup = new ThreeGUIGroup("quadDiffuse");
+
+      // Initialize quadDiffuse uniforms
+
+      if (this.props.alternateMaps.images.length == 4)
+      {
+        console.log("initializing quad diffuse");
+        let diffuses = this.props.alternateMaps.images;
+        console.log(diffuses);
+
+        this.updateDynamicShaders(diffuses[0], "QuadDiffuse", "tlDiffuse");
+        this.updateDynamicShaders(diffuses[1], "QuadDiffuse", "trDiffuse");
+        this.updateDynamicShaders(diffuses[2], "QuadDiffuse", "blDiffuse");
+        this.updateDynamicShaders(diffuses[3], "QuadDiffuse", "brDiffuse");
+      }
 
       quadDiffuseGroup.addComponent("enable", components.THREE_TOGGLE, {
         key: 1,

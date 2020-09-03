@@ -10,6 +10,10 @@ export default function loadQuadDiffuseShader(threeInstance: Object): typeof Pro
             uniforms: {
 
                 "tDiffuse": { value: null },
+                "tlDiffuse": { type: 't', value: null },    // Top-left
+                "trDiffuse": { type: 't', value: null },    // Top-right
+                "blDiffuse": { type: 't', value: null },    // Bottom-left
+                "brDiffuse": { type: 't', value: null },    // Bottom-right
                 "u_enable": { type: 'b', value: false },
                 "u_mouse": { value: new threeInstance.Vector2(0, 0) },
                 "u_resolution": { value: new threeInstance.Vector2(0, 0) },
@@ -32,6 +36,10 @@ export default function loadQuadDiffuseShader(threeInstance: Object): typeof Pro
             fragmentShader: [
 
                 "uniform sampler2D tDiffuse;",
+                "uniform sampler2D tlDiffuse;",
+                "uniform sampler2D trDiffuse;",
+                "uniform sampler2D blDiffuse;",
+                "uniform sampler2D brDiffuse;",
                 "uniform bool u_enable;",
                 "uniform vec2 u_mouse;",
                 "uniform vec2 u_resolution;",
@@ -47,18 +55,22 @@ export default function loadQuadDiffuseShader(threeInstance: Object): typeof Pro
                     "{",
                         //"vec2 pos = vec2(gl_FragCoord.x, u_resolution.y - gl_FragCoord.y) - 0.5;",
                         "vec2 offset = vec2(vUv.x, 1.0 - vUv.y) - u_mouse;",
-                        "vec3 tone;",
+                        // "vec3 tone;",
 
                         "if (offset.x <= 0.0 && offset.y <= 0.0)",
-                            "tone = vec3(1.0, 0.5, 0.5);",
+                            // "tone = vec3(1.0, 0.5, 0.5);",
+                            "color = texture2D( tlDiffuse, vUv );",
                         "else if (offset.x <= 0.0)",
-                            "tone = vec3(0.5, 1.0, 0.5);",
+                            // "tone = vec3(0.5, 1.0, 0.5);",
+                            "color = texture2D( blDiffuse, vUv );",
                         "else if (offset.x > 0.0 && offset.y <= 0.0)",
-                            "tone = vec3(0.5, 0.5, 1.0);",
+                            // "tone = vec3(0.5, 0.5, 1.0);",
+                            "color = texture2D( trDiffuse, vUv );",
                         "else",
-                            "tone = vec3(1.0, 1.0, 0.5);",
+                            // "tone = vec3(1.0, 1.0, 0.5);",
+                            "color = texture2D( brDiffuse, vUv );",
 
-                        "color = vec4(tone, 1.0) * texel;",
+                        // "color = vec4(tone, 1.0) * texel;",
                     "}",
                     "else",
                         "color = texel;",
