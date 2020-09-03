@@ -81,7 +81,13 @@ exports.addView = (req, res) => {
     return;
   }
 
-  const { threeFile, threeThumbnail, skyboxFile, alternateMaps } = req.files;
+  console.log(req.files);
+
+  const { threeFile, threeThumbnail, skyboxFile } = req.files;
+
+  const alternateMaps = req.files['alternateMaps[]'];
+
+  console.log(alternateMaps);
 
   const newView = new View({
     displayName: req.body.displayName,
@@ -89,7 +95,7 @@ exports.addView = (req, res) => {
     threeThumbnail:
       threeThumbnail !== undefined ? threeThumbnail[0].filename : null,
     skyboxFile: skyboxFile !== undefined ? skyboxFile[0].filename : null,
-    alternateMaps: alternateMaps !== undefined ? alternateMaps.map(map => map[0].filename) : null,
+    alternateMaps: alternateMaps !== undefined ? alternateMaps.map(map => map.filename) : null,
     enableLight: req.body.enableLight,
     enableMaterials: req.body.enableMaterials,
     enableShaders: req.body.enableShaders,

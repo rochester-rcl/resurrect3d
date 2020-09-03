@@ -79,6 +79,7 @@ function* getThreeAssetSaga(
 ): Generator<any, any, any> {
   try {
     const asset = yield backend.getThreeAsset(getThreeAssetAction.id);
+    console.log(asset);
     const { viewerSettings } = asset;
     if (viewerSettings !== undefined) {
       asset.viewerSettings = deserializeThreeTypes(viewerSettings);
