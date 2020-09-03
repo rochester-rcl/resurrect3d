@@ -70,9 +70,12 @@ class ThreeContainer extends Component {
 
       if (this.props.threeAsset.alternateMaps !== null) {
         for (let i = 0; i < this.props.threeAsset.alternateMaps.length; i++) {
+          console.log(this.props.threeAsset.alternateMaps[i]);
           this.props.loadAlternateMapAction(this.props.threeAsset.alternateMaps[i])
         }
       }
+      else
+        console.log(this.props.threeAsset);
     }
   }
 

@@ -15,7 +15,7 @@ module.exports = (app, upload, conn, Grid, router) => {
     { name: "threeThumbnail", maxcount: 1 },
     { name: "skyboxFile", maxcount: 1 },
     { name: "externalMaps[]" },
-    { name: "alternateMaps", maxcount: 1 }
+    { name: "alternateMaps[]"}
   ]);
 
   router

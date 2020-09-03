@@ -379,14 +379,17 @@ export function* loadTextureSaga(
 }
 
 function* loadAlternateMapSaga(loadAlternateMapAction) {
+  console.log('load alternate map');
   try {
     const textureLoader = new THREE.TextureLoader();
+    const url = yield backend.getImageFileURL(loadAlternateMapAction.url);
+    console.log(url);
     textureLoader.crossOrigin = "anonymous";
     const textureLoaderChannel = yield call(
       createLoadProgressChannel,
       textureLoader,
       "alternatemap",
-      loadAlternateMapAction.url
+      url
     );
     while (true) {
       const payload = yield take(textureLoaderChannel);

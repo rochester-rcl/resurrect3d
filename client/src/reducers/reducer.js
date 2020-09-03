@@ -99,6 +99,7 @@ function uiReducer(state: Object = defaultState, action: Object): Object {
       }
 
     case ActionConstants.ALTERNATE_MAP_LOADED:
+      console.log(action.payload.val);
       let maps = state.alternateMaps.images;
       maps.push(action.payload.val);
       return {
