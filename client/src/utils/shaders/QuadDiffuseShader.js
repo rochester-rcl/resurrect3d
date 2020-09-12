@@ -47,7 +47,6 @@ export default function loadQuadDiffuseShader(threeInstance: Object): typeof Pro
                 "varying vec2 vUv;",
 
                 "void main() {",
-
                     "vec4 texel = texture2D( tDiffuse, vUv );",
                     "vec4 color;",
 
@@ -76,6 +75,7 @@ export default function loadQuadDiffuseShader(threeInstance: Object): typeof Pro
                         "color = texel;",
 
                     "gl_FragColor = color;",
+                    // "gl_FragColor = texture2D( blDiffuse, vUv);",
 
                 "}"
 

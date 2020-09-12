@@ -1113,6 +1113,7 @@ export default class ThreeView extends Component {
     }
 
     this.scene.add(this.mesh);
+    console.log(this.mesh);
     this.bboxMesh = new THREE.Box3().setFromObject(this.mesh);
     this.meshHeight = this.bboxMesh.max.y - this.bboxMesh.min.y;
     this.meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
@@ -2323,8 +2324,8 @@ export default class ThreeView extends Component {
 
       if (this.props.alternateMaps.images.length == 4)
       {
-        console.log("initializing quad diffuse");
         let diffuses = this.props.alternateMaps.images;
+        diffuses.forEach( map => map.mapping = THREE.UVMapping );
         console.log(diffuses);
 
         this.updateDynamicShaders(diffuses[0], "QuadDiffuse", "tlDiffuse");

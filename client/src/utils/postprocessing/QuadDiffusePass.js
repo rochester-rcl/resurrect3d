@@ -40,6 +40,7 @@ export default function loadQuadDiffusePass(threeInstance: Object) {
 
 			render: function(renderer, writeBuffer, readBuffer, delta, maskActive) {
 		        this.uniforms["tDiffuse"].value = readBuffer.texture;
+		        console.log(readBuffer.texture);
 
 	        	this.uniforms["tlDiffuse"] = this.uniforms["tlDiffuse"] ? this.uniforms["tlDiffuse"] : readBuffer.texture;
 		        this.uniforms["trDiffuse"] = this.uniforms["trDiffuse"] ? this.uniforms["trDiffuse"] : readBuffer.texture;
