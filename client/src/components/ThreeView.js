@@ -1381,14 +1381,8 @@ export default class ThreeView extends Component {
     );
     chromaKeyPass.renderToScreen = false;
 
-    const quadDiffuseShader = THREE.QuadDiffuseShader;
-    const quadDiffusePass = new THREE.ShaderPass(THREE.QuadDiffuseShader);
-
-    quadDiffusePass.renderToScreen = false;
-
     this.addShaderPass({ EDL: EDLPass });
     this.addShaderPass({ ChromaKey: chromaKeyPass });
-    this.addShaderPass({ QuadDiffuse: quadDiffusePass });
 
     const SSAOPass = new THREE.SSAOPass(this.scene, this.camera);
 
@@ -1416,7 +1410,6 @@ export default class ThreeView extends Component {
     this.addShaderPass({ GUI: rawGui });
 
     this.effectComposer.addPass(rawModel);
-    this.effectComposer.addPass(quadDiffusePass);
     this.effectComposer.addPass(chromaKeyPass);
     // this.effectComposer.addPass(SSAOPass);
     this.effectComposer.addPass(EDLPass);
@@ -1887,7 +1880,6 @@ export default class ThreeView extends Component {
       "vignette",
       "resolution"
     );
-    this.updateDynamicShaders(new THREE.Vector2(width, height), "QuadDiffuse", "u_resolution");  //Pass resolution to QuadDiffuse
     this.camera.aspect = clientWidth / clientHeight;
     this.overlayCamera.aspect = clientWidth / clientHeight;
     this.camera.updateProjectionMatrix();
@@ -2178,7 +2170,7 @@ export default class ThreeView extends Component {
     /****************************** SHADERS ***********************************/
 
     if (this.props.options.enableShaders) {
-      const { EDL, ChromaKey, QuadDiffuse } = this.state.shaderPasses;
+      const { EDL, ChromaKey } = this.state.shaderPasses;
       const shaderGroup = new ThreeGUIGroup("shaders");
       const edlGroup = new ThreeGUIGroup("edl");
 
@@ -2319,37 +2311,8 @@ export default class ThreeView extends Component {
       });
       this.settingsMask.shaders.add("threshold");
 
-      const quadDiffuseGroup = new ThreeGUIGroup("quadDiffuse");
-
-      // Initialize quadDiffuse uniforms
-
-      if (this.props.alternateMaps.images.length == 4)
-      {
-        let diffuses = this.props.alternateMaps.images;
-        diffuses.forEach( map => map.mapping = THREE.UVMapping );
-        console.log(diffuses);
-
-        this.updateDynamicShaders(diffuses[0], "QuadDiffuse", "u_tlDiffuse");
-        this.updateDynamicShaders(diffuses[1], "QuadDiffuse", "u_trDiffuse");
-        this.updateDynamicShaders(diffuses[2], "QuadDiffuse", "u_blDiffuse");
-        this.updateDynamicShaders(diffuses[3], "QuadDiffuse", "u_brDiffuse");
-      }
-
-      this.updateDynamicShaders(this.mesh.children[0].geometry.attributes.uv, "QuadDiffuse", "u_uvArray");
-
-      quadDiffuseGroup.addComponent("enable", components.THREE_TOGGLE, {
-        key: 1,
-        callback: value =>
-          this.updateDynamicShaders(value, "QuadDiffuse", "u_enable"),
-        defaultVal: QuadDiffuse.uniforms.u_enable.value,
-        title: "enable"
-      });
-
-      this.settingsMask.shaders.add("u_enable");
-
       shaderGroup.addGroup("eye dome lighting", edlGroup);
       shaderGroup.addGroup("chroma key", chromaKeyGroup);
-      shaderGroup.addGroup("quad diffuse", quadDiffuseGroup);
       this.panelGroup.addGroup("shaders", shaderGroup);
     }
 
@@ -2719,7 +2682,6 @@ export default class ThreeView extends Component {
   handleMouseMove(event: SyntheticMouseEvent): void {
     let rect = this.webGLRenderer.domElement.getBoundingClientRect()
     let coords = new THREE.Vector2((event.clientX - rect.left) / rect.width, (event.clientY - rect.top) / rect.height);
-    this.updateDynamicShaders(coords, "QuadDiffuse", "u_mouse");
     if (this.state.controllable) this.orbit(event.clientX, event.clientY);
   }
 
