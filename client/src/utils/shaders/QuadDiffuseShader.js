@@ -10,10 +10,11 @@ export default function loadQuadDiffuseShader(threeInstance: Object): typeof Pro
             uniforms: {
 
                 "tDiffuse": { value: null },
-                "tlDiffuse": { type: 't', value: null },    // Top-left
-                "trDiffuse": { type: 't', value: null },    // Top-right
-                "blDiffuse": { type: 't', value: null },    // Bottom-left
-                "brDiffuse": { type: 't', value: null },    // Bottom-right
+                "u_tlDiffuse": { type: 't', value: null },    // Top-left
+                "u_trDiffuse": { type: 't', value: null },    // Top-right
+                "u_blDiffuse": { type: 't', value: null },    // Bottom-left
+                "u_brDiffuse": { type: 't', value: null },    // Bottom-right
+                "u_uvArray": { type: 'fv', value: [] },
                 "u_enable": { type: 'b', value: false },
                 "u_mouse": { value: new threeInstance.Vector2(0, 0) },
                 "u_resolution": { value: new threeInstance.Vector2(0, 0) },
@@ -22,11 +23,13 @@ export default function loadQuadDiffuseShader(threeInstance: Object): typeof Pro
 
             vertexShader: [
 
+                "uniform float u_uvArray[172950];",
                 "varying vec2 vUv;",
 
                 "void main() {",
 
-                    "vUv = uv;",
+                    //"vUv = uv;",
+                    "vUv = vec2(u_uvArray[gl_VertexID * 2], u_uvArray[gl_VertexID * 2 + 1]);",
                     "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
 
                 "}"
@@ -34,12 +37,11 @@ export default function loadQuadDiffuseShader(threeInstance: Object): typeof Pro
             ].join( "\n" ),
 
             fragmentShader: [
-
                 "uniform sampler2D tDiffuse;",
-                "uniform sampler2D tlDiffuse;",
-                "uniform sampler2D trDiffuse;",
-                "uniform sampler2D blDiffuse;",
-                "uniform sampler2D brDiffuse;",
+                "uniform sampler2D u_tlDiffuse;",
+                "uniform sampler2D u_trDiffuse;",
+                "uniform sampler2D u_blDiffuse;",
+                "uniform sampler2D u_brDiffuse;",
                 "uniform bool u_enable;",
                 "uniform vec2 u_mouse;",
                 "uniform vec2 u_resolution;",

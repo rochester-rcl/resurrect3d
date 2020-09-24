@@ -29,10 +29,11 @@ export default function loadQuadDiffusePass(threeInstance: Object) {
       		this.uniforms["u_enable"].value = u_enable;
 			this.uniforms["u_mouse"].value = u_mouse;
 			this.uniforms["u_resolution"].value = u_resolution;
-			this.uniforms["tlDiffuse"].value = tlDiffuse;
-			this.uniforms["trDiffuse"].value = trDiffuse;
-			this.uniforms["blDiffuse"].value = blDiffuse;
-			this.uniforms["brDiffuse"].value = brDiffuse;
+			this.uniforms["u_tlDiffuse"].value = tlDiffuse;
+			this.uniforms["u_trDiffuse"].value = trDiffuse;
+			this.uniforms["u_blDiffuse"].value = blDiffuse;
+			this.uniforms["u_brDiffuse"].value = brDiffuse;
+			this.uniforms["u_uvArray"].value = params.u_uvArray;
 		};
 
 		threeInstance.QuadDiffusePass.prototype = Object.assign(Object.create(threeInstance.ShaderPass.prototype), {
@@ -40,14 +41,11 @@ export default function loadQuadDiffusePass(threeInstance: Object) {
 
 			render: function(renderer, writeBuffer, readBuffer, delta, maskActive) {
 		        this.uniforms["tDiffuse"].value = readBuffer.texture;
-		        console.log(readBuffer.texture);
 
-	        	this.uniforms["tlDiffuse"] = this.uniforms["tlDiffuse"] ? this.uniforms["tlDiffuse"] : readBuffer.texture;
-		        this.uniforms["trDiffuse"] = this.uniforms["trDiffuse"] ? this.uniforms["trDiffuse"] : readBuffer.texture;
-		        this.uniforms["blDiffuse"] = this.uniforms["blDiffuse"] ? this.uniforms["blDiffuse"] : readBuffer.texture;
-		        this.uniforms["brDiffuse"] = this.uniforms["brDiffuse"] ? this.uniforms["brDiffuse"] : readBuffer.texture;
-
-		        console.log(this.uniforms);
+	        	this.uniforms["u_tlDiffuse"] = this.uniforms["u_tlDiffuse"] ? this.uniforms["u_tlDiffuse"] : readBuffer.texture;
+		        this.uniforms["u_trDiffuse"] = this.uniforms["u_trDiffuse"] ? this.uniforms["u_trDiffuse"] : readBuffer.texture;
+		        this.uniforms["u_blDiffuse"] = this.uniforms["u_blDiffuse"] ? this.uniforms["u_blDiffuse"] : readBuffer.texture;
+		        this.uniforms["u_brDiffuse"] = this.uniforms["u_brDiffuse"] ? this.uniforms["u_brDiffuse"] : readBuffer.texture;
 
 		        if (this.renderToScreen) {
 		          renderer.render(this.scene, this.camera);

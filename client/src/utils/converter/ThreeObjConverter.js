@@ -72,6 +72,7 @@ export default class ThreeObjConverter extends ThreeConverter {
                 objLoader.setPath("");
                 if (material !== undefined) objLoader.setMaterials(material);
                 this.mesh = objLoader.parse(meshData);
+                console.log(this.mesh);
                 this.setUpMaterials().then(() => resolve(this.mesh));
               })
               .catch((error) => reject(error));

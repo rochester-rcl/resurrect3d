@@ -1056,6 +1056,7 @@ export default class ThreeView extends Component {
 
   initMesh(): void {
     this.mesh = this.props.mesh.object3D;
+    console.log(this.mesh);
     this.meshChildren = getChildren(this.mesh);
     this.materialRefs = getMaterials(this.mesh);
     const setMicrosurface = (material) => {
@@ -2328,11 +2329,13 @@ export default class ThreeView extends Component {
         diffuses.forEach( map => map.mapping = THREE.UVMapping );
         console.log(diffuses);
 
-        this.updateDynamicShaders(diffuses[0], "QuadDiffuse", "tlDiffuse");
-        this.updateDynamicShaders(diffuses[1], "QuadDiffuse", "trDiffuse");
-        this.updateDynamicShaders(diffuses[2], "QuadDiffuse", "blDiffuse");
-        this.updateDynamicShaders(diffuses[3], "QuadDiffuse", "brDiffuse");
+        this.updateDynamicShaders(diffuses[0], "QuadDiffuse", "u_tlDiffuse");
+        this.updateDynamicShaders(diffuses[1], "QuadDiffuse", "u_trDiffuse");
+        this.updateDynamicShaders(diffuses[2], "QuadDiffuse", "u_blDiffuse");
+        this.updateDynamicShaders(diffuses[3], "QuadDiffuse", "u_brDiffuse");
       }
+
+      this.updateDynamicShaders(this.mesh.children[0].geometry.attributes.uv, "QuadDiffuse", "u_uvArray");
 
       quadDiffuseGroup.addComponent("enable", components.THREE_TOGGLE, {
         key: 1,
