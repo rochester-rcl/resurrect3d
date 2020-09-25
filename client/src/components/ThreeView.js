@@ -1056,9 +1056,12 @@ export default class ThreeView extends Component {
 
   initMesh(): void {
     this.mesh = this.props.mesh.object3D;
-    console.log(this.mesh);
     this.meshChildren = getChildren(this.mesh);
     this.materialRefs = getMaterials(this.mesh);
+
+    // New addition
+    this.alternateMaterials = {};
+
     const setMicrosurface = (material) => {
       if (material.type === THREE_MESH_STANDARD_MATERIAL) {
         material.metalness = 0.0;
@@ -1114,7 +1117,6 @@ export default class ThreeView extends Component {
     }
 
     this.scene.add(this.mesh);
-    console.log(this.mesh);
     this.bboxMesh = new THREE.Box3().setFromObject(this.mesh);
     this.meshHeight = this.bboxMesh.max.y - this.bboxMesh.min.y;
     this.meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
@@ -2388,6 +2390,36 @@ export default class ThreeView extends Component {
             });
             materialsGroup.addGroup("microsurface", pbrGroup);
           }
+
+          /* Quad Diffuse Material */
+
+          let diffuses = this.props.alternateMaps.images;
+          if (diffuses.length == 4) {
+            
+            const quadDiffuseMaterial = new THREE.ShaderMaterial(THREE.QuadDiffuseShader);
+            quadDiffuseMaterial.uniforms["u_tlDiffuse"].value = diffuses[0];
+            quadDiffuseMaterial.uniforms["u_trDiffuse"].value = diffuses[1];
+            quadDiffuseMaterial.uniforms["u_blDiffuse"].value = diffuses[2];
+            quadDiffuseMaterial.uniforms["u_brDiffuse"].value = diffuses[3];
+
+            console.log(quadDiffuseMaterial.uniforms);
+
+            this.alternateMaterials["QuadDiffuse"] = quadDiffuseMaterial;
+
+            const quadDiffuseGroup = new ThreeGUIGroup("quadDiffuse");
+            quadDiffuseGroup.addComponent("enable", components.THREE_TOGGLE, {
+              title: "enable",
+              defaultVal: false,
+              callback: (value) => {
+                if (value)
+                  mesh.material = this.alternateMaterials["QuadDiffuse"];
+                else
+                  mesh.material = this.materialRefs[0];
+              }
+            });
+
+            materialsGroup.addGroup("quadDiffuse", quadDiffuseGroup);
+          }
         }
       }
       this.panelGroup.addGroup("materials", materialsGroup);
@@ -2683,6 +2715,9 @@ export default class ThreeView extends Component {
     let rect = this.webGLRenderer.domElement.getBoundingClientRect()
     let coords = new THREE.Vector2((event.clientX - rect.left) / rect.width, (event.clientY - rect.top) / rect.height);
     if (this.state.controllable) this.orbit(event.clientX, event.clientY);
+
+    if (this.alternateMaterials["QuadDiffuse"])
+      this.alternateMaterials["QuadDiffuse"].uniforms["u_mouse"].value = coords;
   }
 
   handleMouseWheel(event: SyntheticWheelEvent): void {
@@ -2705,6 +2740,9 @@ export default class ThreeView extends Component {
     this.width = clientWidth;
     this.height = clientHeight;
     this.updateRenderSize([this.width, this.height]);
+
+    if (this.alternateMaterials["QuadDiffuse"])
+      this.alternateMaterials["QuadDiffuse"].uniforms["u_resolution"].value = new THREE.Vector2(this.width, this.height);
   }
 
   handleKeyDown(event: SyntheticKeyboardEvent): void {
