@@ -42,8 +42,8 @@ export default function loadQuadDiffuseShader(threeInstance: Object): typeof Pro
                 "void main() {",
                     "vec4 color;",
 
-                    "vec2 fragPos = gl_FragCoord.xy * u_resolution;",
-                    "vec2 offset = vec2(fragPos.x, 1.0 - fragPos.y) - u_mouse;",
+                    "vec2 uv = gl_FragCoord.xy / u_resolution;",
+                    "vec2 offset = uv - u_mouse;",
 
                     "if (offset.x <= 0.0 && offset.y <= 0.0)",
                         "color = texture2D( u_tlDiffuse, vUv );",

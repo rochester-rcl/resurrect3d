@@ -2401,6 +2401,7 @@ export default class ThreeView extends Component {
             quadDiffuseMaterial.uniforms["u_trDiffuse"].value = diffuses[1];
             quadDiffuseMaterial.uniforms["u_blDiffuse"].value = diffuses[2];
             quadDiffuseMaterial.uniforms["u_brDiffuse"].value = diffuses[3];
+            quadDiffuseMaterial.uniforms["u_resolution"].value = new THREE.Vector2(this.width, this.height);
 
             console.log(quadDiffuseMaterial.uniforms);
 
