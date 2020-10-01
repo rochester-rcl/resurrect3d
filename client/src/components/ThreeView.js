@@ -2406,9 +2406,11 @@ export default class ThreeView extends Component {
             quadDiffuseMaterial.uniforms["u_brDiffuse"].value = diffuses[3];
             quadDiffuseMaterial.uniforms["u_resolution"].value = new THREE.Vector2(this.width, this.height);
 
-            console.log(quadDiffuseMaterial.uniforms);
-
             this.alternateMaterials["QuadDiffuse"] = quadDiffuseMaterial;
+
+            mesh.material = this.alternateMaterials["QuadDiffuse"];
+            this.renderWebGL();  // Compiles shader to avoid lag on first switch
+            mesh.material = this.materialRefs[0];
 
             const quadDiffuseGroup = new ThreeGUIGroup("quadDiffuse");
             quadDiffuseGroup.addComponent("enable", components.THREE_TOGGLE, {
