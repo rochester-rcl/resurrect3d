@@ -34,7 +34,7 @@ export default function loadQuadDiffuseShader(threeInstance: Object): typeof Pro
                 "uniform sampler2D u_trDiffuse;",
                 "uniform sampler2D u_blDiffuse;",
                 "uniform sampler2D u_brDiffuse;",
-                "uniform vec2 u_mouse;",
+                "uniform vec2 u_mouse;",    // u_mouse has top-left as (0, 0), bottom-right as (1, 1)
                 "uniform vec2 u_resolution;",
 
                 "varying vec2 vUv;",
@@ -43,7 +43,7 @@ export default function loadQuadDiffuseShader(threeInstance: Object): typeof Pro
                     "vec4 color;",
 
                     "vec2 uv = gl_FragCoord.xy / u_resolution;",
-                    "vec2 offset = uv - u_mouse;",
+                    "vec2 offset = vec2(uv.x, 1.0-uv.y) - u_mouse;",
 
                     "if (offset.x <= 0.0 && offset.y <= 0.0)",
                         "color = texture2D( u_tlDiffuse, vUv );",

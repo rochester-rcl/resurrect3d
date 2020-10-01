@@ -1887,6 +1887,9 @@ export default class ThreeView extends Component {
     this.camera.updateProjectionMatrix();
     this.overlayCamera.updateProjectionMatrix();
     this.positionAnnotations();
+
+    if (this.alternateMaterials["QuadDiffuse"])
+      this.alternateMaterials["QuadDiffuse"].uniforms["u_resolution"].value = new THREE.Vector2(width, height);
   }
 
   updateShaders(obj: Object, callback) {
