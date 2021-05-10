@@ -35,7 +35,7 @@
     "semantic-ui-css": "^2.3.3",
     "semantic-ui-react": "^0.88.2",
     "short-uuid": "^2.3.4",
-    "three": "^0.98.0",
+    "three": "^0.125.0",
     "worker-loader": "^2.0.0",
     "zlibjs": "^0.3.1"
   },
