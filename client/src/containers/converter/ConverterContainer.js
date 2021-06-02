@@ -25,6 +25,7 @@ class ConverterContainer extends Component {
   render(): Object {
     const {
       startConversion,
+      addAlternateMaps,
       restartConverter,
       conversionStarted,
       conversionComplete,
@@ -38,7 +39,7 @@ class ConverterContainer extends Component {
     } = this.props;
     if (conversionStarted === false) {
       return conversionType !== CONVERSION_TYPE_RTI ? (
-        <ConverterForm startConversion={startConversion} />
+        <ConverterForm startConversion={startConversion} addAlternateMaps={addAlternateMaps}/>
       ) : (
         <PtmConverterForm startConversion={startConversion} />
       );

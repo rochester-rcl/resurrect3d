@@ -37,6 +37,15 @@ const defaultState = {
     image: null,
   },
 
+  alternateMaps: {
+    loaded: false,
+    progress: {
+      label: 'Loading Alternate Maps',
+      percent: null,
+    },
+    images: [],
+  },
+
   metadata: [],
 
   threeAsset: {
@@ -80,6 +89,25 @@ function uiReducer(state: Object = defaultState, action: Object): Object {
           loaded: true,
           progress: PROGRESS_COMPLETE,
           image: action.payload.val
+        }
+      }
+
+    case ActionConstants.UPDATE_ALTERNATE_MAP_LOAD_PROGRESS:
+      return {
+        ...state,
+        alternateMaps: { ...state.alternateMaps, progress: { label: action.payload.val, percent: action.payload.percent } }
+      }
+
+    case ActionConstants.ALTERNATE_MAP_LOADED:
+      let maps = state.alternateMaps.images;
+      maps.push(action.payload.val);
+      return {
+        ...state,
+        alternateMaps: {
+          ...state.alternateMaps,
+          loaded: true,
+          progress: PROGRESS_COMPLETE,
+          images: maps
         }
       }
     

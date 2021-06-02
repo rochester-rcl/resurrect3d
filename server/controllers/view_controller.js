@@ -58,10 +58,12 @@ exports.getFile = (req, res) => {
 // something to make this for admin only - in the future we will have a browse feature that will require everything
 exports.findAllViews = (req, res) => {
   const query = {};
+  //console.log(req.user);
   if (req.user) {
     query.createdBy = req.user.id;
   }
   View.find(query).exec((err, views) => {
+    //console.log(views);
     if (err) {
       return res.status(500).json({
         message: "Could not find views: Error[ " + err + " ]",
@@ -73,18 +75,27 @@ exports.findAllViews = (req, res) => {
 };
 
 exports.addView = (req, res) => {
+  console.log('add view');
   if (!req.files) {
     console.log("No files to upload.");
     return;
   }
 
+  console.log(req.files);
+
   const { threeFile, threeThumbnail, skyboxFile } = req.files;
+
+  const alternateMaps = req.files['alternateMaps[]'];
+
+  console.log(alternateMaps);
+
   const newView = new View({
     displayName: req.body.displayName,
     threeFile: threeFile !== undefined ? threeFile[0].filename : null,
     threeThumbnail:
       threeThumbnail !== undefined ? threeThumbnail[0].filename : null,
     skyboxFile: skyboxFile !== undefined ? skyboxFile[0].filename : null,
+    alternateMaps: alternateMaps !== undefined ? alternateMaps.map(map => map.filename) : null,
     enableLight: req.body.enableLight,
     enableMaterials: req.body.enableMaterials,
     enableShaders: req.body.enableShaders,
@@ -106,6 +117,8 @@ exports.addView = (req, res) => {
     } else {
       res.json(view);
     }
+    console.log(err);
+    console.log(view);
     console.log("View successfully added");
   });
 };

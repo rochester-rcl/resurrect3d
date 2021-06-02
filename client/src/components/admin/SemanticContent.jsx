@@ -47,12 +47,15 @@ class SemanticContent extends React.Component {
       offScreen: false,
     },
     threeFile: "",
+    alternateMaps: [],
     threeThumbnail: "",
     skyboxFile: "",
     threeFileUpload: "",
+    alternateMapsUpload: [],
     threeThumbnailUpload: "",
     skyboxUpload: "",
     threeFileCancel: true,
+    alternateMapsCancel: true,
     threeThumbnailCancel: true,
     skyboxCancel: true,
     measurements: [
@@ -92,9 +95,9 @@ class SemanticContent extends React.Component {
     this.threeFileRef = React.createRef();
     this.threeThumbnailRef = React.createRef();
     this.skyboxRef = React.createRef();
+    this.alternateMapsRef = React.createRef();
     this.contextRef = React.createRef();
     this.context = null;
-    this.contextRef = createRef();
     this.state = this.defaultState;
   }
 
@@ -221,6 +224,16 @@ class SemanticContent extends React.Component {
         this.setState({ skyboxUpload: event.target.files[0] });
         this.setState({ skyboxCancel: !this.state.skyboxCancel });
         break;
+      case "alternateMap":
+        console.log('upload alternate map');
+        let names = this.state.alternateMaps;
+        names.push(event.target.files[0].name);
+        let files = this.state.alternateMapsUpload;
+        files.push(event.target.files[0]);
+        this.setState({ [event.target.name]: names });
+        this.setState({ alternateMapsUpload: files });
+        this.setState({ alternateMapsCancel: false });
+        break;
       default:
         break;
     }
@@ -234,6 +247,7 @@ class SemanticContent extends React.Component {
       externalMaps: externalMaps,
     });
   };
+
   // TODO change this
   handleEnableChange = (event, { name, value }) => {
     // We probably don't need a switch here
@@ -245,6 +259,7 @@ class SemanticContent extends React.Component {
       case "threeFile":
         this.setState({ threeFile: "" });
         this.setState({ threeFileUpload: "" });
+        this.setState({ alternateMaps: "" });
         this.setState({ threeFileCancel: !this.state.threeFileCancel });
         break;
       case "threeThumbnail":
@@ -259,6 +274,10 @@ class SemanticContent extends React.Component {
         this.setState({ skyboxUpload: "" });
         this.setState({ skyboxCancel: !this.state.skyboxCancel });
         break;
+      case "alternateMap":
+        this.setState({ alternateMaps: [] });
+        this.setState({ alternateMapsUpload: [] });
+        this.setState({ alternateMapsCancel: !this.state.alternateMapsCancel });
       default:
         console.log(target);
     }
@@ -282,6 +301,7 @@ class SemanticContent extends React.Component {
     const view = {
       displayName: this.state.displayName,
       threeFile: this.state.threeFileUpload,
+      alternateMaps: this.state.alternateMapsUpload,
       threeThumbnail: this.state.threeThumbnailUpload,
       skyboxFile: this.state.skyboxUpload,
       enableLight: this.state.enableLight,
@@ -294,6 +314,7 @@ class SemanticContent extends React.Component {
       modelUnits: this.state.modelUnits,
       ...this.formatExternalMaps(),
     };
+    console.log(view);
     this.props.addView(view);
     this.setState((prevState) => ({
       ...prevState,
@@ -622,10 +643,50 @@ class SemanticContent extends React.Component {
                       </Button>
                     </Button.Group>
                   </Form.Field>
+
+                  <Form.Field className="admin-main-form-field">
+                    <Header as="h5" className="admin-file-upload-header">
+                      Add Alternate Map
+                    </Header>
+                    <Button.Group className="admin-button-group">
+                      <Button
+                        className="admin-button-group-button"
+                        icon
+                        title="Open File"
+                        onClick={() => this.alternateMapsRef.current.click()}
+                      >
+                        <Icon size="large" name="folder outline" />
+                        <input
+                          ref={this.alternateMapsRef}
+                          type="file"
+                          name="alternateMap"
+                          hidden
+                          onChange={this.handleFileUpload}
+                          accept="image/*"
+                        />
+                      </Button>
+                      <Button
+                        onClick={() => this.handleFileDiscard("alternateMap")}
+                        icon
+                        title="Discard File"
+                        disabled={this.state.alternateMapsCancel}
+                        color="red"
+                      >
+                        <Icon size="large" name="remove circle" />
+                      </Button>
+                    </Button.Group>
+                  </Form.Field> 
+                  <div className="admin-main-form-list">
+                    <ul>
+                      {this.state.alternateMaps.map(file => <li>{file}</li>)}
+                    </ul>
+                  </div>
+
                   <Divider horizontal inverted>
                     {" "}
                     Settings{" "}
                   </Divider>
+                  
                   <Form.Field
                     control={Select}
                     className="admin-select-dropdown"

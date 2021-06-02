@@ -67,6 +67,14 @@ class ThreeContainer extends Component {
       } else {
         this.props.noSkyboxTexture();
       }
+
+      if (this.props.threeAsset.alternateMaps !== null) {
+        for (let i = 0; i < this.props.threeAsset.alternateMaps.length; i++) {
+          this.props.loadAlternateMapAction(this.props.threeAsset.alternateMaps[i])
+        }
+      }
+      else
+        console.log(this.props.threeAsset);
     }
   }
 
@@ -75,6 +83,7 @@ class ThreeContainer extends Component {
       embedded,
       mesh,
       texture,
+      alternateMaps,
       metadata,
       threeAsset,
       saveViewerSettings,
@@ -113,6 +122,7 @@ class ThreeContainer extends Component {
         <ThreeView
           skyboxTexture={texture}
           mesh={mesh}
+          alternateMaps = {alternateMaps}
           renderDoubleSided={true}
           info={metadata}
           options={options}
@@ -150,6 +160,7 @@ function mapStateToProps(state: Object): Object {
   return {
     mesh: state.ui.mesh,
     texture: state.ui.texture,
+    alternateMaps: state.ui.alternateMaps,
     metadata: state.ui.metadata,
     threeAsset: state.ui.threeAsset,
     user: state.user,

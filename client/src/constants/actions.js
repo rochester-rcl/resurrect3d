@@ -19,6 +19,12 @@ export const TEXTURE_LOAD_ERROR: string = 'TEXTURE_LOAD_ERROR';
 export const TEXTURE_LOADED: string = 'TEXTURE_LOADED';
 export const LOAD_TEXTURE: string = 'LOAD_TEXTURE';
 
+//Alternate Maps
+export const LOAD_ALTERNATE_MAP: string = 'LOAD_ALTERNATE_MAP';
+export const UPDATE_ALTERNATE_MAP_LOAD_PROGRESS: string = 'UPDATE_ALTERNATE_MAP_LOAD_PROGRESS';
+export const ALTERNATE_MAP_LOAD_ERROR: string = 'ALTERNATE_MAP_LOAD_ERROR';
+export const ALTERNATE_MAP_LOADED: string = 'ALTERNATE_MAP_LOADED';
+
 // Admin
 export const AUTHENTICATE: string = 'AUTHENTICATE';
 export const AUTHENTICATE_ATTEMPTED: string = 'AUTHENTICATE_ATTEMPTED';

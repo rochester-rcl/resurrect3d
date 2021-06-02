@@ -26,6 +26,13 @@ export function loadTextureAction(url: string): Object {
   };
 }
 
+export function loadAlternateMapAction(url: string): Object {
+  return {
+    type: ActionConstants.LOAD_ALTERNATE_MAP,
+    url: url
+  }
+}
+
 export function loadLocalTextureAsset(asset, key) {
   return {
     type: ActionConstants.LOAD_LOCAL_TEXTURE_ASSET,

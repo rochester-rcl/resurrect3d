@@ -22,6 +22,11 @@ var viewSchema = new Schema({
       type: String,
       required: false
   },
+  
+  alternateMaps: [{
+    type: String,
+    required: false
+  }],
 
   enableLight: {
     type: Boolean,

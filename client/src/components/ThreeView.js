@@ -1,6 +1,10 @@
 /* @flow */
 // TODO Why is loadText not showing? And why is there a huge bottleneck at loadPostProcessor ?????????
 // React
+
+//e-mail: qwerty@gmail.com
+//pwd: resurrect
+
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 
@@ -1054,6 +1058,10 @@ export default class ThreeView extends Component {
     this.mesh = this.props.mesh.object3D;
     this.meshChildren = getChildren(this.mesh);
     this.materialRefs = getMaterials(this.mesh);
+
+    // New addition
+    this.alternateMaterials = {};
+
     const setMicrosurface = (material) => {
       if (material.type === THREE_MESH_STANDARD_MATERIAL) {
         material.metalness = 0.0;
@@ -1366,6 +1374,7 @@ export default class ThreeView extends Component {
     };
 
     const EDLPass = new THREE.EDLPass(this.scene, this.camera, EDLParams);
+
     const chromaKeyPass = new THREE.ChromaKeyPass(
       false,
       new THREE.Color(0),
@@ -1373,6 +1382,7 @@ export default class ThreeView extends Component {
       false
     );
     chromaKeyPass.renderToScreen = false;
+
     this.addShaderPass({ EDL: EDLPass });
     this.addShaderPass({ ChromaKey: chromaKeyPass });
 
@@ -1877,17 +1887,20 @@ export default class ThreeView extends Component {
     this.camera.updateProjectionMatrix();
     this.overlayCamera.updateProjectionMatrix();
     this.positionAnnotations();
+
+    if (this.alternateMaterials["QuadDiffuse"])
+      this.alternateMaterials["QuadDiffuse"].uniforms["u_resolution"].value = new THREE.Vector2(width, height);
   }
 
-  updateShaders(obj: Object, cb) {
+  updateShaders(obj: Object, callback) {
     const { shaderPasses } = this.state;
     this.setState(
       {
         shaderPasses: { ...shaderPasses, ...obj },
       },
       () => {
-        if (cb !== undefined) {
-          cb();
+        if (callback !== undefined) {
+          callback();
         }
       }
     );
@@ -1904,6 +1917,7 @@ export default class ThreeView extends Component {
     const uniforms = { ...pass.uniforms };
     uniforms[uniformProp].value = value;
     pass.uniforms = uniforms;
+    //console.log("now " + shaderName + " has uniform " + uniformProp + " with value " + value);
     switch (uniformProp) {
       case "screenWidth":
         if (pass.depthRenderTarget !== undefined) {
@@ -2301,6 +2315,7 @@ export default class ThreeView extends Component {
           this.updateDynamicShaders(value, "ChromaKey", "threshold"),
       });
       this.settingsMask.shaders.add("threshold");
+
       shaderGroup.addGroup("eye dome lighting", edlGroup);
       shaderGroup.addGroup("chroma key", chromaKeyGroup);
       this.panelGroup.addGroup("shaders", shaderGroup);
@@ -2377,6 +2392,39 @@ export default class ThreeView extends Component {
                 this.updateDynamicMaterials(value, "roughness"),
             });
             materialsGroup.addGroup("microsurface", pbrGroup);
+          }
+
+          /* Quad Diffuse Material */
+
+          let diffuses = this.props.alternateMaps.images;
+          if (diffuses.length == 4) {
+            
+            const quadDiffuseMaterial = new THREE.ShaderMaterial(THREE.QuadDiffuseShader);
+            quadDiffuseMaterial.uniforms["u_tlDiffuse"].value = diffuses[0];
+            quadDiffuseMaterial.uniforms["u_trDiffuse"].value = diffuses[1];
+            quadDiffuseMaterial.uniforms["u_blDiffuse"].value = diffuses[2];
+            quadDiffuseMaterial.uniforms["u_brDiffuse"].value = diffuses[3];
+            quadDiffuseMaterial.uniforms["u_resolution"].value = new THREE.Vector2(this.width, this.height);
+
+            this.alternateMaterials["QuadDiffuse"] = quadDiffuseMaterial;
+
+            mesh.material = this.alternateMaterials["QuadDiffuse"];
+            this.renderWebGL();  // Compiles shader to avoid lag on first switch
+            mesh.material = this.materialRefs[0];
+
+            const quadDiffuseGroup = new ThreeGUIGroup("quadDiffuse");
+            quadDiffuseGroup.addComponent("enable", components.THREE_TOGGLE, {
+              title: "enable",
+              defaultVal: false,
+              callback: (value) => {
+                if (value)
+                  mesh.material = this.alternateMaterials["QuadDiffuse"];
+                else
+                  mesh.material = this.materialRefs[0];
+              }
+            });
+
+            materialsGroup.addGroup("quadDiffuse", quadDiffuseGroup);
           }
         }
       }
@@ -2670,7 +2718,12 @@ export default class ThreeView extends Component {
   }
 
   handleMouseMove(event: SyntheticMouseEvent): void {
+    let rect = this.webGLRenderer.domElement.getBoundingClientRect()
+    let coords = new THREE.Vector2((event.clientX - rect.left) / rect.width, (event.clientY - rect.top) / rect.height);
     if (this.state.controllable) this.orbit(event.clientX, event.clientY);
+
+    if (this.alternateMaterials["QuadDiffuse"])
+      this.alternateMaterials["QuadDiffuse"].uniforms["u_mouse"].value = coords;
   }
 
   handleMouseWheel(event: SyntheticWheelEvent): void {
@@ -2693,6 +2746,9 @@ export default class ThreeView extends Component {
     this.width = clientWidth;
     this.height = clientHeight;
     this.updateRenderSize([this.width, this.height]);
+
+    if (this.alternateMaterials["QuadDiffuse"])
+      this.alternateMaterials["QuadDiffuse"].uniforms["u_resolution"].value = new THREE.Vector2(this.width, this.height);
   }
 
   handleKeyDown(event: SyntheticKeyboardEvent): void {
