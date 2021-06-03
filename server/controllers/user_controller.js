@@ -18,14 +18,15 @@ const addUser = (req, res) => {
     username: info.username,
     email: info.email,
     password: hash,
-    token: token
+    token: token,
+    verified: process.env.NODE_ENV === "production" ? false : true
   });
   // should likely put this in a separate function
   user.save(err => {
     if (err) {
       res.json({
         status: false,
-        message: `The server encountered a ${err.code} error. Please try again.`
+        message: `The server encountered an error: ${err.message}. Please try again.`
       });
     } else {
       const response = {
@@ -34,13 +35,17 @@ const addUser = (req, res) => {
         token: user.token,
         id: user._id
       };
-      user.sendVerificationEmail(function(err, info) {
-        if (err) {
-          res.json({ status: false, message: "Invalid e-mail address!" });
-        } else {
-          res.json(response);
-        }
-      });
+      if (process.env.NODE_ENV === "production") {
+        user.sendVerificationEmail(function (err, info) {
+          if (err) {
+            res.json({ status: false, message: "Invalid e-mail address!" });
+          } else {
+            res.json(response);
+          }
+        });
+      } else {
+        res.json(response);
+      }
     }
   });
 };
@@ -132,10 +137,10 @@ const authenticateServer = (req, res, next) => {
 };
 
 passport.use(
-  new LocalStrategy(function(email, password, done) {
+  new LocalStrategy(function (email, password, done) {
     // no idea why this is being set to undefined below, but this works
     const _password = password;
-    User.findOne({ email: email }, function(err, user) {
+    User.findOne({ email: email }, function (err, user) {
       if (err) return done(err);
       if (!user) {
         return done(null, false, { message: "invalid username" });
@@ -152,8 +157,8 @@ passport.use(
 );
 
 passport.use(
-  new BearerStrategy(function(token, done) {
-    User.findOne({ token: token }, function(err, user) {
+  new BearerStrategy(function (token, done) {
+    User.findOne({ token: token }, function (err, user) {
       if (err) return done(err);
       if (!user) return done(null, false);
       const { password, ...rest } = user;
@@ -163,12 +168,12 @@ passport.use(
 );
 
 // serialization
-passport.serializeUser(function(user, done) {
+passport.serializeUser(function (user, done) {
   done(null, user._id);
 });
 
-passport.deserializeUser(function(id, done) {
-  User.findById(id, function(err, user) {
+passport.deserializeUser(function (id, done) {
+  User.findById(id, function (err, user) {
     done(err, user);
   });
 });

@@ -5,6 +5,8 @@ var app, upload, conn, Grid;
 var updateAll;
 let gfs;
 
+// TODO update deprecated GridFS features
+
 isEmpty = (obj) => {
   for (var key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {

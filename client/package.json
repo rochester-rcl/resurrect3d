@@ -35,7 +35,7 @@
     "semantic-ui-css": "^2.3.3",
     "semantic-ui-react": "^0.88.2",
     "short-uuid": "^2.3.4",
-    "three": "^0.115.0",
+    "three": "^0.129.0",
     "worker-loader": "^2.0.0",
     "zlibjs": "^0.3.1"
   },
@@ -45,7 +45,7 @@
     "test": "react-app-rewired test --env=jsdom",
     "eject": "react-scripts eject"
   },
-  "proxy": "http://localhost:3001/",
+  "proxy": "http://resurrect-server:8000/",
   "browserslist": {
     "production": [
       ">0.2%",

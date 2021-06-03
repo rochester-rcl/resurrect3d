@@ -1,0 +1,51 @@
+version: "3"
+
+services:
+  mongo:
+    image: mongo:3.6
+    container_name: resurrect-mongo
+    volumes:
+      - ${MONGO_DATA_DIR}:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: resurrectdb_root
+      MONGO_INITDB_ROOT_PASSWORD: resurrectdb
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    image: resurrect3d/server
+    container_name: resurrect-server
+    working_dir: /home/node/working
+    volumes:
+      - ${RESURRECT_SERVER_DIR}:/home/node/working
+    environment:
+      MONGO_URL: "mongodb://resurrectdb_root:resurrectdb@resurrect-mongo:27017/admin"
+      NODE_ENV: "development"
+    entrypoint: /home/server-entrypoint.sh
+    expose:
+      - 8000
+    ports:
+      - 3001:8000
+    depends_on:
+      - mongo
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    image: resurrect3d/client
+    container_name: resurrect-client
+    working_dir: /home/node/working
+    volumes:
+      - ${RESURRECT_CLIENT_DIR}:/home/node/working
+    environment:
+      NODE_ENV: "development"
+    entrypoint: /home/client-entrypoint.sh
+    depends_on:
+      - server
+    expose:
+      - 3000
+    ports:
+      - 3000:3000
+    stdin_open: true

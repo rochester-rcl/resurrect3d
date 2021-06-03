@@ -1,6 +1,7 @@
 /* @flow */
 
 import * as THREE from "three";
+import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 // Constants
 import {
@@ -8,7 +9,7 @@ import {
   THREE_SCENE,
   THREE_GROUP,
   THREE_DIFFUSE_MAP,
-  THREE_MESH_STANDARD_MATERIAL,
+  THREE_MESH_STANDARD_MATERIAL
 } from "../../constants/application";
 // TODO replace all walk and children functions with traverse
 import initSimplifyModifier from "./SimplifyModifier";
@@ -16,7 +17,7 @@ const simplify = initSimplifyModifier(THREE);
 
 export function getChildren(mesh: THREE.Group | THREE.Mesh): Array<THREE.Mesh> {
   const children = [];
-  mesh.traverse((child) => {
+  mesh.traverse(child => {
     if (child.constructor.name === THREE_MESH) {
       children.push(child);
     }
@@ -43,7 +44,7 @@ export function centerGeometry(mesh: THREE.Group | THREE.Mesh): Promise {
     box.getCenter(offset);
     offset = offset.negate().toArray();
     const children = getChildren(mesh);
-    children.forEach((child) => {
+    children.forEach(child => {
       child.geometry.translate(...offset);
     });
     resolve(mesh);
@@ -55,11 +56,10 @@ export function centerGeometry(mesh: THREE.Group | THREE.Mesh): Promise {
 export function smoothFaceNormals(
   bg: THREE.BufferGeometry
 ): THREE.BufferGeometry {
-  const geom = new THREE.Geometry().fromBufferGeometry(bg);
-  geom.mergeVertices();
-  geom.computeVertexNormals();
-  geom.computeFaceNormals();
-  return new THREE.BufferGeometry().fromGeometry(geom);
+  const merged = BufferGeometryUtils.mergeVertices(bg);
+  merged.computeVertexNormals();
+  merged.computeFaceNormals();
+  return bg;
 }
 
 // This is impractical. It's way too slow.

@@ -31,7 +31,7 @@ var UserSchema = new Schema({
   verified: {
     type: Boolean,
     required: true,
-    default: true
+    default: false
   }
   // not sure what else we want but this will do for now, probably first, last, institution etc
 });
