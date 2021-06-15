@@ -8,10 +8,12 @@ export default function loadQuadDiffuseShader(threeInstance: Object): typeof Pro
         threeInstance.QuadDiffuseShader = {
 
             uniforms: {
-                "u_tlDiffuse": { type: 't', value: null },    // Top-left
-                "u_trDiffuse": { type: 't', value: null },    // Top-right
-                "u_blDiffuse": { type: 't', value: null },    // Bottom-left
-                "u_brDiffuse": { type: 't', value: null },    // Bottom-right
+                "u_viewCount": { value: 0 },
+                "u_diffuse1": { type: 't', value: null },    // Top-left
+                "u_diffuse2": { type: 't', value: null },    // Top-right
+                "u_diffuse3": { type: 't', value: null },    // Bottom-left
+                "u_diffuse4": { type: 't', value: null },    // Bottom-right
+                "u_angle": { value: 0.0 },
                 "u_mouse": { value: new threeInstance.Vector2(0, 0) },
                 "u_resolution": { value: new threeInstance.Vector2(0, 0) },
             },
@@ -30,10 +32,12 @@ export default function loadQuadDiffuseShader(threeInstance: Object): typeof Pro
             ].join( "\n" ),
 
             fragmentShader: [
-                "uniform sampler2D u_tlDiffuse;",
-                "uniform sampler2D u_trDiffuse;",
-                "uniform sampler2D u_blDiffuse;",
-                "uniform sampler2D u_brDiffuse;",
+                "uniform int u_viewCount;",
+                "uniform sampler2D u_diffuse1;",
+                "uniform sampler2D u_diffuse2;",
+                "uniform sampler2D u_diffuse3;",
+                "uniform sampler2D u_diffuse4;",
+                "uniform float u_angle;",
                 "uniform vec2 u_mouse;",    // u_mouse has top-left as (0, 0), bottom-right as (1, 1)
                 "uniform vec2 u_resolution;",
 
@@ -42,7 +46,32 @@ export default function loadQuadDiffuseShader(threeInstance: Object): typeof Pro
                 "void main() {",
                     "vec4 color;",
 
-                    "vec2 uv = gl_FragCoord.xy / u_resolution;",
+                    "if (u_viewCount > 1) {",
+                        "float section_angle = 360.0 / float(u_viewCount);",
+
+                        "vec2 uv = gl_FragCoord.xy / u_resolution;",
+                        "vec2 offset = vec2(uv.x, 1.0-uv.y) - u_mouse;",
+
+                        "float frag_angle = degrees(atan(-offset.x, offset.y)) + 180.0;",
+                        "int section = int(mod(float(u_viewCount) + floor((frag_angle - u_angle) / section_angle), float(u_viewCount)));",
+                        // "int section = int(mod(u_viewCount + int(floor((frag_angle - u_angle) / section_angle)), u_viewCount));",
+
+                        "if (section == 0)",
+                            "color = texture2D( u_diffuse1, vUv );",
+                        "else if (section == 1)",
+                            "color = texture2D( u_diffuse2, vUv );",
+                        "else if (section == 2)",
+                            "color = texture2D( u_diffuse3, vUv );",
+                        "else if (section == 3)",
+                            "color = texture2D( u_diffuse4, vUv );",
+                    "} else {",
+                        "color = texture2D( u_diffuse1, vUv );",
+                    "}",
+
+                        
+
+
+                    /* "vec2 uv = gl_FragCoord.xy / u_resolution;",
                     "vec2 offset = vec2(uv.x, 1.0-uv.y) - u_mouse;",
 
                     "if (offset.x <= 0.0 && offset.y <= 0.0)",
@@ -52,7 +81,7 @@ export default function loadQuadDiffuseShader(threeInstance: Object): typeof Pro
                     "else if (offset.x > 0.0 && offset.y <= 0.0)",
                         "color = texture2D( u_trDiffuse, vUv );",
                     "else",
-                        "color = texture2D( u_brDiffuse, vUv );",
+                        "color = texture2D( u_brDiffuse, vUv );", */
 
                     "gl_FragColor = color;",
 

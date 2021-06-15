@@ -2397,13 +2397,21 @@ export default class ThreeView extends Component {
           /* Quad Diffuse Material */
 
           let diffuses = this.props.alternateMaps.images;
-          if (diffuses.length == 4) {
+          console.log(diffuses);
+          if (diffuses.length > 0) {
             
             const quadDiffuseMaterial = new THREE.ShaderMaterial(THREE.QuadDiffuseShader);
-            quadDiffuseMaterial.uniforms["u_tlDiffuse"].value = diffuses[0];
-            quadDiffuseMaterial.uniforms["u_trDiffuse"].value = diffuses[1];
-            quadDiffuseMaterial.uniforms["u_blDiffuse"].value = diffuses[2];
-            quadDiffuseMaterial.uniforms["u_brDiffuse"].value = diffuses[3];
+            quadDiffuseMaterial.uniforms["u_viewCount"].value = diffuses.length;
+            quadDiffuseMaterial.uniforms["u_diffuse1"].value = diffuses[0];
+            if (diffuses.length > 1) {
+              quadDiffuseMaterial.uniforms["u_diffuse2"].value = diffuses[1];
+              if (diffuses.length > 2) {
+                quadDiffuseMaterial.uniforms["u_diffuse3"].value = diffuses[2];
+                if (diffuses.length > 3)
+                  quadDiffuseMaterial.uniforms["u_diffuse4"].value = diffuses[3];
+              }
+            }
+
             quadDiffuseMaterial.uniforms["u_resolution"].value = new THREE.Vector2(this.width, this.height);
 
             this.alternateMaterials["QuadDiffuse"] = quadDiffuseMaterial;
@@ -2412,7 +2420,7 @@ export default class ThreeView extends Component {
             this.renderWebGL();  // Compiles shader to avoid lag on first switch
             mesh.material = this.materialRefs[0];
 
-            const quadDiffuseGroup = new ThreeGUIGroup("quadDiffuse");
+            const quadDiffuseGroup = new ThreeGUIGroup("Curtain View");
             quadDiffuseGroup.addComponent("enable", components.THREE_TOGGLE, {
               title: "enable",
               defaultVal: false,
@@ -2423,8 +2431,28 @@ export default class ThreeView extends Component {
                   mesh.material = this.materialRefs[0];
               }
             });
+            quadDiffuseGroup.addComponent("viewCount", components.THREE_RANGE_SLIDER, {
+              title: "view count",
+              step: 1,
+              min: 1,
+              max: diffuses.length,
+              defaultVal: diffuses.length,
+              callback: (value) => {
+                quadDiffuseMaterial.uniforms["u_viewCount"].value = value;
+              }
+            });
 
-            materialsGroup.addGroup("quadDiffuse", quadDiffuseGroup);
+            quadDiffuseGroup.addComponent("angle", components.THREE_RANGE_SLIDER, {
+              title: "angle",
+              min: 0,
+              max: 360,
+              defaultVal: 0,
+              callback: (value) => {
+                quadDiffuseMaterial.uniforms["u_angle"].value = value;
+              }
+            });
+
+            materialsGroup.addGroup("curtain view", quadDiffuseGroup);
           }
         }
       }
