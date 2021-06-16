@@ -12,7 +12,7 @@ MongoDB >= v3.0
 ## Installation
 Clone this repo and run:
 
-`npm install-all`
+`npm run install-all`
 
 to install both the server and client apps.
 
