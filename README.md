@@ -1,4 +1,4 @@
-# Work in Progress Cultural Heritage 3D Viewer Platform
+# Resurrect3D: An Open and Customizable Platform for Exploring Cultural Heritage
 Built with React, Node, and three.js
 
 ## Dependencies
@@ -12,7 +12,7 @@ MongoDB >= v3.0
 ## Installation
 Clone this repo and run:
 
-`npm install-all`
+`npm-install-all`
 
 to install both the server and client apps.
 
