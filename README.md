@@ -1,4 +1,4 @@
-# Work in Progress Cultural Heritage 3D Viewer Platform
+# Resurrect3D: An Open and Customizable Platform for Exploring Cultural Heritage
 Built with React, Node, and three.js
 
 ## Dependencies
@@ -12,7 +12,7 @@ MongoDB >= v3.0
 ## Installation
 Clone this repo and run:
 
-`npm install-all`
+`npm run install-all`
 
 to install both the server and client apps.
 
@@ -57,9 +57,13 @@ module.exports = config;
 
 All of the above files have sample versions (i.e. sample-config.js) you can reference in the server folder.
 
+## Run
+
 ##### To run in dev mode:
 
-`npm run dev`
+First make sure you have mongodb service up and running.
+
+Then: `npm run dev`
 
 This runs the API server on localhost:3001 and the create-react-app dev server on localhost:3000. All API requests are proxied from port 3000 to 3001.
 
