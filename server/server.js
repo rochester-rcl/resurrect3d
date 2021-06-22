@@ -1,8 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const MongoDB = require("mongodb");
 const multer = require("multer");
 const GridFsStorage = require("multer-gridfs-storage");
-const Grid = require("gridfs-stream");
 const bodyParser = require("body-parser");
 const bb = require("express-busboy");
 const cors = require("cors");
@@ -37,8 +37,7 @@ function mongoConnect(retries = 2, timeout = 1000) {
 }
 
 mongoConnect().then(conn => {
-  Grid.mongo = mongoose.mongo;
-  //const gfs = Grid(connection.db)
+  console.log(conn);
   // Create storage engine
   const storage = new GridFsStorage({
     url: serverConfig.mongoURL,
@@ -70,6 +69,8 @@ mongoConnect().then(conn => {
     }
   });
 
+  const grid = new MongoDB.GridFSBucket(conn.db);
+
   const upload = multer({
     storage: storage,
     limits: { fileSize: 1024 * 1024 * 200 }, //200mbs,
@@ -94,13 +95,7 @@ mongoConnect().then(conn => {
       cb("Error: wrong file type");
     }
   };
-  /*
-bb.extend(app, {
-  upload: true,
-  path: "./temp",
-  allowedPath: /./
-});
-*/
+
   app.use(cors());
   app.use(
     session({
@@ -113,10 +108,10 @@ bb.extend(app, {
   app.use(passport.session());
   app.use(bodyParser.json({ limit: "20mb" }));
   app.use(bodyParser.urlencoded({ limit: "200mb", extended: false }));
-  views(app, upload, conn, Grid, router);
+  views(app, upload, conn, router);
   annotationRoute(router);
   app.use(serverConfig.basename, router);
-  controller.get(app, upload, conn, Grid);
+  controller.get(app, upload, conn, grid);
 
   //Start Application
   app.listen(serverConfig.port, error => {

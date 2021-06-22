@@ -20,7 +20,6 @@
     "url": "https://github.com/rochester-rcl/rcl-react-three/issues"
   },
   "homepage": "https://github.com/rochester-rcl/rcl-react-three#readme",
-  "devDependencies": {},
   "dependencies": {
     "express-session": "^1.15.6",
     "jsdom": "^12.0.0",

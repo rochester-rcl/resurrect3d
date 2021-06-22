@@ -1,29 +1,44 @@
 {
-  "name": "REST-server",
+  "name": "resurrect3d-server",
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
-    "flow-bin": "^0.39.0"
+    "@types/bcrypt": "^5.0.0",
+    "@types/body-parser": "^1.19.0",
+    "@types/dotenv": "^8.2.0",
+    "@types/express": "^4.17.12",
+    "@types/express-busboy": "^6.0.2",
+    "@types/express-session": "^1.17.3",
+    "@types/multer": "^1.4.5",
+    "@types/multer-gridfs-storage": "^4.0.2",
+    "@types/nodemailer": "^6.4.2",
+    "@types/passport": "^1.0.6",
+    "@types/passport-jwt": "^3.0.5",
+    "ts-jest": "^27.0.3",
+    "ts-node-dev": "^1.1.6",
+    "typescript": "^4.3.2"
   },
   "dependencies": {
-    "bcrypt": "^3.0.8",
+    "bcrypt": "^5.0.1",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "express-busboy": "^7.0.1",
     "express-session": "^1.15.6",
-    "gridfs-stream": "^1.1.1",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.12.12",
     "multer": "^1.4.2",
     "multer-gridfs-storage": "^3.3.0",
-    "nodemailer": "^4.7.0",
+    "nodemailer": "^6.6.1",
     "passport": "^0.4.1",
     "passport-http-bearer": "^1.0.1",
     "passport-local": "^1.0.0"
   },
   "scripts": {
-    "server": "nodemon index.js",
-    "client": "nodemon start-client.js"
+    "test": "jest",
+    "tsc": "tsc",
+    "dev": "ts-node-dev --respawn --transpileOnly ./index.ts",
+    "build": "tsc --outDir ./server-build"
   }
 }

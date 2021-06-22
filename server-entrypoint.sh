@@ -6,4 +6,11 @@ if [ ! -d "node_modules" ]; then
     echo "Installing Node Modules" && npm install
 fi
 
-exec node server.js
+if [ "$NODE_ENV" == "production" ] 
+then
+    echo npm run build
+    exec node server-build/index.js
+else
+    exec npm run dev
+fi
+

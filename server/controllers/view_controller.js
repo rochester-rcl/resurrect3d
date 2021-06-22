@@ -1,13 +1,12 @@
 const mongoose = require("mongoose");
 const View = mongoose.model("view");
 const utils = require("../utils");
+const { GridFSModel, GridFSChunkModel } = require("../models/gridfs");
 var app, upload, conn, Grid;
 var updateAll;
-let gfs;
-
 // TODO update deprecated GridFS features
 
-isEmpty = (obj) => {
+isEmpty = obj => {
   for (var key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
       return false;
@@ -16,11 +15,10 @@ isEmpty = (obj) => {
   return true;
 };
 
-exports.get = (app, upload, conn, Grid) => {
+exports.get = (app, upload, conn, grid) => {
   this.app = app;
   this.upload = upload;
   this.conn = conn;
-  this.Grid = Grid;
 
   mongoose.connection.on("open", () => {
     gfs = Grid(mongoose.connection.db, mongoose.mongo);
@@ -28,10 +26,10 @@ exports.get = (app, upload, conn, Grid) => {
 };
 
 exports.getFiles = (req, res) => {
-  gfs.files.find().toArray((err, files) => {
+  GridFSModel.find().toArray((err, files) => {
     if (!files || files.length === 0) {
       return res.status(404).json({
-        err: "No files exist",
+        err: "No files exist"
       });
     }
     return res.json(files);
@@ -39,19 +37,19 @@ exports.getFiles = (req, res) => {
 };
 
 exports.getFile = (req, res) => {
-  gfs.files.findOne({ filename: req.params.filename }, (err, file) => {
+  GridFSModel.findOne({ filename: req.params.filename }, (err, file) => {
     if (!file || file.length === 0) {
       return res.status(404).json({
-        err: "No files exist",
+        err: "No files exist"
       });
     }
 
     if (file.contentType === "image/jpeg" || "image/png") {
-      var readstream = gfs.createReadStream(file.filename);
+      var readstream = grid.createReadStream(file.filename);
       readstream.pipe(res);
     } else {
       res.status(404).json({
-        err: "Not proper mimetype",
+        err: "Not proper mimetype"
       });
     }
   });
@@ -68,7 +66,7 @@ exports.findAllViews = (req, res) => {
     //console.log(views);
     if (err) {
       return res.status(500).json({
-        message: "Could not find views: Error[ " + err + " ]",
+        message: "Could not find views: Error[ " + err + " ]"
       });
     }
     return res.status(200).json({ views: views });
@@ -77,19 +75,15 @@ exports.findAllViews = (req, res) => {
 };
 
 exports.addView = (req, res) => {
-  console.log('add view');
+  console.log("add view");
   if (!req.files) {
     console.log("No files to upload.");
     return;
   }
 
-  console.log(req.files);
-
   const { threeFile, threeThumbnail, skyboxFile } = req.files;
 
-  const alternateMaps = req.files['alternateMaps[]'];
-
-  console.log(alternateMaps);
+  const alternateMaps = req.files["alternateMaps[]"];
 
   const newView = new View({
     displayName: req.body.displayName,
@@ -97,7 +91,10 @@ exports.addView = (req, res) => {
     threeThumbnail:
       threeThumbnail !== undefined ? threeThumbnail[0].filename : null,
     skyboxFile: skyboxFile !== undefined ? skyboxFile[0].filename : null,
-    alternateMaps: alternateMaps !== undefined ? alternateMaps.map(map => map.filename) : null,
+    alternateMaps:
+      alternateMaps !== undefined
+        ? alternateMaps.map(map => map.filename)
+        : null,
     enableLight: req.body.enableLight,
     enableMaterials: req.body.enableMaterials,
     enableShaders: req.body.enableShaders,
@@ -106,7 +103,7 @@ exports.addView = (req, res) => {
     enableDownload: req.body.enableDownload,
     enableEmbed: req.body.enableEmbed,
     modelUnits: req.body.modelUnits,
-    createdBy: req.user.id,
+    createdBy: req.user.id
   });
   let { externalMapInfo } = req.body;
   if (externalMapInfo) {
@@ -143,11 +140,16 @@ exports.updateView = (req, res) => {
       ? utils.flat2nested(req.body)
       : req.body;
   if (isEmpty(req.files)) {
-    View.findOneAndUpdate({ _id: req.params.id }, body, { new: true }, (err, view) => {
-      if (err) res.send(err);
-      res.json(view);
-      console.log({ update: "View successfully updated" });
-    });
+    View.findOneAndUpdate(
+      { _id: req.params.id },
+      body,
+      { new: true },
+      (err, view) => {
+        if (err) res.send(err);
+        res.json(view);
+        console.log({ update: "View successfully updated" });
+      }
+    );
   } else {
     //console.log({isEmpty: 'false'});
 
@@ -157,18 +159,19 @@ exports.updateView = (req, res) => {
 
         if (!isEmpty(req.files.threeFile)) {
           threeFileBool = true;
-          gfs.exist({ filename: view.threeFile }, (err, found) => {
+          GridFSModel.exist({ filename: view.threeFile }, (err, found) => {
             if (err)
               reject(console.log({ exsists: "Three File does not exsist" }));
 
             if (found && found !== req.body.threeFile) {
-              gfs.remove({ filename: view.threeFile }, (err) => {
+              GridFSModel.deleteOne({ filename: view.threeFile }, err => {
                 if (err)
                   reject(
                     console.log({
-                      delete: `delete of ${view.threeFile} - failed`,
+                      delete: `delete of ${view.threeFile} - failed`
                     })
                   );
+                GridFSChunkModel.deleteOne;
               });
             }
           });
@@ -176,39 +179,62 @@ exports.updateView = (req, res) => {
 
         if (!isEmpty(req.files.threeThumbnail)) {
           threeThumbnailBool = true;
-          gfs.exist({ filename: view.threeThumbnail }, (err, found) => {
-            if (err)
-              reject(
-                console.log({ exsists: "Thumbnail File does not exsist" })
-              );
+          GridFSModel.findOne(
+            { filename: view.threeThumbnail },
+            (err, found) => {
+              if (err)
+                reject(
+                  console.log({ exsists: "Thumbnail File does not exsist" })
+                );
 
-            if (found && found !== req.body.threeThumbnail) {
-              gfs.remove({ filename: view.threeThumbnail }, (err) => {
-                if (err)
-                  reject(
-                    console.log({
-                      delete: `delete of ${view.threeThumbnail} - failed`,
-                    })
-                  );
-              });
+              if (found && found !== req.body.threeThumbnail) {
+                GridFSModel.deleteOne({ _id: found._id }, err => {
+                  if (err) {
+                    reject(
+                      console.log({
+                        delete: `delete of ${view.threeThumbnail} - failed`
+                      })
+                    );
+                  }
+                  GridFSChunkModel.deleteOne({ files_id: found._id }, error => {
+                    if (err) {
+                      reject(
+                        console.log({
+                          delete: `delete of ${view.threeThumbnail} - failed`
+                        })
+                      );
+                    }
+                  });
+                });
+              }
             }
-          });
+          );
         }
 
         if (!isEmpty(req.files.skyboxFile)) {
           skyboxFileBool = true;
-          gfs.exist({ filename: view.skyboxFile }, (err, found) => {
+          GridFSModel.findOne({ filename: view.skyboxFile }, (err, found) => {
             if (err)
               reject(console.log({ exsists: "Skybox File does not exsist" }));
 
             if (found && found !== req.body.skyboxFile) {
-              gfs.remove({ filename: view.skyboxFile }, (err) => {
-                if (err)
+              GridFSModel.deleteOne({ _id: found._id }, err => {
+                if (err) {
                   reject(
                     console.log({
-                      delete: `delete of ${view.skyboxFile } - failed`,
+                      delete: `delete of ${view.skyboxFile} - failed`
                     })
                   );
+                }
+                GridFSChunkModel.deleteOne({ files_id: found._id }, error => {
+                  if (err) {
+                    reject(
+                      console.log({
+                        delete: `delete of ${view.threeThumbnail} - failed`
+                      })
+                    );
+                  }
+                });
               });
             }
           });
@@ -225,57 +251,53 @@ exports.updateView = (req, res) => {
             ? req.files.threeThumbnail[0].filename
             : threeThumbnail,
           skyboxFile: skyboxFileBool
-              ? req.files.skyboxFile[0].filename
-              : skyboxFile,
-          ...rest,
+            ? req.files.skyboxFile[0].filename
+            : skyboxFile,
+          ...rest
         };
-        /*const newView = new View({
-            _id: req.params.id,
-            displayName: body.displayName,
-            
-            enableLight: body.enableLight,
-            enableMaterials: body.enableMaterials,
-            enableShaders: body.enableShaders,
-            enableMeasurement: body.enableMeasurement,
-            enableAnnotations: body.enableAnnotations,
-            enableDownload: body.enableDownload,
-            enableEmbed: body.enableEmbed,
-            modelUnits: body.modelUnits,
-            createdBy: req.user.id
-          });*/
 
-        //console.log(newView);
-
-        View.findOneAndUpdate({ _id: req.params.id }, params, { new: true }, (err, view) => {
-          if (err) res.send(err);
-          res.json(view);
-          console.log({ update: "View successfully updated" });
-        });
+        View.findOneAndUpdate(
+          { _id: req.params.id },
+          params,
+          { new: true },
+          (err, view) => {
+            if (err) res.send(err);
+            res.json(view);
+            console.log({ update: "View successfully updated" });
+          }
+        );
       });
     });
   }
 };
 
 exports.deleteFile = (req, res) => {
-  gfs.files.findOne({ filename: req.params.filename }, (err, file) => {
+  GridFSModel.findOne({ filename: req.params.filename }, (err, file) => {
     if (!file || file.length === 0) {
       return res.status(404).json({
-        err: "No file to remove",
+        err: "No file to remove"
       });
     }
 
     if (file.contentType === "image/jpeg" || "image/png") {
-      gfs.remove({ _id: file._id }, (err) => {
+      GridFSModel.deleteOne({ _id: file._id }, err => {
         if (err) {
           return res.send({ delete: `delete of ${file.filename} - failed` });
         } else {
-          console.log("File successfully deleted");
-          return res.send({ delete: `delete of ${file.filename} - success` });
+          GridFSChunkModel.deleteOne({ files_id: file._id }, err => {
+            if (err) {
+              return res.send({
+                delete: `delete of ${file.filename} - failed`
+              });
+            }
+            console.log("File successfully deleted");
+            return res.send({ delete: `delete of ${file.filename} - success` });
+          });
         }
       });
     } else {
       res.status(404).json({
-        err: "Not proper mimetype",
+        err: "Not proper mimetype"
       });
     }
   });
@@ -284,38 +306,50 @@ exports.deleteFile = (req, res) => {
 exports.deleteView = (req, res) => {
   View.findOne({ _id: req.params.id }, (err, view) => {
     if (err) console.log({ err: "View could not be found" });
-    gfs.exist({ filename: view.threeFile }, (err, found) => {
+    GridFSChunkModel.findOne({ filename: view.threeFile }, (err, found) => {
       if (err) return console.log({ exists: "Three File does not exsist" });
       found
-        ? gfs.remove({ filename: view.threeFile }, (err) => {
-            if (err)
+        ? GridFSChunkModel.remove({ filename: view.threeFile }, err => {
+            if (err) {
               return console.log({
-                delete: `delete of ${view.threeFile} - failed`,
+                delete: `delete of ${view.threeFile} - failed`
               });
+            }
+            GridFSChunkModel.deleteOne({ files_id: found._id }, error => {
+              if (err) {
+                return;
+                console.log({
+                  delete: `delete of ${view.threeThumbnail} - failed`
+                });
+              }
+            });
           })
         : console.log("Three File does not exsist");
     });
 
-    gfs.exist({ filename: view.threeThumbnail }, (err, found) => {
-      if (err)
-        return console.log({ exsists: "Thumbnail File does not exsist" });
-      found
-        ? gfs.remove({ filename: view.threeThumbnail }, (err) => {
-            if (err)
-              return console.log({
-                delete: `delete of ${view.threeThumbnail} - failed`,
-              });
-          })
-        : console.log("Thumbnail File does not exsist");
-    });
+    GridFSChunkModel.findOne(
+      { filename: view.threeThumbnail },
+      (err, found) => {
+        if (err)
+          return console.log({ exsists: "Thumbnail File does not exsist" });
+        found
+          ? GridFSModel.deleteOne({ filename: view.threeThumbnail }, err => {
+              if (err)
+                return console.log({
+                  delete: `delete of ${view.threeThumbnail} - failed`
+                });
+            })
+          : console.log("Thumbnail File does not exsist");
+      }
+    );
 
-    gfs.exist({ filename: view.skyboxFile }, (err, found) => {
+    GridFSChunkModel.exist({ filename: view.skyboxFile }, (err, found) => {
       if (err) return console.log({ exsists: "Skybox File does not exsist" });
       found
-        ? gfs.remove({ filename: view.skyboxFile }, (err) => {
+        ? GridFSModel.remove({ filename: view.skyboxFile }, err => {
             if (err)
               return console.log({
-                delete: `delete of ${view.skyboxFile } - failed`,
+                delete: `delete of ${view.skyboxFile} - failed`
               });
           })
         : console.log("Skybox File does not exsist");
