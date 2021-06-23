@@ -1,14 +1,20 @@
 import mongoose, { Document, Schema } from "mongoose";
 
-const GridFSSchema = new Schema<Document>({}, { strict: false });
-const GridFSChunksSchema = new Schema<Document>({}, { strict: false });
+export type GridFSFileDocument = Document;
+export type GridFSChunkDocument = Document;
 
-export const GridFSModel = mongoose.model(
-  "GridFSModel",
-  GridFSSchema,
+const GridFSFileSchema = new Schema<GridFSFileDocument>({}, { strict: false });
+const GridFSChunksSchema = new Schema<GridFSChunkDocument>(
+  {},
+  { strict: false }
+);
+
+export const GridFSFileModel = mongoose.model<GridFSFileDocument>(
+  "GridFSFileModel",
+  GridFSFileSchema,
   "fs.files"
 );
-export const GridFSChunkModel = mongoose.model(
+export const GridFSChunkModel = mongoose.model<GridFSChunkDocument>(
   "GridFSChunkModel",
   GridFSChunksSchema,
   "fs.chunks"
