@@ -5,5 +5,11 @@ interface IMailConfig {
   verificationRoute: string;
 }
 
-type EnvVars = "MONGO_URL" | "PORT" | "BASENAME" | "MAX_UPLOAD_SIZE" | "PRIVATE_KEY";
+type EnvVars =
+  | "MONGO_URL"
+  | "PORT"
+  | "BASENAME"
+  | "MAX_UPLOAD_SIZE"
+  | "PRIVATE_KEY"
+  | "SALT_ROUNDS";
 type EnvVar = string | number | null;

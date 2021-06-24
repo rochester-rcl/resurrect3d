@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { FilterQuery, ObjectId, Document } from "mongoose";
+import { FilterQuery } from "mongoose";
 import { ResurrectDocument, ResurrectModel } from "../models/RecordTypes";
 import { GridFSBucket, GridFSBucketReadStream } from "mongodb";
 import {
@@ -13,40 +13,47 @@ interface IErrorMessage {
   message: string;
 }
 
-type ErrorResponse = Response<IErrorMessage>;
-type DocumentResponse<T extends ResurrectDocument> = Response<T>;
-type MultiDocumentResponse<T extends ResurrectDocument> = Response<T[]>;
+export type ErrorResponse = Response<IErrorMessage>;
+export type DocumentResponse<T extends ResurrectDocument> = Response<T>;
+export type MultiDocumentResponse<T extends ResurrectDocument> = Response<T[]>;
 
 interface IRecordHelper<T extends ResurrectDocument> {
   create: (data: Partial<T>) => Promise<DocumentResponse<T> | ErrorResponse>;
-  get(id: ObjectId): Promise<DocumentResponse<T> | ErrorResponse>;
+  get(id: string): Promise<DocumentResponse<T> | ErrorResponse>;
   get(): Promise<MultiDocumentResponse<T>>;
   update: (doc: T) => Promise<DocumentResponse<T> | ErrorResponse>;
-  expunge: (id: ObjectId) => Promise<Response<void> | ErrorResponse>;
+  expunge: (id: string) => Promise<Response<void> | ErrorResponse>;
   findRecords: (fq: FilterQuery<T>) => Promise<T[]>;
   findRecord: (fq: FilterQuery<T>) => Promise<T | null>;
-  deleteRecord: (id: ObjectId) => Promise<boolean>;
+  addRecord: (data: Partial<T>) => Promise<T>;
+  updateRecord: (doc: T) => Promise<T>;
+  deleteRecord: (id: string) => Promise<boolean>;
   errorResponse: (body: IErrorMessage, status: number) => ErrorResponse;
+  successResponse: (
+    doc: T,
+    status?: number
+  ) => DocumentResponse<T> | MultiDocumentResponse<T>;
 }
 
-export default function recordHelper<T extends ResurrectDocument>(
+export function recordHelper<T extends ResurrectDocument>(
   model: ResurrectModel<T>,
   res: Response
 ): IRecordHelper<T> {
-  function handleError(
+  function errorResponse(
     body: IErrorMessage,
     status: number = 500
   ): ErrorResponse {
     return res.status(status).send(body);
   }
 
-  function handleSuccess(doc: T[], status: number): MultiDocumentResponse<T>;
-  function handleSuccess(doc: T, status: number): DocumentResponse<T>;
-  function handleSuccess(
+  function successResponse(doc: T[], status?: number): MultiDocumentResponse<T>;
+  function successResponse(doc: T, status?: number): DocumentResponse<T>;
+  function successResponse(
     doc: T | T[],
-    status: number = 200
+    status?: number
   ): DocumentResponse<T> | MultiDocumentResponse<T> {
-    return res.status(status).send(doc);
+    let s = status || 200;
+    return res.status(s).send(doc);
   }
 
   function findRecords(fq: FilterQuery<T>): Promise<T[]> {
@@ -59,7 +66,15 @@ export default function recordHelper<T extends ResurrectDocument>(
     return query.exec();
   }
 
-  function deleteRecord(id: ObjectId): Promise<boolean> {
+  function addRecord(data: Partial<T>): Promise<T> {
+    return model.create(data);
+  }
+
+  function updateRecord(doc: T): Promise<T> {
+    return doc.save() as Promise<T>;
+  }
+
+  function deleteRecord(id: string): Promise<boolean> {
     const query = model.deleteOne({ _id: id } as FilterQuery<T>);
     return query.then(({ ok }) => ok !== undefined && ok > 1);
   }
@@ -67,10 +82,9 @@ export default function recordHelper<T extends ResurrectDocument>(
   function create(
     data: Partial<T>
   ): Promise<DocumentResponse<T> | ErrorResponse> {
-    return model
-      .create(data)
-      .then((created: T) => handleSuccess(created, 201))
-      .catch(({ message }: Error) => handleError({ message }, 500));
+    return addRecord(data)
+      .then((created: T) => successResponse(created, 201))
+      .catch(({ message }: Error) => errorResponse({ message }, 500));
   }
 
   function update(
@@ -81,40 +95,40 @@ export default function recordHelper<T extends ResurrectDocument>(
     return doc
       .save() // TODO not sure how to fix this but this will do for now
       .then((updated: ResurrectDocument) =>
-        handleSuccess(updated as T, successStatus)
+        successResponse(updated as T, successStatus)
       )
-      .catch(({ message }: Error) => handleError({ message }, errorStatus));
+      .catch(({ message }: Error) => errorResponse({ message }, errorStatus));
   }
 
-  function expunge(id: ObjectId): Promise<Response<void> | ErrorResponse> {
+  function expunge(id: string): Promise<Response<void> | ErrorResponse> {
     return deleteRecord(id).then(success =>
       success
         ? res.send()
-        : handleError({ message: `Unable to delete Document with id ${id}` })
+        : errorResponse({ message: `Unable to delete Document with id ${id}` })
     );
   }
 
-  function get(id: ObjectId): Promise<DocumentResponse<T> | ErrorResponse>;
+  function get(id: string): Promise<DocumentResponse<T> | ErrorResponse>;
   function get(): Promise<MultiDocumentResponse<T>>;
   function get(
-    id?: ObjectId
+    id?: string
   ): Promise<DocumentResponse<T> | MultiDocumentResponse<T> | ErrorResponse> {
     if (id !== undefined) {
       return findRecord({ _id: id } as FilterQuery<T>).then(
         (result: T | null) => {
           if (!result) {
-            return handleError(
+            return errorResponse(
               { message: `Document with id ${id} not found` },
               404
             );
           } else {
-            return handleSuccess(result, 200);
+            return successResponse(result, 200);
           }
         }
       );
     } else {
       return findRecords({ _id: id } as FilterQuery<T>).then((results: T[]) =>
-        handleSuccess(results, 200)
+        successResponse(results, 200)
       );
     }
   }
@@ -124,10 +138,13 @@ export default function recordHelper<T extends ResurrectDocument>(
     update,
     findRecords,
     findRecord,
+    addRecord,
+    updateRecord,
     deleteRecord,
     get,
     expunge,
-    errorResponse: handleError
+    errorResponse,
+    successResponse
   };
 }
 

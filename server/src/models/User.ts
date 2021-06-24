@@ -4,12 +4,7 @@ import * as Mail from "../utils/mail";
 
 export interface IUserDocument extends Document, IUser {}
 
-interface User extends Model<IUser> {
-  validPassword: (password: string) => boolean;
-  sendVerificationEmail: (callback: (err: Error | null) => void) => void;
-}
-
-export const UserSchema = new Schema<IUser, User>({
+export const UserSchema = new Schema<IUserDocument>({
   email: {
     type: String,
     required: true,
@@ -50,14 +45,21 @@ function formatLink(token: string) {
   return `<a href="${Mail.config.verificationRoute}${token}">Verify your Resurrect3D Account</a>`;
 }
 
-UserSchema.methods.sendVerificationEmail = function (callback) {
+UserSchema.methods.sendVerificationEmail = function (): Promise<void> {
   const message = {
     to: this.email,
     html: Mail.greeting + formatLink(this.token),
     ...Mail.message
   };
-  Mail.transporter.sendMail(message, callback);
+  return new Promise((resolve, reject) => {
+    Mail.transporter.sendMail(message, (err: Error | null) => {
+      if (err) {
+        return reject(err);
+      }
+      return resolve();
+    });
+  });
 };
 
-const UserModel = mongoose.model<IUser, User>("User", UserSchema);
+const UserModel = mongoose.model<IUserDocument>("User", UserSchema);
 export default UserModel;
