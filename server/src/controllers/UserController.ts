@@ -73,9 +73,8 @@ export async function updateUser(
   if (record !== null) {
     const updated = { ...record, ...userData } as IUserDocument;
     return await update(updated);
-  } else {
-    return errorResponse({ message: `User with id ${id} not found.` }, 404);
   }
+  return errorResponse({ message: `User with id ${id} not found.` }, 404);
 }
 
 export async function deleteUser(
@@ -85,4 +84,24 @@ export async function deleteUser(
   const { expunge } = recordHelper<IUserDocument>(UserModel, res);
   const { id } = req.params;
   return await expunge(id);
+}
+
+export async function verifyUser(
+  req: Request,
+  res: Response
+): Promise<UserDocumentResponseWithError> {
+  const { findRecord, update, errorResponse } = recordHelper<IUserDocument>(
+    UserModel,
+    res
+  );
+  const { token } = req.params;
+  const record = await findRecord({ token });
+  if (record !== null) {
+    const updated = { ...record, verified: true } as IUserDocument;
+    return await update(updated);
+  }
+  return errorResponse(
+    { message: `Could not find an account for token ${token}.` },
+    404
+  );
 }

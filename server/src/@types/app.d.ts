@@ -13,3 +13,7 @@ type EnvVars =
   | "PRIVATE_KEY"
   | "SALT_ROUNDS";
 type EnvVar = string | number | null;
+
+interface IMessage {
+  message: string;
+}

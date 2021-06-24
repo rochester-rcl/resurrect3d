@@ -9,11 +9,7 @@ import {
   GridFSFileDocument
 } from "../models/GridFS";
 
-interface IErrorMessage {
-  message: string;
-}
-
-export type ErrorResponse = Response<IErrorMessage>;
+export type ErrorResponse = Response<IMessage>;
 export type DocumentResponse<T extends ResurrectDocument> = Response<T>;
 export type MultiDocumentResponse<T extends ResurrectDocument> = Response<T[]>;
 
@@ -28,7 +24,7 @@ interface IRecordHelper<T extends ResurrectDocument> {
   addRecord: (data: Partial<T>) => Promise<T>;
   updateRecord: (doc: T) => Promise<T>;
   deleteRecord: (id: string) => Promise<boolean>;
-  errorResponse: (body: IErrorMessage, status: number) => ErrorResponse;
+  errorResponse: (body: IMessage, status: number) => ErrorResponse;
   successResponse: (
     doc: T,
     status?: number
@@ -40,7 +36,7 @@ export function recordHelper<T extends ResurrectDocument>(
   res: Response
 ): IRecordHelper<T> {
   function errorResponse(
-    body: IErrorMessage,
+    body: IMessage,
     status: number = 500
   ): ErrorResponse {
     return res.status(status).send(body);
