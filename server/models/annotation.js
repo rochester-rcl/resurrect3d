@@ -42,11 +42,7 @@ const annotationSchema = new Schema({
   }
 });
 
-annotationSchema.methods.refresh = function(callback) {
-  this.model("annotation").findOne({ _id: this._id }, callback);
-};
-
-annotationSchema.methods.updateSaveStatus = function(status, callback) {
+annotationSchema.methods.updateSaveStatus = function(status: AnnotationSaveStatus, callback) {
   this.model("annotation").updateOne(
     { _id: this._id },
     { saveStatus: status },

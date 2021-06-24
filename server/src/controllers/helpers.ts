@@ -25,20 +25,21 @@ interface IRecordHelper<T extends ResurrectDocument> {
   updateRecord: (doc: T) => Promise<T>;
   deleteRecord: (id: string) => Promise<boolean>;
   errorResponse: (body: IMessage, status: number) => ErrorResponse;
-  successResponse: (
+  successResponse(
+    doc: T[],
+    status?: number
+  ): DocumentResponse<T> | MultiDocumentResponse<T>;
+  successResponse(
     doc: T,
     status?: number
-  ) => DocumentResponse<T> | MultiDocumentResponse<T>;
+  ): DocumentResponse<T> | MultiDocumentResponse<T>;
 }
 
 export function recordHelper<T extends ResurrectDocument>(
   model: ResurrectModel<T>,
   res: Response
 ): IRecordHelper<T> {
-  function errorResponse(
-    body: IMessage,
-    status: number = 500
-  ): ErrorResponse {
+  function errorResponse(body: IMessage, status: number = 500): ErrorResponse {
     return res.status(status).send(body);
   }
 

@@ -50,7 +50,7 @@ export const AnnotationSchema = new Schema<IAnnotation>({
 });
 
 AnnotationSchema.methods.updateSaveStatus = function (
-  status
+  status: AnnotationSaveStatus
 ): Promise<IAnnotationDocument> {
   this.saveStatus = status;
   return this.save();

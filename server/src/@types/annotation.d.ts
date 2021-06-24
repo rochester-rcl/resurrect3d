@@ -1,7 +1,7 @@
 type AnnotationSaveStatus = "SAVED" | "UNSAVED" | "UPDATED";
 
 interface IAnnotation {
-  threeViewId: number;
+  threeViewId: string; // bson ObjectId
   title: string;
   point: string; // serialized Vector3
   normal: string; // serialized Vector3
