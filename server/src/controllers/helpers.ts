@@ -23,7 +23,10 @@ interface IRecordHelper<T extends ResurrectDocument> {
   findRecord: (fq: FilterQuery<T>) => Promise<T | null>;
   addRecord: (data: Partial<T>) => Promise<T>;
   updateRecord: (doc: T) => Promise<T>;
-  deleteRecord: (id: string) => Promise<boolean>;
+  deleteRecord(id: string): Promise<boolean>;
+  deleteRecord(fq: FilterQuery<T>): Promise<boolean>;
+  deleteRecords(ids: string[]): Promise<boolean>;
+  deleteRecords(fq: FilterQuery<T>): Promise<boolean>;
   errorResponse: (body: IMessage, status: number) => ErrorResponse;
   successResponse(
     doc: T[],
@@ -71,9 +74,32 @@ export function recordHelper<T extends ResurrectDocument>(
     return doc.save() as Promise<T>;
   }
 
-  function deleteRecord(id: string): Promise<boolean> {
-    const query = model.deleteOne({ _id: id } as FilterQuery<T>);
+  function deleteRecord(id: string): Promise<boolean>;
+  function deleteRecord(fq: FilterQuery<T>): Promise<boolean>;
+  function deleteRecord(param: string | FilterQuery<T>): Promise<boolean> {
+    let query;
+    if (typeof param === "string") {
+      query = model.deleteOne({ _id: param } as FilterQuery<T>);
+    } else {
+      query = model.deleteOne(param);
+    }
     return query.then(({ ok }) => ok !== undefined && ok > 1);
+  }
+
+  function deleteRecords(ids: string[]): Promise<boolean>;
+  function deleteRecords(fq: FilterQuery<T>): Promise<boolean>;
+  function deleteRecords(params: string[] | FilterQuery<T>): Promise<boolean> {
+    let query;
+    const isArray = Array.isArray(params);
+    if (isArray) {
+      query = model.deleteMany({ _id: { $in: params } } as FilterQuery<T>);
+    } else {
+      query = model.deleteMany(params as FilterQuery<T>);
+    }
+
+    return query.then(ok =>
+      ok !== undefined && isArray ? ok === params.length : ok > 0
+    );
   }
 
   function create(
@@ -138,6 +164,7 @@ export function recordHelper<T extends ResurrectDocument>(
     addRecord,
     updateRecord,
     deleteRecord,
+    deleteRecords,
     get,
     expunge,
     errorResponse,
@@ -150,13 +177,14 @@ interface IGridHelper {
     fq: FilterQuery<GridFSFileDocument>
   ) => Promise<GridFSFileDocument | null>;
   deleteFile: (fq: FilterQuery<GridFSFileDocument>) => Promise<boolean>;
+  deleteFiles: (fileIds: string[]) => Promise<boolean>;
   streamFile: (
     fq: FilterQuery<GridFSFileDocument>
   ) => Promise<Response<GridFSBucketReadStream> | ErrorResponse>;
 }
 
 export function gridHelper(grid: GridFSBucket, res: Response): IGridHelper {
-  const { findRecord, deleteRecord, errorResponse } =
+  const { findRecord, deleteRecord, deleteRecords, errorResponse } =
     recordHelper<GridFSFileDocument>(GridFSFileModel, res);
 
   const chunkHelper = recordHelper<GridFSChunkDocument>(GridFSChunkModel, res);
@@ -172,13 +200,23 @@ export function gridHelper(grid: GridFSBucket, res: Response): IGridHelper {
       if (!file) {
         return false;
       }
-      return deleteRecord(file.id).then(success => {
+      return deleteRecord(file._id).then(success => {
         if (success) {
-          return chunkHelper.deleteRecord(file.id);
+          return chunkHelper.deleteRecord({ files_id: file._id });
         } else {
           return false;
         }
       });
+    });
+  }
+
+  function deleteFiles(fileIds: string[]): Promise<boolean> {
+    return deleteRecords(fileIds).then(success => {
+      if (success) {
+        return chunkHelper.deleteRecords({ files_id: { $in: fileIds } });
+      } else {
+        return false;
+      }
     });
   }
 
@@ -200,6 +238,7 @@ export function gridHelper(grid: GridFSBucket, res: Response): IGridHelper {
   return {
     findFile,
     deleteFile,
+    deleteFiles,
     streamFile
   };
 }

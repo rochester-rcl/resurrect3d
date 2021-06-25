@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface IViewerDocument extends Document, IViewer {}
 
-export const ViewerSchema = new Schema<IViewer>({
+export const ViewerSchema = new Schema<IViewerDocument>({
   displayName: {
     type: String,
     required: false
@@ -85,12 +85,8 @@ export const ViewerSchema = new Schema<IViewer>({
     type: Schema.Types.ObjectId,
     ref: "User"
   },
-  externalMapInfo: {
-    type: [Object],
-    required: false
-  },
   allowedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }]
 });
 
-const ViewerModel = mongoose.model<IViewer>("view", ViewerSchema);
+const ViewerModel = mongoose.model<IViewerDocument>("view", ViewerSchema);
 export default ViewerModel;

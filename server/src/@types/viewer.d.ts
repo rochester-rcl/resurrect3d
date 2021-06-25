@@ -8,8 +8,9 @@ interface IViewer {
   enableDownload: boolean;
   enableEmbed: boolean;
   modelUnits: string;
-  threeThumbnail?: string;
+  threeThumbnail: string | null;
   displayName?: string;
-  skyboxFile?: string;
-  alternateMaps?: string;
+  skyboxFile: string | null;
+  alternateMaps: string[] | null;
+  [key: string]: string | boolean | string[] | null | undefined;
 }
