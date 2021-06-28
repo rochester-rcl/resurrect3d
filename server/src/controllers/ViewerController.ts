@@ -145,3 +145,39 @@ export async function updateViewer(
   }
   return errorResponse({ message: `Viewer with id ${id} not found.` }, 404);
 }
+
+export async function deleteViewer(
+  req: Request,
+  res: Response,
+  grid: GridFSBucket
+): Promise<ViewerResponseWithError> {
+  const { findRecord, deleteRecord, errorResponse } =
+    recordHelper<IViewerDocument>(ViewerModel, res);
+  const { deleteFiles } = gridHelper(grid, res);
+  const { id } = req.params;
+  const viewer = await findRecord({ _id: id });
+  if (!viewer) {
+    return errorResponse({ message: `Unable to find Viewer ${id}` }, 404);
+  }
+  try {
+    const deleted = await deleteRecord(viewer.id);
+    if (!deleted) {
+      throw new Error(`Unable to delete Viewer ${id}`);
+    }
+    const { threeFile, skyboxFile, threeThumbnail, alternateMaps } = viewer;
+    const toDelete = getFilesToDelete(viewer, {
+      threeFile,
+      skyboxFile,
+      threeThumbnail,
+      alternateMaps
+    });
+    const allDeleted = await deleteFiles(toDelete);
+    if (!allDeleted) {
+      throw new Error(`Unable to delete files for viewer ${id}`);
+    }
+    return res.send();
+  } catch (error) {
+    const { message } = error;
+    return errorResponse({ message }, 500);
+  }
+}
