@@ -1,6 +1,8 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-export interface IViewerDocument extends Document, IViewer {}
+export interface IViewerDocument extends Document, IViewer {
+  [key: string]: any;
+}
 
 export const ViewerSchema = new Schema<IViewerDocument>({
   displayName: {

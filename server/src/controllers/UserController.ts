@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import getEnvVar from "../utils/env";
 import { IVerifyOptions } from "passport-local";
-
+import { IVerifyOptions as BearerVerifyOptions } from "passport-http-bearer";
 import {
   recordHelper,
   DocumentResponse,
@@ -128,6 +128,20 @@ export function authenticateServer(
   return next();
 }
 
+export function onLogin(
+  req: Request,
+  res: Response
+): Response<Partial<IUserDocument>> {
+  const { user } = req;
+  const { username, email, token, _id } = user as IUserDocument;
+  return res.json({
+    username: username,
+    email: email,
+    token: token,
+    id: _id
+  });
+}
+
 export function logout(
   req: Request,
   res: Response
@@ -141,63 +155,76 @@ export function logout(
   }
 }
 
-export async function userStrategy(
+export async function localStrategy(
   email: string,
   password: string,
-  done: (
-    error?: Error | null,
-    user?: IUserDocument | null,
-    options?: IVerifyOptions
-  ) => void
+  done: DoneFunc<IUserDocument, IVerifyOptions>
 ): Promise<void> {
   try {
     const query = UserModel.findOne({
-      email: email
+      email
     } as FilterQuery<IUserDocument>);
     const user = await query;
 
     if (!user) {
-      return done(null, user, {
+      return done(undefined, undefined, {
         message: `User with email ${email} not found`
       });
     }
 
     if (!user.validPassword(password)) {
-      return done(null, null, {
+      return done(undefined, undefined, {
         message: `Incorrect password for user ${user.username}`
       });
     }
 
     if (!user.verified) {
-      return done(null, null, {
+      return done(undefined, undefined, {
         message: `User ${user.username}'s account is not verified`
       });
     }
 
-    return done(null, user);
+    return done(undefined, user);
   } catch (error) {
     return done(error);
   }
 }
 
+export async function bearerStrategy(
+  token: string,
+  done: DoneFunc<IUserDocument, BearerVerifyOptions>
+): Promise<void> {
+  try {
+    const query = UserModel.findOne({ token });
+    const user = await query;
+    if (!user) {
+      throw new Error("User not found");
+    }
+    // remove password
+    return done(undefined, { ...user, password: "" } as IUserDocument, {
+      scope: "all"
+    });
+  } catch (error) {
+    return done(error);
+  }
+}
+
+export type DoneFunc<T, OptT> = (
+  error?: Error,
+  user?: T,
+  options?: OptT
+) => void;
+
 export function serializeUser(
   user: IUserDocument,
-  done: (
-    error?: Error | null,
-    user?: IUserDocument | null,
-    options?: IVerifyOptions
-  ) => void
+  done: DoneFunc<string, IVerifyOptions>
 ): void {
-  done(null, user._id);
+  done(undefined, user._id);
 }
 
 export async function deserializeUser(
   id: string,
-  done: (
-    error?: Error | null,
-    user?: IUserDocument | null,
-    options?: IVerifyOptions
-  ) => void
+  done: DoneFunc<IUserDocument, IVerifyOptions>
 ): Promise<void> {
   try {
     const query = UserModel.findById(id);
@@ -205,7 +232,7 @@ export async function deserializeUser(
     if (!user) {
       throw new Error(`User with id ${id} not found`);
     }
-    return done(null, user);
+    return done(undefined, user);
   } catch (error) {
     return done(error);
   }

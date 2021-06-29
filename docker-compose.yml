@@ -10,6 +10,13 @@ services:
       MONGO_INITDB_ROOT_USERNAME: resurrectdb_root
       MONGO_INITDB_ROOT_PASSWORD: resurrectdb
 
+  mongo-test:
+    image: mongo:3.6
+    container_name: mongo-test
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: testdb_root
+      MONGO_INITDB_ROOT_PASSWORD: test
+
   server-prod:
     image: resurrect3d/server
     container_name: resurrect-server-prod
@@ -38,6 +45,7 @@ services:
     environment:
       MONGO_URL: "mongodb://resurrectdb_root:resurrectdb@resurrect-mongo:27017/admin"
       NODE_ENV: "development"
+      TESTING: "false"
     entrypoint: /home/server-entrypoint.sh
     expose:
       - 8000
@@ -45,6 +53,24 @@ services:
       - 3001:8000
     depends_on:
       - mongo
+
+  server-test:
+    image: resurrect3d/server
+    container_name: resurrect-server-dev
+    working_dir: /home/node/working
+    volumes:
+      - ${RESURRECT_SERVER_DIR}:/home/node/working
+    environment:
+      MONGO_TEST_URL: "mongodb://testdb_root:test@mongo-test:27017/admin"
+      NODE_ENV: "development"
+      TESTING: "true"
+      EMAIL_USERNAME: "testuser"
+      EMAIL_PASSWORD: "password"
+      EMAIL_SERVICE: "fakemail"
+      EMAIL_VERIFICATION_ROUTE: "/verify"
+    entrypoint: /home/server-entrypoint.sh
+    depends_on:
+      - mongo-test
 
   client:
     build:

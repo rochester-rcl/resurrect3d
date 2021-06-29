@@ -7,6 +7,7 @@ interface IMailConfig {
 
 type EnvVars =
   | "MONGO_URL"
+  | "MONGO_TEST_URL"
   | "PORT"
   | "BASENAME"
   | "MAX_UPLOAD_SIZE"

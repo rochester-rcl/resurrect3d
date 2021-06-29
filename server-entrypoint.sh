@@ -11,6 +11,11 @@ then
     echo npm run build
     exec node server-build/index.js
 else
-    exec npm run dev
+    if [ "$TESTING" == "true" ]
+    then
+        exec npm run test
+    else
+        npm run dev
+    fi
 fi
 
