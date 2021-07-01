@@ -45,7 +45,7 @@
   "scripts": {
     "test": "jest",
     "tsc": "tsc",
-    "dev": "ts-node-dev --respawn --transpileOnly ./index.ts",
+    "dev": "ts-node-dev --respawn --transpile-only ./index.ts",
     "build": "tsc --outDir ./server-build"
   }
 }

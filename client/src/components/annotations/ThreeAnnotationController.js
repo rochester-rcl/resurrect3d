@@ -214,7 +214,6 @@ class ThreeAnnotationController extends Component {
 
   handleKeyDown(event) {
     const { presentationMode, currentIndex } = this.state;
-    console.log(currentIndex);
     if (presentationMode) {
       switch (event.keyCode) {
         case KEYCODES.LEFT:

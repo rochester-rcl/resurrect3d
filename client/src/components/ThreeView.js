@@ -753,6 +753,7 @@ export default class ThreeView extends Component {
       frameOfReference: "local",
       className: "three-controls-button",
     });
+    
     controls.addComponent("embed", ThreeEmbed, {
       ...buttonProps,
       className: "three-embed-button",

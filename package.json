@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test-client": "cd client && npm jest",
-    "test-server": "cd server && npm jest",
+    "test-server": "cd server && npm jest --detectOpenHandles",
     "client": "cd client && npm start",
     "server": "nodemon server/server.js",
     "install-all": "cd server && npm install && cd ../client && npm install && cd .. && npm install",

@@ -32,7 +32,7 @@ export default class Login extends Component {
     event.stopPropagation();
     const { email, password } = this.state;
     const loginInfo = {
-      username: email,
+      email,
       password: encodeURIComponent(password)
     };
     this.props.loginUser(loginInfo);

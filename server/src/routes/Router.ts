@@ -19,7 +19,9 @@ passport.serializeUser<string>(
 passport.deserializeUser(UserController.deserializeUser);
 
 // Passport Strategies
-passport.use(new LocalStrategy(UserController.localStrategy));
+passport.use(
+  new LocalStrategy({ usernameField: "email" }, UserController.localStrategy)
+);
 passport.use(new BearerStrategy(UserController.bearerStrategy));
 
 export default function initRoutes(upload: Multer, grid: GridFSBucket): Router {
@@ -85,7 +87,7 @@ export default function initRoutes(upload: Multer, grid: GridFSBucket): Router {
     .route("/api/users/authenticate")
     .get(UserController.authenticateClient);
 
-  router.route("/api/users/").post(UserController.createUser);
+  router.route("/api/users").post(UserController.createUser);
 
   router
     .route("/api/users/:id")

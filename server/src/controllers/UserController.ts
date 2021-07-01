@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import getEnvVar from "../utils/env";
@@ -32,12 +33,18 @@ export async function createUser(
   const { addRecord, successResponse, errorResponse } =
     recordHelper<IUserDocument>(UserModel, res);
   try {
-    const rec = await addRecord({ ...info, password: hash, token: token });
+    const { NODE_ENV } = process.env;
+    const rec = await addRecord({
+      ...info,
+      password: hash,
+      token: token,
+      verified: NODE_ENV === "production" ? false : true
+    });
     if (process.env.NODE_ENV === "production") {
       // send email
       await rec.sendVerificationEmail();
     }
-    return successResponse(rec);
+    return successResponse(rec, 201);
   } catch (error) {
     const { message } = error;
     return errorResponse({ message }, 500);
@@ -79,12 +86,24 @@ export async function updateUser(
   return errorResponse({ message: `User with id ${id} not found.` }, 404);
 }
 
+// TODO - delete all viewers and annotations when deleting a user
 export async function deleteUser(
   req: Request,
   res: Response
 ): Promise<Response<void> | ErrorResponse> {
-  const { expunge } = recordHelper<IUserDocument>(UserModel, res);
+  const { expunge, errorResponse } = recordHelper<IUserDocument>(
+    UserModel,
+    res
+  );
+  const user = req.user as IUserDocument | undefined;
   const { id } = req.params;
+  const objectId = mongoose.Types.ObjectId(id);
+  if (!user || (user && !user._id.equals(objectId))) {
+    return errorResponse(
+      { message: "User does not have permission to remove this account" },
+      403
+    );
+  }
   return await expunge(id);
 }
 
@@ -99,8 +118,8 @@ export async function verifyUser(
   const { token } = req.params;
   const record = await findRecord({ token });
   if (record !== null) {
-    const updated = { ...record, verified: true } as IUserDocument;
-    return await update(updated);
+    record.verified = true;
+    return await update(record);
   }
   return errorResponse(
     { message: `Could not find an account for token ${token}.` },
@@ -120,9 +139,15 @@ export function authenticateServer(
   res: Response,
   next: NextFunction
 ): Response<{ authenticated: boolean }> | void {
-  if (req.user === undefined) {
+  if (!req.user) {
     return res.status(401).json({
       authenticaed: false
+    });
+  }
+  const user = req.user as IUserDocument;
+  if (!user.verified) {
+    return res.status(403).json({
+      authenticated: false
     });
   }
   return next();

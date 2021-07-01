@@ -15,7 +15,7 @@ else
     then
         exec npm run test
     else
-        npm run dev
+        exec npm run dev
     fi
 fi
 

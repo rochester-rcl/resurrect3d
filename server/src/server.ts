@@ -4,6 +4,7 @@ import passport from "passport";
 import session from "express-session";
 import cors from "cors";
 import multer from "multer";
+import { Server } from "http";
 import mongoose, { Mongoose, Connection } from "mongoose";
 import GridFsStorage from "multer-gridfs-storage";
 import { GridFSBucket } from "mongodb";
@@ -16,13 +17,31 @@ dotenv.config();
 
 // initialize Mongo / GridFS
 
-export async function initMongo(url?: string): Promise<Mongoose> {
-  const dbUrl = url || (getEnvVar("MONGO_URL") as string);
-  console.log(dbUrl);
-  return mongoose.connect(dbUrl, { useNewUrlParser: true });
+function sleep(timeout: number): Promise<void> {
+  return new Promise(resolve => {
+    setTimeout(() => resolve(), timeout);
+  });
 }
 
-export function initServer(connection: Connection): express.Application {
+export async function initMongo(
+  url?: string,
+  retries = 2,
+  timeout = 1000
+): Promise<Mongoose> {
+  try {
+    const dbUrl = url || (getEnvVar("MONGO_URL") as string);
+    return await mongoose.connect(dbUrl, { useNewUrlParser: true });
+  } catch (error) {
+    if (retries > 0) {
+      await sleep(timeout);
+      return initMongo(url, retries - 1);
+    } else {
+      throw error;
+    }
+  }
+}
+
+export function initServer(connection: Connection): Server {
   // Config
   const url = getEnvVar("MONGO_URL") as string;
   const fileSize = getEnvVar("MAX_UPLOAD_SIZE") as number;
@@ -56,10 +75,10 @@ export function initServer(connection: Connection): express.Application {
   app.use(express.json({ limit: "20mb" }));
 
   const router = initRoutes(upload, grid);
+
   app.use(basename, router);
 
-  app.listen(port, () => {
+  return app.listen(port, () => {
     console.log(`Resurrect3D Server is Listening for Connections on ${port}`);
   });
-  return app;
 }

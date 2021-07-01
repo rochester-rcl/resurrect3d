@@ -83,7 +83,7 @@ export function recordHelper<T extends ResurrectDocument>(
     } else {
       query = model.deleteOne(param);
     }
-    return query.then(({ ok }) => ok !== undefined && ok > 1);
+    return query.then(({ ok }) => ok !== undefined && ok > 0);
   }
 
   function deleteRecords(ids: string[]): Promise<boolean>;
@@ -116,7 +116,7 @@ export function recordHelper<T extends ResurrectDocument>(
     errorStatus: number = 500
   ): Promise<DocumentResponse<T> | ErrorResponse> {
     return doc
-      .save() // TODO not sure how to fix this but this will do for now
+      .save()
       .then((updated: ResurrectDocument) =>
         successResponse(updated as T, successStatus)
       )

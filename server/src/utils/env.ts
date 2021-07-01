@@ -15,7 +15,7 @@ export default function getEnvVar(key: EnvVars): EnvVar {
       return process.env.MAX_UPLOAD_SIZE || 200;
 
     case "PRIVATE_KEY":
-      return process.env.PRIVATE_KEY || "";
+      return process.env.PRIVATE_KEY || "private";
 
     case "SALT_ROUNDS":
       return process.env.SALT_ROUNDS || 10;
