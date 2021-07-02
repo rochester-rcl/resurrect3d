@@ -14,11 +14,26 @@ const userInfo = {
   password: "thisisatest"
 };
 
+const viewerInfo = {
+  
+}
+
 beforeAll(async () => {
   app = await startApp();
   agent = request.agent(app);
+  // create, verify, and log in a user for the tests
+  const userResponse = await agent?.post("/api/users").send(userInfo);
+  user = userResponse.body;
+  await agent?.get(`/api/users/verify/${user?.token}`);
+  await agent?.post("/api/users/login").send(userInfo);
 });
 
 afterAll(async () => {
   await stopApp(app as Server);
+});
+
+describe("Viewer API Tests", () => {
+  it("Should create a viewer", async () => {
+
+  });
 });

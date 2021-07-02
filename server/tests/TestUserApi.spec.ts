@@ -3,6 +3,7 @@ import request from "supertest";
 import { Server } from "http";
 import { initMongo, initServer } from "../src/server";
 import getEnv from "../src/utils/env";
+import { startApp, stopApp } from "./TestUtils";
 
 let agent: request.SuperTest<request.Test> | null = null;
 let app: Server | null = null;
@@ -32,26 +33,13 @@ const user4Info = {
 };
 
 beforeAll(async () => {
-  const testDbUrl = getEnv("MONGO_TEST_URL") as string;
-  const { connection } = await initMongo(testDbUrl);
-  app = initServer(connection);
+  app = await startApp();
   agent = request.agent(app);
 });
 
 afterAll(async () => {
-  await cleanUp();
-  await mongoose.disconnect();
-  app?.close();
+  await stopApp(app as Server);
 });
-
-async function cleanUp() {
-  Object.values(mongoose.connection.collections).forEach(async collection => {
-    await collection.deleteMany({});
-  });
-  mongoose.connections.forEach(async conn => {
-    await conn.close();
-  });
-}
 
 describe("User API Tests", () => {
   it("Should create a user", async () => {

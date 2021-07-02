@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { GridFSBucket } from "mongodb";
+import { GridFSBucket, GridFSBucketReadStream } from "mongodb";
 
 import {
   recordHelper,
@@ -9,6 +9,8 @@ import {
   ErrorResponse
 } from "./helpers";
 import ViewerModel, { IViewerDocument } from "../models/Viewer";
+import { FilterQuery } from "mongoose";
+import { GridFSFileDocument } from "../models/GridFS";
 
 interface IViewerRequestFiles {
   threeFile: Express.Multer.File[];
@@ -180,4 +182,14 @@ export async function deleteViewer(
     const { message } = error;
     return errorResponse({ message }, 500);
   }
+}
+
+export async function streamViewerFile(
+  req: Request,
+  res: Response,
+  grid: GridFSBucket
+): Promise<Response<GridFSBucketReadStream> | ErrorResponse> {
+  const { streamFile } = gridHelper(grid, res);
+  const { filename } = req.params;
+  return streamFile({ filename } as FilterQuery<GridFSFileDocument>);
 }
