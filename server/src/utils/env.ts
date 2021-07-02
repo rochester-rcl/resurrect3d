@@ -12,7 +12,7 @@ export default function getEnvVar(key: EnvVars): EnvVar {
       return process.env.BASENAME || "";
 
     case "MAX_UPLOAD_SIZE":
-      return process.env.MAX_UPLOAD_SIZE || 200;
+      return process.env.MAX_UPLOAD_SIZE || 1024 * 1024 * 200;
 
     case "PRIVATE_KEY":
       return process.env.PRIVATE_KEY || "private";

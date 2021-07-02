@@ -9,6 +9,15 @@ import {
   GridFSFileDocument
 } from "../models/GridFS";
 
+export class HttpError extends Error {
+  status: number;
+  name: string = "HttpError";
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
 export type ErrorResponse = Response<IMessage>;
 export type DocumentResponse<T extends ResurrectDocument> = Response<T>;
 export type MultiDocumentResponse<T extends ResurrectDocument> = Response<T[]>;

@@ -133,6 +133,6 @@ describe("User API Tests", () => {
 
     // make sure user1 can't log back in
     const loggedInRes = await agent?.post("/api/users/login").send(user3Info);
-    expect(loggedInRes?.status).toEqual(403); // needs custom passport callaback to work properly
+    expect(loggedInRes?.status).toEqual(401);
   });
 });

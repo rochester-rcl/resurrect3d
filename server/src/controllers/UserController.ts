@@ -3,13 +3,18 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import getEnvVar from "../utils/env";
-import { IVerifyOptions } from "passport-local";
-import { IVerifyOptions as BearerVerifyOptions } from "passport-http-bearer";
+import passport from "passport";
+import { IVerifyOptions, Strategy as LocalStrategy } from "passport-local";
+import {
+  Strategy as BearerStrategy,
+  IVerifyOptions as BearerVerifyOptions
+} from "passport-http-bearer";
 import {
   recordHelper,
   DocumentResponse,
   MultiDocumentResponse,
-  ErrorResponse
+  ErrorResponse,
+  HttpError
 } from "./helpers";
 import UserModel, { IUserDocument } from "../models/User";
 import { FilterQuery } from "mongoose";
@@ -33,12 +38,12 @@ export async function createUser(
   const { addRecord, successResponse, errorResponse } =
     recordHelper<IUserDocument>(UserModel, res);
   try {
-    const { NODE_ENV } = process.env;
+    const { NODE_ENV, TESTING } = process.env;
     const rec = await addRecord({
       ...info,
       password: hash,
       token: token,
-      verified: NODE_ENV === "production" ? false : true
+      verified: NODE_ENV === "production" || TESTING ? false : true
     });
     if (process.env.NODE_ENV === "production") {
       // send email
@@ -104,6 +109,7 @@ export async function deleteUser(
       403
     );
   }
+  req.logOut();
   return await expunge(id);
 }
 
@@ -255,10 +261,103 @@ export async function deserializeUser(
     const query = UserModel.findById(id);
     const user = await query;
     if (!user) {
-      throw new Error(`User with id ${id} not found`);
+      throw new HttpError(`User with id ${id} not found`, 404);
     }
     return done(undefined, user);
   } catch (error) {
     return done(error);
   }
 }
+
+// User serialization
+
+passport.serializeUser<string>(
+  (user: Express.User, done: DoneFunc<string, IVerifyOptions>) =>
+    serializeUser(user as IUserDocument, done)
+);
+
+passport.deserializeUser(deserializeUser);
+
+// Passport Strategies
+passport.use(new LocalStrategy({ usernameField: "email" }, localStrategy));
+passport.use(new BearerStrategy(bearerStrategy));
+
+function authenticateLocal(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Express.User> {
+  return new Promise((resolve, reject) => {
+    passport.authenticate(
+      "local",
+      (err: Error | null, user: Express.User | boolean, info: any) => {
+        if (err) {
+          return reject(err);
+        }
+        if (!user) {
+          return reject(
+            new HttpError("No user found with credentails supplied", 401)
+          );
+        }
+        return resolve(user);
+      }
+    )(req, res, next);
+  });
+}
+
+async function loginUser(req: Request, user: Express.User): Promise<void> {
+  return new Promise((resolve, reject) => {
+    req.logIn(user, (err?: Error) => {
+      if (err) {
+        return reject(err);
+      }
+      return resolve();
+    });
+  });
+}
+
+export async function login(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response<Partial<IUserDocument>> | ErrorResponse> {
+  try {
+    const user = await authenticateLocal(req, res, next);
+    await loginUser(req, user);
+    return onLogin(req, res);
+  } catch (error) {
+    const { message } = error;
+    const status = error.name === "HttpError" ? error.status : 500;
+    return res.status(status).json({ message });
+  }
+}
+
+/*passport.authenticate(
+    "local",
+    (
+      err: Error | null,
+      user: Express.User | boolean,
+      info: any
+    ): Response<IMessage> | void => {
+      if (err) {
+        const { message } = err;
+        return res.status(403).json({ message });
+      }
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      try {
+      req.logIn(user, (err?: Error) => {
+        if (err) {
+          return res
+            .status(403)
+            .json({ message: "Invalid username or password" });
+        }
+        
+          return UserController.onLogin(req, res);
+        } catch (error) {
+          const { message } = error;
+          return res.status(403).json({ message });
+      });
+    }
+  )(req, res, next);*/

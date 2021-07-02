@@ -1,28 +1,10 @@
-import express, { Router } from "express";
+import express, { Request, Response, Router, NextFunction } from "express";
 import { Multer } from "multer";
 import { GridFSBucket } from "mongodb";
-import passport from "passport";
-import { IVerifyOptions, Strategy as LocalStrategy } from "passport-local";
-import { Strategy as BearerStrategy } from "passport-http-bearer";
 import * as UserController from "../controllers/UserController";
 import * as ViewerController from "../controllers/ViewerController";
 import * as AnnotationController from "../controllers/AnnotationController";
 import { IUserDocument } from "../models/User";
-
-// User serialization
-
-passport.serializeUser<string>(
-  (user: Express.User, done: UserController.DoneFunc<string, IVerifyOptions>) =>
-    UserController.serializeUser(user as IUserDocument, done)
-);
-
-passport.deserializeUser(UserController.deserializeUser);
-
-// Passport Strategies
-passport.use(
-  new LocalStrategy({ usernameField: "email" }, UserController.localStrategy)
-);
-passport.use(new BearerStrategy(UserController.bearerStrategy));
 
 export default function initRoutes(upload: Multer, grid: GridFSBucket): Router {
   const router = express.Router();
@@ -77,9 +59,7 @@ export default function initRoutes(upload: Multer, grid: GridFSBucket): Router {
     );
 
   // User Routes
-  router
-    .route("/api/users/login")
-    .post(passport.authenticate("local"), UserController.onLogin);
+  router.route("/api/users/login").post(UserController.login);
 
   router.route("/api/users/logout").get(UserController.logout);
 
