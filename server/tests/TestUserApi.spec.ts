@@ -33,7 +33,7 @@ const user4Info = {
 };
 
 beforeAll(async () => {
-  app = await startApp();
+  app = await startApp(8080);
   agent = request.agent(app);
 });
 

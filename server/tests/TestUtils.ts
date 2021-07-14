@@ -1,25 +1,32 @@
-import mongoose from "mongoose";
+import mongoose, { Connection } from "mongoose";
 import { Server } from "http";
 import { initMongo, initServer } from "../src/server";
 import getEnv from "../src/utils/env";
 
-export async function startApp(): Promise<Server> {
+let connection: Connection | null = null;
+
+export async function startApp(port: number): Promise<Server> {
   const testDbUrl = getEnv("MONGO_TEST_URL") as string;
-  const { connection } = await initMongo(testDbUrl);
-  return initServer(connection);
+  ({ connection } = await initMongo(testDbUrl));
+  return initServer(connection, port);
+}
+
+function closeApp(app: Server): Promise<void> {
+  return new Promise(resolve => app.close(() => resolve()));
 }
 
 export async function stopApp(app: Server): Promise<void> {
   await cleanUp();
   await mongoose.disconnect();
-  app.close();
+  await closeApp(app);
 }
 
 export async function cleanUp() {
-  Object.values(mongoose.connection.collections).forEach(async collection => {
-    await collection.deleteMany({});
-  });
-  mongoose.connections.forEach(async conn => {
-    await conn.close();
-  });
+  const collections = await connection?.collections;
+  if (collections) {
+    for (let key in collections) {
+      await collections[key].deleteMany({});
+    }
+    await mongoose.connection.close();
+  }
 }

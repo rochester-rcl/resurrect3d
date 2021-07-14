@@ -30,7 +30,12 @@ export async function initMongo(
 ): Promise<Mongoose> {
   try {
     const dbUrl = url || (getEnvVar("MONGO_URL") as string);
-    return await mongoose.connect(dbUrl, { useNewUrlParser: true });
+    return await mongoose.connect(dbUrl, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useCreateIndex: true,
+      useFindAndModify: true
+    });
   } catch (error) {
     if (retries > 0) {
       await sleep(timeout);
@@ -41,13 +46,13 @@ export async function initMongo(
   }
 }
 
-export function initServer(connection: Connection): Server {
+export function initServer(connection: Connection, port?: number): Server {
   // Config
   const url = getEnvVar("MONGO_URL") as string;
   const fileSize = getEnvVar("MAX_UPLOAD_SIZE") as number;
   const privateKey = getEnvVar("PRIVATE_KEY") as string;
   const basename = getEnvVar("BASENAME") as string;
-  const port = getEnvVar("PORT") as number;
+  const serverPort = port || (getEnvVar("PORT") as number);
   // File storage
   const grid = new GridFSBucket(connection.db);
   const storage = new GridFsStorage({ url });
@@ -78,7 +83,7 @@ export function initServer(connection: Connection): Server {
 
   app.use(basename, router);
 
-  return app.listen(port, () => {
+  return app.listen(serverPort, () => {
     console.log(`Resurrect3D Server is Listening for Connections on ${port}`);
   });
 }

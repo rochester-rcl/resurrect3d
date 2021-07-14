@@ -331,33 +331,3 @@ export async function login(
     return res.status(status).json({ message });
   }
 }
-
-/*passport.authenticate(
-    "local",
-    (
-      err: Error | null,
-      user: Express.User | boolean,
-      info: any
-    ): Response<IMessage> | void => {
-      if (err) {
-        const { message } = err;
-        return res.status(403).json({ message });
-      }
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      try {
-      req.logIn(user, (err?: Error) => {
-        if (err) {
-          return res
-            .status(403)
-            .json({ message: "Invalid username or password" });
-        }
-        
-          return UserController.onLogin(req, res);
-        } catch (error) {
-          const { message } = error;
-          return res.status(403).json({ message });
-      });
-    }
-  )(req, res, next);*/
