@@ -6,7 +6,7 @@ import cors from "cors";
 import multer from "multer";
 import { Server } from "http";
 import mongoose, { Mongoose, Connection } from "mongoose";
-import GridFsStorage from "multer-gridfs-storage";
+import { GridFsStorage } from "multer-gridfs-storage";
 import { GridFSBucket } from "mongodb";
 import getEnvVar from "./utils/env";
 import { validateFileType as fileFilter } from "./utils/file";
@@ -53,9 +53,10 @@ export function initServer(connection: Connection, port?: number): Server {
   const privateKey = getEnvVar("PRIVATE_KEY") as string;
   const basename = getEnvVar("BASENAME") as string;
   const serverPort = port || (getEnvVar("PORT") as number);
+  const db = connection.db
   // File storage
   const grid = new GridFSBucket(connection.db);
-  const storage = new GridFsStorage({ url });
+  const storage = new GridFsStorage({ db });
   const upload = multer({
     storage,
     limits: { fileSize },

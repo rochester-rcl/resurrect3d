@@ -58,6 +58,11 @@ export default function initRoutes(upload: Multer, grid: GridFSBucket): Router {
       AnnotationController.deleteAnnotation
     );
 
+  // File Routes
+  router
+    .route("/api/files/:fileId")
+    .get(async (req, res) => ViewerController.streamViewerFile(req, res, grid));
+
   // User Routes
   router.route("/api/users/login").post(UserController.login);
 

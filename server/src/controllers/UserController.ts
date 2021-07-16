@@ -38,12 +38,12 @@ export async function createUser(
   const { addRecord, successResponse, errorResponse } =
     recordHelper<IUserDocument>(UserModel, res);
   try {
-    const { NODE_ENV, TESTING } = process.env;
+    const { NODE_ENV } = process.env;
     const rec = await addRecord({
       ...info,
       password: hash,
       token: token,
-      verified: NODE_ENV === "production" || TESTING ? false : true
+      verified: NODE_ENV === "production" || "test" ? false : true
     });
     if (process.env.NODE_ENV === "production") {
       // send email
@@ -210,11 +210,10 @@ export async function localStrategy(
     }
 
     if (!user.verified) {
-      return done(undefined, undefined, {
+      return done(new Error(`${email} is not verified`), undefined, {
         message: `User ${user.username}'s account is not verified`
       });
     }
-
     return done(undefined, user);
   } catch (error) {
     return done(error);
@@ -296,7 +295,7 @@ function authenticateLocal(
         }
         if (!user) {
           return reject(
-            new HttpError("No user found with credentails supplied", 401)
+            new HttpError("No user found with credentials supplied", 401)
           );
         }
         return resolve(user);
@@ -322,12 +321,15 @@ export async function login(
   next: NextFunction
 ): Promise<Response<Partial<IUserDocument>> | ErrorResponse> {
   try {
-    const user = await authenticateLocal(req, res, next);
+    const user = (await authenticateLocal(req, res, next)) as IUserDocument;
+    if (!user.verified) {
+      throw new HttpError(`User ${user.username} is not verified`, 401);
+    }
     await loginUser(req, user);
     return onLogin(req, res);
   } catch (error) {
     const { message } = error;
-    const status = error.name === "HttpError" ? error.status : 500;
+    const status = error.name === "HttpError" ? error.status : 401;
     return res.status(status).json({ message });
   }
 }

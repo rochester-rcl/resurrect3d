@@ -106,9 +106,11 @@ export function recordHelper<T extends ResurrectDocument>(
       query = model.deleteMany(params as FilterQuery<T>);
     }
 
-    return query.then(ok =>
-      ok !== undefined && isArray ? ok === params.length : ok > 0
-    );
+    return query.then(({ n, ok, deletedCount }) => {
+      return ok !== undefined && deletedCount !== undefined && n !== undefined
+        ? n === deletedCount
+        : false;
+    });
   }
 
   function create(

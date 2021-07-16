@@ -1,5 +1,0 @@
-FROM node:16
-
-COPY server-entrypoint.sh /home
-
-RUN chmod +x /home/server-entrypoint.sh

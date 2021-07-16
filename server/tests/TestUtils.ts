@@ -1,6 +1,7 @@
 import mongoose, { Connection } from "mongoose";
 import { Server } from "http";
 import { initMongo, initServer } from "../src/server";
+import UserModel from "../src/models/User";
 import getEnv from "../src/utils/env";
 
 let connection: Connection | null = null;
@@ -16,17 +17,11 @@ function closeApp(app: Server): Promise<void> {
 }
 
 export async function stopApp(app: Server): Promise<void> {
-  await cleanUp();
-  await mongoose.disconnect();
+  await connection?.close();
   await closeApp(app);
 }
 
-export async function cleanUp() {
-  const collections = await connection?.collections;
-  if (collections) {
-    for (let key in collections) {
-      await collections[key].deleteMany({});
-    }
-    await mongoose.connection.close();
-  }
+export async function deleteUser(id: string): Promise<void> {
+  const query = UserModel.deleteOne({ _id: id });
+  await query;
 }

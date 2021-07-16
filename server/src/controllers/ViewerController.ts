@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { GridFSBucket, GridFSBucketReadStream } from "mongodb";
-
 import {
   recordHelper,
   gridHelper,
@@ -11,13 +10,15 @@ import {
 import ViewerModel, { IViewerDocument } from "../models/Viewer";
 import { FilterQuery } from "mongoose";
 import { GridFSFileDocument } from "../models/GridFS";
+import { GridFile } from "multer-gridfs-storage";
 
+interface IReqGridFile extends Express.Multer.File, GridFile {}
 interface IViewerRequestFiles {
-  threeFile: Express.Multer.File[];
-  skyboxFile?: Express.Multer.File[];
-  threeThumbnail?: Express.Multer.File[];
-  alternateMaps?: Express.Multer.File[];
-  [fieldname: string]: Express.Multer.File[] | undefined;
+  threeFile: IReqGridFile[];
+  skyboxFile?: IReqGridFile[];
+  threeThumbnail?: IReqGridFile[];
+  alternateMaps?: IReqGridFile[];
+  [fieldname: string]: IReqGridFile[] | undefined;
 }
 
 interface IViewerFilenames {
@@ -33,18 +34,18 @@ type ViewerResponseWithError =
   | MultiDocumentResponse<IViewerDocument>
   | ErrorResponse;
 
-function getFilenames(files: IViewerRequestFiles): IViewerFilenames {
+function getFileIds(files: IViewerRequestFiles): IViewerFilenames {
   // only threeFile is required
   if (!files.threeFile) {
     throw new Error("threeFile is not set on request.files");
   }
   return {
-    threeFile: files.threeFile[0].filename,
-    skyboxFile: (files.skyboxFile && files.skyboxFile[0].filename) || null,
+    threeFile: files.threeFile[0].id,
+    skyboxFile: (files.skyboxFile && files.skyboxFile[0].id) || null,
     threeThumbnail:
-      (files.threeThumbnail && files.threeThumbnail[0].filename) || null,
+      (files.threeThumbnail && files.threeThumbnail[0].id) || null,
     alternateMaps:
-      (files.alternateMaps && files.alternateMaps.map(m => m.filename)) || null
+      (files.alternateMaps && files.alternateMaps.map(m => m.id)) || null
   };
 }
 
@@ -76,6 +77,12 @@ function getFilesToDelete(
   return toDelete;
 }
 
+function getAllFilesToDelete(filenames: IViewerFilenames): string[] {
+  const { alternateMaps, ...rest } = filenames;
+  const allFiles = Object.values(rest).concat(alternateMaps);
+  return allFiles.filter(f => f !== null) as string[];
+}
+
 export async function createViewer(
   req: Request,
   res: Response
@@ -87,7 +94,7 @@ export async function createViewer(
   if (!req.files) {
     return errorResponse({ message: "Request has no files set" }, 400);
   }
-  const filenames = getFilenames(req.files as IViewerRequestFiles);
+  const filenames = getFileIds(req.files as IViewerRequestFiles);
   const viewerData = { ...req.body, ...filenames } as IViewerDocument;
   return await create(viewerData);
 }
@@ -123,7 +130,7 @@ export async function updateViewer(
   const record = await findRecord({ _id: id });
   if (record !== null) {
     try {
-      const filenames = getFilenames(req.files as IViewerRequestFiles);
+      const filenames = getFileIds(req.files as IViewerRequestFiles);
       const updated = {
         ...record,
         ...{ ...viewerData, ...filenames }
@@ -167,7 +174,7 @@ export async function deleteViewer(
       throw new Error(`Unable to delete Viewer ${id}`);
     }
     const { threeFile, skyboxFile, threeThumbnail, alternateMaps } = viewer;
-    const toDelete = getFilesToDelete(viewer, {
+    const toDelete = getAllFilesToDelete({
       threeFile,
       skyboxFile,
       threeThumbnail,
@@ -190,6 +197,6 @@ export async function streamViewerFile(
   grid: GridFSBucket
 ): Promise<Response<GridFSBucketReadStream> | ErrorResponse> {
   const { streamFile } = gridHelper(grid, res);
-  const { filename } = req.params;
-  return streamFile({ filename } as FilterQuery<GridFSFileDocument>);
+  const { fileId } = req.params;
+  return streamFile({ _id: fileId } as FilterQuery<GridFSFileDocument>);
 }

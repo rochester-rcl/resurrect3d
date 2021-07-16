@@ -1,9 +1,6 @@
-import mongoose from "mongoose";
 import request from "supertest";
 import { Server } from "http";
-import { initMongo, initServer } from "../src/server";
-import getEnv from "../src/utils/env";
-import { startApp, stopApp } from "./TestUtils";
+import { startApp, stopApp, deleteUser } from "./TestUtils";
 
 let agent: request.SuperTest<request.Test> | null = null;
 let app: Server | null = null;
@@ -47,20 +44,24 @@ describe("User API Tests", () => {
     const res = await agent?.post("/api/users").send(userInfo);
     expect(res).not.toBeUndefined();
     expect(res?.status).toEqual(201);
-    const { username, email, password } = res?.body;
+    const { _id, username, email, password } = res?.body;
     expect(username).toEqual(userInfo.username);
     expect(email).toEqual(userInfo.email);
     expect(password).not.toEqual(userInfo.password);
+    // cleanup
+    await deleteUser(_id);
   });
 
   it("Should verify, authenticate, and log in a user", async () => {
-    expect.assertions(18);
+    expect.assertions(19);
 
     // make sure user isn't authenticated
     const auth1 = await agent?.get("/api/users/authenticate");
     expect(auth1?.body.authenticated).toEqual(false);
     const savedUser = await agent?.post("/api/users").send(user2Info);
-    const { token } = savedUser?.body;
+    expect(savedUser?.body.verified).toEqual(false);
+
+    const { _id, token } = savedUser?.body;
 
     // make sure user can't actually log in without verification
     const notLoggedIn = await agent?.post("/api/users/login").send(user2Info);
@@ -99,6 +100,8 @@ describe("User API Tests", () => {
     // attempt to authenticate
     const auth3 = await agent?.get("/api/users/authenticate");
     expect(auth3?.body.authenticated).toEqual(false);
+    // cleanup
+    await deleteUser(_id);
   });
 
   it("Should delete a user", async () => {
@@ -107,7 +110,7 @@ describe("User API Tests", () => {
     await agent?.get(`/api/users/verify/${user1?.body.token}`);
     const user2 = await agent?.post("/api/users").send(user4Info);
     await agent?.get(`/api/users/verify/${user2?.body.token}`);
-
+    
     // log in as user1, attempt to delete user2
     await agent?.post("/api/users/login").send(user3Info);
     const deleteRes1 = await agent?.delete(`/api/users/${user2?.body._id}`);
@@ -122,5 +125,6 @@ describe("User API Tests", () => {
     // make sure user1 can't log back in
     const loggedInRes = await agent?.post("/api/users/login").send(user3Info);
     expect(loggedInRes?.status).toEqual(401);
+    await deleteUser(user2?.body);
   });
 });

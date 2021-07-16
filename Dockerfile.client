@@ -1,5 +1,0 @@
-FROM node:10.9.0
-
-COPY client-entrypoint.sh /home
-
-RUN chmod +x /home/client-entrypoint.sh
