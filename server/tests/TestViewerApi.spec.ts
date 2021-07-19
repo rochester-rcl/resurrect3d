@@ -5,7 +5,7 @@ import { IUserDocument } from "../src/models/User";
 import { IViewerDocument } from "../src/models/Viewer";
 import { GridFSFileModel, GridFSChunkModel } from "../src/models/GridFS";
 import ViewerModel from "../src/models/Viewer";
-import mongoose from "mongoose";
+import fs from "fs";
 
 let agent: request.SuperTest<request.Test> | null = null;
 let app: Server | null = null;
@@ -18,6 +18,8 @@ const userInfo = {
 };
 
 const threeFile = "tests/files/threefile.gz";
+const skyboxFile = "tests/files/skybox.jpg";
+const threeThumbnailFile = "tests/files/three-thumbnail.jpg";
 
 const viewerInfo: Partial<IViewer> = {
   enableLight: true,
@@ -82,6 +84,20 @@ afterAll(async () => {
   await stopApp(app as Server);
 });
 
+function readBinaryFile(
+  res: request.Response,
+  callback: (error: Error | null, data: Buffer) => void
+): void {
+  res.setEncoding("binary");
+  let hex = "";
+  res.on("data", (chunk: string) => {
+    hex += chunk;
+  });
+  res.on("end", () => {
+    callback(null, Buffer.from(hex, "binary"));
+  });
+}
+
 describe("Viewer API Tests", () => {
   it("Should create a viewer", async () => {
     expect.assertions(4);
@@ -115,5 +131,66 @@ describe("Viewer API Tests", () => {
     // make sure files are also deleted
     file = await agent?.get(`/api/files/${result.body.threeFile}`);
     expect(file?.status).toEqual(404);
+  });
+
+  it("Should be able to stream a threeFile", async () => {
+    expect.assertions(3);
+    const test = agent?.post("/api/views");
+    const result = await jsonToFormData(
+      viewerInfo,
+      test as request.Test
+    ).attach("threeFile", threeFile);
+    expect(result.status).toEqual(201);
+    // make sure file exists
+    let file = await agent
+      ?.get(`/api/files/${result.body.threeFile}`)
+      .buffer()
+      .parse(readBinaryFile);
+    expect(file?.status).toEqual(200);
+    const fileContents = fs.readFileSync(threeFile);
+    expect(file?.body).toEqual(fileContents);
+    // cleanup
+    await agent?.delete(`/api/views/${result.body._id}`);
+  });
+
+  it("Should be able to stream image files", async () => {
+    expect.assertions(9);
+    const test = agent?.post("/api/views");
+    const result = await jsonToFormData(viewerInfo, test as request.Test)
+      .attach("threeFile", threeFile)
+      .attach("skyboxFile", skyboxFile)
+      .attach("threeThumbnail", threeThumbnailFile);
+    expect(result.status).toEqual(201);
+    // make sure uuids for images are set
+    expect(result?.body.skyboxFile).toBeDefined();
+    expect(result?.body.threeThumbnail).toBeDefined();
+
+    // check thumbnail file
+    let thumbnail = await agent
+      ?.get(`/api/files/${result.body.threeThumbnail}`)
+      .buffer()
+      .parse(readBinaryFile);
+    expect(thumbnail?.status).toEqual(200);
+    const thumbnailContents = fs.readFileSync(threeThumbnailFile);
+    expect(thumbnail?.body).toEqual(thumbnailContents);
+
+    // skybox
+    let skybox = await agent
+      ?.get(`/api/files/${result.body.skyboxFile}`)
+      .buffer()
+      .parse(readBinaryFile);
+    expect(skybox?.status).toEqual(200);
+    const skyboxContents = fs.readFileSync(skyboxFile);
+    expect(skybox?.body).toEqual(skyboxContents);
+
+    // cleanup
+    await agent?.delete(`/api/views/${result.body._id}`);
+
+    // make sure all files get deleted
+    thumbnail = await agent?.get(`/api/files/${result.body.threeThumbnail}`);
+    expect(thumbnail?.status).toEqual(404);
+
+    skybox = await agent?.get(`/api/files/${result.body.skyboxFile}`);
+    expect(skybox?.status).toEqual(404);
   });
 });
