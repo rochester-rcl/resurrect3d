@@ -17,7 +17,7 @@ interface IViewerRequestFiles {
   threeFile: IReqGridFile[];
   skyboxFile?: IReqGridFile[];
   threeThumbnail?: IReqGridFile[];
-  alternateMaps?: IReqGridFile[];
+  "alternateMaps[]"?: IReqGridFile[];
   [fieldname: string]: IReqGridFile[] | undefined;
 }
 
@@ -45,7 +45,8 @@ function getFileIds(files: IViewerRequestFiles): IViewerFilenames {
     threeThumbnail:
       (files.threeThumbnail && files.threeThumbnail[0].id) || null,
     alternateMaps:
-      (files.alternateMaps && files.alternateMaps.map(m => m.id)) || null
+      (files["alternateMaps[]"] && files["alternateMaps[]"].map(m => m.id)) ||
+      null
   };
 }
 

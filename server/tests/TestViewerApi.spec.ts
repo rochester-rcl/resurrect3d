@@ -108,7 +108,7 @@ describe("Viewer API Tests", () => {
     ).attach("threeFile", threeFile);
     expect(compareSavedViewerToViewerInfo(result.body)).toEqual(true);
     expect(result.status).toEqual(201);
-    expect(result.body.threeFile).toBeDefined();
+    expect(result.body.threeFile).toBeTruthy();
     expect(result.body._id).toBeDefined();
 
     // cleanup
@@ -133,7 +133,7 @@ describe("Viewer API Tests", () => {
     expect(file?.status).toEqual(404);
   });
 
-  it("Should be able to stream a threeFile", async () => {
+  it("Should stream a threeFile", async () => {
     expect.assertions(3);
     const test = agent?.post("/api/views");
     const result = await jsonToFormData(
@@ -148,12 +148,12 @@ describe("Viewer API Tests", () => {
       .parse(readBinaryFile);
     expect(file?.status).toEqual(200);
     const fileContents = fs.readFileSync(threeFile);
-    expect(file?.body).toEqual(fileContents);
+    expect(Buffer.compare(file?.body, fileContents)).toEqual(0);
     // cleanup
     await agent?.delete(`/api/views/${result.body._id}`);
   });
 
-  it("Should be able to stream image files", async () => {
+  it("Should stream image files", async () => {
     expect.assertions(9);
     const test = agent?.post("/api/views");
     const result = await jsonToFormData(viewerInfo, test as request.Test)
@@ -162,8 +162,8 @@ describe("Viewer API Tests", () => {
       .attach("threeThumbnail", threeThumbnailFile);
     expect(result.status).toEqual(201);
     // make sure uuids for images are set
-    expect(result?.body.skyboxFile).toBeDefined();
-    expect(result?.body.threeThumbnail).toBeDefined();
+    expect(result?.body.skyboxFile).toBeTruthy();
+    expect(result?.body.threeThumbnail).toBeTruthy();
 
     // check thumbnail file
     let thumbnail = await agent
@@ -172,7 +172,7 @@ describe("Viewer API Tests", () => {
       .parse(readBinaryFile);
     expect(thumbnail?.status).toEqual(200);
     const thumbnailContents = fs.readFileSync(threeThumbnailFile);
-    expect(thumbnail?.body).toEqual(thumbnailContents);
+    expect(Buffer.compare(thumbnail?.body, thumbnailContents)).toEqual(0);
 
     // skybox
     let skybox = await agent
@@ -181,7 +181,7 @@ describe("Viewer API Tests", () => {
       .parse(readBinaryFile);
     expect(skybox?.status).toEqual(200);
     const skyboxContents = fs.readFileSync(skyboxFile);
-    expect(skybox?.body).toEqual(skyboxContents);
+    expect(Buffer.compare(skybox?.body, skyboxContents)).toEqual(0);
 
     // cleanup
     await agent?.delete(`/api/views/${result.body._id}`);
@@ -192,5 +192,59 @@ describe("Viewer API Tests", () => {
 
     skybox = await agent?.get(`/api/files/${result.body.skyboxFile}`);
     expect(skybox?.status).toEqual(404);
+  });
+
+  it("Should stream alternate maps", async () => {
+    expect.assertions(10);
+    const test = agent?.post("/api/views");
+    const result = await jsonToFormData(viewerInfo, test as request.Test)
+      .attach("threeFile", threeFile)
+      .attach("alternateMaps[]", skyboxFile)
+      .attach("alternateMaps[]", threeThumbnailFile);
+    expect(result.status).toEqual(201);
+    // make sure uuids for images are set
+    expect(result?.body.alternateMaps).toBeTruthy();
+    expect(result?.body.alternateMaps.length).toEqual(2);
+
+    // fetch both alternate maps
+    let alternate1 = await agent
+      ?.get(`/api/files/${result.body.alternateMaps[0]}`)
+      .buffer()
+      .parse(readBinaryFile);
+
+    let alternate2 = await agent
+      ?.get(`/api/files/${result.body.alternateMaps[1]}`)
+      .buffer()
+      .parse(readBinaryFile);
+
+    expect(alternate1?.status).toEqual(200);
+    expect(alternate2?.status).toEqual(200);
+
+    // make sure both files aren't the same
+    expect(alternate1?.body).not.toEqual(alternate2?.body);
+
+    // make sure the content matches the files
+    const alternate1Content = fs.readFileSync(skyboxFile);
+    const alternate2Content = fs.readFileSync(threeThumbnailFile);
+    const alternateMapData = [alternate1Content, alternate2Content]; // in case order isn't maintained
+
+    const alternate1DataMatch = alternateMapData.some(
+      data => Buffer.compare(alternate1?.body, data) === 0
+    );
+    const alternate2DataMatch = alternateMapData.some(
+      data => Buffer.compare(alternate2?.body, data) === 0
+    );
+    expect(alternate1DataMatch).toBe(true);
+    expect(alternate2DataMatch).toBe(true);
+
+    // cleanup
+    await agent?.delete(`/api/views/${result.body._id}`);
+
+    // make sure alternate maps are deleted
+    alternate1 = await agent?.get(`/api/files/${result.body.alternateMaps[0]}`);
+    alternate2 = await agent?.get(`/api/files/${result.body.alternateMaps[1]}`);
+
+    expect(alternate1?.status).toEqual(404);
+    expect(alternate2?.status).toEqual(404);
   });
 });
