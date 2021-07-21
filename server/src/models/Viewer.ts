@@ -83,6 +83,7 @@ export const ViewerSchema = new Schema<IViewerDocument>({
     type: Object,
     required: false
   },
+
   createdBy: {
     type: Schema.Types.ObjectId,
     ref: "User"

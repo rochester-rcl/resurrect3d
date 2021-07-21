@@ -12,9 +12,23 @@ interface IViewer {
   displayName?: string;
   skyboxFile: string | null;
   alternateMaps: string[] | null;
-  [key: string]: string | boolean | string[] | null | undefined;
+  viewerSettings?: IViewerSettings | null;
+  [key: string]:
+    | IViewerSettings
+    | string
+    | boolean
+    | string[]
+    | null
+    | undefined;
 }
 
-interface IViewerRequestData extends Omit<IViewer, "alternateMaps"> {
+// Can refine this type further once we settle on all settings
+interface IViewerSettings {
+  [key: string]: any;
+}
+
+interface IViewerRequestData
+  extends Omit<IViewer, "alternateMaps, viewerSettings"> {
   alternateMaps: string | null; // serialized json array
+  viewerSettings: string | null; // serialized json object
 }

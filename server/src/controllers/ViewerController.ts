@@ -64,6 +64,19 @@ function getFileIds(
   };
 }
 
+function getViewerSettings(
+  viewerReq: Partial<IViewerRequestData>
+): IViewerSettings | null {
+  if (viewerReq.viewerSettings) {
+    try {
+      return JSON.parse(viewerReq.viewerSettings);
+    } catch (error) {
+      return null;
+    }
+  }
+  return null;
+}
+
 function getFilesToDelete(
   viewer: IViewerDocument,
   filenames: IViewerFilenames
@@ -113,8 +126,13 @@ export async function createViewer(
   if (!req.files) {
     return errorResponse({ message: "Request has no files set" }, 400);
   }
+  const viewerSettings = getViewerSettings(req.body);
   const filenames = getFileIds(req.body, req.files as IViewerRequestFiles);
-  const viewerData = { ...req.body, ...filenames } as IViewerDocument;
+  const viewerData = {
+    ...req.body,
+    ...filenames,
+    viewerSettings
+  } as IViewerDocument;
   return await create(viewerData);
 }
 
@@ -154,13 +172,15 @@ export async function updateViewer(
         viewerData,
         req.files as IViewerRequestFiles
       );
+      const viewerSettings = getViewerSettings(viewerData);
       const updated = {
         ...viewerData,
         ...filenames,
         threeFile:
           record.threeFile && !filenames.threeFile
             ? record.threeFile
-            : filenames.threeFile
+            : filenames.threeFile,
+        viewerSettings
       };
       const toDelete = getFilesToDelete(record, filenames);
       const saved = await updateRecord(updated, record);

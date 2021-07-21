@@ -256,6 +256,51 @@ describe("Viewer API Tests", () => {
     expect(alternate2?.status).toEqual(404);
   });
 
+  it("Should save and update viewer settings", async () => {
+    expect.assertions(7);
+    const test = agent?.post("/api/views");
+    const result = await jsonToFormData(
+      { ...viewerInfo, viewerSettings: JSON.stringify({ aKey: "a value" }) },
+
+      test as request.Test
+    ).attach("threeFile", threeFile);
+
+    expect(result.status).toEqual(201);
+    expect(result?.body.viewerSettings).toBeDefined();
+    expect(result?.body.viewerSettings.aKey).toEqual("a value");
+
+    // update viewer settings
+    const updateTest = agent?.put(`/api/views/${result?.body._id}`);
+    const updated = await jsonToFormData(
+      {
+        ...viewerInfo2,
+        viewerSettings: JSON.stringify({
+          aKey: "a different value",
+          anotherKey: "another value"
+        })
+      },
+      updateTest as request.Test
+    );
+
+    expect(updated?.body.threeFile).toBeDefined();
+    expect(updated?.body.viewerSettings.aKey).toEqual("a different value");
+    expect(updated?.body.viewerSettings.anotherKey).toEqual("another value");
+
+    const updateTest2 = agent?.put(`/api/views/${result?.body._id}`);
+    const updated2 = await jsonToFormData(
+      {
+        ...viewerInfo2,
+        viewerSettings: null
+      },
+      updateTest2 as request.Test
+    );
+
+    expect(updated2?.body.viewerSettings).toEqual(null);
+
+    // cleanup
+    await deleteViewer(result.body);
+  });
+
   it("Should update a viewer", async () => {
     expect.assertions(6);
     const test = agent?.post("/api/views");
