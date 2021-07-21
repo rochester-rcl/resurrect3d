@@ -26,12 +26,15 @@ interface IRecordHelper<T extends ResurrectDocument> {
   create: (data: Partial<T>) => Promise<DocumentResponse<T> | ErrorResponse>;
   get(id: string): Promise<DocumentResponse<T> | ErrorResponse>;
   get(): Promise<MultiDocumentResponse<T>>;
-  update: (doc: T) => Promise<DocumentResponse<T> | ErrorResponse>;
+  update: (
+    fields: Partial<T>,
+    doc: T
+  ) => Promise<DocumentResponse<T> | ErrorResponse>;
   expunge: (id: string) => Promise<Response<void> | ErrorResponse>;
   findRecords: (fq: FilterQuery<T>) => Promise<T[]>;
   findRecord: (fq: FilterQuery<T>) => Promise<T | null>;
   addRecord: (data: Partial<T>) => Promise<T>;
-  updateRecord: (doc: T) => Promise<T>;
+  updateRecord: (fields: Partial<T>, doc: T) => Promise<T>;
   deleteRecord(id: string): Promise<boolean>;
   deleteRecord(fq: FilterQuery<T>): Promise<boolean>;
   deleteRecords(ids: string[]): Promise<boolean>;
@@ -79,7 +82,8 @@ export function recordHelper<T extends ResurrectDocument>(
     return model.create(data);
   }
 
-  function updateRecord(doc: T): Promise<T> {
+  function updateRecord(fields: Partial<T>, doc: T): Promise<T> {
+    Object.assign(doc, fields);
     return doc.save() as Promise<T>;
   }
 
@@ -122,15 +126,15 @@ export function recordHelper<T extends ResurrectDocument>(
   }
 
   function update(
+    fields: Partial<T>,
     doc: T,
     successStatus: number = 200,
     errorStatus: number = 500
   ): Promise<DocumentResponse<T> | ErrorResponse> {
-    return doc
-      .save()
-      .then((updated: ResurrectDocument) =>
-        successResponse(updated as T, successStatus)
-      )
+    return updateRecord(fields, doc)
+      .then((updated: ResurrectDocument) => {
+        return successResponse(updated as T, successStatus);
+      })
       .catch(({ message }: Error) => errorResponse({ message }, errorStatus));
   }
 

@@ -32,12 +32,7 @@ export async function updateAnnotation(
     recordHelper<IAnnotationDocument>(AnnotationModel, res);
   const record = await findRecord({ _id: id });
   if (record !== null) {
-    const updated = {
-      ...record,
-      ...annotationData,
-      saveStatus: "SAVED"
-    } as IAnnotationDocument;
-    return await update(updated);
+    return await update(annotationData, record);
   }
   return errorResponse({ message: `Annotation with id ${id} not found.` }, 404);
 }

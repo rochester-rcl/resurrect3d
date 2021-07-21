@@ -43,7 +43,7 @@ export async function createUser(
       ...info,
       password: hash,
       token: token,
-      verified: NODE_ENV === "production" || "test" ? false : true
+      verified: NODE_ENV === "production" || NODE_ENV === "test" ? false : true
     });
     if (process.env.NODE_ENV === "production") {
       // send email
@@ -85,8 +85,7 @@ export async function updateUser(
   );
   const record = await findRecord({ _id: id });
   if (record !== null) {
-    const updated = { ...record, ...userData } as IUserDocument;
-    return await update(updated);
+    return await update(userData, record);
   }
   return errorResponse({ message: `User with id ${id} not found.` }, 404);
 }
@@ -124,8 +123,7 @@ export async function verifyUser(
   const { token } = req.params;
   const record = await findRecord({ token });
   if (record !== null) {
-    record.verified = true;
-    return await update(record);
+    return await update({ verified: true }, record);
   }
   return errorResponse(
     { message: `Could not find an account for token ${token}.` },

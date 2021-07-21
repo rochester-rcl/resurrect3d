@@ -14,3 +14,7 @@ interface IViewer {
   alternateMaps: string[] | null;
   [key: string]: string | boolean | string[] | null | undefined;
 }
+
+interface IViewerRequestData extends Omit<IViewer, "alternateMaps"> {
+  alternateMaps: string | null; // serialized json array
+}

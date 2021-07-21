@@ -66,7 +66,7 @@ services:
       - ./server:/home/node/working
     environment:
       MONGO_TEST_URL: "mongodb://testdb_root:test@mongo-test:27017/admin"
-      NODE_ENV: "development"
+      NODE_ENV: "test"
       EMAIL_USERNAME: "testuser"
       EMAIL_PASSWORD: "password"
       EMAIL_SERVICE: "fakemail"

@@ -6,6 +6,7 @@ import { IViewerDocument } from "../src/models/Viewer";
 import { GridFSFileModel, GridFSChunkModel } from "../src/models/GridFS";
 import ViewerModel from "../src/models/Viewer";
 import fs from "fs";
+import { parse } from "superagent";
 
 let agent: request.SuperTest<request.Test> | null = null;
 let app: Server | null = null;
@@ -18,6 +19,7 @@ const userInfo = {
 };
 
 const threeFile = "tests/files/threefile.gz";
+const threeFile2 = "tests/files/threefile2.gz";
 const skyboxFile = "tests/files/skybox.jpg";
 const threeThumbnailFile = "tests/files/three-thumbnail.jpg";
 
@@ -35,6 +37,20 @@ const viewerInfo: Partial<IViewer> = {
   alternateMaps: null
 };
 
+const viewerInfo2: Partial<IViewer> = {
+  enableLight: false,
+  enableMaterials: false,
+  enableShaders: false,
+  enableMeasurement: false,
+  enableAnnotations: false,
+  enableDownload: false,
+  enableEmbed: false,
+  modelUnits: "IN",
+  threeThumbnail: null,
+  skyboxFile: null,
+  alternateMaps: null
+};
+
 function jsonToFormData(
   body: { [key: string]: any },
   test: request.Test
@@ -47,8 +63,11 @@ function jsonToFormData(
   return test;
 }
 
-function compareSavedViewerToViewerInfo(viewer: IViewerDocument): boolean {
-  return Object.keys(viewerInfo).every(key => viewerInfo[key] === viewer[key]);
+function compareSavedViewerToViewerInfo(
+  info: Partial<IViewer>,
+  viewer: IViewerDocument
+): boolean {
+  return Object.keys(info).every(key => info[key] === viewer[key]);
 }
 
 async function deleteViewer(viewer: IViewerDocument): Promise<void> {
@@ -84,20 +103,6 @@ afterAll(async () => {
   await stopApp(app as Server);
 });
 
-function readBinaryFile(
-  res: request.Response,
-  callback: (error: Error | null, data: Buffer) => void
-): void {
-  res.setEncoding("binary");
-  let hex = "";
-  res.on("data", (chunk: string) => {
-    hex += chunk;
-  });
-  res.on("end", () => {
-    callback(null, Buffer.from(hex, "binary"));
-  });
-}
-
 describe("Viewer API Tests", () => {
   it("Should create a viewer", async () => {
     expect.assertions(4);
@@ -106,7 +111,10 @@ describe("Viewer API Tests", () => {
       viewerInfo,
       test as request.Test
     ).attach("threeFile", threeFile);
-    expect(compareSavedViewerToViewerInfo(result.body)).toEqual(true);
+
+    expect(compareSavedViewerToViewerInfo(viewerInfo, result.body)).toEqual(
+      true
+    );
     expect(result.status).toEqual(201);
     expect(result.body.threeFile).toBeTruthy();
     expect(result.body._id).toBeDefined();
@@ -145,7 +153,7 @@ describe("Viewer API Tests", () => {
     let file = await agent
       ?.get(`/api/files/${result.body.threeFile}`)
       .buffer()
-      .parse(readBinaryFile);
+      .parse(parse.image);
     expect(file?.status).toEqual(200);
     const fileContents = fs.readFileSync(threeFile);
     expect(Buffer.compare(file?.body, fileContents)).toEqual(0);
@@ -169,7 +177,7 @@ describe("Viewer API Tests", () => {
     let thumbnail = await agent
       ?.get(`/api/files/${result.body.threeThumbnail}`)
       .buffer()
-      .parse(readBinaryFile);
+      .parse(parse.image);
     expect(thumbnail?.status).toEqual(200);
     const thumbnailContents = fs.readFileSync(threeThumbnailFile);
     expect(Buffer.compare(thumbnail?.body, thumbnailContents)).toEqual(0);
@@ -178,7 +186,7 @@ describe("Viewer API Tests", () => {
     let skybox = await agent
       ?.get(`/api/files/${result.body.skyboxFile}`)
       .buffer()
-      .parse(readBinaryFile);
+      .parse(parse.image);
     expect(skybox?.status).toEqual(200);
     const skyboxContents = fs.readFileSync(skyboxFile);
     expect(Buffer.compare(skybox?.body, skyboxContents)).toEqual(0);
@@ -210,12 +218,12 @@ describe("Viewer API Tests", () => {
     let alternate1 = await agent
       ?.get(`/api/files/${result.body.alternateMaps[0]}`)
       .buffer()
-      .parse(readBinaryFile);
+      .parse(parse.image);
 
     let alternate2 = await agent
       ?.get(`/api/files/${result.body.alternateMaps[1]}`)
       .buffer()
-      .parse(readBinaryFile);
+      .parse(parse.image);
 
     expect(alternate1?.status).toEqual(200);
     expect(alternate2?.status).toEqual(200);
@@ -246,5 +254,176 @@ describe("Viewer API Tests", () => {
 
     expect(alternate1?.status).toEqual(404);
     expect(alternate2?.status).toEqual(404);
+  });
+
+  it("Should update a viewer", async () => {
+    expect.assertions(6);
+    const test = agent?.post("/api/views");
+    const result = await jsonToFormData(
+      viewerInfo,
+      test as request.Test
+    ).attach("threeFile", threeFile);
+    expect(compareSavedViewerToViewerInfo(viewerInfo, result?.body)).toEqual(
+      true
+    );
+    expect(result.status).toEqual(201);
+
+    // update the viewer
+    const updateTest = agent?.put(`/api/views/${result?.body._id}`);
+    const updated = await jsonToFormData(
+      viewerInfo2,
+      updateTest as request.Test
+    ).attach("threeFile", threeFile2);
+
+    expect(updated?.status).toEqual(200);
+    // superagent does not let you pass null / false as FormData fields so we can only check files and modelUnits
+    expect(updated?.body.modelUnits).toEqual(viewerInfo2.modelUnits);
+    expect(updated?.body.threeFile).not.toEqual(result?.body.threeFile);
+    // make sure updated threefile matches
+    let updatedFile = await agent
+      ?.get(`/api/files/${updated?.body.threeFile}`)
+      .buffer()
+      .parse(parse.image);
+    const updatedFileContents = fs.readFileSync(threeFile2);
+    expect(Buffer.compare(updatedFile?.body, updatedFileContents)).toEqual(0);
+
+    // cleanup
+    await deleteViewer(result?.body);
+  });
+
+  it("Should update images", async () => {
+    expect.assertions(8);
+    const test = agent?.post("/api/views");
+    const result = await jsonToFormData(viewerInfo, test as request.Test)
+      .attach("threeFile", threeFile)
+      .attach("threeThumbnail", threeThumbnailFile);
+    expect(result.status).toEqual(201);
+
+    // update the viewer
+    const updateTest = agent?.put(`/api/views/${result?.body._id}`);
+    const updated = await jsonToFormData(
+      viewerInfo2,
+      updateTest as request.Test
+    ).attach("threeThumbnail", skyboxFile);
+
+    expect(updated?.status).toEqual(200);
+    // superagent does not let you pass null / false as FormData fields so we can only check files and modelUnits
+    expect(updated?.body.threeThumbnail).not.toEqual(
+      result?.body.threeThumbnail
+    );
+    // make sure updated thumbnail matches
+    let updatedFile = await agent
+      ?.get(`/api/files/${updated?.body.threeThumbnail}`)
+      .buffer()
+      .parse(parse.image);
+    const updatedFileContents = fs.readFileSync(skyboxFile);
+    expect(Buffer.compare(updatedFile?.body, updatedFileContents)).toEqual(0);
+
+    // add a skybox
+    const updateTest2 = agent?.put(`/api/views/${result?.body._id}`);
+    const updated2 = await jsonToFormData(
+      { ...viewerInfo2, threeThumbnail: updated?.body.threeThumbnail },
+      updateTest2 as request.Test
+    ).attach("skyboxFile", skyboxFile);
+
+    expect(updated2?.status).toEqual(200);
+    // superagent does not let you pass null / false as FormData fields so we can only check files and modelUnits
+    expect(updated2?.body.threeThumbnail).toEqual(updated?.body.threeThumbnail);
+    expect(updated2?.body.skyboxFile).toBeTruthy();
+
+    // make sure updated skybox matches
+    let updatedFile2 = await agent
+      ?.get(`/api/files/${updated2?.body.skyboxFile}`)
+      .buffer()
+      .parse(parse.image);
+    expect(Buffer.compare(updatedFile2?.body, updatedFileContents)).toEqual(0);
+
+    // cleanup
+    await deleteViewer(result?.body);
+  });
+
+  it("Should update alternateMaps", async () => {
+    expect.assertions(11);
+    const test = agent?.post("/api/views");
+    const result = await jsonToFormData(viewerInfo, test as request.Test)
+      .attach("threeFile", threeFile)
+      .attach("alternateMaps[]", skyboxFile);
+    expect(result.status).toEqual(201);
+
+    // add another alternate map
+    const updateTest = agent?.put(`/api/views/${result?.body._id}`);
+    const updated = await jsonToFormData(
+      {
+        ...viewerInfo2,
+        alternateMaps: JSON.stringify(result?.body.alternateMaps)
+      },
+      updateTest as request.Test
+    ).attach("alternateMaps[]", threeThumbnailFile);
+
+    expect(updated?.status).toEqual(200);
+    expect(updated?.body.alternateMaps.length).toEqual(2);
+
+    // fetch both alternate maps
+    const alternate1 = await agent
+      ?.get(`/api/files/${updated?.body.alternateMaps[0]}`)
+      .buffer()
+      .parse(parse.image);
+
+    const alternate2 = await agent
+      ?.get(`/api/files/${updated?.body.alternateMaps[1]}`)
+      .buffer()
+      .parse(parse.image);
+
+    expect(alternate1?.status).toEqual(200);
+    expect(alternate2?.status).toEqual(200);
+
+    // make sure both files aren't the same
+    expect(alternate1?.body).not.toEqual(alternate2?.body);
+
+    // make sure the content matches the files
+    const alternate1Content = fs.readFileSync(skyboxFile);
+    const alternate2Content = fs.readFileSync(threeThumbnailFile);
+    const alternateMapData = [alternate1Content, alternate2Content]; // in case order isn't maintained
+
+    const alternate1DataMatch = alternateMapData.some(
+      data => Buffer.compare(alternate1?.body, data) === 0
+    );
+    const alternate2DataMatch = alternateMapData.some(
+      data => Buffer.compare(alternate2?.body, data) === 0
+    );
+    expect(alternate1DataMatch).toEqual(true);
+    expect(alternate2DataMatch).toEqual(true);
+
+    // delete an alternate map
+    const update2Test = agent?.put(`/api/views/${result?.body._id}`);
+    const updated2 = await jsonToFormData(
+      {
+        ...viewerInfo2,
+        alternateMaps: JSON.stringify([updated.body.alternateMaps[0]])
+      },
+      update2Test as request.Test
+    );
+
+    expect(updated2?.body.alternateMaps.length).toEqual(1);
+
+    // make sure deleted map no longer exists
+    const alternate3 = await agent
+      ?.get(`/api/files/${updated2?.body.alternateMaps[0]}`)
+      .buffer()
+      .parse(parse.image);
+
+    const alternate3DataMatch = alternateMapData.some(
+      data => Buffer.compare(alternate3?.body, data) === 0
+    );
+    expect(alternate3DataMatch).toEqual(true);
+
+    const alternate4 = await agent?.get(
+      `/api/files/${updated?.body.alternateMaps[1]}`
+    );
+
+    expect(alternate4?.status).toEqual(404);
+
+    // cleanup
+    await deleteViewer(result?.body);
   });
 });

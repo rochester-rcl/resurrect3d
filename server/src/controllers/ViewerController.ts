@@ -34,19 +34,33 @@ type ViewerResponseWithError =
   | MultiDocumentResponse<IViewerDocument>
   | ErrorResponse;
 
-function getFileIds(files: IViewerRequestFiles): IViewerFilenames {
-  // only threeFile is required
-  if (!files.threeFile) {
-    throw new Error("threeFile is not set on request.files");
+function getFileIds(
+  viewerData: Partial<IViewerRequestData>,
+  files: IViewerRequestFiles
+): IViewerFilenames {
+  function getAlternateMaps(): string[] | null {
+    // deserialize alternate maps data
+    const viewerAlternateMaps = viewerData.alternateMaps
+      ? JSON.parse(viewerData.alternateMaps)
+      : [];
+    const filesAlternateMaps = files["alternateMaps[]"]
+      ? files["alternateMaps[]"].map(am => am.id)
+      : [];
+    const allMaps = viewerAlternateMaps.concat(filesAlternateMaps);
+    return allMaps.length > 0 ? allMaps : null;
   }
+
   return {
-    threeFile: files.threeFile[0].id,
-    skyboxFile: (files.skyboxFile && files.skyboxFile[0].id) || null,
+    threeFile: (files.threeFile && files.threeFile[0].id) || null,
+    skyboxFile:
+      (files.skyboxFile && files.skyboxFile[0].id) ||
+      viewerData.skyboxFile ||
+      null,
     threeThumbnail:
-      (files.threeThumbnail && files.threeThumbnail[0].id) || null,
-    alternateMaps:
-      (files["alternateMaps[]"] && files["alternateMaps[]"].map(m => m.id)) ||
-      null
+      (files.threeThumbnail && files.threeThumbnail[0].id) ||
+      viewerData.threeThumbnail ||
+      null,
+    alternateMaps: getAlternateMaps()
   };
 }
 
@@ -71,6 +85,10 @@ function getFilesToDelete(
       }
     } else {
       if (viewer[key] !== null && viewer[key] !== filenames[key]) {
+        // special case for threeFile, it cannot be deleted when updating
+        if (key === "threeFile" && filenames[key] === null) {
+          continue;
+        }
         toDelete.push(viewer[key] as string);
       }
     }
@@ -95,7 +113,7 @@ export async function createViewer(
   if (!req.files) {
     return errorResponse({ message: "Request has no files set" }, 400);
   }
-  const filenames = getFileIds(req.files as IViewerRequestFiles);
+  const filenames = getFileIds(req.body, req.files as IViewerRequestFiles);
   const viewerData = { ...req.body, ...filenames } as IViewerDocument;
   return await create(viewerData);
 }
@@ -122,23 +140,30 @@ export async function updateViewer(
   res: Response,
   grid: GridFSBucket
 ): Promise<ViewerResponseWithError> {
-  const viewerData: IViewer = req.body;
+  const viewerData: IViewerRequestData = req.body;
   const { id } = req.params;
   const { findRecord, updateRecord, successResponse, errorResponse } =
     recordHelper<IViewerDocument>(ViewerModel, res);
   const { deleteFiles } = gridHelper(grid, res);
 
   const record = await findRecord({ _id: id });
+
   if (record !== null) {
     try {
-      const filenames = getFileIds(req.files as IViewerRequestFiles);
+      const filenames = getFileIds(
+        viewerData,
+        req.files as IViewerRequestFiles
+      );
       const updated = {
-        ...record,
-        ...{ ...viewerData, ...filenames }
-      } as IViewerDocument;
-      const saved = await updateRecord(updated);
-      // delete old files
+        ...viewerData,
+        ...filenames,
+        threeFile:
+          record.threeFile && !filenames.threeFile
+            ? record.threeFile
+            : filenames.threeFile
+      };
       const toDelete = getFilesToDelete(record, filenames);
+      const saved = await updateRecord(updated, record);
       const deleteStatus = await deleteFiles(toDelete);
       return deleteStatus
         ? successResponse(saved)
