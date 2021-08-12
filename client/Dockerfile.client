@@ -4,6 +4,6 @@ WORKDIR /home/node/working
 
 COPY package*.json ./
 
-RUN npm install -g
+RUN npm install
 
 ENTRYPOINT [ "npm", "start" ]

@@ -4,4 +4,4 @@ WORKDIR /home/node/working
 
 COPY package*.json ./
 
-RUN npm -g install
+RUN npm install

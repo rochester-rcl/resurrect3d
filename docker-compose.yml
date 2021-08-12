@@ -43,6 +43,7 @@ services:
     working_dir: /home/node/working
     volumes:
       - ./server:/home/node/working
+      - /home/node/working/node_modules
     environment:
       MONGO_URL: "mongodb://resurrectdb_root:resurrectdb@resurrect-mongo:27017/admin"
       NODE_ENV: "development"
@@ -64,6 +65,7 @@ services:
     working_dir: /home/node/working
     volumes:
       - ./server:/home/node/working
+      - /home/node/working/node_modules
     environment:
       MONGO_TEST_URL: "mongodb://testdb_root:test@mongo-test:27017/admin"
       NODE_ENV: "test"
@@ -84,6 +86,7 @@ services:
     working_dir: /home/node/working
     volumes:
       - ./client:/home/node/working
+      - /home/node/working/node_modules
     environment:
       NODE_ENV: "development"
     depends_on:
