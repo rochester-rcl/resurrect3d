@@ -16,6 +16,7 @@ import { changeAnnotationFocus } from "../actions/AnnotationActions";
 
 // Components
 import ThreeView from "../components/ThreeView";
+import Scene from "../components/ThreeViewFiber";
 import LoaderModal from "../components/LoaderModal";
 import EmbedModePlayButton from "../components/EmbedModePlayButton";
 
@@ -133,6 +134,7 @@ class ThreeContainer extends Component {
           localAssets={this.props.localAssets}
           changeAnnotationFocus={this.props.changeAnnotationFocus}
           embedded={this.props.embedded}
+          
         />
       );
     } else {
@@ -155,7 +157,21 @@ class ThreeContainer extends Component {
     }
   }
 }
-
+/*       <Scene props={mesh, texture}/>   <ThreeView
+          skyboxTexture={texture}
+          mesh={mesh}
+          alternateMaps = {alternateMaps}
+          renderDoubleSided={true}
+          info={metadata}
+          options={options}
+          onSave={saveViewerSettings}
+          saveStatus={saveStatus}
+          loggedIn={user.loggedIn}
+          threeViewId={viewerId}
+          localAssets={this.props.localAssets}
+          changeAnnotationFocus={this.props.changeAnnotationFocus}
+          embedded={this.props.embedded}
+        />*/
 function mapStateToProps(state: Object): Object {
   return {
     mesh: state.ui.mesh,

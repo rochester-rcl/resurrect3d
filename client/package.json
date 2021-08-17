@@ -11,8 +11,8 @@
   "dependencies": {
     "@material-ui/core": "^4.11.0",
     "@material-ui/icons": "^3.0.2",
+    "@react-three/drei": "^7.4.0",
     "@react-three/fiber": "^7.0.4",
-    "@reach-three/drei": "^7.4.0",
     "babel-polyfill": "^6.26.0",
     "chevrotain": "^7.0.0",
     "history": "^4.10.1",

@@ -27,8 +27,8 @@ function Scene(){
     const {mesh, texture} = this.props
     return(
         <Canvas>
-            <Skybox/>
-            <Mesh/>
+            <Skybox props={texture}/>
+            <Mesh props={mesh}/>
         </Canvas>
     )
 }
