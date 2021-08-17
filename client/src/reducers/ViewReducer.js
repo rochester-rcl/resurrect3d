@@ -29,6 +29,7 @@ export default function(state = initialState, action){
       }
 
     case ActionConstants.VIEWS_LOADED:
+      console.log("here");
       return {
         ...state,
         views: action.views,

@@ -131,6 +131,7 @@ export async function createViewer(
   const viewerData = {
     ...req.body,
     ...filenames,
+    createdBy: req.user.id,
     viewerSettings
   } as IViewerDocument;
   return await create(viewerData);
@@ -149,8 +150,9 @@ export async function getViewers(
   req: Request,
   res: Response
 ): Promise<ViewerResponseWithError> {
+  console.log(req.user);
   const { get } = recordHelper<IViewerDocument>(ViewerModel, res);
-  return await get();
+  return await get({ createdBy: req.user.id });
 }
 
 export async function updateViewer(

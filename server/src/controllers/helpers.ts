@@ -25,6 +25,7 @@ export type MultiDocumentResponse<T extends ResurrectDocument> = Response<T[]>;
 interface IRecordHelper<T extends ResurrectDocument> {
   create: (data: Partial<T>) => Promise<DocumentResponse<T> | ErrorResponse>;
   get(id: string): Promise<DocumentResponse<T> | ErrorResponse>;
+  get(fq: FilterQuery<T>): Promise<MultiDocumentResponse<T>>;
   get(): Promise<MultiDocumentResponse<T>>;
   update: (
     fields: Partial<T>,
@@ -65,7 +66,7 @@ export function recordHelper<T extends ResurrectDocument>(
     status?: number
   ): DocumentResponse<T> | MultiDocumentResponse<T> {
     let s = status || 200;
-    return res.status(s).send(doc);
+    return res.status(s).json(doc);
   }
 
   function findRecords(fq: FilterQuery<T>): Promise<T[]> {
@@ -146,17 +147,17 @@ export function recordHelper<T extends ResurrectDocument>(
     );
   }
 
-  function get(id: string): Promise<DocumentResponse<T> | ErrorResponse>;
-  function get(): Promise<MultiDocumentResponse<T>>;
+  function get(query: string): Promise<DocumentResponse<T> | ErrorResponse>;
+  function get(query: FilterQuery<T>): Promise<MultiDocumentResponse<T>>;
   function get(
-    id?: string
+    query: string | FilterQuery<T>
   ): Promise<DocumentResponse<T> | MultiDocumentResponse<T> | ErrorResponse> {
-    if (id !== undefined) {
-      return findRecord({ _id: id } as FilterQuery<T>).then(
+    if (typeof query === "string") {
+      return findRecord({ _id: query } as FilterQuery<T>).then(
         (result: T | null) => {
           if (!result) {
             return errorResponse(
-              { message: `Document with id ${id} not found` },
+              { message: `Document with id ${query} not found` },
               404
             );
           } else {
@@ -165,7 +166,7 @@ export function recordHelper<T extends ResurrectDocument>(
         }
       );
     } else {
-      return findRecords({ _id: id } as FilterQuery<T>).then((results: T[]) =>
+      return findRecords(query).then((results: T[]) =>
         successResponse(results, 200)
       );
     }

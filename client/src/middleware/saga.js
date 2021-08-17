@@ -17,7 +17,7 @@ import {
   WORKER_PROGRESS,
   GZIP_EXT,
   OBJ_EXT,
-  VRML_EXT,
+  VRML_EXT
 } from "../constants/application";
 import {
   USER_LOGGED_IN,
@@ -26,7 +26,7 @@ import {
   AUTHENTICATE_ATTEMPTED,
   LOGOUT_USER,
   USER_LOGGED_OUT,
-  USER_DELETED,
+  USER_DELETED
 } from "../constants/actions";
 
 import threeViewerBackendFactory from "./backends/threeViewerBackendFactory";
@@ -93,7 +93,7 @@ function* getThreeAssetSaga(
       if (metadata) {
         yield put({
           type: ActionConstants.THREE_METADATA_LOADED,
-          metadata: metadata,
+          metadata: metadata
         });
       }
     } else {
@@ -106,7 +106,7 @@ function* getThreeAssetSaga(
       ext: ext,
       fileId: asset.threeFile,
       id: id,
-      embedded: getThreeAssetAction.embedded,
+      embedded: getThreeAssetAction.embedded
     });
     yield put({ type: ActionConstants.THREE_ASSET_LOADED, threeAsset: asset });
   } catch (error) {
@@ -169,20 +169,20 @@ function getActionType(payload: Object): string {
 }
 
 function createWorkerProgressChannel(worker: Object, loaderType: string) {
-  return eventChannel((emit) => {
+  return eventChannel(emit => {
     worker.onmessage = (event: MessageEvent) => {
       const { data } = event;
       if (data.type === WORKER_PROGRESS) {
         emit({
           eventType: "progress",
           val: data.payload,
-          loaderType: loaderType,
+          loaderType: loaderType
         });
       } else {
         emit({
           eventType: "loaded",
           val: data.payload,
-          loaderType: loaderType,
+          loaderType: loaderType
         });
         emit(END);
       }
@@ -199,7 +199,7 @@ function createLoadProgressChannel(
   loaderType: string,
   url
 ): void {
-  return eventChannel((emit) => {
+  return eventChannel(emit => {
     loader.load(
       url,
       (payload: Object) => {
@@ -210,7 +210,7 @@ function createLoadProgressChannel(
         emit({
           eventType: "loaded",
           val: payload,
-          loaderType: loaderType,
+          loaderType: loaderType
         });
         emit(END);
       },
@@ -219,14 +219,14 @@ function createLoadProgressChannel(
         emit({
           eventType: "progress",
           val: update,
-          loaderType: loaderType,
+          loaderType: loaderType
         });
       },
       (error: Error) => {
         emit({
           eventType: "error",
           val: error,
-          loaderType: loaderType,
+          loaderType: loaderType
         });
       }
     );
@@ -243,11 +243,11 @@ function* parseJSONMesh(meshData: Object) {
   const object3D = loader.parse(meshData);
   yield put({
     type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
-    payload: { val: "Building Scene", percent: null },
+    payload: { val: "Building Scene", percent: null }
   });
   yield put({
     type: ActionConstants.MESH_LOADED,
-    payload: { val: object3D },
+    payload: { val: object3D }
   });
 }
 
@@ -260,13 +260,13 @@ function* loadJSONMesh(loadMeshAction) {
   if (result) {
     yield put({
       type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
-      payload: { val: "Loading Mesh From Cache", percent: null },
+      payload: { val: "Loading Mesh From Cache", percent: null }
     });
     data = result.data.model.raw;
   } else {
     yield put({
       type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
-      payload: { val: "Fetching Mesh From Server", percent: null },
+      payload: { val: "Fetching Mesh From Server", percent: null }
     });
     data = yield ThreeViewerAbstractBackend.fetchJSONAssetSaga(
       id,
@@ -277,7 +277,7 @@ function* loadJSONMesh(loadMeshAction) {
   }
   yield put({
     type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
-    payload: { val: "Parsing Mesh Data", percent: null },
+    payload: { val: "Parsing Mesh Data", percent: null }
   });
   yield parseJSONMesh(data);
 }
@@ -293,7 +293,7 @@ function* loadGzippedMesh(loadMeshAction) {
   if (result) {
     yield put({
       type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
-      payload: { val: "Loading Mesh From Cache", percent: null },
+      payload: { val: "Loading Mesh From Cache", percent: null }
     });
     progressChannel = yield ThreeViewerAbstractBackend.gunzipAssetSaga(
       result.data.model.raw,
@@ -302,7 +302,7 @@ function* loadGzippedMesh(loadMeshAction) {
   } else {
     yield put({
       type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
-      payload: { val: "Fetching Mesh From Server", percent: null },
+      payload: { val: "Fetching Mesh From Server", percent: null }
     });
     progressChannel = yield ThreeViewerAbstractBackend.fetchGZippedAssetSaga(
       id,
@@ -317,7 +317,7 @@ function* loadGzippedMesh(loadMeshAction) {
     if (payload.eventType === "loaded") {
       yield put({
         type: ActionConstants.UPDATE_MESH_LOAD_PROGRESS,
-        payload: { val: "Building Scene", percent: null },
+        payload: { val: "Building Scene", percent: null }
       });
       /*
         This isn't too much of a bottleneck - it's unfortunate that ObjectLoader relies on <img> tags as we could off-load
@@ -332,8 +332,8 @@ function* loadGzippedMesh(loadMeshAction) {
         type: getActionType(payload),
         payload: {
           val: "Decompressing Mesh Data",
-          percent: payload.val,
-        },
+          percent: payload.val
+        }
       });
     }
   }
@@ -343,11 +343,8 @@ export function* loadMeshSaga(
   loadMeshAction: Object
 ): Generator<any, any, any> {
   try {
-    if (loadMeshAction.ext === GZIP_EXT) {
-      yield loadGzippedMesh(loadMeshAction);
-    } else {
-      yield loadJSONMesh(loadMeshAction);
-    }
+    // don't bother with json data anymore
+    yield loadGzippedMesh(loadMeshAction);
   } catch (error) {
     console.log(error);
   }
@@ -371,7 +368,7 @@ export function* loadTextureSaga(
       const payload = yield take(textureLoaderChannel);
       yield put({
         type: getActionType(payload),
-        payload,
+        payload
       });
     }
   } catch (error) {
@@ -419,7 +416,7 @@ function* loadLocalTextureSaga(action) {
       yield put({
         type: getActionType(payload),
         payload: payload,
-        key: action.key,
+        key: action.key
       });
     }
   } catch (error) {
@@ -483,12 +480,12 @@ function* loginSaga(loginAction: Object): Generator<any, any, any> {
       const user = yield backend.adminBackend.login(loginAction.loginInfo);
       if (user.error) {
         yield put({
-          type: LOGIN_ERROR,
+          type: LOGIN_ERROR
         });
       } else {
         yield put({
           type: USER_LOGGED_IN,
-          user: { ...user, loginError: false },
+          user: { ...user, loginError: false }
         });
       }
     } else {
@@ -535,15 +532,15 @@ export function* addThreeViewSaga(
         addThreeViewAction.viewData
       );
       yield put({
-        type: ActionConstants.VIEW_ADDED,
+        type: ActionConstants.VIEW_ADDED
       });
       const results = yield call(backend.adminBackend.getViews);
       console.log(results);
-      const objConvertedResults = yield call(arrayToObject, results.views);
+      const objConvertedResults = yield call(arrayToObject, results);
       console.log(objConvertedResults);
       yield put({
         type: ActionConstants.VIEWS_LOADED,
-        views: objConvertedResults,
+        views: objConvertedResults
       });
       // TODO add this to "views"
     } else {
@@ -560,10 +557,10 @@ export function* getThreeViewsSaga(
   try {
     if (backend.hasAdminBackend) {
       const results = yield call(backend.adminBackend.getViews);
-      const objConvertedResults = yield call(arrayToObject, results.views);
+      const objConvertedResults = yield call(arrayToObject, results);
       yield put({
         type: ActionConstants.VIEWS_LOADED,
-        views: objConvertedResults,
+        views: objConvertedResults
       });
     } else {
       console.warn(genericAPIRouteMessage);
@@ -584,7 +581,7 @@ export function* getThreeViewSaga(
       );
       yield put({
         type: ActionConstants.VIEW_LOADED,
-        view: result,
+        view: result
       });
     } else {
       console.warn(genericAPIRouteMessage);
@@ -624,11 +621,11 @@ export function* deleteThreeViewSaga(
       );
 
       const results = yield call(backend.adminBackend.getViews);
-      const objConvertedResults = yield call(arrayToObject, results.views);
+      const objConvertedResults = yield call(arrayToObject, results);
 
       yield put({
         type: ActionConstants.VIEWS_LOADED,
-        views: objConvertedResults,
+        views: objConvertedResults
       });
     } else {
       console.warn(genericAPIRouteMessage);
@@ -661,8 +658,8 @@ function* compressConvertedFile(data: Object): void {
         type: getActionType(payload),
         payload: {
           val: "Compressing Mesh Data",
-          percent: payload.val,
-        },
+          percent: payload.val
+        }
       });
     }
   }
@@ -687,8 +684,7 @@ export function* runConversionSaga(conversionAction) {
         default:
           yield put({
             type: ConverterProgress.EVENT_TYPES.CONVERSION_ERROR,
-            message: new Error(`No Converter Available for ${ext} format`)
-              .stack,
+            message: new Error(`No Converter Available for ${ext} format`).stack
           });
           break;
       }
@@ -702,7 +698,7 @@ export function* runConversionSaga(conversionAction) {
       } else {
         yield put({
           type: ActionConstants.CONVERSION_COMPLETE,
-          file: JSON.stringify(converted.threeFile),
+          file: JSON.stringify(converted.threeFile)
         });
       }
     }
@@ -710,7 +706,7 @@ export function* runConversionSaga(conversionAction) {
     console.log(error);
     yield put({
       type: ConverterProgress.EVENT_TYPES.CONVERSION_ERROR,
-      message: error.stack,
+      message: error.stack
     });
   }
 }
@@ -790,7 +786,7 @@ export function* watchForDeleteThreeView(): Generator<any, any, any> {
 // Converter
 export function* watchForConversion(): Generator<any, any, any> {
   yield takeEvery(ActionConstants.START_CONVERSION, runConversionSaga);
-} 
+}
 
 export default function* rootSaga(): Generator<any, any, any> {
   yield [
@@ -812,6 +808,6 @@ export default function* rootSaga(): Generator<any, any, any> {
     watchForUpdateThreeView(),
     watchForDeleteThreeView(),
     watchForConversion(),
-    fork(AnnotationSaga),
+    fork(AnnotationSaga)
   ];
 }
