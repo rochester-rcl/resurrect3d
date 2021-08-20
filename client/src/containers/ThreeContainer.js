@@ -120,22 +120,7 @@ class ThreeContainer extends Component {
       WEBGL_SUPPORT
     ) {
       return (
-        <ThreeView
-          skyboxTexture={texture}
-          mesh={mesh}
-          alternateMaps = {alternateMaps}
-          renderDoubleSided={true}
-          info={metadata}
-          options={options}
-          onSave={saveViewerSettings}
-          saveStatus={saveStatus}
-          loggedIn={user.loggedIn}
-          threeViewId={viewerId}
-          localAssets={this.props.localAssets}
-          changeAnnotationFocus={this.props.changeAnnotationFocus}
-          embedded={this.props.embedded}
-          
-        />
+        <Scene {...mesh} {...texture} />
       );
     } else {
       let progressStatus;

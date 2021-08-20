@@ -1,10 +1,10 @@
 import React, {} from "react"
 import {Canvas} from "@react-three/fiber"
-import {} from "@react-three/drei"
+import {Box, OrbitControls} from "@react-three/drei"
 import * as THREE from "three"
 
-function Skybox(){
-    const {texture} = this.props
+function Skybox(texture){
+
     return(
         <mesh>
         <sphereBufferGeometry attach="geometry" args={[500, 60, 40]} />
@@ -13,8 +13,8 @@ function Skybox(){
     )
 }
 
-function Mesh(){
-    const {mesh} = this.props
+function Mesh(props, mesh){
+
     return(
         <group>
             <mesh geometry={mesh.geometry}/>
@@ -23,12 +23,18 @@ function Mesh(){
     )
 }
 
-function Scene(){
-    const {mesh, texture} = this.props
+function Scene(props, mesh, texture){
+
     return(
         <Canvas>
-            <Skybox props={texture}/>
-            <Mesh props={mesh}/>
+            <ambientLight color="white"/>
+            <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
+      <pointLight position={[-10, -10, -10]} />
+
+            <Box> 
+                 <meshStandardMaterial attach="material" color="pink"/>
+            </Box>
+            <OrbitControls/>
         </Canvas>
     )
 }
