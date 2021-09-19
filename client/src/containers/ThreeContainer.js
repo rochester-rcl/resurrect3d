@@ -120,7 +120,7 @@ class ThreeContainer extends Component {
       WEBGL_SUPPORT
     ) {
       return (
-        <Scene tex={texture} object={mesh} />
+        <Scene {...mesh} {...texture} />
       );
     } else {
       let progressStatus;
