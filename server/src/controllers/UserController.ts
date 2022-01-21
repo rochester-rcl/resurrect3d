@@ -18,6 +18,7 @@ import {
 } from "./helpers";
 import UserModel, { IUserDocument } from "../models/User";
 import { FilterQuery } from "mongoose";
+import { isHttpError } from "../utils/guards";
 
 type UserDocumentResponseWithError =
   | DocumentResponse<IUserDocument>
@@ -51,7 +52,7 @@ export async function createUser(
     }
     return successResponse(rec, 201);
   } catch (error) {
-    const { message } = error;
+    const { message } = error as Error;
     return errorResponse({ message }, 500);
   }
 }
@@ -179,7 +180,7 @@ export function logout(
     req.logout();
     return res.json();
   } catch (error) {
-    const { message } = error;
+    const { message } = error as Error;
     return res.status(500).json({ message });
   }
 }
@@ -214,7 +215,7 @@ export async function localStrategy(
     }
     return done(undefined, user);
   } catch (error) {
-    return done(error);
+    return done(error as Error);
   }
 }
 
@@ -233,7 +234,7 @@ export async function bearerStrategy(
       scope: "all"
     });
   } catch (error) {
-    return done(error);
+    return done(error as Error);
   }
 }
 
@@ -262,7 +263,7 @@ export async function deserializeUser(
     }
     return done(undefined, user);
   } catch (error) {
-    return done(error);
+    return done(error as Error);
   }
 }
 
@@ -326,8 +327,12 @@ export async function login(
     await loginUser(req, user);
     return onLogin(req, res);
   } catch (error) {
-    const { message } = error;
-    const status = error.name === "HttpError" ? error.status : 401;
+    const err = error as Error | HttpError;
+    const { message } = err;
+    let status = 401;
+    if (isHttpError(err)) {
+      status = err.status;
+    }
     return res.status(status).json({ message });
   }
 }

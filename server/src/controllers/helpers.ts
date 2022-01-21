@@ -24,7 +24,7 @@ export type MultiDocumentResponse<T extends ResurrectDocument> = Response<T[]>;
 
 interface IRecordHelper<T extends ResurrectDocument> {
   create: (data: Partial<T>) => Promise<DocumentResponse<T> | ErrorResponse>;
-  get(id: string): Promise<DocumentResponse<T> | ErrorResponse>;
+  get(query: string): Promise<DocumentResponse<T> | ErrorResponse>;
   get(fq: FilterQuery<T>): Promise<MultiDocumentResponse<T>>;
   get(): Promise<MultiDocumentResponse<T>>;
   update: (
@@ -69,7 +69,7 @@ export function recordHelper<T extends ResurrectDocument>(
     return res.status(s).json(doc);
   }
 
-  function findRecords(fq: FilterQuery<T>): Promise<T[]> {
+  function findRecords(fq: FilterQuery<T> = {}): Promise<T[]> {
     const query = model.find(fq);
     return query.exec();
   }
@@ -149,9 +149,15 @@ export function recordHelper<T extends ResurrectDocument>(
 
   function get(query: string): Promise<DocumentResponse<T> | ErrorResponse>;
   function get(query: FilterQuery<T>): Promise<MultiDocumentResponse<T>>;
+  function get(): Promise<MultiDocumentResponse<T>>;
   function get(
-    query: string | FilterQuery<T>
+    query?: string | FilterQuery<T>
   ): Promise<DocumentResponse<T> | MultiDocumentResponse<T> | ErrorResponse> {
+    if (!query) {
+      return findRecords().then((results: T[]) =>
+        successResponse(results, 200)
+      );
+    }
     if (typeof query === "string") {
       return findRecord({ _id: query } as FilterQuery<T>).then(
         (result: T | null) => {

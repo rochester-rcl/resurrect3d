@@ -11,6 +11,7 @@ import ViewerModel, { IViewerDocument } from "../models/Viewer";
 import { FilterQuery } from "mongoose";
 import { GridFSFileDocument } from "../models/GridFS";
 import { GridFile } from "multer-gridfs-storage";
+import { IUserDocument } from "../models/User";
 
 interface IReqGridFile extends Express.Multer.File, GridFile {}
 interface IViewerRequestFiles {
@@ -128,10 +129,14 @@ export async function createViewer(
   }
   const viewerSettings = getViewerSettings(req.body);
   const filenames = getFileIds(req.body, req.files as IViewerRequestFiles);
+  // req.user should always be set since this is an authenticated route
+  if (!req.user) {
+    throw new Error("No user set on request");
+  }
   const viewerData = {
     ...req.body,
     ...filenames,
-    createdBy: req.user.id,
+    createdBy: (req.user as IUserDocument).id,
     viewerSettings
   } as IViewerDocument;
   return await create(viewerData);
@@ -150,9 +155,11 @@ export async function getViewers(
   req: Request,
   res: Response
 ): Promise<ViewerResponseWithError> {
-  console.log(req.user);
+  if (!req.user) {
+    throw new Error("User not set on request")
+  }
   const { get } = recordHelper<IViewerDocument>(ViewerModel, res);
-  return await get({ createdBy: req.user.id });
+  return await get({ createdBy: (req.user as IUserDocument).id });
 }
 
 export async function updateViewer(
@@ -196,7 +203,7 @@ export async function updateViewer(
             500
           );
     } catch (error) {
-      const { message } = error;
+      const { message } = error as Error;
       return errorResponse({ message }, 500);
     }
   }
@@ -234,7 +241,7 @@ export async function deleteViewer(
     }
     return res.send();
   } catch (error) {
-    const { message } = error;
+    const { message } = error as Error;
     return errorResponse({ message }, 500);
   }
 }

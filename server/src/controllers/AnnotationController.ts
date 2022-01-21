@@ -57,7 +57,7 @@ export async function loadAnnotations(
     const annotations = await findRecords({ threeViewId });
     return successResponse(sortAnnotations(annotations));
   } catch (error) {
-    const { message } = error;
+    const { message } = error as Error;
     return errorResponse({ message }, 500);
   }
 }
