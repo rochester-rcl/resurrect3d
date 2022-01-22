@@ -1,10 +1,3 @@
-/* @flow */
-// TODO Why is loadText not showing? And why is there a huge bottleneck at loadPostProcessor ?????????
-// React
-
-//e-mail: qwerty@gmail.com
-//pwd: resurrect
-
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
 
@@ -79,6 +72,14 @@ import ThreeEmbed from "./ThreeEmbed";
 
 // Components
 import ThreeWebVR, { checkVR } from "./webvr/ThreeWebVR";
+
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { MaskPass } from "three/examples/jsm/postprocessing/MaskPass.js";
+import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+import { TexturePass } from "three/examples/jsm/postprocessing/TexturePass.js";
+import { ClearMaskPass } from "three/examples/jsm/postprocessing/MaskPass.js";
+import { BrightnessContrastShader } from "three/examples/jsm/shaders/BrightnessContrastShader";
 
 // Because of all of the THREE examples' global namespace pollu
 const THREE = _THREE;
@@ -826,8 +827,8 @@ export default class ThreeView extends Component {
         dashSize: 1,
         gapSize: 1,
       });
-      let geometry = new THREE.Geometry();
-      geometry.vertices.push(startVec, endVec);
+      let points = [startVec, endVec];
+      let geometry = new THREE.BufferGeometry().setFromPoints(points);
       let line = new THREE.Line(geometry, material);
       line.computeLineDistances();
       line.visible = false;
@@ -1302,43 +1303,43 @@ export default class ThreeView extends Component {
       stencilBuffer: true,
     };
 
-    this.effectComposer = new THREE.EffectComposer(
+    this.effectComposer = new EffectComposer(
       this.webGLRenderer,
       new THREE.WebGLRenderTarget(this.width, this.height, rtParams)
     );
 
-    this.sceneComposer = new THREE.EffectComposer(
+    this.sceneComposer = new EffectComposer(
       this.webGLRenderer,
       new THREE.WebGLRenderTarget(this.width, this.height, rtParams)
     );
 
-    this.modelComposer = new THREE.EffectComposer(
+    this.modelComposer = new EffectComposer(
       this.webGLRenderer,
       new THREE.WebGLRenderTarget(this.width, this.height, rtParams)
     );
 
-    this.guiComposer = new THREE.EffectComposer(
+    this.guiComposer = new EffectComposer(
       this.webGLRenderer,
       new THREE.WebGLRenderTarget(this.width, this.height, rtParams)
     );
 
     //The environment
-    const envRenderPass = new THREE.RenderPass(this.envScene, this.camera);
+    const envRenderPass = new RenderPass(this.envScene, this.camera);
 
     // the model
-    const modelRenderPass = new THREE.RenderPass(this.scene, this.camera);
+    const modelRenderPass = new RenderPass(this.scene, this.camera);
 
     // the gui
-    const guiRenderPass = new THREE.RenderPass(this.guiScene, this.camera);
+    const guiRenderPass = new RenderPass(this.guiScene, this.camera);
 
-    const mask = new THREE.MaskPass(this.scene, this.camera);
-    const maskInverse = new THREE.MaskPass(this.scene, this.camera);
+    const mask = new MaskPass(this.scene, this.camera);
+    const maskInverse = new MaskPass(this.scene, this.camera);
     maskInverse.inverse = true;
 
-    const envMask = new THREE.MaskPass(this.envScene, this.camera);
-    const guiMask = new THREE.MaskPass(this.guiScene, this.camera);
+    const envMask = new MaskPass(this.envScene, this.camera);
+    const guiMask = new MaskPass(this.guiScene, this.camera);
 
-    const copyPass = new THREE.ShaderPass(THREE.CopyShader);
+    const copyPass = new ShaderPass(THREE.CopyShader);
     copyPass.renderToScreen = true;
 
     const vignettePass = new THREE.VignettePass(
@@ -1349,10 +1350,10 @@ export default class ThreeView extends Component {
 
     this.addShaderPass({ vignette: vignettePass });
 
-    const clearMask = new THREE.ClearMaskPass();
+    const clearMask = new ClearMaskPass();
 
-    const brightnessShader = THREE.BrightnessContrastShader;
-    const brightnessPass = new THREE.ShaderPass(brightnessShader);
+    const brightnessShader = BrightnessContrastShader;
+    const brightnessPass = new ShaderPass(brightnessShader);
     brightnessPass.renderToScreen = false;
     brightnessPass.uniforms["contrast"].value = 0.15;
 
@@ -1399,23 +1400,23 @@ export default class ThreeView extends Component {
 
     this.guiComposer.addPass(guiRenderPass);
 
-    const rawScene = new THREE.TexturePass(
+    const rawScene = new TexturePass(
       this.sceneComposer.renderTarget2.texture
     );
-    const rawModel = new THREE.TexturePass(
+    const rawModel = new TexturePass(
       this.modelComposer.renderTarget2.texture
     );
     rawModel.clear = false;
-    const rawGui = new THREE.TexturePass(
+    const rawGui = new TexturePass(
       this.guiComposer.renderTarget2.texture,
       0.8
     );
     this.addShaderPass({ GUI: rawGui });
 
     this.effectComposer.addPass(rawModel);
-    this.effectComposer.addPass(chromaKeyPass);
+    //this.effectComposer.addPass(chromaKeyPass);
     // this.effectComposer.addPass(SSAOPass);
-    this.effectComposer.addPass(EDLPass);
+    //this.effectComposer.addPass(EDLPass);
     this.effectComposer.addPass(maskInverse);
     this.effectComposer.addPass(rawScene);
     this.effectComposer.addPass(clearMask);
