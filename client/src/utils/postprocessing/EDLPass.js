@@ -2,6 +2,78 @@
  * EDL Shader Pass
  */
 
+import { EDLShader } from "../shaders/EDLShader";
+import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass";
+import * as THREE from "three";
+
+export class EDLPass extends ShaderPass {
+  constructor(scene, camera, params) {
+    super(EDLShader);
+
+    this.renderToScreen = false;
+
+    const radius = params.radius !== undefined ? params.radius : 1.0;
+    const edlStrength =
+      params.edlStrength !== undefined ? params.edlStrength : 1.0;
+    const opacity = params.opacity !== undefined ? params.opacity : 1.0;
+    const screenWidth = params.screenWidth || window.innerWidth || 1;
+    const screenHeight = params.screenHeight || window.innerHeight || 1;
+    const enableEDL = params.enableEDL !== undefined ? params.enableEDL : false;
+    const onlyEDL = params.onlyEDL !== undefined ? params.onlyEDL : false;
+    const onlyEDLColor =
+      params.onlyEDLColor !== undefined
+        ? params.onlyEDLColor
+        : new THREE.Color(0xffffff);
+    const useTexture =
+      params.useTexture !== undefined ? params.useTexture : false;
+    this.camera2 = camera;
+    this.scene2 = scene;
+
+    this.depthMaterial = new THREE.MeshDepthMaterial();
+    this.depthMaterial.depthPacking = THREE.RGBADepthPacking;
+
+    let rtParams = {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      format: THREE.RGBAFormat,
+    };
+    this.depthRenderTarget = new THREE.WebGLRenderTarget(
+      screenWidth,
+      screenHeight,
+      rtParams
+    );
+
+    this.uniforms["tDepth"].value = this.depthRenderTarget.texture;
+    this.uniforms["radius"].value = radius;
+    this.uniforms["edlStrength"].value = edlStrength;
+    this.uniforms["opacity"].value = opacity;
+    this.uniforms["screenWidth"].value = screenWidth;
+    this.uniforms["screenHeight"].value = screenHeight;
+    this.uniforms["cameraNear"].value = this.camera2.near;
+    this.uniforms["cameraFar"].value = this.camera2.far;
+    this.uniforms["onlyEDL"].value = onlyEDL;
+    this.uniforms["enableEDL"].value = enableEDL;
+    this.uniforms["useTexture"].value = useTexture;
+    this.uniforms["onlyEDLColor"].value = onlyEDLColor;
+  }
+
+  render(renderer, writeBuffer, readBuffer, delta, maskActive) {
+    // Render depth into texture
+    this.scene2.overrideMaterial = this.depthMaterial;
+    renderer.setRenderTarget(this.depthRenderTarget);
+    renderer.clear();
+    renderer.render(this.scene2, this.camera2);
+    this.scene2.overrideMaterial = null;
+    super.render(
+      renderer,
+      writeBuffer,
+      readBuffer,
+      delta,
+      maskActive
+    );
+  }
+}
+
 export default function loadEDLPass(threeInstance: Object): typeof Promise {
   return new Promise((resolve, reject) => {
     threeInstance.EDLPass = function (scene, camera, params) {

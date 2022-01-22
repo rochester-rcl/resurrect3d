@@ -80,6 +80,9 @@ import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { TexturePass } from "three/examples/jsm/postprocessing/TexturePass.js";
 import { ClearMaskPass } from "three/examples/jsm/postprocessing/MaskPass.js";
 import { BrightnessContrastShader } from "three/examples/jsm/shaders/BrightnessContrastShader";
+import { VignettePass } from "../utils/postprocessing/VignettePass";
+import { ChromaKeyPass } from "../utils/postprocessing/ChromaKeyPass";
+import { EDLPass } from "../utils/postprocessing/EDLPass";
 
 // Because of all of the THREE examples' global namespace pollu
 const THREE = _THREE;
@@ -554,7 +557,7 @@ export default class ThreeView extends Component {
       this.camera.up,
       new THREE.Vector3(0, 1, 0)
     );
-    this.quatInverse = this.quat.clone().inverse();
+    this.quatInverse = this.quat.clone().invert();
     this.rotationTarget = new THREE.Vector3();
 
     // Scenes
@@ -921,8 +924,8 @@ export default class ThreeView extends Component {
             depthWrite: false,
             depthTest: false,
           });
-          let geometry = new THREE.Geometry();
-          geometry.vertices.push(a, b);
+          let vertices = [a, b];
+          let geometry = new THREE.BufferGeometry().setFromPoints(vertices);
           let line = new THREE.Line(geometry, material);
           line.computeLineDistances();
           this.measurement.add(line);
@@ -1342,7 +1345,7 @@ export default class ThreeView extends Component {
     const copyPass = new ShaderPass(THREE.CopyShader);
     copyPass.renderToScreen = true;
 
-    const vignettePass = new THREE.VignettePass(
+    const vignettePass = new VignettePass(
       new THREE.Vector2(this.width, this.height),
       0.3,
       new THREE.Color(0.045, 0.045, 0.045)
@@ -1357,14 +1360,6 @@ export default class ThreeView extends Component {
     brightnessPass.renderToScreen = false;
     brightnessPass.uniforms["contrast"].value = 0.15;
 
-    const modelBloomPass = new THREE.UnrealBloomPass(
-      new THREE.Vector2(this.width, this.height),
-      0.2,
-      0,
-      0.3,
-      this.modelComposer.renderTarget2.texture
-    );
-
     const EDLParams = {
       screenWidth: this.width,
       screenHeight: this.height,
@@ -1375,9 +1370,9 @@ export default class ThreeView extends Component {
       radius: 0,
     };
 
-    const EDLPass = new THREE.EDLPass(this.scene, this.camera, EDLParams);
+    const edlPass = new EDLPass(this.scene, this.camera, EDLParams);
 
-    const chromaKeyPass = new THREE.ChromaKeyPass(
+    const chromaKeyPass = new ChromaKeyPass(
       false,
       new THREE.Color(0),
       0.5,
@@ -1385,20 +1380,18 @@ export default class ThreeView extends Component {
     );
     chromaKeyPass.renderToScreen = false;
 
-    this.addShaderPass({ EDL: EDLPass });
+    this.addShaderPass({ EDL: edlPass });
     this.addShaderPass({ ChromaKey: chromaKeyPass });
-
-    const SSAOPass = new THREE.SSAOPass(this.scene, this.camera);
-
-    SSAOPass.renderToScreen = false;
-
+      
     this.sceneComposer.addPass(envRenderPass);
     this.sceneComposer.addPass(brightnessPass);
     this.sceneComposer.addPass(vignettePass);
 
     this.modelComposer.addPass(modelRenderPass);
+    this.modelComposer.addPass(copyPass);
 
     this.guiComposer.addPass(guiRenderPass);
+    this.guiComposer.addPass(copyPass);
 
     const rawScene = new TexturePass(
       this.sceneComposer.renderTarget2.texture
@@ -1414,9 +1407,9 @@ export default class ThreeView extends Component {
     this.addShaderPass({ GUI: rawGui });
 
     this.effectComposer.addPass(rawModel);
-    //this.effectComposer.addPass(chromaKeyPass);
+    this.effectComposer.addPass(chromaKeyPass);
     // this.effectComposer.addPass(SSAOPass);
-    //this.effectComposer.addPass(EDLPass);
+    this.effectComposer.addPass(edlPass);
     this.effectComposer.addPass(maskInverse);
     this.effectComposer.addPass(rawScene);
     this.effectComposer.addPass(clearMask);
@@ -1952,7 +1945,7 @@ export default class ThreeView extends Component {
         break;
 
       case "replacementColor":
-        pass.setReplacementColor(value);
+        // pass.setReplacementColor(value);
         break;
 
       default:
