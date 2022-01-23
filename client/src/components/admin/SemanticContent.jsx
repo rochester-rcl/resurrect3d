@@ -678,7 +678,7 @@ class SemanticContent extends React.Component {
                   </Form.Field> 
                   <div className="admin-main-form-list">
                     <ul>
-                      {this.state.alternateMaps.map(file => <li>{file}</li>)}
+                      {this.state.alternateMaps ? this.state.alternateMaps.map(file => <li>{file}</li>) : null}
                     </ul>
                   </div>
 

@@ -1396,17 +1396,14 @@ export default class ThreeView extends Component {
     const rawScene = new TexturePass(
       this.sceneComposer.renderTarget2.texture
     );
-    const rawModel = new TexturePass(
-      this.modelComposer.renderTarget2.texture
-    );
-    rawModel.clear = false;
+    
     const rawGui = new TexturePass(
       this.guiComposer.renderTarget2.texture,
       0.8
     );
     this.addShaderPass({ GUI: rawGui });
 
-    this.effectComposer.addPass(rawModel);
+    this.effectComposer.addPass(modelRenderPass);
     this.effectComposer.addPass(chromaKeyPass);
     // this.effectComposer.addPass(SSAOPass);
     this.effectComposer.addPass(edlPass);
