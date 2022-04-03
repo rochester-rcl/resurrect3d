@@ -85,6 +85,6 @@ export function initServer(connection: Connection, port?: number): Server {
   app.use(basename, router);
 
   return app.listen(serverPort, () => {
-    console.log(`Resurrect3D Server is Listening for Connections on ${port}`);
+    console.log(`Resurrect3D Server is Listening for Connections on ${serverPort}`);
   });
 }

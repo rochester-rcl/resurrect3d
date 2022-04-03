@@ -1,10 +1,10 @@
 export default function getEnvVar(key: EnvVars): EnvVar {
   switch (key) {
     case "MONGO_URL":
-      return process.env.MONGO_URL || "http://localhost:27017/resurrectdb";
+      return process.env.MONGO_URL || "mongodb://127.0.0.1:27017/resurrectdb";
 
     case "MONGO_TEST_URL":
-      return process.env.MONGO_TEST_URL || "http://localhost:27017/testdb";
+      return process.env.MONGO_TEST_URL || "mongodb://localhost:27017/testdb";
     case "PORT":
       return process.env.PORT ? parseFloat(process.env.PORT) : 8000;
 
