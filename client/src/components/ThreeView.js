@@ -777,6 +777,64 @@ export default class ThreeView extends Component {
     this.updateCamera();
     this.renderWebGL();
     this.renderCSS();
+  updateCursor(xrFrame) {
+    let inputSources = xrSession.inputSources;
+    let intersected = false;
+    for (let inputSource of inputSources) {
+
+      let rayPose = xrFrame.getPose(inputSource.targetRaySpace, this.xrReferenceSpace);
+      
+      if (rayPose) {
+        let color = 'blue';
+        let cursor = null;
+
+        let geometry = new THREE.CircleGeometry(0.05, 30);
+        let material = new THREE.MeshBasicMaterial(
+          {color: color, transparent: true, opacity : 0.5, side: THREE.DoubleSide});
+        cursor = new THREE.Mesh(geometry, material);
+        cursor.name = 'cursor';
+        this.scene.add(cursor);
+
+        let laserLength = 0;
+        let pointerMatrix = new THREE.Matrix4();
+        pointerMatrix.fromArray(rayPose.transform.matrix);
+        let raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(new THREE.Vector2(this.vrCamera.rotation.x, this.vrCamera.rotation.z), this.vrCamera);
+        const buttons = this.scene.children.filter(child => child.name.startsWith('control_button'));
+        const buttonNames = buttons.map(button => button.name);
+        let intersects = raycaster.intersectObjects(this.scene.children.filter(child => child.name.startsWith("control_button")), true);
+
+        /**
+          We have
+          - List of currently highlighted
+          - List of currently intersected
+          - List of all
+          For each intersection:
+            Remove from all
+            If currently highlighted, continue
+            If not currently highlighted, highlight and set currently highlighted to true
+          For each remaining in all:
+            If in currently highlighted, remove from currently highlighted
+            Set highlight (false)
+         */
+
+        for (let intersect of intersects) {
+          const { name } = intersect.object;
+          buttonNames.splice(buttonNames.indexOf(name), 1);
+          if (!this.highlightedVrButtons.includes(name)) {
+            this.highlightedVrButtons.push(name);
+            this.setButtonHighlight(intersect.object, true);
+          }
+        }
+        for (let notIntersectName of buttonNames) {
+          if (this.highlightedVrButtons.includes(notIntersectName)) {
+            this.highlightedVrButtons.splice(this.highlightedVrButtons.indexOf(notIntersectName), 1);
+            const button = buttons.find(b => b.name == notIntersectName);
+            this.setButtonHighlight(button, false);
+          }
+        }
+      }
+    }
   }
 
   renderWebGL(): void {
