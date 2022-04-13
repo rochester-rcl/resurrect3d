@@ -4,6 +4,9 @@ import ReactDOM from "react-dom";
 // THREEJS
 import * as _THREE from "three";
 import { CSS2DObject, CSS2DRenderer } from "./CSS2DRenderer";
+import { InteractionManager } from "three.interactive";
+import { XRHandModelFactory } from 'three/examples/jsm/webxr/XRHandModelFactory';
+
 
 // Semantic UI
 import LoaderModal from "./LoaderModal";
@@ -39,6 +42,7 @@ import ThreePointLights from "../utils/lights";
 import { convertUnits, lerpArrays } from "../utils/math";
 import { serializeThreeTypes } from "../utils/serialization";
 import screenfull from "screenfull";
+import {  Handy } from '../lib/Handy.js';
 
 // Constants
 import {
@@ -83,12 +87,24 @@ import { BrightnessContrastShader } from "three/examples/jsm/shaders/BrightnessC
 import { VignettePass } from "../utils/postprocessing/VignettePass";
 import { ChromaKeyPass } from "../utils/postprocessing/ChromaKeyPass";
 import { EDLPass } from "../utils/postprocessing/EDLPass";
+import { canvasRoundRect } from "../utils/canvas";
+
 
 // Because of all of the THREE examples' global namespace pollu
 const THREE = _THREE;
+window.THREE = THREE;
+
+window.Handy = Handy;
+
+declare var xrSession: any;
 
 export default class ThreeView extends Component {
   /* Flow - declare all instance property types here */
+
+  // matankb vr stuff
+  previousHand: any;
+  previousThumb: any;
+  fist: boolean;
 
   // settings
   height: number;
@@ -155,6 +171,8 @@ export default class ThreeView extends Component {
   // GUI
   panelLayout: ThreeGUIPanelLayout;
   controls: ThreeGUILayout;
+  vrControls: VRControls;
+  vrToolsShown: boolean;
 
   // DOM
   threeContainer: HTMLElement;
@@ -262,6 +280,9 @@ export default class ThreeView extends Component {
   constructor(props: Object) {
     super(props);
 
+    // VR Highlight (matan)
+    (this: any).highlightedVrButtons = [];
+
     /** Properties
      ***************************************************************************/
 
@@ -339,7 +360,7 @@ export default class ThreeView extends Component {
     (this: any).drawAnnotations = this.drawAnnotations.bind(this);
     (this: any).viewAnnotation = this.viewAnnotation.bind(this);
     this.onAnnotationPresentationToggle = this.onAnnotationPresentationToggle.bind(
-      this
+      this  
     );
     this.updateAnnotations = this.updateAnnotations.bind(this);
     (this: any).drawSpriteTarget = this.drawSpriteTarget.bind(this);
@@ -406,7 +427,7 @@ export default class ThreeView extends Component {
   }
 
   componentDidUpdate(prevProps: Object, prevState: Object): void {
-    const { cameraControlPaused } = this.state;
+    const { cameraControlPaused } = this.state; // TODO: replace with real vrActive
     const { changeAnnotationFocus } = this.props;
     if (prevState.units !== this.state.units) {
       this.removeAxisLabels();
@@ -624,12 +645,14 @@ export default class ThreeView extends Component {
       gammaOutput: true,
       preserveDrawingBuffer: true,
     });
+    window.webGLRenderer = this.webGLRenderer;
 
     // Renderer and DOM
     this.webGLRenderer.shadowMap.enabled = true;
     this.webGLRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.webGLRenderer.setPixelRatio(1);
     this.threeView.appendChild(this.webGLRenderer.domElement);
+    window.view = this;
     this.width = this.webGLRenderer.domElement.clientWidth;
     this.height = this.webGLRenderer.domElement.clientHeight;
     this.camera.aspect = this.width / this.height;
@@ -773,10 +796,218 @@ export default class ThreeView extends Component {
     );
   }
 
-  update(): void {
+  update(_, xrFrame): void {
+    // debugger;
     this.updateCamera();
     this.renderWebGL();
     this.renderCSS();
+    if (window.xrSession) {
+      this.updateCursor(xrFrame);
+      // const buttons = this.scene.children.filter(child => child.name.startsWith('control_button') || child.name === 'control_panel');
+      // for (const button of buttons) {
+        // button.lookAt(this.vrCamera.position);
+        // button.quaternion.copy(this.vrCamera.quaternion);
+      // }
+      Handy.update();
+      this.updateHand();
+    }
+
+    if (this.interactionManager) {
+      // this.interactionManager.update();
+    }
+  }
+
+  setupHands() {
+    const 
+    handModelFactory = new XRHandModelFactory();
+    const colors = {
+
+      default: new THREE.Color( 0xFFFFFF ),//  White glove.
+      left:    new THREE.Color( 0x00FF00 ),//  Green glove for left.
+      right:   new THREE.Color( 0xFF0000 ) //  Red glove for right.
+    }
+
+    const handGroup = new THREE.Group();
+    this.scene.add(handGroup);
+    // handGroup.scale.set(2, 2, 2)
+    // handGroup.position.setZ(2.5);
+    window.handGroup = handGroup;
+
+    const [ hand0, hand1 ] = [ {}, {} ].map( ( hand, i ) => {
+
+
+      //  THREE.Renderer now wraps all of this complexity
+      //  so you donâ€™t have to worry about it!
+      //  getHand() returns an empty THREE.Group instance
+      //  that you can immediately add to your scene.
+
+      hand = this.webGLRenderer.xr.getHand( i );
+      handGroup.add(hand);
+
+
+      //  So far we have an abstract model of a hand
+      //  but we donâ€™t have a VISUAL model of a hand!
+      //  Letâ€™s load four different visual models:
+      //
+      //      1 - A cube for each joint.
+      //      2 - A sphere for each joint.
+      //      3 - High poly hand model.
+      //
+      //  Our intent is to display one at a time,
+      //  allowing the user to cycle through them
+      //  by making a fist.
+
+      hand.models = [
+
+        handModelFactory.createHandModel( hand, 'boxes' ),
+        handModelFactory.createHandModel( hand, 'spheres' ),
+        handModelFactory.createHandModel( hand, 'mesh' )
+      ]
+      hand.modelIndex = 2
+      hand.isDefaultColor = true
+
+
+
+
+      //  This is what makes detecting hand poses easy!
+
+      Handy.makeHandy( hand, this.scene )
+
+
+
+
+      //  When hand tracking data becomes available
+      //  weâ€™ll receive this connection event.
+
+      hand.addEventListener( 'connected', ( event ) => {
+
+        console.log( 'Hand tracking has begun!', event )
+
+
+        //  As long as the handedness never changes (ha!)
+        //  this should do us right.
+
+        hand.handedness = event.data.handedness
+
+
+        //  When the hand joint data comes online
+        //  it will make ALL of the above models visible.
+        //  Letâ€™s hide them all except for the active one.
+
+        hand.models.forEach( function( model ){
+
+          hand.add( model )
+          model.visible = false
+        })	
+        hand.models[ hand.modelIndex ].visible = true
+      })
+
+
+      return hand
+    })
+  }
+
+  updateHand() {
+    const MOVEMENT_MULT = 5;
+    const SCALE_MULT = 2;
+    const ROTATION_MULT = 1;
+
+    if (!this.webGLRenderer.xr.getHand(0).joints.wrist) {
+      return;
+    }
+
+    const currentHand = this.webGLRenderer.xr.getHand(0).joints.wrist.position;
+    const currentHandRotation = this.webGLRenderer.xr.getHand(1).joints.wrist.rotation;
+
+    if (!this.previousHand) {
+      const {x, y, z } = this.webGLRenderer.xr.getHand(0).joints.wrist.position;
+      this.previousHand = { x, y, z, rotation: this.webGLRenderer.xr.getHand(1).joints.wrist.rotation.z };
+      return;
+    }
+    
+    if (Handy.hands.getRight().isPose('new_fist')) {
+      const wristDeltaX = this.previousHand.x - currentHand.x;
+      const wristDeltaY = this.previousHand.y - currentHand.y;
+      const wristDeltaZ = this.previousHand.z - currentHand.z;
+      const newScale = this.mesh.scale.x - (wristDeltaZ * SCALE_MULT);
+
+      const rotationDelta = this.previousHand.rotation - currentHandRotation.z;
+
+      this.mesh.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), (-wristDeltaX * MOVEMENT_MULT));
+      this.mesh.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), (wristDeltaY * MOVEMENT_MULT));
+      this.mesh.scale.set(newScale, newScale, newScale);
+    }
+
+    if (Handy.hands.getLeft().isPose('new_fist')) {
+      const rotationDelta = this.previousHand.rotation - currentHandRotation.z;
+      this.mesh.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), (-rotationDelta * ROTATION_MULT));
+    }
+
+    if (Handy.hands.getRight().isPose('new_point')) {
+      this.updateDynamicLighting(currentHand.x, 'offsetX');
+      this.updateDynamicLighting(currentHand.y, 'offsetY');
+      this.updateDynamicLighting(currentHand.z, 'offsetZ');
+    }
+
+
+    this.previousHand = {x: currentHand.x, y: currentHand.y, z: currentHand.z, rotation: currentHandRotation.z };
+
+    // POSE
+
+
+  }
+
+  _setupControllerRaycast(raycaster, rayMatrix) {
+    const { vrCamera } = this;
+    const { rotation, position } = vrCamera;
+    let raycasterOrigin = new THREE.Vector3();
+    let raycasterDestination = new THREE.Vector3(rotation.x, rotation.y, rotation.z);
+    // let raycasterDestination = new THREE.Vector3(0, 0, -1);
+    let newOrigin = new THREE.Vector3(position.x, position.y, position.z);
+    // let newOrigin = new THREE.Vector3(0, 0, 0);
+    // raycasterOrigin.setFromMatrixPosition(rayMatrix);
+    raycaster.set(newOrigin, raycasterDestination.normalize());
+    // raycaster.set(raycasterOrigin, raycasterDestination.transformDirection(rayMatrix).normalize());
+  }
+
+  checkFistGesture(inputSource, frame, renderer) {
+    // for (const finger of [["index-finger-phalanx-tip", "index-finger-metacarpal"],
+    //                ["middle-finger-phalanx-tip", "middle-finger-metacarpal"],
+    //                ["ring-finger-phalanx-tip", "ring-finger-metacarpal"],
+    //                ["pinky-finger-phalanx-tip", "pinky-finger-metacarpal"]]) {
+    //    let tip = finger[0];
+    //    let metacarpal = finger[1];
+    //    let tipPose = frame.getPose(inputSource.hand.get(tip), renderer.referenceSpace);
+    //    let metacarpalPose = frame.getPose(inputSource.hand.get(metacarpal), renderer.referenceSpace)
+      
+    //    console.log(this.calculateDistance(tipPose.position, metacarpalPose.position));
+      //  if (this.calculateDistance(tipPose.position, metacarpalPose.position) > minimumDistance ||
+      //      !this.checkOrientation(tipPose.orientation, metacarpalPose.orientation)) {
+      //     return false
+      //  }
+    // }
+  }
+
+  calculateDistance( v1, v2) {
+    var dx = v1.x - v2.x;
+    var dy = v1.y - v2.y;
+    var dz = v1.z - v2.z;
+    return Math.sqrt( dx * dx + dy * dy + dz * dz );
+  }
+
+ checkOrientation(tipOrientation, metacarpalOrientation) {
+  // let tipDirection = applyOrientation(tipOrientation, [0, 0, -1]); // -Z axis of tip
+  // let palmDirection = applyOrientation(metacarpalOrientation, [0, -1, 0]) // -Y axis of metacarpal
+
+  // if (1 - dotProduct(tipDirection, palmDirection) < minimumDeviation) {
+  //    return true;
+  // } else {
+  //    return false;
+  // }
+}
+
+ 
+
   updateCursor(xrFrame) {
     let inputSources = xrSession.inputSources;
     let intersected = false;
@@ -2040,6 +2271,7 @@ export default class ThreeView extends Component {
     value: string | number | THREE.Vector3,
     prop: string
   ): void {
+    console.log(value, prop);
     const { dynamicLightProps } = this.state;
     let updated = {};
     if (!prop.includes("offset")) {
@@ -2703,6 +2935,8 @@ export default class ThreeView extends Component {
     });
   }
 
+  /** VR **/
+
   enterVR(): void {
     this.setState(
       {
@@ -2711,6 +2945,9 @@ export default class ThreeView extends Component {
       () => {
         this.prepareSceneForVR();
         this.webGLRenderer.setAnimationLoop(this.update);
+        xrSession.requestReferenceSpace('local').then(r => {
+          this.xrReferenceSpace = r;
+        })
       }
     );
   }
@@ -3071,3 +3308,5 @@ export default class ThreeView extends Component {
 
   // Static methods
 }
+
+// window.addEventListener('error', e => alert(e.message));
