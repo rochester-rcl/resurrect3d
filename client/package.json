@@ -17,7 +17,7 @@
     "interweave": "^8.1.0",
     "jszip": "^3.5.0",
     "ndarray-ops": "^1.2.2",
-    "numjs": "^0.16.0",
+    "numjs": "https://github.com/grimmer0125/numjs-1/tree/update_sharp_to_fix_m1_compatibility",
     "pako": "^1.0.11",
     "rc-progress": "^2.6.1",
     "react": "^16.13.1",
@@ -36,6 +36,7 @@
     "semantic-ui-react": "^0.88.2",
     "short-uuid": "^2.3.4",
     "three": "^0.129.0",
+    "three.interactive": "^1.1.0",
     "worker-loader": "^2.0.0",
     "zlibjs": "^0.3.1"
   },
@@ -45,7 +46,7 @@
     "test": "react-app-rewired test --env=jsdom",
     "eject": "react-scripts eject"
   },
-  "proxy": "http://resurrect-server-dev:8000/",
+  "proxy": "http://localhost:8000/",
   "browserslist": {
     "production": [
       ">0.2%",
