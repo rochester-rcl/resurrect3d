@@ -2670,12 +2670,191 @@ export default class ThreeView extends Component {
     this.centerCamera();
   }
 
+  TEST_simulateVr() {
+    this.setState({ simulateVrActive: true }, () => this.prepareSceneForVR())
+  }
+
+  generateVrButtonMaterial(label, icon, doBorder) {
+    const multiplier = 100;
+    const w = 20 * multiplier;
+    const h = 5 * multiplier;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0d0d0d';
+    canvasRoundRect(ctx, 0, 0, canvas.width, canvas.height, 10); // TODO: this  might not work
+    ctx.fillStyle = 'white';
+    ctx.font = '200px "Source Code Pro"';
+    ctx.fillText(label, 100, (h / 2) + 50);
+    if (doBorder) {
+      ctx.moveTo(1, 1);
+      ctx.lineWidth = 50;
+      ctx.strokeStyle = '#a4c3fc';
+      ctx.beginPath()
+      ctx.lineTo(w, 1);
+      ctx.lineTo(w, h);
+      ctx.lineTo(0, h);
+      ctx.lineTo(0, 0);
+      ctx.stroke()
+    }
+    var texture = new THREE.Texture(canvas);
+    texture.needsUpdate = true;
+    var material = new THREE.MeshBasicMaterial({
+      map: texture
+    });
+    return material;
+  }
+
+  setButtonHighlight(button, highlight) {
+    // const button = this.scene.children.filter(c => c.name.startsWith('control_button'))[3];
+    button.material = this.generateVrButtonMaterial(button.name.split('control_button_')[1], '', highlight);
+  }
+
+  renderVrControl(label, icon, onclick, row, col, doRerender = true) {
+    const multiplier = 100;
+    const w = 20 * multiplier;
+    const h = 5 * multiplier;
+
+    const material = this.generateVrButtonMaterial(label, '', false);
+    var plane = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9 * (h / w)), material);
+    plane.position.z = 0.001;
+    // this.interactionManager.add(plane);
+    plane.addEventListener('click', () => {
+      onclick()
+      if (doRerender) {
+        this.renderVrControls();
+      }
+    });
+
+    plane.position.x = row;
+    plane.position.y = ((col * 0.25) + 1);
+    plane.name = `control_button_${label}`;
+
+    this.scene.add(plane);
+    this.vrControls.push(plane);
+  }
+
+  clearVrControls() {
+    // clear all vr controls first
+    if (this.vrControls && this.vrControls.length) {
+      for (const control of this.vrControls) {
+        this.scene.remove(control);
+        // this.interactionManager.remove(control);
+      }
+    }
+    this.vrControls = [];
+  }
+
+  renderVrToolsPanel(y_coord) {
+    const geometry = new THREE.BoxGeometry(2, 3, 0);
+    const material = new THREE.MeshBasicMaterial({ color: '#1b1b1b' });
+    const cube = new THREE.Mesh(geometry, material);
+    cube.position.setY(y_coord);
+    cube.position.setX(-2);
+    cube.position.z = 0;
+    this.scene.add(cube);
+    this.vrControls.push(cube);
+  }
+
+  renderVrControls() {
+    return;
+    this.clearVrControls();
+    const y_coord = 1;
+
+    // control box
+    const geometry = new THREE.BoxGeometry(3, 0.8, 0);
+    const material = new THREE.MeshBasicMaterial({ color: '#1b1b1b' });
+    const cube = new THREE.Mesh(geometry, material);
+    cube.position.setY(y_coord);
+    cube.position.z = 0;
+    cube.name = "control_panel";
+    this.scene.add(cube);
+    this.vrControls.push(cube);
+
+    // control buttons
+
+    this.renderVrControl('zoom in', '', () => this.centerCamera(), -1, 1);
+
+    this.renderVrControl(
+      `lighting: ${this.state.dynamicLighting ? 'on' : 'off'}`, '',
+      () => this.toggleDynamicLighting(),
+      1,
+      1
+    );
+    
+    this.renderVrControl(
+      `show axes: ${this.state.showAxes ? 'on' : 'off'}`, '',
+      () => this.showAxes(!this.state.showAxes),
+      0,
+      1
+    );
+
+    this.renderVrControl(
+      `screenshot`, '',
+      () => this.captureScreenshot(),
+      0,
+      -0.2,
+    );
+
+    this.renderVrControl(
+      `EXIT VR`, '',
+      () => this.exitVR(),
+      1,
+      -0.2,
+      false,
+    );
+
+    this.renderVrControl(
+      `tools`, '',
+      () => {
+        this.setState({ vrToolsShown: !this.state.vrToolsShown })
+      },
+      -1,
+      -0.2,
+    );
+
+    if (this.state.vrToolsShown) {
+      this.renderVrToolsPanel(y_coord);
+    }
+    
+  }
+
   prepareSceneForVR() {
     this.scene.add(this.skyboxMesh);
+
+    if (!this.interactionManager) {
+      this.interactionManager = new InteractionManager(
+        this.webGLRenderer,
+        this.vrCamera,
+        this.webGLRenderer.domElement
+      );
+    }
+
+    this.setupHands();
+
+    this.renderVrControls();
+
+    xrSession.addEventListener('select', () => {
+      const selected = this.highlightedVrButtons[0].split('control_button_')[1];
+      if (selected.startsWith('light')) {
+        console.log('toggling lighting');
+        this.toggleDynamicLighting();
+      } else if (selected.startsWith('EXIT VR')) {
+
+      } else if (selected.startsWith('show axes')) {
+        this.showAxes(!this.state.showAxes);
+      } else if (selected === 'zoom in') {}
+      this.renderVrControls();
+    })
+
+    
   }
 
   tearDownSceneForVR() {
     this.scene.remove(this.skyboxMesh);
+    this.clearVrControls();
     this.envScene.add(this.skyboxMesh);
   }
 
