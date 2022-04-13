@@ -14,8 +14,8 @@ import {
 import ThreeButton from "../ThreeButton";
 
 // polyfill
-import WebXRPolyfill from "webxr-polyfill";
-const polyfill = new WebXRPolyfill();
+// import WebXRPolyfill from "webxr-polyfill";
+// const polyfill = new WebXRPolyfill({ allowCardboardOnDesktop: true });
 
 export function checkVR() {
   if ("xr" in navigator && "requestDevice" in navigator.xr) return true;
@@ -58,7 +58,7 @@ export default class ThreeWebVR extends Component {
       this.props.renderer.xr.enabled = true;
       navigator.xr.isSessionSupported("immersive-vr").then((supported) => {
         if (supported) {
-          const init = {};
+          const init = {optionalFeatures: [ 'hand-tracking' ] };
           this.enterCallback = this.enterXR(init);
         } else {
           this.setState({
