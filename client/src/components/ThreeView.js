@@ -89,6 +89,7 @@ import { ChromaKeyPass } from "../utils/postprocessing/ChromaKeyPass";
 import { EDLPass } from "../utils/postprocessing/EDLPass";
 import { canvasRoundRect } from "../utils/canvas";
 
+import colorWheelData from '../color-wheel-data.json';
 
 // Because of all of the THREE examples' global namespace pollu
 const THREE = _THREE;
