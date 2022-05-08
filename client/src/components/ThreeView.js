@@ -91,13 +91,9 @@ import { canvasRoundRect } from "../utils/canvas";
 
 import colorWheelData from '../color-wheel-data.json';
 
+
 // Because of all of the THREE examples' global namespace pollu
 const THREE = _THREE;
-window.THREE = THREE;
-
-window.Handy = Handy;
-
-declare var xrSession: any;
 
 export default class ThreeView extends Component {
   /* Flow - declare all instance property types here */
@@ -431,6 +427,7 @@ export default class ThreeView extends Component {
     // TODO will remove this after when FB fixes onWheel events (https://github.com/facebook/react/issues/14856)
     this.threeView.addEventListener("wheel", this.handleMouseWheel);
   }
+  
 
   componentDidUpdate(prevProps: Object, prevState: Object): void {
     const { cameraControlPaused } = this.state; // TODO: replace with real vrActive
@@ -707,7 +704,6 @@ export default class ThreeView extends Component {
     this.webGLRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.webGLRenderer.setPixelRatio(1);
     this.threeView.appendChild(this.webGLRenderer.domElement);
-    window.view = this;
     this.width = this.webGLRenderer.domElement.clientWidth;
     this.height = this.webGLRenderer.domElement.clientHeight;
     this.camera.aspect = this.width / this.height;
@@ -864,113 +860,44 @@ export default class ThreeView extends Component {
     this.renderCSS();
     if (window.xrSession) {
       this.updateCursor(xrFrame);
-      // const buttons = this.scene.children.filter(child => child.name.startsWith('control_button') || child.name === 'control_panel');
-      // for (const button of buttons) {
-        // button.lookAt(this.vrCamera.position);
-        // button.quaternion.copy(this.vrCamera.quaternion);
-      // }
       Handy.update();
       this.updateHand();
     }
   }
 
   setupHands() {
-    console.log('yes');
     const handModelFactory = new XRHandModelFactory();
-    const colors = {
-
-      default: new THREE.Color( 0xFFFFFF ),//  White glove.
-      left:    new THREE.Color( 0x00FF00 ),//  Green glove for left.
-      right:   new THREE.Color( 0xFF0000 ) //  Red glove for right.
-    }
 
     const handGroup = new THREE.Group();
     this.scene.add(handGroup);
-    // handGroup.scale.set(2, 2, 2)
-    // handGroup.position.setZ(2.5);
-    window.handGroup = handGroup;
 
     const [ hand0, hand1 ] = [ {}, {} ].map( ( hand, i ) => {
-
-
-      //  THREE.Renderer now wraps all of this complexity
-      //  so you donâ€™t have to worry about it!
-      //  getHand() returns an empty THREE.Group instance
-      //  that you can immediately add to your scene.
 
       hand = this.webGLRenderer.xr.getHand( i );
       handGroup.add(hand);
 
-
-      //  So far we have an abstract model of a hand
-      //  but we donâ€™t have a VISUAL model of a hand!
-      //  Letâ€™s load four different visual models:
-      //
-      //      1 - A cube for each joint.
-      //      2 - A sphere for each joint.
-      //      3 - High poly hand model.
-      //
-      //  Our intent is to display one at a time,
-      //  allowing the user to cycle through them
-      //  by making a fist.
-
-      hand.models = [
-
-        handModelFactory.createHandModel( hand, 'boxes' ),
-        handModelFactory.createHandModel( hand, 'spheres' ),
-        handModelFactory.createHandModel( hand, 'mesh' )
-      ]
-      hand.modelIndex = 2
-      hand.isDefaultColor = true
-
-
-
-
-      //  This is what makes detecting hand poses easy!
+      const model = handModelFactory.createHandModel( hand, 'mesh' );
+      hand.add(model);
+      model.visible = true;
 
       Handy.makeHandy( hand, this.scene )
 
-
-
-
-      //  When hand tracking data becomes available
-      //  weâ€™ll receive this connection event.
-
       hand.addEventListener( 'connected', ( event ) => {
-
-        console.log( 'Hand tracking has begun!', event )
-
-
-        //  As long as the handedness never changes (ha!)
-        //  this should do us right.
-
         hand.handedness = event.data.handedness
-
-
-        //  When the hand joint data comes online
-        //  it will make ALL of the above models visible.
-        //  Letâ€™s hide them all except for the active one.
-
-        hand.models.forEach( function( model ){
-
-          hand.add( model )
-          model.visible = false
-        })	
-        hand.models[ hand.modelIndex ].visible = true
-      })
-
+      });
 
       return hand
     })
   }
 
   getColorwheelCoord(position) {
-    const colorWheelSize = 300; // todo: replace with serialized Object.keys(colorWheelData.data).length;
+    const colorWheelSize = 300;
     const index = Math.floor(colorWheelSize * (((position / 0.5) + 1)) / 2);
     return index;
   }
 
   updateHand() {
+
     const MOVEMENT_MULT = 5;
     const SCALE_MULT = 2;
     const ROTATION_MULT = 1;
@@ -1017,11 +944,6 @@ export default class ThreeView extends Component {
         const dir = new THREE.Vector3();
         dir.subVectors(currentIndexTip, currentIndexBase).normalize();
         this.vrSpotlight.target.position.set(dir.x, dir.y, dir.z);
-
-
-        // this.updateDynamicLighting(currentHand.x, 'offsetX');
-        // this.updateDynamicLighting(currentHand.y, 'offsetY');
-        // this.updateDynamicLighting(currentHand.z, 'offsetZ');
       }
 
       if (Handy.hands.getRight().isPose('new_circle')) {
@@ -3248,7 +3170,6 @@ export default class ThreeView extends Component {
     this.renderVrControls();
 
     xrSession.addEventListener('select', () => {
-      return;
       const selected = this.highlightedVrButtons[0].split('control_button_')[1];
       if (selected.startsWith('light')) {
         console.log('toggling lighting');
