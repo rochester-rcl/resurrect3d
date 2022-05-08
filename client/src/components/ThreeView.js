@@ -105,6 +105,11 @@ export default class ThreeView extends Component {
   previousHand: any;
   previousThumb: any;
   fist: boolean;
+  vrResetPose: number;
+  colorSwitchCounter: number;
+  colorPickerGroup: any;
+  vrMode: string;
+  vrSpotlight: any;
 
   // settings
   height: number;
@@ -530,6 +535,55 @@ export default class ThreeView extends Component {
 
   /** THREE JS 'LIFECYCYLE'
    *****************************************************************************/
+
+  toHex(first, second) {
+    return parseInt((first + second).repeat(3), 16);
+  }
+
+  generateWhiteToBlack() {
+      const order = 'fedcba9876543210';
+      const colors = [];
+      for (let i = 0; i < 16; i++) {
+        for (let j = 0; j < 16; j++) {
+          colors.push(this.toHex(order[i], order[j]));
+        }
+      }
+      return colors;
+  }
+
+  openColorPicker() {
+
+    this.colorPickerGroup = new THREE.Group();
+    
+    const planeGeometry = new THREE.PlaneGeometry( 1, 1 );
+    const planeMaterial = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    this.colorPreviewPlane = plane;
+    plane.position.setX(1);
+
+    this.colorPickerGroup.add(plane);
+
+    const circleGeometry = new THREE.CircleGeometry(1, 100);
+    const material = new THREE.MeshBasicMaterial({ 
+      map: new THREE.TextureLoader().load("/color-wheel.png"),
+     });
+    const circle = new THREE.Mesh( circleGeometry, material );
+    const scale = 0.5;
+    circle.scale.setX(scale);
+    circle.scale.setY(scale);
+    circle.scale.setZ(scale);
+    this.colorPickerGroup.add(circle);
+    this.scene.add(this.colorPickerGroup)
+    this.circle = circle;
+    this.whiteToBlack = this.generateWhiteToBlack();
+  }
+
+  closeColorPicker() {
+    if (this.colorPickerGroup) {
+      this.scene.remove(this.colorPickerGroup);
+    }
+  }
+
   initThree(): void {
     const { localAssets } = this.props;
     this.GUI = new ThreeGUI();
@@ -673,7 +727,13 @@ export default class ThreeView extends Component {
     }, this.initMesh());
   }
 
+  /* COLOR PICKER EXPERIMENT */
+  initColorpicker() {
+
+  }
+
   initControls(): void {
+    // initColorpicker();
     let components = this.GUI.components;
     let layouts = this.GUI.layouts;
     let controls = new ThreeGUIGroup("controls");
@@ -811,15 +871,11 @@ export default class ThreeView extends Component {
       Handy.update();
       this.updateHand();
     }
-
-    if (this.interactionManager) {
-      // this.interactionManager.update();
-    }
   }
 
   setupHands() {
-    const 
-    handModelFactory = new XRHandModelFactory();
+    console.log('yes');
+    const handModelFactory = new XRHandModelFactory();
     const colors = {
 
       default: new THREE.Color( 0xFFFFFF ),//  White glove.
@@ -907,16 +963,26 @@ export default class ThreeView extends Component {
     })
   }
 
+  getColorwheelCoord(position) {
+    const colorWheelSize = 300; // todo: replace with serialized Object.keys(colorWheelData.data).length;
+    const index = Math.floor(colorWheelSize * (((position / 0.5) + 1)) / 2);
+    return index;
+  }
+
   updateHand() {
     const MOVEMENT_MULT = 5;
     const SCALE_MULT = 2;
     const ROTATION_MULT = 1;
+
+    let selectedColor;
 
     if (!this.webGLRenderer.xr.getHand(0).joints.wrist) {
       return;
     }
 
     const currentHand = this.webGLRenderer.xr.getHand(0).joints.wrist.position;
+    const currentIndexTip = this.webGLRenderer.xr.getHand(0).joints['index-finger-tip'].position;
+    const currentIndexBase = Handy.hands.getRight().joints['index-finger-metacarpal'].position;
     const currentHandRotation = this.webGLRenderer.xr.getHand(1).joints.wrist.rotation;
 
     if (!this.previousHand) {
@@ -925,35 +991,103 @@ export default class ThreeView extends Component {
       return;
     }
     
-    if (Handy.hands.getRight().isPose('new_fist')) {
-      const wristDeltaX = this.previousHand.x - currentHand.x;
-      const wristDeltaY = this.previousHand.y - currentHand.y;
-      const wristDeltaZ = this.previousHand.z - currentHand.z;
-      const newScale = this.mesh.scale.x - (wristDeltaZ * SCALE_MULT);
+    if (this.vrMode === 'view') {
+      if (Handy.hands.getRight().isPose('new_fist')) {
+        const wristDeltaX = this.previousHand.x - currentHand.x;
+        const wristDeltaY = this.previousHand.y - currentHand.y;
+        const wristDeltaZ = this.previousHand.z - currentHand.z;
+        const newScale = this.mesh.scale.x - (wristDeltaZ * SCALE_MULT);
+  
+        const rotationDelta = this.previousHand.rotation - currentHandRotation.z;
+  
+        this.mesh.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), (-wristDeltaX * MOVEMENT_MULT));
+        this.mesh.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), (wristDeltaY * MOVEMENT_MULT));
+        this.mesh.scale.set(newScale, newScale, newScale);
+      }
+  
+      if (Handy.hands.getLeft().isPose('new_fist')) {
+        const rotationDelta = this.previousHand.rotation - currentHandRotation.z;
+        this.mesh.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), (-rotationDelta * ROTATION_MULT));
+      }
+  
+      if (Handy.hands.getRight().isPose('new_point', 2500)) {
+        this.vrSpotlight.position.set(currentIndexTip.x, currentIndexTip.y, currentIndexTip.z);
 
-      const rotationDelta = this.previousHand.rotation - currentHandRotation.z;
+        const dir = new THREE.Vector3();
+        dir.subVectors(currentIndexTip, currentIndexBase).normalize();
+        this.vrSpotlight.target.position.set(dir.x, dir.y, dir.z);
 
-      this.mesh.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), (-wristDeltaX * MOVEMENT_MULT));
-      this.mesh.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), (wristDeltaY * MOVEMENT_MULT));
-      this.mesh.scale.set(newScale, newScale, newScale);
+
+        // this.updateDynamicLighting(currentHand.x, 'offsetX');
+        // this.updateDynamicLighting(currentHand.y, 'offsetY');
+        // this.updateDynamicLighting(currentHand.z, 'offsetZ');
+      }
+
+      if (Handy.hands.getRight().isPose('new_circle')) {
+        this.vrResetPose++;
+        if (this.vrResetPose === 50) {
+          this.mesh.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), 0);
+          this.mesh.setRotationFromAxisAngle(new THREE.Vector3(1, 0, 0), 0);
+          this.mesh.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), 0)
+          this.mesh.scale.set(1, 1, 1);
+        }
+      } else {
+        this.vrResetPose = 0;
+      }
     }
 
-    if (Handy.hands.getLeft().isPose('new_fist')) {
-      const rotationDelta = this.previousHand.rotation - currentHandRotation.z;
-      this.mesh.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), (-rotationDelta * ROTATION_MULT));
-    }
+    if (this.vrMode === 'color') {
+      const colorPos = this.webGLRenderer.xr.getHand(0).joints['index-finger-tip'].position;
+      this.circle.position.z = colorPos.z;
 
-    if (Handy.hands.getRight().isPose('new_point')) {
-      this.updateDynamicLighting(currentHand.x, 'offsetX');
-      this.updateDynamicLighting(currentHand.y, 'offsetY');
-      this.updateDynamicLighting(currentHand.z, 'offsetZ');
-    }
+      // goes from 0.1 to -0.8
+      const brightnessScale = -(Math.min(colorPos.z - 0.1, 0) / 0.8);
+      const brightnessIndex = Math.floor(brightnessScale * this.whiteToBlack.length);
+      this.circle.material.color.setHex(this.whiteToBlack[brightnessIndex]);
 
+      const colorWheelSize = Object.keys(colorWheelData.data).length;
+      const colorXIndex = this.getColorwheelCoord(colorPos.x);
+      const colorYIndex = this.getColorwheelCoord(-colorPos.y);
+      
+      console.log(colorXIndex);
+      const colorPixel = colorWheelData.data[colorXIndex] && colorWheelData.data[colorXIndex][colorYIndex];
+      window.colorPixel = colorPixel;
+      if (colorPixel) {
+        const [r, g, b] = colorPixel.split(',').map(x => parseInt(x.trim()));
+        const inverseBrightnessScale = 1 - brightnessScale;
+        const getRgbVal = v => (v * inverseBrightnessScale) / 255;
+        selectedColor = { r: getRgbVal(r), g: getRgbVal(g), b: getRgbVal(b) };
+        this.colorPreviewPlane.material.color.setRGB(selectedColor.r, selectedColor.g, selectedColor.b);
+      }
+    }
+    
+    if (Handy.hands.getLeft().isPose('asl c')) {
+      if (this.colorSwitchCounter === undefined) {
+        this.colorSwitchCounter = 100;
+      } else if (this.colorSwitchCounter > 0) {
+        this.colorSwitchCounter--;
+      } else if (this.colorSwitchCounter === 0) {
+        this.colorSwitchCounter = 100;
+        if (this.vrMode === 'view') {
+          // switch to color picker
+          this.openColorPicker();
+          this.mesh.visible = false;
+          this.vrMode = 'color';
+        } else {
+          // switch to view
+          if (selectedColor) {
+            // debugger;
+            // this.updateDynamicLighting(selectedColor, "color");
+            this.vrSpotlight.color.setRGB(selectedColor.r, selectedColor.g, selectedColor.b);
+          }
+          this.closeColorPicker();
+          this.mesh.visible = true;
+          this.vrMode = 'view';
+        }
+      }
+    }
 
     this.previousHand = {x: currentHand.x, y: currentHand.y, z: currentHand.z, rotation: currentHandRotation.z };
-
-    // POSE
-
 
   }
 
@@ -969,46 +1103,10 @@ export default class ThreeView extends Component {
     raycaster.set(newOrigin, raycasterDestination.normalize());
     // raycaster.set(raycasterOrigin, raycasterDestination.transformDirection(rayMatrix).normalize());
   }
-
-  checkFistGesture(inputSource, frame, renderer) {
-    // for (const finger of [["index-finger-phalanx-tip", "index-finger-metacarpal"],
-    //                ["middle-finger-phalanx-tip", "middle-finger-metacarpal"],
-    //                ["ring-finger-phalanx-tip", "ring-finger-metacarpal"],
-    //                ["pinky-finger-phalanx-tip", "pinky-finger-metacarpal"]]) {
-    //    let tip = finger[0];
-    //    let metacarpal = finger[1];
-    //    let tipPose = frame.getPose(inputSource.hand.get(tip), renderer.referenceSpace);
-    //    let metacarpalPose = frame.getPose(inputSource.hand.get(metacarpal), renderer.referenceSpace)
-      
-    //    console.log(this.calculateDistance(tipPose.position, metacarpalPose.position));
-      //  if (this.calculateDistance(tipPose.position, metacarpalPose.position) > minimumDistance ||
-      //      !this.checkOrientation(tipPose.orientation, metacarpalPose.orientation)) {
-      //     return false
-      //  }
-    // }
-  }
-
-  calculateDistance( v1, v2) {
-    var dx = v1.x - v2.x;
-    var dy = v1.y - v2.y;
-    var dz = v1.z - v2.z;
-    return Math.sqrt( dx * dx + dy * dy + dz * dz );
-  }
-
- checkOrientation(tipOrientation, metacarpalOrientation) {
-  // let tipDirection = applyOrientation(tipOrientation, [0, 0, -1]); // -Z axis of tip
-  // let palmDirection = applyOrientation(metacarpalOrientation, [0, -1, 0]) // -Y axis of metacarpal
-
-  // if (1 - dotProduct(tipDirection, palmDirection) < minimumDeviation) {
-  //    return true;
-  // } else {
-  //    return false;
-  // }
-}
-
  
 
   updateCursor(xrFrame) {
+    return;
     let inputSources = xrSession.inputSources;
     let intersected = false;
     for (let inputSource of inputSources) {
@@ -1410,7 +1508,7 @@ export default class ThreeView extends Component {
       });*/
     }
 
-    this.scene.add(this.mesh);
+    this.scene.add(this.mesh); 
     this.bboxMesh = new THREE.Box3().setFromObject(this.mesh);
     this.meshHeight = this.bboxMesh.max.y - this.bboxMesh.min.y;
     this.meshWidth = this.bboxMesh.max.x - this.bboxMesh.min.x;
@@ -3117,7 +3215,24 @@ export default class ThreeView extends Component {
   }
 
   prepareSceneForVR() {
+
     this.scene.add(this.skyboxMesh);
+
+    // spotlight
+    const spotLight = new THREE.SpotLight( 0xff1900 );
+    spotLight.castShadow = true;
+    spotLight.shadow.mapSize.width = 1024;
+    spotLight.shadow.mapSize.height = 1024;
+    spotLight.shadow.camera.near = 500;
+    spotLight.shadow.camera.far = 4000;
+    spotLight.shadow.camera.fov = 30;
+    this.scene.add(spotLight);
+    this.scene.add(spotLight.target);
+    this.vrSpotlight = spotLight;
+
+
+    this.colorSwitchCounter = 100;
+    this.vrMode = 'view';
 
     if (!this.interactionManager) {
       this.interactionManager = new InteractionManager(
@@ -3132,6 +3247,7 @@ export default class ThreeView extends Component {
     this.renderVrControls();
 
     xrSession.addEventListener('select', () => {
+      return;
       const selected = this.highlightedVrButtons[0].split('control_button_')[1];
       if (selected.startsWith('light')) {
         console.log('toggling lighting');
