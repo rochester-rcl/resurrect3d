@@ -5,7 +5,7 @@
   "devDependencies": {
     "flow-bin": "^0.39.0",
     "react-app-rewired": "^2.1.5",
-    "react-scripts": "^3.2.0"
+    "react-scripts": "^5.0.1"
   },
   "dependencies": {
     "@material-ui/core": "^4.0.0-rc.0",
